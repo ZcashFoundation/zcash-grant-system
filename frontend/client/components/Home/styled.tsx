@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import moneyBg from 'static/images/money.jpg';
+import backgroundImage from 'static/images/earth.jpg';
 
 export const Hero = styled.div`
   position: relative;
@@ -10,8 +10,8 @@ export const Hero = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #273c75;
-  background-image: url('${moneyBg}');
+  background-color: #0D2739;
+  background-image: url('${backgroundImage}');
   background-position: top center;
   background-size: cover;
   box-shadow: 0 80px 50px -40px rgba(0, 0, 0, 0.4) inset;
