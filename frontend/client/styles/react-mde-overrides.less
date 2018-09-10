@@ -1,0 +1,92 @@
+// No SuitCSS style here because we're trying to override.
+
+// Header buttons opacity
+.mde-header ul.mde-header-group li.mde-header-item {
+  opacity: 0.4;
+  transition: opacity 60ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Tab buttons
+.react-mde-tabbed-layout .mde-tabs .mde-tab {
+  height: 100%;
+  width: 80px;
+  text-align: center;
+  border: none !important;
+  box-shadow: none !important;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  // Hide the currently active tab
+  &.mde-tab-activated {
+    display: none;
+  }
+
+  // Change text to "Edit" from "Code"
+  &:first-child {
+    font-size: 0;
+
+    &:after {
+      content: 'Edit';
+      font-size: 14px;
+    }
+  }
+}
+
+.mde-preview {
+  .mde-preview-content {
+    color: #4C4C4C;
+    font-size: 1.1rem;
+    font-family: 'Nunito Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-variant: tabular-nums;
+    line-height: 1.5;
+
+    h1, h2, h3, h4, h5, h6 {
+      text-decoration: none;
+      border: none;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+    h2 {
+      font-size: 1.8rem;
+    }
+    h3 {
+      font-size: 1.6rem;
+    }
+    h4 {
+      font-size: 1.4rem;
+    }
+    h5 {
+      font-size: 1.2rem;
+    }
+    h6 {
+      font-size: 1.1rem;
+    }
+
+    ul,
+    ol {
+      padding-left: 30px;
+      font-size: 1.05rem;
+    }
+
+    ul {
+      list-style: circle;
+    }
+
+    ol {
+      list-style: decimal;
+    }
+
+    img {
+      max-width: 100%;
+    }
+  }
+}

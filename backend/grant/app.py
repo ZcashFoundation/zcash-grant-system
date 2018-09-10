@@ -1,0 +1,59 @@
+# -*- coding: utf-8 -*-
+"""The app module, containing the app factory function."""
+from flask import Flask
+from flask_cors import CORS
+
+from grant import commands, proposal, author, comment, milestone
+from grant.extensions import bcrypt, migrate, db, ma
+
+
+def create_app(config_object="grant.settings"):
+    app = Flask(__name__.split(".")[0])
+    app.config.from_object(config_object)
+    register_extensions(app)
+    register_blueprints(app)
+    register_shellcontext(app)
+    register_commands(app)
+    return app
+
+
+def register_extensions(app):
+    """Register Flask extensions."""
+    bcrypt.init_app(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    ma.init_app(app)
+    CORS(app)
+    return None
+
+
+def register_blueprints(app):
+    """Register Flask blueprints."""
+    app.register_blueprint(comment.views.blueprint)
+    app.register_blueprint(proposal.views.blueprint)
+    app.register_blueprint(author.views.blueprint)
+    app.register_blueprint(milestone.views.blueprint)
+
+
+    return None
+
+
+def register_shellcontext(app):
+    """Register shell context objects."""
+
+    def shell_context():
+        """Shell context objects."""
+        return {"db": db}
+
+    app.shell_context_processor(shell_context)
+
+
+def register_commands(app):
+    """Register Click commands."""
+    app.cli.add_command(commands.test)
+    app.cli.add_command(commands.lint)
+    app.cli.add_command(commands.clean)
+    app.cli.add_command(commands.urls)
+
+    app.cli.add_command(author.commands.create_author)
+    app.cli.add_command(proposal.commands.create_proposal)

@@ -1,0 +1,29 @@
+{
+  "presets": ["next/babel", "@zeit/next-typescript/babel"],
+  "env": {
+    "development": {
+      "plugins": ["inline-dotenv"]
+    },
+    "production": {
+      "plugins": ["transform-inline-environment-variables"]
+    }
+  },
+  "plugins": [
+    ["import", { "libraryName": "antd", "style": false }],
+    [
+      "module-resolver",
+      {
+        "root": ["client"],
+        "extensions": [".js", ".tsx", ".ts"]
+      }
+    ],
+    [
+      "styled-components",
+      {
+        "ssr": true,
+        "displayName": true,
+        "preprocess": false
+      }
+    ]
+  ]
+}
