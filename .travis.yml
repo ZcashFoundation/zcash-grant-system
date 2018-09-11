@@ -14,6 +14,7 @@ matrix:
       python: 3.6
       before_install:
         - cd backend/
+        - cp .envexample .env
       install: pip install -r requirements/dev.txt
       script:
         - flask test
@@ -22,6 +23,6 @@ matrix:
       node_js: 8.11.4
       before_install:
         - cd contract/
-      install: yarn
+      install: yarn && yarn add global truffle
       script:
         - yarn run test
