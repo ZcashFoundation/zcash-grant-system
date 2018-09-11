@@ -4,10 +4,12 @@ interface Web3Window extends Window {
   web3?: Web3;
 }
 
-const web3Window = window as Web3Window;
-
 const resolveWeb3 = (resolve: (web3: Web3) => void, reject: (err: Error) => void) => {
-  let { web3 } = web3Window;
+  if (typeof window === 'undefined') {
+    return reject(new Error('No global window variable'));
+  }
+
+  let { web3 } = window as Web3Window;
   const alreadyInjected = typeof web3 !== 'undefined'; // i.e. Mist/Metamask
   const localProvider = `http://localhost:8545`;
 

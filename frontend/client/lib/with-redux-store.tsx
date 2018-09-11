@@ -2,7 +2,6 @@ import React from 'react';
 import { AppState } from 'store/reducers';
 import { configureStore } from 'store/configure';
 
-const anyWindow = window as any;
 const isServer = typeof window === 'undefined';
 const __NEXT_REDUX_STORE__ = '__NEXT_REDUX_STORE__';
 
@@ -13,6 +12,7 @@ function getOrCreateStore(initialState?: Partial<AppState>) {
   }
 
   // Create store if unavailable on the client and set it on the window object
+  const anyWindow = window as any;
   if (!anyWindow[__NEXT_REDUX_STORE__]) {
     anyWindow[__NEXT_REDUX_STORE__] = configureStore(initialState);
   }

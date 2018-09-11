@@ -110,7 +110,7 @@ export const SideBlock = styled.div`
   }
 `;
 
-export const BodyText = styled.div<{ isExpanded: boolean }>`
+export const BodyText = styled<{ isExpanded: boolean }, 'div'>('div')`
   max-height: ${(p: any) => (p.isExpanded ? 'none' : '27rem')};
   overflow: hidden;
   font-size: 1.1rem;

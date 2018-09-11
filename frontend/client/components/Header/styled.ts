@@ -7,7 +7,7 @@ export const Placeholder = styled.div`
   height: ${headerHeight};
 `;
 
-export const Header = styled.header<{ isTransparent?: boolean }>`
+export const Header = styled<{ isTransparent: boolean }, 'header'>('header')`
   position: ${(p: any) => (p.isTransparent ? 'absolute' : 'relative')};
   top: 0;
   left: 0;

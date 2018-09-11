@@ -64,7 +64,7 @@ export const Button = styled.a`
   }
 `;
 
-export const FundingOverMessage = styled.div<{ isSuccess: boolean }>`
+export const FundingOverMessage = styled<{ isSuccess: boolean }, 'div'>('div')`
   display: flex;
   justify-content: center;
   align-items: center;
