@@ -1,12 +1,15 @@
 matrix:
   include:
+    # Frontend
     - language: node_js
       node_js: 8.11.4
       install: yarn
       before_script:
         - cd frontend/
       script:
-        - yarn run test
+        - yarn run lint
+        - yarn run tsc
+    # Backend
     - language: python
       python: 3.6
       install: pip install -r requirements/dev.txt
@@ -14,3 +17,11 @@ matrix:
         - cd backend/
       script:
         - flask test
+    # Contracts
+    - language: node_js
+      node_js: 8.11.4
+      install: yarn
+      before_script:
+        - cd contract/
+      script:
+        - yarn run test
