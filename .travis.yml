@@ -14,7 +14,7 @@ matrix:
       python: 3.6
       before_install:
         - cd backend/
-        - cp .envexample .env
+        - cp .env.example .env
       install: pip install -r requirements/dev.txt
       script:
         - flask test
