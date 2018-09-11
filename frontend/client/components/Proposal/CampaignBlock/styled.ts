@@ -64,13 +64,13 @@ export const Button = styled.a`
   }
 `;
 
-export const FundingOverMessage = styled.div`
+export const FundingOverMessage = styled<{ isSuccess: boolean }, 'div'>('div')`
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 0.5rem -1rem 0;
   font-size: 1.15rem;
-  color: ${(p: any) => (p.isSuccess ? '#2ECC71' : '#E74C3C')};
+  color: ${p => (p.isSuccess ? '#2ECC71' : '#E74C3C')};
 
   .anticon {
     font-size: 1.5rem;

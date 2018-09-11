@@ -41,17 +41,17 @@ export const HeroButtons = styled.div`
   }
 `;
 
-export const HeroButton = styled.a`
+export const HeroButton = styled<{ isPrimary?: boolean }, 'a'>('a')`
   height: 3.6rem;
   line-height: 3.6rem;
   width: 16rem;
   padding: 0;
   margin: 0 10px;
-  background: ${(p: any) =>
+  background: ${p =>
     p.isPrimary
       ? 'linear-gradient(-180deg, #3498DB 0%, #2C8ACA 100%)'
       : 'linear-gradient(-180deg, #FFFFFF 0%, #FAFAFA 98%)'};
-  color: ${(p: any) => (p.isPrimary ? '#FFF' : '#4C4C4C')};
+  color: ${p => (p.isPrimary ? '#FFF' : '#4C4C4C')};
   text-align: center;
   font-size: 1.4rem;
   border-radius: 4px;
@@ -61,7 +61,7 @@ export const HeroButton = styled.a`
   &:hover,
   &:focus {
     transform: translateY(-2px);
-    color: ${(p: any) => (p.isPrimary ? '#FFF' : '#4C4C4C')};
+    color: ${p => (p.isPrimary ? '#FFF' : '#4C4C4C')};
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
   }
 

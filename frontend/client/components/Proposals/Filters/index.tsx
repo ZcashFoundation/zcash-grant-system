@@ -1,5 +1,6 @@
 import React from 'react';
 import { Select, Checkbox, Radio, Card, Divider, Affix } from 'antd';
+import { RadioChangeEvent } from 'antd/lib/radio';
 import {
   PROPOSAL_SORT,
   SORT_LABELS,
@@ -73,7 +74,7 @@ export default class ProposalFilters extends React.Component<Props> {
     );
   }
 
-  private handleCategoryChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  private handleCategoryChange = (ev: RadioChangeEvent) => {
     const { filters } = this.props;
     const category = ev.target.value as PROPOSAL_CATEGORY;
     const categories = ev.target.checked
@@ -86,7 +87,7 @@ export default class ProposalFilters extends React.Component<Props> {
     });
   };
 
-  private handleStageChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  private handleStageChange = (ev: RadioChangeEvent) => {
     this.props.handleChangeFilters({
       ...this.props.filters,
       stage: ev.target.value as PROPOSAL_STAGE,

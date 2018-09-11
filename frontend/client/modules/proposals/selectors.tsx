@@ -16,14 +16,6 @@ export function getProposal(
   );
 }
 
-export function getProposalForumURL(
-  state: AppState,
-  proposalId: ProposalWithCrowdFund['proposalId'],
-): string | null {
-  const proposal = getProposal(state, proposalId);
-  return proposal ? proposal.forum_url : null;
-}
-
 export function getProposalComments(
   state: AppState,
   proposalId: ProposalWithCrowdFund['proposalId'],

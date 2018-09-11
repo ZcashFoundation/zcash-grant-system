@@ -2,7 +2,7 @@ import { Store, createStore, applyMiddleware } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
 import thunkMiddleware, { ThunkMiddleware } from 'redux-thunk';
 import promiseMiddleware from 'redux-promise-middleware';
-import rootReducer, { combineInitialState } from './reducers';
+import rootReducer, { AppState, combineInitialState } from './reducers';
 // import rootSaga from './sagas';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -22,8 +22,10 @@ const bindMiddleware = (middleware: MiddleWare[]) => {
   return applyMiddleware(...middleware);
 };
 
-export function configureStore(initialState = combineInitialState): Store {
-  const store: any = createStore(
+export function configureStore(
+  initialState: Partial<AppState> = combineInitialState,
+): Store {
+  const store: Store<AppState> = createStore(
     rootReducer,
     initialState,
     bindMiddleware([sagaMiddleware, thunkMiddleware, promiseMiddleware()]),
