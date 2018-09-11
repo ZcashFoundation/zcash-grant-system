@@ -23,6 +23,9 @@ matrix:
       node_js: 8.11.4
       before_install:
         - cd contract/
-      install: yarn && yarn add global truffle
+      install: yarn && yarn add global truffle ganache-cli
+      before_script:
+        - ganache-cli > /dev/null &
+        - sleep 10
       script:
         - yarn run test
