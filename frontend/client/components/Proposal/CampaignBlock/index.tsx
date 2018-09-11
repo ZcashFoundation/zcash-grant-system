@@ -203,7 +203,10 @@ const withConnect = connect(
   { fundCrowdFund: web3Actions.fundCrowdFund },
 );
 
-const ConnectedCampaignBlock = withRouter(compose(withConnect)(CampaignBlock));
+const ConnectedCampaignBlock = compose<Props, OwnProps>(
+  withRouter,
+  withConnect,
+)(CampaignBlock);
 
 export default (props: OwnProps) => (
   <Web3Container
@@ -215,13 +218,6 @@ export default (props: OwnProps) => (
         </ProposalStyled.Block>
       </ProposalStyled.SideBlock>
     )}
-    render={({ web3, accounts, contracts }) => (
-      <ConnectedCampaignBlock
-        web3={web3}
-        accounts={accounts}
-        contract={contracts[0]}
-        {...props}
-      />
-    )}
+    render={() => <ConnectedCampaignBlock {...props} />}
   />
 );

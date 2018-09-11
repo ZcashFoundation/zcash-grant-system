@@ -22,7 +22,7 @@ export async function getCrowdFundState(
     : await web3.eth.getBalance(crowdFundContract._address);
 
   const isFrozen = await crowdFundContract.methods.frozen().call({ from: account });
-  const trustees = await collectArrayElements(
+  const trustees = await collectArrayElements<string>(
     crowdFundContract.methods.trustees,
     account,
   );

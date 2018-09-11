@@ -1,5 +1,6 @@
 import axios from './axios';
 import { Proposal } from 'modules/proposals/reducers';
+import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/proposals/');
@@ -18,11 +19,12 @@ export function getProposalUpdates(proposalId: number | string) {
 }
 
 export function postProposal(payload: {
-  accountAddress;
-  crowdFundContractAddress;
-  content;
-  title;
-  milestones;
+  accountAddress: string;
+  crowdFundContractAddress: string;
+  content: string;
+  title: string;
+  category: PROPOSAL_CATEGORY;
+  milestones: object[]; // TODO: Type me
 }) {
   return axios.post(`/api/proposals/create`, payload);
 }

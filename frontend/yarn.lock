@@ -747,7 +747,7 @@
   dependencies:
     any-observable "^0.3.0"
 
-"@types/bn.js@4.11.1":
+"@types/bn.js@*", "@types/bn.js@4.11.1":
   version "4.11.1"
   resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-4.11.1.tgz#6fd07b93490ecf0f3501a31ea9cfd330885b10fa"
   dependencies:
@@ -852,6 +852,17 @@
 "@types/showdown@1.7.5":
   version "1.7.5"
   resolved "https://registry.yarnpkg.com/@types/showdown/-/showdown-1.7.5.tgz#91061f2f16d5bdf66b186185999ed675a8908b6a"
+
+"@types/underscore@*":
+  version "1.8.9"
+  resolved "https://registry.yarnpkg.com/@types/underscore/-/underscore-1.8.9.tgz#fef41f800cd23db1b4f262ddefe49cd952d82323"
+
+"@types/web3@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@types/web3/-/web3-1.0.3.tgz#2c5f6905d46eb6e40da8eb7c1e553463862fa599"
+  dependencies:
+    "@types/bn.js" "*"
+    "@types/underscore" "*"
 
 "@zeit/next-css@0.2.0", "@zeit/next-css@^0.2.0":
   version "0.2.0"

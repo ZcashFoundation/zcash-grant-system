@@ -1,11 +1,7 @@
 import React from 'react';
 import moment from 'moment';
 import { Timeline, Spin, Icon } from 'antd';
-import {
-  ProposalWithCrowdFund,
-  Milestone,
-  MILESTONE_STATE,
-} from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund, MILESTONE_STATE } from 'modules/proposals/reducers';
 import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import * as Styled from './styled';
 
@@ -14,7 +10,7 @@ interface OwnProps {
 }
 
 interface Web3Props {
-  web3: any;
+  web3: Web3RenderProps['web3'];
 }
 
 type Props = OwnProps & Web3Props;

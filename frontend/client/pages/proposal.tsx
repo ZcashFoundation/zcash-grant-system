@@ -11,7 +11,7 @@ class ProposalPage extends Component<RouteProps> {
     super(props);
   }
   render() {
-    const proposalId = this.props.router.query.id;
+    const proposalId = this.props.router.query.id as string;
     return (
       <Web3Page
         title={`Proposal ${proposalId}`}

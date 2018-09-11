@@ -16,7 +16,7 @@ export const Form = styled.form`
   }
 `;
 
-export const Input = styled.input`
+export const Input = styled<{ isSuccess?: boolean }, 'input'>('input')`
   display: block;
   height: ${inputHeight};
   width: 100%;
@@ -60,7 +60,9 @@ export const Input = styled.input`
   }
 `;
 
-export const Button = styled.button`
+export const Button = styled<{ isLoading?: boolean; isSuccess?: boolean }, 'button'>(
+  'button',
+)`
   display: block;
   position: absolute;
   top: 50%;
