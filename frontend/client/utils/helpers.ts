@@ -1,5 +1,3 @@
-import { Milestone } from 'modules/proposals/reducers';
-
 export function isNumeric(n: any) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }

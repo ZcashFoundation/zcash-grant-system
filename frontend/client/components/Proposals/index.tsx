@@ -49,6 +49,8 @@ const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
 
 interface StateProps {
   proposals: ReturnType<typeof getProposals>;
+  proposalsError: AppState['proposal']['proposalsError'];
+  isFetchingProposals: AppState['proposal']['isFetchingProposals'];
 }
 
 interface DispatchProps {
@@ -185,16 +187,6 @@ const withConnect = connect(
 
 const ConnectedProposals = compose(withConnect)(Proposals);
 
-export default props => (
-  <Web3Container
-    renderLoading={() => <Spin />}
-    render={({ web3, accounts, contracts }) => (
-      <ConnectedProposals
-        web3={web3}
-        accounts={accounts}
-        contract={contracts[0]}
-        {...props}
-      />
-    )}
-  />
+export default () => (
+  <Web3Container renderLoading={() => <Spin />} render={() => <ConnectedProposals />} />
 );

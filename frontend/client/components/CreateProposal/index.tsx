@@ -1,6 +1,6 @@
 // TODO: Make each section its own page. Reduce size of this component!
 import React from 'react';
-import Web3Container from 'lib/Web3Container';
+import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
@@ -16,6 +16,23 @@ import { computePercentage } from 'utils/helpers';
 import { getAmountError } from 'utils/validators';
 import MarkdownEditor from 'components/MarkdownEditor';
 import * as Styled from './styled';
+
+interface StateProps {
+  crowdFundLoading: AppState['web3']['crowdFundLoading'];
+  crowdFundError: AppState['web3']['crowdFundError'];
+  crowdFundCreatedAddress: AppState['web3']['crowdFundCreatedAddress'];
+}
+
+interface DispatchProps {
+  createCrowdFund: typeof web3Actions['createCrowdFund'];
+}
+
+interface Web3Props {
+  web3: Web3RenderProps['web3'];
+  contract: Web3RenderProps['contracts'][0];
+}
+
+type Props = StateProps & DispatchProps & Web3Props;
 
 interface Errors {
   title?: string;
@@ -61,7 +78,7 @@ function milestoneToMilestoneAmount(milestone: Milestone, raiseGoal: number) {
   return computePercentage(raiseGoal, milestone.payoutPercent);
 }
 
-class CreateProposal extends React.Component<any, State> {
+class CreateProposal extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = { ...DEFAULT_STATE };
@@ -172,7 +189,6 @@ class CreateProposal extends React.Component<any, State> {
       durationInMinutes: deadline,
       milestoneVotingPeriodInMinutes: milestoneDeadline,
       immediateFirstMilestonePayout,
-      category,
     };
 
     createCrowdFund(contract, contractData, backendData);
@@ -516,7 +532,7 @@ const withConnect = connect(
   mapDispatchToProps,
 );
 
-const ConnectedCreateProposal = compose(withConnect)(CreateProposal);
+const ConnectedCreateProposal = compose<Props, Web3Props>(withConnect)(CreateProposal);
 
 export default () => (
   <Web3Container

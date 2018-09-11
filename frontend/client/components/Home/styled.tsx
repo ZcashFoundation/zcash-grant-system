@@ -41,7 +41,7 @@ export const HeroButtons = styled.div`
   }
 `;
 
-export const HeroButton = styled.a`
+export const HeroButton = styled.a<{ isPrimary?: boolean }>`
   height: 3.6rem;
   line-height: 3.6rem;
   width: 16rem;

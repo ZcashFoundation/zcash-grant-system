@@ -126,12 +126,15 @@ function mapDispatchToProps(dispatch: Dispatch) {
   return bindActionCreators({ ...proposalActions, ...web3Actions }, dispatch);
 }
 
-const withConnect = connect(
+const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
   mapStateToProps,
   mapDispatchToProps,
 );
 
-const ConnectedProposal = withRouter(compose(withConnect)(ProposalDetail));
+const ConnectedProposal = compose<Props, OwnProps>(
+  withRouter,
+  withConnect,
+)(ProposalDetail);
 
 export default (props: OwnProps) => (
   <Web3Container
@@ -144,13 +147,6 @@ export default (props: OwnProps) => (
         </Styled.Top>
       </Styled.Container>
     )}
-    render={({ web3, accounts, contracts }) => (
-      <ConnectedProposal
-        web3={web3}
-        accounts={accounts}
-        contract={contracts[0]}
-        {...props}
-      />
-    )}
+    render={() => <ConnectedProposal {...props} />}
   />
 );

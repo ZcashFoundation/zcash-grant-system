@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactMde, { ReactMdeTypes, DraftUtil } from 'react-mde';
+import ReactMde, { ReactMdeTypes } from 'react-mde';
 import Showdown from 'showdown';
 
 interface Props {

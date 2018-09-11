@@ -80,8 +80,8 @@ export const FundingRaised = styled.div`
   }
 `;
 
-export const FundingPercent = styled.div`
-  color: ${(p: any) => (p.isFunded ? '#2ecc71' : 'inherit')};
+export const FundingPercent = styled.div<{ isFunded: boolean }>`
+  color: ${p => (p.isFunded ? '#2ecc71' : 'inherit')};
   font-size: 0.7rem;
   padding-left: 0.25rem;
 `;

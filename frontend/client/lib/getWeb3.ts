@@ -1,7 +1,13 @@
 import Web3 from 'web3';
 
-const resolveWeb3 = (resolve, reject) => {
-  let { web3 } = window;
+interface Web3Window extends Window {
+  web3?: Web3;
+}
+
+const web3Window = window as Web3Window;
+
+const resolveWeb3 = (resolve: (web3: Web3) => void, reject: (err: Error) => void) => {
+  let { web3 } = web3Window;
   const alreadyInjected = typeof web3 !== 'undefined'; // i.e. Mist/Metamask
   const localProvider = `http://localhost:8545`;
 

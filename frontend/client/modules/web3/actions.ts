@@ -5,6 +5,10 @@ import { postProposal } from 'api/api';
 import getContract, { WrongNetworkError } from 'lib/getContract';
 import { sleep } from 'utils/helpers';
 import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
+import { PROPOSAL_CATEGORY } from 'api/constants';
+import { AppState } from 'store/reducers';
+
+type GetState = () => AppState;
 
 function handleWrongNetworkError(dispatch: (action: any) => void) {
   return (err: Error) => {
@@ -27,11 +31,12 @@ export function setWeb3() {
 }
 
 export type TSetContract = typeof setContract;
-export function setContract(json, deployedAddress?) {
-  return (dispatch: Dispatch<any>, getState: any) => {
+export function setContract(json: any, deployedAddress?: string) {
+  return (dispatch: Dispatch<any>, getState: GetState) => {
     const state = getState();
     if (state.web3.web3) {
-      dispatch({
+      // TODO: Type me as promise dispatch
+      (dispatch as any)({
         type: types.CONTRACT,
         payload: getContract(state.web3.web3, json, deployedAddress),
       }).catch(handleWrongNetworkError(dispatch));
@@ -48,7 +53,7 @@ export function setContract(json, deployedAddress?) {
 
 export type TSetAccounts = typeof setAccounts;
 export function setAccounts() {
-  return (dispatch: Dispatch<any>, getState: any) => {
+  return (dispatch: Dispatch<any>, getState: GetState) => {
     const state = getState();
     if (state.web3.web3) {
       dispatch({ type: types.ACCOUNTS_PENDING });
@@ -82,9 +87,39 @@ export function setAccounts() {
   };
 }
 
+// TODO: Move these to a better place?
+interface MilestoneData {
+  title: string;
+  description: string;
+  date: string;
+  payoutPercent: number;
+  immediatePayout: boolean;
+}
+
+interface ProposalContractData {
+  ethAmount: number | string; // TODO: BigNumber
+  payOutAddress: string;
+  trusteesAddresses: string[];
+  milestoneAmounts: number[] | string[]; // TODO: BigNumber
+  milestones: MilestoneData[];
+  durationInMinutes: number;
+  milestoneVotingPeriodInMinutes: number;
+  immediateFirstMilestonePayout: boolean;
+}
+
+interface ProposalBackendData {
+  title: string;
+  content: string;
+  category: PROPOSAL_CATEGORY;
+}
+
 export type TCreateCrowdFund = typeof createCrowdFund;
-export function createCrowdFund(CrowdFundFactoryContract, contractData, backendData) {
-  return async (dispatch: Dispatch<any>, getState) => {
+export function createCrowdFund(
+  CrowdFundFactoryContract: any,
+  contractData: ProposalContractData,
+  backendData: ProposalBackendData,
+) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.CROWD_FUND_PENDING,
     });
@@ -117,7 +152,7 @@ export function createCrowdFund(CrowdFundFactoryContract, contractData, backendD
           immediateFirstMilestonePayout,
         )
         .send({ from: accounts[0] })
-        .once('confirmation', async function(confNumber, receipt) {
+        .once('confirmation', async (_: any, receipt: any) => {
           const crowdFundContractAddress =
             receipt.events.ContractCreated.returnValues.newAddress;
           await postProposal({
@@ -132,7 +167,8 @@ export function createCrowdFund(CrowdFundFactoryContract, contractData, backendD
             type: types.CROWD_FUND_CREATED,
             payload: crowdFundContractAddress,
           });
-          dispatch(fetchProposals()).catch(handleWrongNetworkError(dispatch));
+          // TODO: Type me as promise dispatch
+          (dispatch as any)(fetchProposals()).catch(handleWrongNetworkError(dispatch));
         });
     } catch (err) {
       dispatch({
@@ -145,8 +181,8 @@ export function createCrowdFund(CrowdFundFactoryContract, contractData, backendD
 }
 
 export type TRequestMilestonePayout = typeof requestMilestonePayout;
-export function requestMilestonePayout(crowdFundContract, index) {
-  return async (dispatch: Dispatch<any>, getState) => {
+export function requestMilestonePayout(crowdFundContract: any, index: number) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.REQUEST_MILESTONE_PAYOUT_PENDING,
     });
@@ -156,8 +192,7 @@ export function requestMilestonePayout(crowdFundContract, index) {
       await crowdFundContract.methods
         .requestMilestonePayout(index)
         .send({ from: account })
-        .once('confirmation', async function(confNumber, receipt) {
-          console.info('Milestone payout request confirmed', { confNumber, receipt });
+        .once('confirmation', async () => {
           await sleep(5000);
           await dispatch(fetchProposal(crowdFundContract._address));
           dispatch({
@@ -175,8 +210,8 @@ export function requestMilestonePayout(crowdFundContract, index) {
 }
 
 export type TPayMilestonePayout = typeof payMilestonePayout;
-export function payMilestonePayout(crowdFundContract, index) {
-  return async (dispatch: Dispatch<any>, getState) => {
+export function payMilestonePayout(crowdFundContract: any, index: number) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.PAY_MILESTONE_PAYOUT_PENDING,
     });
@@ -186,7 +221,7 @@ export function payMilestonePayout(crowdFundContract, index) {
       await crowdFundContract.methods
         .payMilestonePayout(index)
         .send({ from: account })
-        .once('confirmation', async function(confNumber, receipt) {
+        .once('confirmation', async () => {
           await sleep(5000);
           await dispatch(fetchProposal(crowdFundContract._address));
           dispatch({
@@ -204,9 +239,10 @@ export function payMilestonePayout(crowdFundContract, index) {
   };
 }
 
+// TODO: BigNumber me
 export type TSendTransaction = typeof fundCrowdFund;
-export function fundCrowdFund(crowdFundContract, value) {
-  return async (dispatch: Dispatch<any>, getState) => {
+export function fundCrowdFund(crowdFundContract: any, value: number | string) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.SEND_PENDING,
     });
@@ -218,7 +254,7 @@ export function fundCrowdFund(crowdFundContract, value) {
       await crowdFundContract.methods
         .contribute()
         .send({ from: account, value: web3.utils.toWei(String(value), 'ether') })
-        .once('confirmation', async function(confNumber, receipt) {
+        .once('confirmation', async () => {
           await sleep(5000);
           await dispatch(fetchProposal(crowdFundContract._address));
           dispatch({
@@ -241,7 +277,7 @@ export function voteMilestonePayout(
   index: number,
   vote: boolean,
 ) {
-  return async (dispatch: Dispatch<any>, getState: any) => {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({ type: types.VOTE_AGAINST_MILESTONE_PAYOUT_PENDING });
     const state = getState();
     const account = state.web3.accounts[0];

@@ -1,8 +1,6 @@
 import { AppState } from 'store/reducers';
 
-export function findCrowdFund(state: AppState, contractAddress) {
-  const { crowdFunds } = state.web3;
-  return crowdFunds.find(crowdFund => {
-    return crowdFund.crowdFundContract._address === contractAddress;
-  });
+export function findContract(state: AppState, contractAddress: string) {
+  const { contracts } = state.web3;
+  return contracts.find(contract => contract._address === contractAddress);
 }
