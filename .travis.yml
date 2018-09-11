@@ -3,25 +3,25 @@ matrix:
     # Frontend
     - language: node_js
       node_js: 8.11.4
-      install: yarn
-      before_script:
+      before_install:
         - cd frontend/
+      install: yarn
       script:
         - yarn run lint
         - yarn run tsc
     # Backend
     - language: python
       python: 3.6
-      install: pip install -r requirements/dev.txt
-      before_script:
+      before_install:
         - cd backend/
+      install: pip install -r requirements/dev.txt
       script:
         - flask test
     # Contracts
     - language: node_js
       node_js: 8.11.4
-      install: yarn
-      before_script:
+      before_install:
         - cd contract/
+      install: yarn
       script:
         - yarn run test
