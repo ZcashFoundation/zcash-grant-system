@@ -2,6 +2,7 @@ import { Store, createStore, applyMiddleware } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
 import thunkMiddleware, { ThunkMiddleware } from 'redux-thunk';
 import promiseMiddleware from 'redux-promise-middleware';
+import { composeWithDevTools } from 'redux-devtools-extension';
 import rootReducer, { AppState, combineInitialState } from './reducers';
 // import rootSaga from './sagas';
 
@@ -15,11 +16,9 @@ const bindMiddleware = (middleware: MiddleWare[]) => {
     const logger = createLogger({
       collapsed: true,
     });
-    const allMiddleware = [...middleware, logger];
-    const { composeWithDevTools } = require('redux-devtools-extension');
-    return composeWithDevTools(applyMiddleware(...allMiddleware));
+    middleware = [...middleware, logger];
   }
-  return applyMiddleware(...middleware);
+  return composeWithDevTools(applyMiddleware(...middleware));
 };
 
 export function configureStore(
