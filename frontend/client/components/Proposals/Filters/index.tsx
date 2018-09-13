@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Checkbox, Radio, Card, Divider, Affix } from 'antd';
+import { Select, Checkbox, Radio, Card, Divider } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import {
   PROPOSAL_SORT,
@@ -27,7 +27,7 @@ export default class ProposalFilters extends React.Component<Props> {
     const { sort, filters, handleChangeSort } = this.props;
 
     return (
-      <Affix offsetTop={20}>
+      <div>
         <Card title="Sort">
           <Select onChange={handleChangeSort} value={sort} style={{ width: '100%' }}>
             {Object.keys(PROPOSAL_SORT).map((s: PROPOSAL_SORT) => (
@@ -70,7 +70,7 @@ export default class ProposalFilters extends React.Component<Props> {
             </div>
           ))}
         </Card>
-      </Affix>
+      </div>
     );
   }
 
