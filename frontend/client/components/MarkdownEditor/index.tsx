@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMde, { ReactMdeTypes } from 'react-mde';
-import Showdown from 'showdown';
+import { convert } from 'utils/markdown';
+import * as Styled from './styled';
 
 interface Props {
   onChange(markdown: string): void;
@@ -11,13 +12,9 @@ interface State {
 }
 
 export default class MarkdownEditor extends React.PureComponent<Props, State> {
-  converter: Showdown.Converter;
-
-  constructor(props: Props) {
-    super(props);
-    this.state = { mdeState: null };
-    this.converter = new Showdown.Converter({ simplifiedAutoLink: true });
-  }
+  state: State = {
+    mdeState: null,
+  };
 
   handleChange = (mdeState: ReactMdeTypes.MdeState) => {
     this.setState({ mdeState });
@@ -25,17 +22,19 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
   };
 
   generatePreview = (md: string) => {
-    return Promise.resolve(this.converter.makeHtml(md));
+    return Promise.resolve(convert(md));
   };
 
   render() {
     return (
-      <ReactMde
-        onChange={this.handleChange}
-        editorState={this.state.mdeState}
-        generateMarkdownPreview={this.generatePreview}
-        layout="tabbed"
-      />
+      <Styled.Container>
+        <ReactMde
+          onChange={this.handleChange}
+          editorState={this.state.mdeState}
+          generateMarkdownPreview={this.generatePreview}
+          layout="tabbed"
+        />
+      </Styled.Container>
     );
   }
 }

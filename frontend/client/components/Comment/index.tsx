@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import Markdown from 'react-markdown';
+import Markdown from 'components/Markdown';
 import { Comment as IComment } from 'modules/proposals/reducers';
 import * as Styled from './styled';
 

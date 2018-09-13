@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Spin } from 'antd';
-import Markdown from 'react-markdown';
+import Markdown from 'components/Markdown';
 import moment from 'moment';
 import { AppState } from 'store/reducers';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';

@@ -94,7 +94,6 @@
     "react-document-title": "^2.0.3",
     "react-dom": "^16.4.0",
     "react-headroom": "^2.2.2",
-    "react-markdown": "3.4.1",
     "react-mde": "^5.8.0",
     "react-redux": "^5.0.7",
     "recompose": "^0.27.1",
@@ -117,7 +116,8 @@
     "typescript": "3.0.3",
     "url-loader": "^1.0.1",
     "web3": "^1.0.0-beta.34",
-    "webpack-bundle-analyzer": "^2.13.1"
+    "webpack-bundle-analyzer": "^2.13.1",
+    "xss": "1.0.3"
   },
   "devDependencies": {
     "@types/bn.js": "4.11.1",

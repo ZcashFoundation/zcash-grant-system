@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { markdownStyles } from 'utils/markdown';
 
 const collapseWidth = '1100px';
 const singleColWidth = '600px';
@@ -114,43 +115,7 @@ export const BodyText = styled<{ isExpanded: boolean }, 'div'>('div')`
   max-height: ${(p: any) => (p.isExpanded ? 'none' : '27rem')};
   overflow: hidden;
   font-size: 1.1rem;
-
-  h1 {
-    font-size: 2rem;
-  }
-  h2 {
-    font-size: 1.8rem;
-  }
-  h3 {
-    font-size: 1.6rem;
-  }
-  h4 {
-    font-size: 1.4rem;
-  }
-  h5 {
-    font-size: 1.2rem;
-  }
-  h6 {
-    font-size: 1.1rem;
-  }
-
-  ul,
-  ol {
-    padding-left: 30px;
-    font-size: 1.05rem;
-  }
-
-  ul {
-    list-style: circle;
-  }
-
-  ol {
-    list-style: decimal;
-  }
-
-  img {
-    max-width: 100%;
-  }
+  ${markdownStyles};
 `;
 
 export const BodyExpand = styled.button`

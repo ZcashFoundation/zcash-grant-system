@@ -1,7 +1,7 @@
 import React from 'react';
 import { compose } from 'recompose';
 import { connect } from 'react-redux';
-import ReactMarkdown from 'react-markdown';
+import Markdown from 'components/Markdown';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
@@ -66,11 +66,7 @@ class ProposalDetail extends React.Component<Props, State> {
               </Styled.PageTitle>
               <Styled.Block style={{ flexGrow: 1 }}>
                 <Styled.BodyText isExpanded={isBodyExpanded}>
-                  {proposal ? (
-                    <ReactMarkdown source={proposal.body} />
-                  ) : (
-                    <Spin size="large" />
-                  )}
+                  {proposal ? <Markdown source={proposal.body} /> : <Spin size="large" />}
                 </Styled.BodyText>
                 {proposal &&
                   !isBodyExpanded && (
