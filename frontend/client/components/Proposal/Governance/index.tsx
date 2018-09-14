@@ -2,6 +2,7 @@ import React from 'react';
 import GovernanceMilestones from './Milestones';
 import GovernanceRefunds from './Refunds';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import Placeholder from 'components/Placeholder';
 import * as Styled from './styled';
 
 interface Props {
@@ -14,10 +15,14 @@ export default class ProposalGovernance extends React.Component<Props> {
 
     if (!proposal.crowdFund.isRaiseGoalReached) {
       return (
-        <p>
-          Milestone history and voting will be displayed here once the project has been
-          funded.
-        </p>
+        <Placeholder
+          style={{ minHeight: '220px' }}
+          title="Governance isn’t available yet"
+          subtitle={`
+            Milestone history and voting will be displayed here once the
+            project has been funded
+          `}
+        />
       );
     }
 

@@ -17,9 +17,11 @@ export async function getCrowdFundState(
   const isRaiseGoalReached = await crowdFundContract.methods
     .isRaiseGoalReached()
     .call({ from: account });
-  const funded = isRaiseGoalReached
-    ? target
-    : await web3.eth.getBalance(crowdFundContract._address);
+  const balance = await web3.eth.getBalance(crowdFundContract._address);
+  const funded = isRaiseGoalReached ? target : balance;
+  const amountVotingForRefund = isRaiseGoalReached
+    ? await crowdFundContract.methods.amountVotingForRefund().call({ from: account })
+    : '0';
 
   const isFrozen = await crowdFundContract.methods.frozen().call({ from: account });
   const trustees = await collectArrayElements<string>(
@@ -115,8 +117,13 @@ export async function getCrowdFundState(
 
   return {
     immediateFirstMilestonePayout,
+    // TODO: Bignumber these 4
+    balance: parseFloat(web3.utils.fromWei(String(balance), 'ether')),
     funded: parseFloat(web3.utils.fromWei(String(funded), 'ether')),
     target: parseFloat(web3.utils.fromWei(String(target), 'ether')),
+    amountVotingForRefund: parseFloat(
+      web3.utils.fromWei(String(amountVotingForRefund), 'ether'),
+    ),
     beneficiary,
     deadline,
     trustees,

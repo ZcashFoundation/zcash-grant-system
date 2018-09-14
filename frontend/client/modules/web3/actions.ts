@@ -301,3 +301,71 @@ export function voteMilestonePayout(
     }
   };
 }
+
+export function voteRefund(crowdFundContract: any, vote: boolean) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
+    dispatch({ type: types.VOTE_REFUND_PENDING });
+    const state = getState();
+    const account = state.web3.accounts[0];
+
+    try {
+      await crowdFundContract.methods
+        .voteRefund(vote)
+        .send({ from: account })
+        .once('confirmation', async () => {
+          await sleep(5000);
+          await dispatch(fetchProposal(crowdFundContract._address));
+          dispatch({ type: types.VOTE_REFUND_FULFILLED });
+        });
+    } catch (err) {
+      dispatch({
+        type: types.VOTE_REFUND_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}
+
+export function withdrawRefund(crowdFundContract: any, address: string) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
+    dispatch({ type: types.WITHDRAW_REFUND_PENDING });
+    const state = getState();
+    const account = state.web3.accounts[0];
+
+    try {
+      let isFrozen = await crowdFundContract.methods.frozen().call({ from: account });
+      if (!isFrozen) {
+        await new Promise(resolve => {
+          crowdFundContract.methods
+            .refund()
+            .send({ from: account })
+            .once('confirmation', async () => {
+              await sleep(5000);
+              isFrozen = await crowdFundContract.methods.frozen().call({ from: account });
+              resolve();
+            });
+        });
+      }
+
+      if (!isFrozen) {
+        throw new Error('Proposal isn’t in a refundable state yet.');
+      }
+
+      await crowdFundContract.methods
+        .withdraw(address)
+        .send({ from: account })
+        .once('confirmation', async () => {
+          await sleep(5000);
+          await dispatch(fetchProposal(crowdFundContract._address));
+          dispatch({ type: types.WITHDRAW_REFUND_FULFILLED });
+        });
+    } catch (err) {
+      dispatch({
+        type: types.WITHDRAW_REFUND_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}

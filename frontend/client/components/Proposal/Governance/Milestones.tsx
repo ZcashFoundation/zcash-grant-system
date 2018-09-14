@@ -187,30 +187,15 @@ class Milestones extends React.Component<Props> {
       <>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {showVoteProgress && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                margin: '0 2rem 0.5rem 0',
-                textAlign: 'center',
-              }}
-            >
+            <Styled.ProgressContainer>
               <Progress
                 type="dashboard"
                 percent={activeVoteMilestone.percentAgainstPayout}
                 format={p => `${p}%`}
                 status="exception"
               />
-              <div
-                style={{
-                  whiteSpace: 'nowrap',
-                  opacity: 0.6,
-                  fontSize: '0.75rem',
-                }}
-              >
-                voted against payout
-              </div>
-            </div>
+              <Styled.ProgressText>voted against payout</Styled.ProgressText>
+            </Styled.ProgressContainer>
           )}
           <div>
             {content}

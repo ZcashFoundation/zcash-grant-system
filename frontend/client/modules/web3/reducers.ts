@@ -27,6 +27,9 @@ export interface Web3State {
 
   isMilestoneActionPending: boolean;
   milestoneActionError: null | string;
+
+  isRefundActionPending: boolean;
+  refundActionError: null | string;
 }
 
 export const INITIAL_STATE: Web3State = {
@@ -52,6 +55,9 @@ export const INITIAL_STATE: Web3State = {
 
   isMilestoneActionPending: false,
   milestoneActionError: null,
+
+  isRefundActionPending: false,
+  refundActionError: null,
 };
 
 function addContract(state: Web3State, payload: Contract) {
@@ -196,6 +202,27 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
         ...state,
         milestoneActionError: payload,
         isMilestoneActionPending: false,
+      };
+
+    case types.VOTE_REFUND_PENDING:
+    case types.WITHDRAW_REFUND_PENDING:
+      return {
+        ...state,
+        isRefundActionPending: true,
+        refundActionError: null,
+      };
+    case types.VOTE_REFUND_FULFILLED:
+    case types.WITHDRAW_REFUND_FULFILLED:
+      return {
+        ...state,
+        isRefundActionPending: false,
+      };
+    case types.VOTE_REFUND_REJECTED:
+    case types.WITHDRAW_REFUND_REJECTED:
+      return {
+        ...state,
+        refundActionError: payload,
+        isRefundActionPending: false,
       };
 
     default:

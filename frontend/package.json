@@ -12,7 +12,7 @@
     "tsc": "tsc",
     "link-contracts": "cd client/lib && ln -s ../../build/contracts contracts",
     "ganache": "ganache-cli -b 5",
-    "truffle": "truffle exec ./bin/init-truffle.js && truffle console"
+    "truffle": "truffle exec ./bin/init-truffle.js && cd client/lib/contracts && truffle console"
   },
   "husky": {
     "hooks": {

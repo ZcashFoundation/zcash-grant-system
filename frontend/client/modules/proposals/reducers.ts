@@ -16,6 +16,7 @@ export interface Contributor {
   address: string;
   contributionAmount: string;
   refundVote: boolean;
+  refunded: boolean;
   proportionalContribution: string;
   milestoneNoVotes: boolean[];
 }
@@ -52,8 +53,10 @@ export interface ProposalMilestone extends Milestone {
 
 export interface CrowdFund {
   immediateFirstMilestonePayout: boolean;
+  balance: number;
   funded: number;
   target: number;
+  amountVotingForRefund: number;
   beneficiary: string;
   deadline: number;
   trustees: string[];
