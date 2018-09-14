@@ -37,22 +37,39 @@ type Props = StateProps & DispatchProps & OwnProps;
 
 interface State {
   isBodyExpanded: boolean;
+  isBodyOverflowing: boolean;
+  bodyId: string;
 }
 
 class ProposalDetail extends React.Component<Props, State> {
   state: State = {
     isBodyExpanded: false,
+    isBodyOverflowing: false,
+    bodyId: `body-${Math.floor(Math.random() * 1000000)}`,
   };
 
   componentDidMount() {
     if (!this.props.proposal) {
       this.props.fetchProposal(this.props.proposalId);
     }
+    window.addEventListener('resize', this.checkBodyOverflow);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.checkBodyOverflow);
+  }
+
+  componentDidUpdate() {
+    if (this.props.proposal) {
+      this.checkBodyOverflow();
+    }
   }
 
   render() {
     const { proposal } = this.props;
-    const { isBodyExpanded } = this.state;
+    const { isBodyExpanded, isBodyOverflowing, bodyId } = this.state;
+    const showExpand = !isBodyExpanded && isBodyOverflowing;
+
     if (!proposal) {
       return <Spin />;
     } else {
@@ -65,15 +82,14 @@ class ProposalDetail extends React.Component<Props, State> {
                 {proposal ? proposal.title : <span>&nbsp;</span>}
               </Styled.PageTitle>
               <Styled.Block style={{ flexGrow: 1 }}>
-                <Styled.BodyText isExpanded={isBodyExpanded}>
+                <Styled.BodyText id={bodyId} isExpanded={isBodyExpanded}>
                   {proposal ? <Markdown source={proposal.body} /> : <Spin size="large" />}
                 </Styled.BodyText>
-                {proposal &&
-                  !isBodyExpanded && (
-                    <Styled.BodyExpand onClick={this.expandBody}>
-                      Read more <Icon type="arrow-down" style={{ fontSize: '0.7rem' }} />
-                    </Styled.BodyExpand>
-                  )}
+                {showExpand && (
+                  <Styled.BodyExpand onClick={this.expandBody}>
+                    Read more <Icon type="arrow-down" style={{ fontSize: '0.7rem' }} />
+                  </Styled.BodyExpand>
+                )}
               </Styled.Block>
             </Styled.TopMain>
             <Styled.TopSide>
@@ -109,6 +125,25 @@ class ProposalDetail extends React.Component<Props, State> {
 
   private expandBody = () => {
     this.setState({ isBodyExpanded: true });
+  };
+
+  private checkBodyOverflow = () => {
+    const { isBodyExpanded, bodyId, isBodyOverflowing } = this.state;
+    if (isBodyExpanded) {
+      return;
+    }
+
+    // Use id instead of ref because styled component ref doesn't return html element
+    const bodyEl = document.getElementById(bodyId);
+    if (!bodyEl) {
+      return;
+    }
+
+    if (isBodyOverflowing && bodyEl.scrollHeight <= bodyEl.clientHeight) {
+      this.setState({ isBodyOverflowing: false });
+    } else if (!isBodyOverflowing && bodyEl.scrollHeight > bodyEl.clientHeight) {
+      this.setState({ isBodyOverflowing: true });
+    }
   };
 }
 
