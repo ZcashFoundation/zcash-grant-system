@@ -18,5 +18,6 @@
     "baseUrl": "./client",
     "lib": ["dom", "es2016"]
   },
-  "include": ["./client", "node_modules/@types", "typings"]
+  "include": ["./client", "node_modules/@types", "typings"],
+  "exclude": ["./client/build", "./client/static"]
 }
