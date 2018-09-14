@@ -19,8 +19,8 @@ const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
   [PROPOSAL_SORT.OLDEST]: (p1, p2) => p1.dateCreated - p2.dateCreated,
   [PROPOSAL_SORT.LEAST_FUNDED]: (p1, p2) => {
     // First show sub-100% funding
-    const p1Pct = p1.crowdFund.funded / p1.crowdFund.target;
-    const p2Pct = p2.crowdFund.funded / p2.crowdFund.target;
+    const p1Pct = p1.crowdFund.percentFunded;
+    const p2Pct = p2.crowdFund.percentFunded;
     if (p1Pct < 1 && p2Pct >= 1) {
       return -1;
     } else if (p2Pct < 1 && p1Pct >= 1) {
@@ -29,12 +29,12 @@ const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
       return p1Pct - p2Pct;
     }
     // Then show most overall funds
-    return p1.crowdFund.funded - p2.crowdFund.funded;
+    return p1.crowdFund.funded.cmp(p2.crowdFund.funded);
   },
   [PROPOSAL_SORT.MOST_FUNDED]: (p1, p2) => {
     // First show sub-100% funding
-    const p1Pct = p1.crowdFund.funded / p1.crowdFund.target;
-    const p2Pct = p2.crowdFund.funded / p2.crowdFund.target;
+    const p1Pct = p1.crowdFund.percentFunded;
+    const p2Pct = p2.crowdFund.percentFunded;
     if (p1Pct < 1 && p2Pct >= 1) {
       return 1;
     } else if (p2Pct < 1 && p1Pct >= 1) {
@@ -43,7 +43,7 @@ const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
       return p2Pct - p1Pct;
     }
     // Then show most overall funds
-    return p2.crowdFund.funded - p1.crowdFund.funded;
+    return p2.crowdFund.funded.cmp(p1.crowdFund.funded);
   },
 };
 

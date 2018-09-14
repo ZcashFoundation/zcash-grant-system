@@ -1,3 +1,4 @@
+import Web3 from 'web3';
 import types from './types';
 
 interface Contract {
@@ -5,7 +6,7 @@ interface Contract {
 }
 
 export interface Web3State {
-  web3: any | null;
+  web3: Web3 | null;
   isMissingWeb3: boolean;
   isWrongNetwork: boolean;
   isWeb3Locked: boolean;

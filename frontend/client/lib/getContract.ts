@@ -1,7 +1,9 @@
+import Web3 from 'web3';
+
 export class WrongNetworkError extends Error {}
 
 const getContractInstance = async (
-  web3: any,
+  web3: Web3,
   contractDefinition: any,
   deployedAddress?: string,
 ) => {

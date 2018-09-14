@@ -10,8 +10,9 @@ import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { web3Actions } from 'modules/web3';
 import { withRouter } from 'next/router';
-import Web3Container from 'lib/Web3Container';
+import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import ShortAddress from 'components/ShortAddress';
+import UnitDisplay from 'components/UnitDisplay';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
 
@@ -27,7 +28,11 @@ interface ActionProps {
   fundCrowdFund: typeof web3Actions['fundCrowdFund'];
 }
 
-type Props = OwnProps & StateProps & ActionProps;
+interface Web3Props {
+  web3: Web3RenderProps['web3'];
+}
+
+type Props = OwnProps & StateProps & ActionProps & Web3Props;
 
 interface State {
   amountToRaise: string;
@@ -52,15 +57,17 @@ class CampaignBlock extends React.Component<Props, State> {
       return;
     }
 
-    const { crowdFund } = this.props.proposal;
-    const remainingTarget = crowdFund.target - crowdFund.funded;
+    const { proposal, web3 } = this.props;
+    const { crowdFund } = proposal;
+    const remainingTarget = crowdFund.target.sub(crowdFund.funded);
     const amount = parseFloat(value);
     let amountError = null;
 
     if (Number.isNaN(amount)) {
       // They're entering some garbage, they’ll work it out
     } else {
-      amountError = getAmountError(amount, remainingTarget);
+      const remainingEthNum = parseFloat(web3.utils.fromWei(remainingTarget, 'ether'));
+      amountError = getAmountError(amount, remainingEthNum);
     }
 
     this.setState({ amountToRaise: value, amountError });
@@ -74,7 +81,7 @@ class CampaignBlock extends React.Component<Props, State> {
   };
 
   render() {
-    const { proposal, sendLoading } = this.props;
+    const { proposal, sendLoading, web3 } = this.props;
     const { amountToRaise, amountError } = this.state;
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
@@ -83,6 +90,9 @@ class CampaignBlock extends React.Component<Props, State> {
       const isFundingOver =
         crowdFund.isRaiseGoalReached || crowdFund.deadline < Date.now();
       const isDisabled = isFundingOver || !!amountError || !amountFloat;
+      const remainingEthNum = parseFloat(
+        web3.utils.fromWei(crowdFund.target.sub(crowdFund.funded), 'ether'),
+      );
 
       content = (
         <React.Fragment>
@@ -117,7 +127,8 @@ class CampaignBlock extends React.Component<Props, State> {
           <Styled.Info>
             <Styled.InfoLabel>Funding</Styled.InfoLabel>
             <Styled.InfoValue>
-              {crowdFund.funded} / {crowdFund.target} ETH
+              <UnitDisplay value={crowdFund.funded} /> /{' '}
+              <UnitDisplay value={crowdFund.target} symbol="ETH" />
             </Styled.InfoValue>
           </Styled.Info>
 
@@ -140,7 +151,7 @@ class CampaignBlock extends React.Component<Props, State> {
               <Styled.Bar>
                 <Styled.BarInner
                   style={{
-                    width: `${(crowdFund.funded / crowdFund.target) * 100}%`,
+                    width: `${crowdFund.percentFunded}%`,
                   }}
                 />
               </Styled.Bar>
@@ -157,7 +168,7 @@ class CampaignBlock extends React.Component<Props, State> {
                     value={amountToRaise}
                     placeholder="0.5"
                     min={0}
-                    max={crowdFund.target - crowdFund.funded}
+                    max={remainingEthNum}
                     step={0.1}
                     onChange={this.handleAmountChange}
                     addonAfter="ETH"
@@ -203,7 +214,7 @@ const withConnect = connect(
   { fundCrowdFund: web3Actions.fundCrowdFund },
 );
 
-const ConnectedCampaignBlock = compose<Props, OwnProps>(
+const ConnectedCampaignBlock = compose<Props, OwnProps & Web3Props>(
   withRouter,
   withConnect,
 )(CampaignBlock);
@@ -218,6 +229,6 @@ export default (props: OwnProps) => (
         </ProposalStyled.Block>
       </ProposalStyled.SideBlock>
     )}
-    render={() => <ConnectedCampaignBlock {...props} />}
+    render={({ web3 }) => <ConnectedCampaignBlock {...props} web3={web3} />}
   />
 );

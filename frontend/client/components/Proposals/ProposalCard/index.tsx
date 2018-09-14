@@ -11,9 +11,10 @@ import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import Identicon from 'components/Identicon';
+import UnitDisplay from 'components/UnitDisplay';
 
 interface Props extends ProposalWithCrowdFund {
-  web3: any;
+  web3: AppState['web3']['web3'];
 }
 
 class ProposalCard extends React.Component<Props> {
@@ -24,24 +25,24 @@ class ProposalCard extends React.Component<Props> {
     if (!web3) {
       return <Spin />;
     } else {
-      const percent = Math.floor((crowdFund.funded / crowdFund.target) * 100);
       return (
         <Link href={`/proposals/${proposalId}`}>
           <Styled.Container>
             <Styled.Title>{title}</Styled.Title>
             <Styled.Funding>
               <Styled.FundingRaised>
-                {crowdFund.funded} ETH <small>raised</small> of {crowdFund.target} ETH
-                goal
+                <UnitDisplay value={crowdFund.funded} symbol="ETH" />{' '}
+                <small>raised</small> of{' '}
+                <UnitDisplay value={crowdFund.target} symbol="ETH" /> goal
               </Styled.FundingRaised>
-              <Styled.FundingPercent isFunded={percent >= 100}>
-                {percent}%
+              <Styled.FundingPercent isFunded={crowdFund.percentFunded >= 100}>
+                {crowdFund.percentFunded}%
               </Styled.FundingPercent>
             </Styled.Funding>
             <Progress
-              percent={percent}
+              percent={crowdFund.percentFunded}
+              status={crowdFund.percentFunded >= 100 ? 'success' : 'active'}
               showInfo={false}
-              status={percent >= 100 ? 'success' : 'active'}
             />
 
             <Styled.Team>

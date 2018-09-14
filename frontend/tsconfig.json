@@ -16,7 +16,7 @@
     "sourceMap": true,
     "skipLibCheck": true,
     "baseUrl": "./client",
-    "lib": ["dom", "es2016"]
+    "lib": ["dom", "es2017"]
   },
   "include": ["./client", "node_modules/@types", "typings"],
   "exclude": ["./client/build", "./client/static"]

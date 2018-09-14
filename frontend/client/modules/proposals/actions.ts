@@ -6,6 +6,7 @@ import {
   getProposalUpdates,
 } from 'api/api';
 import { Dispatch } from 'redux';
+import Web3 from 'web3';
 import { ProposalWithCrowdFund, Proposal } from 'modules/proposals/reducers';
 import getContract from 'lib/getContract';
 import CrowdFund from 'lib/contracts/CrowdFund.json';
@@ -13,7 +14,7 @@ import { getCrowdFundState } from 'web3interact/crowdFund';
 
 async function getMergedCrowdFundProposal(
   proposal: Proposal,
-  web3: any,
+  web3: Web3,
   account: string,
 ) {
   const crowdFundContract = await getContract(web3, CrowdFund, proposal.proposalId);
@@ -38,7 +39,7 @@ async function getMergedCrowdFundProposal(
 // valid as defined by crowdFund contract existing on current network
 export async function getValidProposals(
   proposals: { data: Proposal[] },
-  web3: any,
+  web3: Web3,
   account: string,
 ) {
   return (await Promise.all(

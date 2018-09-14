@@ -2,22 +2,18 @@ import React from 'react';
 import moment from 'moment';
 import { Timeline, Spin, Icon } from 'antd';
 import { ProposalWithCrowdFund, MILESTONE_STATE } from 'modules/proposals/reducers';
-import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
+import UnitDisplay from 'components/UnitDisplay';
 import * as Styled from './styled';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
 }
 
-interface Web3Props {
-  web3: Web3RenderProps['web3'];
-}
+type Props = OwnProps;
 
-type Props = OwnProps & Web3Props;
-
-class Milestones extends React.Component<Props> {
+export default class Milestones extends React.Component<Props> {
   render() {
-    const { proposal, web3 } = this.props;
+    const { proposal } = this.props;
 
     if (!proposal) {
       return <Spin />;
@@ -37,7 +33,7 @@ class Milestones extends React.Component<Props> {
                 <Styled.MilestonePayoutAmount>
                   The team was awarded{' '}
                   <strong>
-                    {web3.utils.fromWei(String(milestone.amount), 'ether')} ETH
+                    <UnitDisplay value={milestone.amount} symbol="ETH" />
                   </strong>{' '}
                   {milestone.isImmediatePayout
                     ? 'as an initial payout'
@@ -75,7 +71,7 @@ class Milestones extends React.Component<Props> {
                   <Styled.MilestonePayoutAmount>
                     Rewards team with{' '}
                     <strong>
-                      {web3.utils.fromWei(String(milestone.amount), 'ether')} ETH
+                      <UnitDisplay value={milestone.amount} symbol="ETH" />
                     </strong>
                   </Styled.MilestonePayoutAmount>
                   <Styled.MilestonePayoutInfo>
@@ -109,10 +105,3 @@ class Milestones extends React.Component<Props> {
     );
   }
 }
-
-export default (props: OwnProps) => (
-  <Web3Container
-    renderLoading={() => <Spin />}
-    render={({ web3 }: Web3RenderProps) => <Milestones web3={web3} {...props} />}
-  />
-);

@@ -6,6 +6,7 @@ import { ProposalWithCrowdFund, MILESTONE_STATE } from 'modules/proposals/reduce
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
+import UnitDisplay from 'components/UnitDisplay';
 import * as Styled from './styled';
 
 interface OwnProps {
@@ -13,7 +14,6 @@ interface OwnProps {
 }
 
 interface Web3Props {
-  web3: Web3RenderProps['web3'];
   accounts: Web3RenderProps['accounts'];
 }
 
@@ -35,7 +35,6 @@ class Milestones extends React.Component<Props> {
     const {
       proposal,
       accounts,
-      web3,
       isMilestoneActionPending,
       milestoneActionError,
     } = this.props;
@@ -108,7 +107,7 @@ class Milestones extends React.Component<Props> {
             Congratulations! Your milestone payout request was succesful. Click below to
             receive your payment of{' '}
             <strong>
-              {web3.utils.fromWei(uncollectedMilestone.amount, 'ether')} ETH
+              <UnitDisplay value={uncollectedMilestone.amount} symbol="ETH" />
             </strong>
             .
           </Styled.MilestoneActionText>
@@ -255,8 +254,8 @@ const ConnectedMilestones = connect(
 export default (props: OwnProps) => (
   <Web3Container
     renderLoading={() => <Spin />}
-    render={({ web3, accounts }: Web3RenderProps) => (
-      <ConnectedMilestones web3={web3} accounts={accounts} {...props} />
+    render={({ accounts }: Web3RenderProps) => (
+      <ConnectedMilestones accounts={accounts} {...props} />
     )}
   />
 );

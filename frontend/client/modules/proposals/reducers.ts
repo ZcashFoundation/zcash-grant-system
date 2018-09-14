@@ -1,6 +1,6 @@
-import BN from 'bn.js';
 import types from './types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
+import { Wei } from 'utils/units';
 
 export interface User {
   accountAddress: string;
@@ -31,8 +31,8 @@ export enum MILESTONE_STATE {
 export interface Milestone {
   index: number;
   state: MILESTONE_STATE;
-  amount: BN;
-  amountAgainstPayout: BN;
+  amount: Wei;
+  amountAgainstPayout: Wei;
   percentAgainstPayout: number;
   payoutRequestVoteDeadline: number;
   isPaid: boolean;
@@ -53,10 +53,12 @@ export interface ProposalMilestone extends Milestone {
 
 export interface CrowdFund {
   immediateFirstMilestonePayout: boolean;
-  balance: number;
-  funded: number;
-  target: number;
-  amountVotingForRefund: number;
+  balance: Wei;
+  funded: Wei;
+  percentFunded: number;
+  target: Wei;
+  amountVotingForRefund: Wei;
+  percentVotingForRefund: number;
   beneficiary: string;
   deadline: number;
   trustees: string[];

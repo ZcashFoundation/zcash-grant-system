@@ -36,9 +36,7 @@ class GovernanceRefunds extends React.Component<Props> {
     const isTrustee = crowdFund.trustees.includes(account);
     const hasVotedForRefund = contributor && contributor.refundVote;
     const hasRefunded = contributor && contributor.refunded;
-    const refundPct = Math.floor(
-      (crowdFund.amountVotingForRefund / crowdFund.target) * 100,
-    );
+    const refundPct = crowdFund.percentVotingForRefund;
     const color = refundPct < 10 ? '#1890ff' : refundPct < 50 ? '#faad14' : '#f5222d';
 
     let text;
