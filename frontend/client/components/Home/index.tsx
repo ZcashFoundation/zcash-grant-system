@@ -24,7 +24,9 @@ export default class Home extends React.Component {
     return (
       <AntWrap title="Home" isHeaderTransparent isFullScreen>
         <Styled.Hero>
-          <Styled.HeroTitle>Community-first project funding</Styled.HeroTitle>
+          <Styled.HeroTitle>
+            Crowdfunded grants for <br /> Blockchain ecosystem improvements
+          </Styled.HeroTitle>
 
           <Styled.HeroButtons>
             <Link href="/create">
