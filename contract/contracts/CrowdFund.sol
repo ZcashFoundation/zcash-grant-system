@@ -245,6 +245,10 @@ contract CrowdFund {
         return contributors[contributorAddress].milestoneNoVotes[milestoneIndex];
     }
 
+    function getContributorContributionAmount(address contributorAddress) public view returns (uint) {
+        return contributors[contributorAddress].contributionAmount;
+    }
+
     modifier onlyFrozen() {
         require(frozen, "CrowdFund is not frozen");
         _;
