@@ -11,21 +11,31 @@ interface Props {
 const ContributorsBlock = ({ crowdFund }: Props) => {
   let content;
   if (crowdFund) {
-    content = crowdFund.contributors.map(contributor => (
-      <UserRow
-        key={contributor.address}
-        address={contributor.address}
-        amount={contributor.contributionAmount}
-      />
-    ));
+    if (crowdFund.contributors.length) {
+      content = crowdFund.contributors.map(contributor => (
+        <UserRow
+          key={contributor.address}
+          address={contributor.address}
+          amount={contributor.contributionAmount}
+        />
+      ));
+    } else {
+      content = <h5>No contributors found.</h5>;
+    }
   } else {
     content = <Spin />;
   }
 
   return (
     <ProposalStyled.SideBlock>
-      <ProposalStyled.BlockTitle>Contributors</ProposalStyled.BlockTitle>
-      <ProposalStyled.Block>{content}</ProposalStyled.Block>
+      {crowdFund.contributors.length ? (
+        <>
+          <ProposalStyled.BlockTitle>Contributors</ProposalStyled.BlockTitle>
+          <ProposalStyled.Block>{content}</ProposalStyled.Block>
+        </>
+      ) : (
+        content
+      )}
     </ProposalStyled.SideBlock>
   );
 };
