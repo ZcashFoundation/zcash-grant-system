@@ -14,7 +14,7 @@ export interface User {
 
 export interface Contributor {
   address: string;
-  contributionAmount: string;
+  contributionAmount: Wei;
   refundVote: boolean;
   refunded: boolean;
   proportionalContribution: string;

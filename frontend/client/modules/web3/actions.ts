@@ -7,6 +7,7 @@ import { sleep } from 'utils/helpers';
 import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { AppState } from 'store/reducers';
+import { Wei } from 'utils/units';
 
 type GetState = () => AppState;
 
@@ -97,10 +98,10 @@ interface MilestoneData {
 }
 
 interface ProposalContractData {
-  ethAmount: number | string; // TODO: BigNumber
+  ethAmount: Wei;
   payOutAddress: string;
   trusteesAddresses: string[];
-  milestoneAmounts: number[] | string[]; // TODO: BigNumber
+  milestoneAmounts: Wei[];
   milestones: MilestoneData[];
   durationInMinutes: number;
   milestoneVotingPeriodInMinutes: number;

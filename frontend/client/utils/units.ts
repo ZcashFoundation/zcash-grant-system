@@ -38,7 +38,7 @@ export const Units = {
   gether: '1000000000000000000000000000',
   tether: '1000000000000000000000000000000',
 };
-const handleValues = (input: string | BN) => {
+const handleValues = (input: string | BN | number) => {
   if (typeof input === 'string') {
     return input.startsWith('0x') ? new BN(stripHexPrefix(input), 16) : new BN(input);
   }
@@ -58,7 +58,7 @@ const Data = (input: string) => toBuffer(addHexPrefix(input));
 
 const Nonce = (input: string | BN) => handleValues(input);
 
-const Wei = (input: string | BN): Wei => handleValues(input);
+const Wei = (input: string | BN | number): Wei => handleValues(input);
 
 const TokenValue = (input: string | BN) => handleValues(input);
 
@@ -93,7 +93,13 @@ const fromWei = (wei: Wei, unit: UnitKey) => {
   return baseToConvertedUnit(wei.toString(), decimal);
 };
 
-const toWei = (value: string, decimal: number): Wei => {
+const toWei = (value: string, unitType: number | UnitKey): Wei => {
+  let decimal;
+  if (typeof unitType === 'number') {
+    decimal = unitType;
+  } else if (typeof unitType === 'string') {
+    decimal = getDecimalFromEtherUnit(unitType);
+  }
   const wei = convertedToBaseUnit(value, decimal);
   return Wei(wei);
 };

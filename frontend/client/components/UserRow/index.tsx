@@ -2,14 +2,14 @@ import React from 'react';
 import ShortAddress from 'components/ShortAddress';
 import Identicon from 'components/Identicon';
 import * as Styled from './styled';
+import { Wei, fromWei } from 'utils/units';
 
 interface Props {
   address: string;
+  amount?: Wei;
 }
 
-// TODO - don't hardcode monero image
-
-const UserRow = ({ address }: Props) => (
+const UserRow = ({ address, amount }: Props) => (
   <Styled.Container>
     <Styled.Avatar>
       <Identicon address={address} />
@@ -18,7 +18,9 @@ const UserRow = ({ address }: Props) => (
       <Styled.InfoMain>
         <ShortAddress address={address} />
       </Styled.InfoMain>
-      <Styled.InfoSecondary>{/* user.title */}</Styled.InfoSecondary>
+      {amount && (
+        <Styled.InfoSecondary>{fromWei(amount, 'ether')} ETH</Styled.InfoSecondary>
+      )}
     </Styled.Info>
   </Styled.Container>
 );

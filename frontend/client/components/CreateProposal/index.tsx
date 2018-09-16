@@ -12,11 +12,11 @@ import { RadioChangeEvent } from 'antd/lib/radio';
 import TrusteeFields from './TrusteeFields';
 import MilestoneFields, { Milestone } from './MilestoneFields';
 import CreateSuccess from './CreateSuccess';
-import { computePercentage } from 'utils/helpers';
 import { getAmountError } from 'utils/validators';
 import MarkdownEditor from 'components/MarkdownEditor';
 import * as Styled from './styled';
-
+import { Wei, toWei } from 'utils/units';
+import BN from 'bn.js';
 interface StateProps {
   crowdFundLoading: AppState['web3']['crowdFundLoading'];
   crowdFundError: AppState['web3']['crowdFundError'];
@@ -74,8 +74,8 @@ const DEFAULT_STATE: State = {
   milestoneDeadline: 60 * 60 * 24 * 7,
 };
 
-function milestoneToMilestoneAmount(milestone: Milestone, raiseGoal: number) {
-  return computePercentage(raiseGoal, milestone.payoutPercent);
+function milestoneToMilestoneAmount(milestone: Milestone, raiseGoal: Wei) {
+  return raiseGoal.divn(100).mul(new BN(milestone.payoutPercent));
 }
 
 class CreateProposal extends React.Component<Props, State> {
@@ -159,7 +159,7 @@ class CreateProposal extends React.Component<Props, State> {
   };
 
   createCrowdFund = async () => {
-    const { contract, createCrowdFund, web3 } = this.props;
+    const { contract, createCrowdFund } = this.props;
     const {
       title,
       proposalBody,
@@ -173,11 +173,11 @@ class CreateProposal extends React.Component<Props, State> {
     } = this.state;
 
     const backendData = { content: proposalBody, title, category };
-
-    const targetInWei = web3.utils.toWei(String(amountToRaise), 'ether');
+    const targetInWei = toWei(amountToRaise, 'ether');
     const milestoneAmounts = milestones.map(milestone =>
-      milestoneToMilestoneAmount(milestone, targetInWei),
+      Wei(milestoneToMilestoneAmount(milestone, targetInWei)),
     );
+    console.log('milestoneAmounts', milestoneAmounts);
     const immediateFirstMilestonePayout = milestones[0].immediatePayout;
 
     const contractData = {
