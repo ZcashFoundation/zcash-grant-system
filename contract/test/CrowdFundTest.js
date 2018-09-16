@@ -422,4 +422,16 @@ contract("CrowdFund", accounts => {
     assert.equal(true, milestoneVote)
   });
 
+
+  // [END] getContributorMilestoneVote
+
+  // [BEGIN] getContributorContributionAmount
+
+  it("returns amount a contributor has contributed", async () => {
+    const constributionAmount = raiseGoal / 5 
+    await crowdFund.contribute({ from: thirdAccount, value: constributionAmount });
+    const contractContributionAmount = await crowdFund.getContributorContributionAmount(thirdAccount)
+    assert.equal(contractContributionAmount.toNumber(), constributionAmount)
+  });
+
 });
