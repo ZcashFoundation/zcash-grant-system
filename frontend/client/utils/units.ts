@@ -38,7 +38,7 @@ export const Units = {
   gether: '1000000000000000000000000000',
   tether: '1000000000000000000000000000000',
 };
-const handleValues = (input: string | BN | number) => {
+const handleValues = (input: string | BN) => {
   if (typeof input === 'string') {
     return input.startsWith('0x') ? new BN(stripHexPrefix(input), 16) : new BN(input);
   }
@@ -58,7 +58,7 @@ const Data = (input: string) => toBuffer(addHexPrefix(input));
 
 const Nonce = (input: string | BN) => handleValues(input);
 
-const Wei = (input: string | BN | number): Wei => handleValues(input);
+const Wei = (input: string | BN): Wei => handleValues(input);
 
 const TokenValue = (input: string | BN) => handleValues(input);
 
