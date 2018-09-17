@@ -25,7 +25,7 @@ export default class Home extends React.Component {
       <AntWrap title="Home" isHeaderTransparent isFullScreen>
         <Styled.Hero>
           <Styled.HeroTitle>
-            Crowdfunded grants for <br /> Blockchain ecosystem improvements
+           Decentralized funding for <br/> Blockchain ecosystem improvements
           </Styled.HeroTitle>
 
           <Styled.HeroButtons>
