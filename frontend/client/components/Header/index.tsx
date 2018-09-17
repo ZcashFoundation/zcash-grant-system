@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from 'antd';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import * as Styled from './styled';
 
 interface OwnProps {
@@ -15,30 +15,28 @@ export default class Header extends React.Component<Props> {
     return (
       <React.Fragment>
         <Styled.Header isTransparent={isTransparent}>
-          <div style={{ display: 'flex' }}>
-            <Link href="/proposals">
-              <Styled.Button>
-                <Styled.ButtonIcon>
-                  <Icon type="shop" />
-                </Styled.ButtonIcon>
-                <Styled.ButtonText>Explore</Styled.ButtonText>
-              </Styled.Button>
+          <Styled.Button style={{ display: 'flex' }}>
+            <Link to="/proposals">
+              <Styled.ButtonIcon>
+                <Icon type="shop" />
+              </Styled.ButtonIcon>
+              <Styled.ButtonText>Explore</Styled.ButtonText>
             </Link>
-          </div>
+          </Styled.Button>
 
-          <Link href="/">
-            <Styled.Title>Grant.io</Styled.Title>
-          </Link>
+          <Styled.Title>
+            <Link to="/">Grant.io</Link>
+          </Styled.Title>
 
           <React.Fragment>
-            <Link href="/create">
-              <Styled.Button style={{ marginLeft: '1.5rem' }}>
+            <Styled.Button style={{ marginLeft: '1.5rem' }}>
+              <Link to="/create">
                 <Styled.ButtonIcon>
                   <Icon type="form" />
                 </Styled.ButtonIcon>
                 <Styled.ButtonText>Start a Proposal</Styled.ButtonText>
-              </Styled.Button>
-            </Link>
+              </Link>
+            </Styled.Button>
           </React.Fragment>
 
           {!isTransparent && <Styled.AlphaBanner>Alpha</Styled.AlphaBanner>}

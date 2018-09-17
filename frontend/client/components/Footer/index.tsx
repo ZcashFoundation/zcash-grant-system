@@ -1,12 +1,12 @@
 import React from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import * as Styled from './styled';
 
 export default () => (
   <Styled.Footer>
-    <Link href="/">
-      <Styled.Title>Grant.io</Styled.Title>
-    </Link>
+    <Styled.Title>
+      <Link to="/">Grant.io</Link>
+    </Styled.Title>
     {/*<Styled.Links>
       <Styled.Link>about</Styled.Link>
       <Styled.Link>legal</Styled.Link>

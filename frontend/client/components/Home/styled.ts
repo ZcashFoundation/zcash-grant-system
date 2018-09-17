@@ -142,7 +142,7 @@ export const IntroBlob = styled.div`
     max-width: 320px;
   }
 
-  img {
+  svg {
     margin-bottom: 1rem;
     opacity: 0.75;
     height: 100px;

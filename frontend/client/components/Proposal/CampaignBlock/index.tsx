@@ -9,7 +9,7 @@ import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { web3Actions } from 'modules/web3';
-import { withRouter } from 'next/router';
+import { withRouter } from 'react-router';
 import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import ShortAddress from 'components/ShortAddress';
 import UnitDisplay from 'components/UnitDisplay';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Progress, Icon, Spin } from 'antd';
 import moment from 'moment';
-import Link from 'next/link';
+import { Redirect } from 'react-router-dom';
 import { CATEGORY_UI } from 'api/constants';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
 import * as Styled from './styled';
@@ -18,7 +18,11 @@ interface Props extends ProposalWithCrowdFund {
 }
 
 class ProposalCard extends React.Component<Props> {
+  state = { redirect: '' };
   render() {
+    if (this.state.redirect) {
+      return <Redirect push to={this.state.redirect} />;
+    }
     const { title, proposalId, category, dateCreated, web3, crowdFund } = this.props;
     const team = [...this.props.team].reverse();
 
@@ -26,48 +30,47 @@ class ProposalCard extends React.Component<Props> {
       return <Spin />;
     } else {
       return (
-        <Link href={`/proposals/${proposalId}`}>
-          <Styled.Container>
-            <Styled.Title>{title}</Styled.Title>
-            <Styled.Funding>
-              <Styled.FundingRaised>
-                <UnitDisplay value={crowdFund.funded} symbol="ETH" />{' '}
-                <small>raised</small> of{' '}
-                <UnitDisplay value={crowdFund.target} symbol="ETH" /> goal
-              </Styled.FundingRaised>
-              <Styled.FundingPercent isFunded={crowdFund.percentFunded >= 100}>
-                {crowdFund.percentFunded}%
-              </Styled.FundingPercent>
-            </Styled.Funding>
-            <Progress
-              percent={crowdFund.percentFunded}
-              status={crowdFund.percentFunded >= 100 ? 'success' : 'active'}
-              showInfo={false}
-            />
+        <Styled.Container
+          onClick={() => this.setState({ redirect: `/proposals/${proposalId}` })}
+        >
+          <Styled.Title>{title}</Styled.Title>
+          <Styled.Funding>
+            <Styled.FundingRaised>
+              <UnitDisplay value={crowdFund.funded} symbol="ETH" /> <small>raised</small>{' '}
+              of <UnitDisplay value={crowdFund.target} symbol="ETH" /> goal
+            </Styled.FundingRaised>
+            <Styled.FundingPercent isFunded={crowdFund.percentFunded >= 100}>
+              {crowdFund.percentFunded}%
+            </Styled.FundingPercent>
+          </Styled.Funding>
+          <Progress
+            percent={crowdFund.percentFunded}
+            status={crowdFund.percentFunded >= 100 ? 'success' : 'active'}
+            showInfo={false}
+          />
 
-            <Styled.Team>
-              <Styled.TeamName>
-                {team[0].accountAddress}{' '}
-                {team.length > 1 && <small>+{team.length - 1} other</small>}
-              </Styled.TeamName>
-              <Styled.TeamAvatars>
-                {team.reverse().map(u => (
-                  <Identicon key={u.userid} address={u.accountAddress} />
-                ))}
-              </Styled.TeamAvatars>
-            </Styled.Team>
-            <Styled.ContractAddress>{proposalId}</Styled.ContractAddress>
+          <Styled.Team>
+            <Styled.TeamName>
+              {team[0].accountAddress}{' '}
+              {team.length > 1 && <small>+{team.length - 1} other</small>}
+            </Styled.TeamName>
+            <Styled.TeamAvatars>
+              {team.reverse().map(u => (
+                <Identicon key={u.userid} address={u.accountAddress} />
+              ))}
+            </Styled.TeamAvatars>
+          </Styled.Team>
+          <Styled.ContractAddress>{proposalId}</Styled.ContractAddress>
 
-            <Styled.Info>
-              <Styled.InfoCategory style={{ color: CATEGORY_UI[category].color }}>
-                <Icon type={CATEGORY_UI[category].icon} /> {CATEGORY_UI[category].label}
-              </Styled.InfoCategory>
-              <Styled.InfoCreated>
-                {moment(dateCreated * 1000).fromNow()}
-              </Styled.InfoCreated>
-            </Styled.Info>
-          </Styled.Container>
-        </Link>
+          <Styled.Info>
+            <Styled.InfoCategory style={{ color: CATEGORY_UI[category].color }}>
+              <Icon type={CATEGORY_UI[category].icon} /> {CATEGORY_UI[category].label}
+            </Styled.InfoCategory>
+            <Styled.InfoCreated>
+              {moment(dateCreated * 1000).fromNow()}
+            </Styled.InfoCreated>
+          </Styled.Info>
+        </Styled.Container>
       );
     }
   }

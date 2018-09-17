@@ -24,44 +24,48 @@ export const Header = styled<{ isTransparent: boolean }, 'header'>('header')`
   box-shadow: ${(p: any) => (p.isTransparent ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.3)')};
 `;
 
-export const Title = styled.a`
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2.2rem;
-  margin: 0;
-  color: inherit;
-  letter-spacing: 0.08rem;
-  font-weight: 500;
-  transition: transform 100ms ease;
-  flex-grow: 1;
-  text-align: center;
-
-  &:hover,
-  &:focus,
-  &:active {
+export const Title = styled.span`
+  a {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.2rem;
+    margin: 0;
     color: inherit;
-    transform: translateY(-2px) translate(-50%, -50%);
+    letter-spacing: 0.08rem;
+    font-weight: 500;
+    transition: transform 100ms ease;
+    flex-grow: 1;
+    text-align: center;
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: inherit;
+      transform: translateY(-2px) translate(-50%, -50%);
+    }
   }
 `;
 
-export const Button = styled.a`
-  display: block;
-  background: none;
-  padding: 0;
-  font-size: 1.2rem;
-  font-weight: 300;
-  color: inherit;
-  letter-spacing: 0.05rem;
-  cursor: pointer;
-  transition: transform 100ms ease;
-
-  &:hover,
-  &:focus,
-  &:active {
-    transform: translateY(-1px);
+export const Button = styled.div`
+  a {
+    display: block;
+    background: none;
+    padding: 0;
+    font-size: 1.2rem;
+    font-weight: 300;
     color: inherit;
+    letter-spacing: 0.05rem;
+    cursor: pointer;
+    transition: transform 100ms ease;
+
+    &:hover,
+    &:focus,
+    &:active {
+      transform: translateY(-1px);
+      color: inherit;
+    }
   }
 `;
 

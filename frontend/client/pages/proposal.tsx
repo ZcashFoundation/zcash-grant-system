@@ -2,16 +2,16 @@ import React, { Component } from 'react';
 import Web3Page from 'components/Web3Page';
 import Proposal from 'components/Proposal';
 
-import { WithRouterProps, withRouter } from 'next/router';
+import { withRouter, RouteComponentProps } from 'react-router';
 
-type RouteProps = WithRouterProps;
+type RouteProps = RouteComponentProps<any>;
 
 class ProposalPage extends Component<RouteProps> {
   constructor(props: RouteProps) {
     super(props);
   }
   render() {
-    const proposalId = this.props.router.query.id as string;
+    const proposalId = this.props.match.params.id;
     return (
       <Web3Page
         title={`Proposal ${proposalId}`}

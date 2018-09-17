@@ -10,18 +10,20 @@ export const Footer = styled.footer`
   height: 140px;
 `;
 
-export const Title = styled.a`
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #fff;
-  transition: transform 100ms ease;
+export const Title = styled.span`
+  a {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #fff;
+    transition: transform 100ms ease;
 
-  &:hover,
-  &:focus,
-  &:active {
-    transform: translateY(-1px);
-    color: inherit;
+    &:hover,
+    &:focus,
+    &:active {
+      transform: translateY(-1px);
+      color: inherit;
+    }
   }
 `;
 

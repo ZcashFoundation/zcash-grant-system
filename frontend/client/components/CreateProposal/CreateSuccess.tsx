@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { Icon } from 'antd';
 import * as Styled from './styled';
 
@@ -16,10 +16,8 @@ const CreateSuccess = ({ crowdFundCreatedAddress }: Props) => (
       <h2>Contract was succesfully deployed!</h2>
       <div>
         Your proposal is now live and on the blockchain!{' '}
-        <Link href={`/proposals/${crowdFundCreatedAddress}`}>
-          <a>Click here</a>
-        </Link>{' '}
-        to check it out.
+        <Link to={`/proposals/${crowdFundCreatedAddress}`}>Click here</Link> to check it
+        out.
       </div>
     </Styled.SuccessText>
   </Styled.Success>

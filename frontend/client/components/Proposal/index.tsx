@@ -18,7 +18,7 @@ import GovernanceTab from './Governance';
 import ContributorsTab from './Contributors';
 // import CommunityTab from './Community';
 import * as Styled from './styled';
-import { withRouter } from 'next/router';
+import { withRouter } from 'react-router';
 import Web3Container from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
 

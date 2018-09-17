@@ -1,26 +1,33 @@
 import React from 'react';
 import * as Styled from './styled';
-import Link from 'next/link';
+import { Redirect } from 'react-router-dom';
 import { Icon } from 'antd';
 import AntWrap from 'components/AntWrap';
+import TeamsSvg from 'static/images/intro-teams.svg';
+import FundingSvg from 'static/images/intro-funding.svg';
+import CommunitySvg from 'static/images/intro-community.svg';
 
 const introBlobs = [
   {
-    image: 'static/images/intro-teams.svg',
+    Svg: TeamsSvg,
     text: 'Developers and teams propose projects for improving the ecosystem',
   },
   {
-    image: 'static/images/intro-funding.svg',
+    Svg: FundingSvg,
     text: 'Projects are funded by the community and paid as it’s built',
   },
   {
-    image: 'static/images/intro-community.svg',
+    Svg: CommunitySvg,
     text: 'Open discussion and project updates bring devs and the community together',
   },
 ];
 
 export default class Home extends React.Component {
+  state = { redirect: '' };
   render() {
+    if (this.state.redirect) {
+      return <Redirect push to={this.state.redirect} />;
+    }
     return (
       <AntWrap title="Home" isHeaderTransparent isFullScreen>
         <Styled.Hero>
@@ -29,12 +36,15 @@ export default class Home extends React.Component {
           </Styled.HeroTitle>
 
           <Styled.HeroButtons>
-            <Link href="/create">
-              <Styled.HeroButton isPrimary>Propose a Project</Styled.HeroButton>
-            </Link>
-            <Link href="/proposals">
-              <Styled.HeroButton>Explore Projects</Styled.HeroButton>
-            </Link>
+            <Styled.HeroButton
+              onClick={() => this.setState({ redirect: '/create' })}
+              isPrimary
+            >
+              Propose a Project
+            </Styled.HeroButton>
+            <Styled.HeroButton onClick={() => this.setState({ redirect: '/proposals' })}>
+              Explore Projects
+            </Styled.HeroButton>
           </Styled.HeroButtons>
 
           <Styled.HeroScroll>
@@ -52,7 +62,7 @@ export default class Home extends React.Component {
           <Styled.IntroBlobs>
             {introBlobs.map((blob, i) => (
               <Styled.IntroBlob key={i}>
-                <img src={blob.image} />
+                <blob.Svg />
                 <p>{blob.text}</p>
               </Styled.IntroBlob>
             ))}
