@@ -2,14 +2,13 @@ import React from 'react';
 import ShortAddress from 'components/ShortAddress';
 import Identicon from 'components/Identicon';
 import * as Styled from './styled';
-import { Wei, fromWei } from 'utils/units';
 
 interface Props {
   address: string;
-  amount?: Wei;
+  secondary?: React.ReactNode;
 }
 
-const UserRow = ({ address, amount }: Props) => (
+const UserRow = ({ address, secondary }: Props) => (
   <Styled.Container>
     <Styled.Avatar>
       <Identicon address={address} />
@@ -18,9 +17,7 @@ const UserRow = ({ address, amount }: Props) => (
       <Styled.InfoMain>
         <ShortAddress address={address} />
       </Styled.InfoMain>
-      {amount && (
-        <Styled.InfoSecondary>{fromWei(amount, 'ether')} ETH</Styled.InfoSecondary>
-      )}
+      {secondary && <Styled.InfoSecondary>{secondary}</Styled.InfoSecondary>}
     </Styled.Info>
   </Styled.Container>
 );

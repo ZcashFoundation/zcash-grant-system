@@ -177,7 +177,6 @@ class CreateProposal extends React.Component<Props, State> {
     const milestoneAmounts = milestones.map(milestone =>
       Wei(milestoneToMilestoneAmount(milestone, targetInWei)),
     );
-    console.log('milestoneAmounts', milestoneAmounts);
     const immediateFirstMilestonePayout = milestones[0].immediatePayout;
 
     const contractData = {

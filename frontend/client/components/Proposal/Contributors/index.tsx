@@ -3,6 +3,9 @@ import { Spin } from 'antd';
 import { CrowdFund } from 'modules/proposals/reducers';
 import UserRow from 'components/UserRow';
 import * as ProposalStyled from '../styled';
+import Placeholder from '../../Placeholder';
+import { fromWei } from '../../../utils/units';
+import UnitDisplay from '../../UnitDisplay';
 
 interface Props {
   crowdFund: CrowdFund;
@@ -16,11 +19,20 @@ const ContributorsBlock = ({ crowdFund }: Props) => {
         <UserRow
           key={contributor.address}
           address={contributor.address}
-          amount={contributor.contributionAmount}
+          secondary={<UnitDisplay value={contributor.contributionAmount} symbol="ETH" />}
         />
       ));
     } else {
-      content = <h5>No contributors found.</h5>;
+      content = (
+        <Placeholder
+          style={{ minHeight: '220px' }}
+          title="No contributors found"
+          subtitle={`
+            It appears that your campaign hasn't yet been funded.
+            Check back later once you've received at least one contribution!
+          `}
+        />
+      );
     }
   } else {
     content = <Spin />;

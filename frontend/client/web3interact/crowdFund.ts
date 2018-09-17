@@ -29,7 +29,7 @@ export async function getCrowdFundState(
       ? 0
       : balance
           .mul(new BN(100))
-          .divRound(target)
+          .div(target)
           .toNumber();
   const amountVotingForRefund = isRaiseGoalReached
     ? Wei(await crowdFundContract.methods.amountVotingForRefund().call({ from: account }))
