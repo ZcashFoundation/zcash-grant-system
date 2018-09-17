@@ -3,9 +3,8 @@ import { Spin } from 'antd';
 import { CrowdFund } from 'modules/proposals/reducers';
 import UserRow from 'components/UserRow';
 import * as ProposalStyled from '../styled';
-import Placeholder from '../../Placeholder';
-import { fromWei } from '../../../utils/units';
-import UnitDisplay from '../../UnitDisplay';
+import Placeholder from 'components/Placeholder';
+import UnitDisplay from 'components/UnitDisplay';
 
 interface Props {
   crowdFund: CrowdFund;
