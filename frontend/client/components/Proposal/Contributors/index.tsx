@@ -27,8 +27,8 @@ const ContributorsBlock = ({ crowdFund }: Props) => {
           style={{ minHeight: '220px' }}
           title="No contributors found"
           subtitle={`
-            It appears that your campaign hasn't yet been funded.
-            Check back later once you've received at least one contribution!
+            No contributions have been made to this proposal.
+            Check back later once there's been at least one contribution.
           `}
         />
       );
