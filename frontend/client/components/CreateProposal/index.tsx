@@ -16,7 +16,9 @@ import { getAmountError } from 'utils/validators';
 import MarkdownEditor from 'components/MarkdownEditor';
 import * as Styled from './styled';
 import { Wei, toWei } from 'utils/units';
+import exampleProposal from './exampleProposal.json';
 import BN from 'bn.js';
+
 interface StateProps {
   crowdFundLoading: AppState['web3']['crowdFundLoading'];
   crowdFundError: AppState['web3']['crowdFundError'];
@@ -87,6 +89,12 @@ class CreateProposal extends React.Component<Props, State> {
   componentWillUpdate() {
     if (this.props.crowdFundLoading) {
       this.setState({ ...DEFAULT_STATE });
+    }
+  }
+
+  setExampleProposal() {
+    if (process.env.NODE_ENV !== 'production') {
+      this.setState(exampleProposal);
     }
   }
 
@@ -171,7 +179,6 @@ class CreateProposal extends React.Component<Props, State> {
       milestones,
       category,
     } = this.state;
-
     const backendData = { content: proposalBody, title, category };
     const targetInWei = toWei(amountToRaise, 'ether');
     const milestoneAmounts = milestones.map(milestone =>
@@ -304,7 +311,9 @@ class CreateProposal extends React.Component<Props, State> {
 
     return (
       <Form layout="vertical">
-        <Styled.Title>Create a proposal</Styled.Title>
+        <Styled.Title onClick={() => this.setExampleProposal()}>
+          Create a proposal
+        </Styled.Title>
         <Styled.HelpText>All fields are required</Styled.HelpText>
 
         <Form.Item
@@ -434,6 +443,11 @@ class CreateProposal extends React.Component<Props, State> {
             size="large"
             style={{ display: 'flex', textAlign: 'center' }}
           >
+            {deadline === 60 && (
+              <Radio.Button style={{ flex: 1 }} value={60}>
+                60 Seconds
+              </Radio.Button>
+            )}
             <Radio.Button style={{ flex: 1 }} value={60 * 60 * 24 * 30}>
               30 Days
             </Radio.Button>
@@ -454,6 +468,11 @@ class CreateProposal extends React.Component<Props, State> {
             size="large"
             style={{ display: 'flex', textAlign: 'center' }}
           >
+            {milestoneDeadline === 60 && (
+              <Radio.Button style={{ flex: 1 }} value={60}>
+                60 Seconds
+              </Radio.Button>
+            )}
             <Radio.Button style={{ flex: 1 }} value={60 * 60 * 24 * 3}>
               3 Days
             </Radio.Button>
