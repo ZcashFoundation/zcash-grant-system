@@ -93,7 +93,13 @@ const fromWei = (wei: Wei, unit: UnitKey) => {
   return baseToConvertedUnit(wei.toString(), decimal);
 };
 
-const toWei = (value: string, decimal: number): Wei => {
+const toWei = (value: string, unitType: number | UnitKey): Wei => {
+  let decimal;
+  if (typeof unitType === 'number') {
+    decimal = unitType;
+  } else if (typeof unitType === 'string') {
+    decimal = getDecimalFromEtherUnit(unitType);
+  }
   const wei = convertedToBaseUnit(value, decimal);
   return Wei(wei);
 };

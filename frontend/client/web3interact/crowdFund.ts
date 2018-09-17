@@ -2,6 +2,7 @@ import Web3 from 'web3';
 import { CrowdFund, Milestone, MILESTONE_STATE } from 'modules/proposals/reducers';
 import { collectArrayElements } from 'utils/web3Utils';
 import { Wei } from 'utils/units';
+import BN from 'bn.js';
 
 export async function getCrowdFundState(
   crowdFundContract: any,
@@ -26,7 +27,10 @@ export async function getCrowdFundState(
     ? 100
     : balance.divn(100).isZero()
       ? 0
-      : target.div(balance.divn(100)).toNumber();
+      : balance
+          .mul(new BN(100))
+          .div(target)
+          .toNumber();
   const amountVotingForRefund = isRaiseGoalReached
     ? Wei(await crowdFundContract.methods.amountVotingForRefund().call({ from: account }))
     : Wei('0');
@@ -102,6 +106,11 @@ export async function getCrowdFundState(
               .getContributorMilestoneVote(addr, idx)
               .call({ form: account }),
         ),
+      );
+      contributor.contributionAmount = Wei(
+        await crowdFundContract.methods
+          .getContributorContributionAmount(addr)
+          .call({ from: account }),
       );
       return contributor;
     }),

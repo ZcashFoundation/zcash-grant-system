@@ -5,11 +5,10 @@ import * as Styled from './styled';
 
 interface Props {
   address: string;
+  secondary?: React.ReactNode;
 }
 
-// TODO - don't hardcode monero image
-
-const UserRow = ({ address }: Props) => (
+const UserRow = ({ address, secondary }: Props) => (
   <Styled.Container>
     <Styled.Avatar>
       <Identicon address={address} />
@@ -18,7 +17,7 @@ const UserRow = ({ address }: Props) => (
       <Styled.InfoMain>
         <ShortAddress address={address} />
       </Styled.InfoMain>
-      <Styled.InfoSecondary>{/* user.title */}</Styled.InfoSecondary>
+      {secondary && <Styled.InfoSecondary>{secondary}</Styled.InfoSecondary>}
     </Styled.Info>
   </Styled.Container>
 );

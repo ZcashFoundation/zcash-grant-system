@@ -15,6 +15,7 @@ import Milestones from './Milestones';
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
 import GovernanceTab from './Governance';
+import ContributorsTab from './Contributors';
 // import CommunityTab from './Community';
 import * as Styled from './styled';
 import { withRouter } from 'next/router';
@@ -113,8 +114,11 @@ class ProposalDetail extends React.Component<Props, State> {
                 <div style={{ marginTop: '1.5rem' }} />
                 <UpdatesTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Governance" key="governanc">
+              <Tabs.TabPane tab="Governance" key="governance">
                 <GovernanceTab proposal={proposal} />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Contributors" key="contributors">
+                <ContributorsTab crowdFund={proposal.crowdFund} />
               </Tabs.TabPane>
             </Tabs>
           )}
