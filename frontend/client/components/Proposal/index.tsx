@@ -107,7 +107,6 @@ class ProposalDetail extends React.Component<Props, State> {
                 </div>
               </Tabs.TabPane>
               <Tabs.TabPane tab="Discussion" key="discussions">
-                <div style={{ marginTop: '1.5rem' }} />
                 <CommentsTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Updates" key="updates">

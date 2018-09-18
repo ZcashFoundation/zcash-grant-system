@@ -17,12 +17,17 @@ export const Info = styled.div`
   margin-bottom: 1rem;
 `;
 
-export const InfoThumb = styled.img`
+export const InfoThumb = styled.div`
   display: block;
   margin-right: 0.5rem;
   width: ${infoHeight};
   height: ${infoHeight};
-  border-radius: 4px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+  }
 `;
 
 export const InfoName = styled.div`
@@ -59,7 +64,13 @@ export const ControlButton = styled.a`
 `;
 
 export const Replies = styled.div`
-  margin: 1rem;
+  margin: 1rem 0 1rem 1rem;
   padding: 1rem 0rem 1rem 2rem;
   border-left: 1px solid rgba(0, 0, 0, 0.12);
+`;
+
+export const ReplyForm = styled.div`
+  margin-bottom: 1rem;
+  max-width: 600px;
+  width: 100%;
 `;

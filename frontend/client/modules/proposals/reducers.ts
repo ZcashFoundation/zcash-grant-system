@@ -1,6 +1,7 @@
 import types from './types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { Wei } from 'utils/units';
+import { findComment } from 'utils/helpers';
 
 export interface User {
   accountAddress: string;
@@ -125,6 +126,9 @@ export interface ProposalState {
   proposalUpdates: { [id: string]: ProposalUpdates };
   updatesError: null | string;
   isFetchingUpdates: boolean;
+
+  isPostCommentPending: boolean;
+  postCommentError: null | string;
 }
 
 export const INITIAL_STATE: ProposalState = {
@@ -139,6 +143,9 @@ export const INITIAL_STATE: ProposalState = {
   proposalUpdates: {},
   updatesError: null,
   isFetchingUpdates: false,
+
+  isPostCommentPending: false,
+  postCommentError: null,
 };
 
 function addProposal(state: ProposalState, payload: ProposalWithCrowdFund) {
@@ -191,6 +198,46 @@ function addUpdates(state: ProposalState, payload: { data: ProposalUpdates }) {
       [payload.data.proposalId]: payload.data,
     },
     isFetchingUpdates: false,
+  };
+}
+
+interface PostCommentPayload {
+  proposalId: ProposalWithCrowdFund['proposalId'];
+  comment: Comment;
+  parentCommentId?: Comment['commentId'];
+}
+function addPostedComment(state: ProposalState, payload: PostCommentPayload) {
+  const { proposalId, comment, parentCommentId } = payload;
+  const newComments = state.proposalComments[proposalId]
+    ? {
+        ...state.proposalComments[proposalId],
+        totalComments: state.proposalComments[proposalId].totalComments + 1,
+        comments: [...state.proposalComments[proposalId].comments],
+      }
+    : {
+        proposalId: payload.proposalId,
+        totalComments: 1,
+        comments: [],
+      };
+
+  if (parentCommentId) {
+    const parentComment = findComment(parentCommentId, newComments.comments);
+    if (parentComment) {
+      // FIXME: Object mutation because I'm lazy, but this probably shouldn’t
+      // exist once API hookup is done. We'll just re-request from server.
+      parentComment.replies.unshift(comment);
+    }
+  } else {
+    newComments.comments.unshift(comment);
+  }
+
+  return {
+    ...state,
+    isPostCommentPending: false,
+    proposalComments: {
+      ...state.proposalComments,
+      [payload.proposalId]: newComments,
+    },
   };
 }
 
@@ -247,6 +294,21 @@ export default (state = INITIAL_STATE, action: any) => {
         // TODO: Get action to send real error
         updatesError: 'Failed to fetch updates',
         isFetchingUpdates: false,
+      };
+
+    case types.POST_PROPOSAL_COMMENT_PENDING:
+      return {
+        ...state,
+        isPostCommentPending: true,
+        postCommentError: null,
+      };
+    case types.POST_PROPOSAL_COMMENT_FULFILLED:
+      return addPostedComment(state, payload);
+    case types.POST_PROPOSAL_COMMENT_REJECTED:
+      return {
+        ...state,
+        isPostCommentPending: false,
+        postCommentError: payload,
       };
 
     default:
