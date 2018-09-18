@@ -9,7 +9,7 @@ from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
 from .models import Proposal, proposals_schema, proposal_schema, db
 
-blueprint = Blueprint("proposal", __name__, url_prefix="/api/proposals")
+blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 
 
 def __adjust_dumped_proposal(proposal):
@@ -84,7 +84,7 @@ def get_proposals():
     return JSONResponse(results)
 
 
-@blueprint.route("/create", methods=["POST"])
+@blueprint.route("/", methods=["POST"])
 def make_proposal():
     from grant.author.models import Author
 

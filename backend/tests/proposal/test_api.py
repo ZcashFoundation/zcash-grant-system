@@ -30,7 +30,7 @@ class TestAPI(BaseTestConfig):
         ).first())
 
         self.app.post(
-            "/api/proposals/create",
+            "/api/v1/proposals/",
             data=json.dumps(proposal),
             content_type='application/json'
         )
@@ -41,8 +41,7 @@ class TestAPI(BaseTestConfig):
 
     def test_create_new_proposal_comment(self):
         proposal_res = self.app.post(
-            # TODO adjust endpoint to /api/proposal to follow REST convention
-            "/api/proposals/create",
+            "/api/v1/proposals/",
             data=json.dumps(proposal),
             content_type='application/json'
         )
