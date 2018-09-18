@@ -4,8 +4,10 @@ from flask import Blueprint, request
 from sqlalchemy.exc import IntegrityError
 
 from grant import JSONResponse
-from .models import Proposal, proposals_schema, proposal_schema, db
+from grant.author.models import Author
+from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
+from .models import Proposal, proposals_schema, proposal_schema, db
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/proposals")
 
@@ -28,14 +30,41 @@ def get_proposal(proposal_id):
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
 def get_proposal_comments(proposal_id):
-    proposals = Proposal.query.filter_by(proposal_id=proposal_id).first()
-    if proposals:
-        results = proposal_schema.dump(proposals)
+    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    if proposal:
+        dumped_proposal = proposal_schema.dump(proposal)
         return JSONResponse(
             proposal_id=proposal_id,
-            total_comments=len(results["comments"]),
-            comments=results["comments"]
+            total_comments=len(dumped_proposal["comments"]),
+            comments=dumped_proposal["comments"]
         )
+    else:
+        return JSONResponse(message="No proposal matching id", _statusCode=404)
+
+
+@blueprint.route("/<proposal_id>/comments", methods=["POST"])
+def post_proposal_comments(proposal_id):
+    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    if proposal:
+        incoming = request.get_json()
+        author_id = incoming["authorId"]
+        content = incoming["content"]
+        author = Author.query.filter_by(id=author_id).first()
+
+        if author:
+            comment = Comment(
+                proposal_id=proposal_id,
+                author_id=author_id,
+                content=content
+            )
+
+            db.session.add(comment)
+            db.session.commit()
+            dumped_comment = comment_schema.dump(comment)
+            return JSONResponse(dumped_comment, _statusCode=201)
+
+        else:
+            return JSONResponse(message="No author matching id", _statusCode=404)
     else:
         return JSONResponse(message="No proposal matching id", _statusCode=404)
 
@@ -105,4 +134,4 @@ def make_proposal():
         return JSONResponse(message="Proposal with that hash already exists", _statusCode=409)
 
     results = proposal_schema.dump(proposal)
-    return JSONResponse(results, _statusCode=204)
+    return JSONResponse(results, _statusCode=201)

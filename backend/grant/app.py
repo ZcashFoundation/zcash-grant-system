@@ -34,10 +34,6 @@ def register_blueprints(app):
     app.register_blueprint(author.views.blueprint)
     app.register_blueprint(milestone.views.blueprint)
 
-
-    return None
-
-
 def register_shellcontext(app):
     """Register shell context objects."""
 
