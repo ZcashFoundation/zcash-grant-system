@@ -11,7 +11,7 @@ export default class BasicHead extends React.Component<Props> {
     return (
       <div>
         <Helmet>
-          <title>Grant.io - {title}</title>
+          <title>{`Grant.io - ${title}`}</title>
           <meta name={`${title} page`} content={`${title} page stuff`} />
           <link
             rel="stylesheet"
