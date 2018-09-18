@@ -50,7 +50,7 @@ class TestAPI(BaseTestConfig):
         proposal_author_id = proposal_json["author"]["userid"]
 
         comment_res = self.app.post(
-            "/api/proposals/{}/comments".format(proposal_id),
+            "/api/v1/proposals/{}/comments".format(proposal_id),
             data=json.dumps({
                 "authorId": proposal_author_id,
                 "content": "What a comment"
