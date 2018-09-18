@@ -1,2 +1,5 @@
 # Funds these addresses when `npm run truffle` runs. Comma separated.
 FUND_ETH_ADDRESSES=0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520,0xDECAF9CD2367cdbb726E904cD6397eDFcAe6068DEe0460DFa261520,0xDECAF9CD2367cdbb726E904cD6397eDFcAe6068D
+
+# Disable typescript checking for dev building (reduce build time & resource usage)
+NO_DEV_TS_CHECK=true
