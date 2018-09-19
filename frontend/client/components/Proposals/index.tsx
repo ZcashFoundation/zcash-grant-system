@@ -11,7 +11,7 @@ import ProposalResults from './Results';
 import ProposalFilters, { Filters } from './Filters';
 import { PROPOSAL_SORT } from 'api/constants';
 import Web3Container from 'lib/Web3Container';
-import * as Styled from './styled';
+import './style.less';
 
 type ProposalSortFn = (p1: ProposalWithCrowdFund, p2: ProposalWithCrowdFund) => number;
 const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
@@ -147,7 +147,7 @@ class Proposals extends React.Component<Props, State> {
       />
     );
     return (
-      <Styled.Container>
+      <div className="Proposals">
         {isFiltersDrawered ? (
           <Drawer
             placement="right"
@@ -167,32 +167,33 @@ class Proposals extends React.Component<Props, State> {
             </Button>
           </Drawer>
         ) : (
-          <Styled.Filters>{filtersComponent}</Styled.Filters>
+          <div className="Proposals-filters">{filtersComponent}</div>
         )}
 
-        <Styled.Results>
-          <Styled.Search>
+        <div className="Proposals-results">
+          <div className="Proposals-search">
             <Input.Search
               placeholder="Search for a proposal"
               onChange={this.handleChangeSearch}
               size="large"
             />
-            <Styled.SearchFilterButton
+            <Button
+              className="Proposals-search-filterButton"
               type="primary"
               size="large"
               onClick={this.openFilterDrawer}
             >
               <Icon type="filter" /> Filters
-            </Styled.SearchFilterButton>
-          </Styled.Search>
+            </Button>
+          </div>
           <Divider />
           <ProposalResults
             proposals={processedProposals}
             proposalsError={proposalsError}
             isFetchingProposals={isFetchingProposals}
           />
-        </Styled.Results>
-      </Styled.Container>
+        </div>
+      </div>
     );
   }
 

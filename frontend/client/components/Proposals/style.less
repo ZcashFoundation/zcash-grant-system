@@ -1,0 +1,33 @@
+@small-query: ~'(max-width: 640px)';
+
+.Proposals {
+  display: flex;
+  flex-direction: row;
+
+  &-filters {
+    width: 220px;
+    margin-right: 3rem;
+
+    @media @small-query {
+      display: none;
+    }
+  }
+
+  &-results {
+    flex: 1;
+    width: 100%;
+  }
+
+  &-search {
+    display: flex;
+
+    &-filterButton {
+      display: none;
+      margin-left: 0.5rem;
+
+      @media @small-query {
+        display: block;
+      }
+    }
+  }
+}
