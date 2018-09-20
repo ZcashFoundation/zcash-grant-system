@@ -86,6 +86,7 @@ export function convert(
 
 // TODO: Find a better place for this?
 export const markdownStyles = `
+  line-height: 1.7;
   font-family: 'Nunito Sans', 'Helvetica Neue', Arial, sans-serif;
 
   h1, h2, h3, h4, h5, h6 {

@@ -114,6 +114,13 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
         crowdFundLoading: false,
         crowdFundError: payload,
       };
+    case types.RESET_CROWD_FUND:
+      return {
+        ...state,
+        crowdFundLoading: false,
+        crowdFundError: null,
+        crowdFundCreatedAddress: null,
+      };
 
     case types.CONTRACT_PENDING:
       return {

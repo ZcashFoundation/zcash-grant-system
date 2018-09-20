@@ -44,9 +44,8 @@ export interface Milestone {
 export interface ProposalMilestone extends Milestone {
   body: string;
   content: string;
-  dateCreated: Date;
-  dateEstimated: Date;
   immediatePayout: boolean;
+  dateEstimated: string;
   payoutPercent: string;
   stage: string;
   title: string;

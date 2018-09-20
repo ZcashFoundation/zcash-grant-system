@@ -93,7 +93,8 @@ const fromWei = (wei: Wei, unit: UnitKey) => {
   return baseToConvertedUnit(wei.toString(), decimal);
 };
 
-const toWei = (value: string, unitType: number | UnitKey): Wei => {
+const toWei = (value: string | number, unitType: number | UnitKey): Wei => {
+  value = value.toString();
   let decimal;
   if (typeof unitType === 'number') {
     decimal = unitType;

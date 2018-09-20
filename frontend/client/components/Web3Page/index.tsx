@@ -3,14 +3,13 @@ import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
 import { Spin } from 'antd';
-import AntWrap from 'components/AntWrap';
+import AntWrap, { Props as AntWrapProps } from 'components/AntWrap';
 import { web3Actions } from 'modules/web3';
 import MetamaskIcon from 'static/images/metamask.png';
 import WrongNetworkIcon from 'static/images/wrong-network.png';
 import './style.less';
 
-interface OwnProps {
-  title: string;
+interface OwnProps extends AntWrapProps {
   render(props: Web3RenderProps & any): React.ReactNode;
 }
 
@@ -27,7 +26,7 @@ interface ActionProps {
 type Props = OwnProps & StateProps & ActionProps;
 
 const Web3Page = (props: Props) => {
-  const { title, render, isMissingWeb3, isWeb3Locked, isWrongNetwork } = props;
+  const { render, isMissingWeb3, isWeb3Locked, isWrongNetwork, ...rest } = props;
   let content;
   let centerContent = false;
   if (isMissingWeb3) {
@@ -88,7 +87,7 @@ const Web3Page = (props: Props) => {
   }
 
   return (
-    <AntWrap title={title} centerContent={centerContent}>
+    <AntWrap centerContent={centerContent} {...rest}>
       <div className="Web3Page">{content}</div>
     </AntWrap>
   );

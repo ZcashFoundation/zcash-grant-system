@@ -97,7 +97,7 @@ interface MilestoneData {
   immediatePayout: boolean;
 }
 
-interface ProposalContractData {
+export interface ProposalContractData {
   ethAmount: Wei;
   payOutAddress: string;
   trusteesAddresses: string[];
@@ -108,7 +108,7 @@ interface ProposalContractData {
   immediateFirstMilestonePayout: boolean;
 }
 
-interface ProposalBackendData {
+export interface ProposalBackendData {
   title: string;
   content: string;
   category: PROPOSAL_CATEGORY;
@@ -179,6 +179,10 @@ export function createCrowdFund(
       });
     }
   };
+}
+
+export function resetCreateCrowdFund() {
+  return { type: types.RESET_CROWD_FUND };
 }
 
 export type TRequestMilestonePayout = typeof requestMilestonePayout;

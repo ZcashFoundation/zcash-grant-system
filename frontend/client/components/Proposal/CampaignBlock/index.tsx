@@ -18,6 +18,7 @@ import { CATEGORY_UI } from 'api/constants';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
+  isPreview?: boolean;
 }
 
 interface StateProps {
@@ -81,7 +82,7 @@ class CampaignBlock extends React.Component<Props, State> {
   };
 
   render() {
-    const { proposal, sendLoading, web3 } = this.props;
+    const { proposal, sendLoading, web3, isPreview } = this.props;
     const { amountToRaise, amountError } = this.state;
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
@@ -89,7 +90,7 @@ class CampaignBlock extends React.Component<Props, State> {
       const { crowdFund } = proposal;
       const isFundingOver =
         crowdFund.isRaiseGoalReached || crowdFund.deadline < Date.now();
-      const isDisabled = isFundingOver || !!amountError || !amountFloat;
+      const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
       const remainingEthNum = parseFloat(
         web3.utils.fromWei(crowdFund.target.sub(crowdFund.funded), 'ether'),
       );
@@ -172,6 +173,7 @@ class CampaignBlock extends React.Component<Props, State> {
                     step={0.1}
                     onChange={this.handleAmountChange}
                     addonAfter="ETH"
+                    disabled={isPreview}
                   />
                 </Form.Item>
 

@@ -33,6 +33,7 @@ const commands: { [key in MARKDOWN_TYPE]: ReactMdeProps['commands'] } = {
 
 interface Props {
   type?: MARKDOWN_TYPE;
+  initialMarkdown?: string;
   onChange(markdown: string): void;
 }
 
@@ -44,6 +45,12 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
   state: State = {
     mdeState: null,
   };
+
+  constructor(props: Props) {
+    super(props);
+    const mdeState = props.initialMarkdown ? { markdown: props.initialMarkdown } : null;
+    this.state = { mdeState };
+  }
 
   handleChange = (mdeState: ReactMdeTypes.MdeState) => {
     this.setState({ mdeState });

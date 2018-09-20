@@ -24,6 +24,7 @@ import { web3Actions } from 'modules/web3';
 
 interface OwnProps {
   proposalId: string;
+  isPreview?: boolean;
 }
 
 interface StateProps {
@@ -42,7 +43,7 @@ interface State {
   bodyId: string;
 }
 
-class ProposalDetail extends React.Component<Props, State> {
+export class ProposalDetail extends React.Component<Props, State> {
   state: State = {
     isBodyExpanded: false,
     isBodyOverflowing: false,
@@ -67,7 +68,7 @@ class ProposalDetail extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposal } = this.props;
+    const { proposal, isPreview } = this.props;
     const { isBodyExpanded, isBodyOverflowing, bodyId } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
 
@@ -94,7 +95,7 @@ class ProposalDetail extends React.Component<Props, State> {
               </Styled.Block>
             </Styled.TopMain>
             <Styled.TopSide>
-              <CampaignBlock proposal={proposal} />
+              <CampaignBlock proposal={proposal} isPreview={isPreview} />
               <TeamBlock crowdFund={crowdFund} />
             </Styled.TopSide>
           </Styled.Top>
@@ -106,10 +107,10 @@ class ProposalDetail extends React.Component<Props, State> {
                   <Milestones proposal={proposal} />
                 </div>
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Discussion" key="discussions">
+              <Tabs.TabPane tab="Discussion" key="discussions" disabled={isPreview}>
                 <CommentsTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Updates" key="updates">
+              <Tabs.TabPane tab="Updates" key="updates" disabled={isPreview}>
                 <div style={{ marginTop: '1.5rem' }} />
                 <UpdatesTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
