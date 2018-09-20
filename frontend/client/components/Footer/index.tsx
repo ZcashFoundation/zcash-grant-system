@@ -1,16 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import * as Styled from './styled';
+import './style.less';
 
 export default () => (
-  <Styled.Footer>
-    <Styled.Title>
-      <Link to="/">Grant.io</Link>
-    </Styled.Title>
-    {/*<Styled.Links>
-      <Styled.Link>about</Styled.Link>
-      <Styled.Link>legal</Styled.Link>
-      <Styled.Link>privacy policy</Styled.Link>
-    </Styled.Links>*/}
-  </Styled.Footer>
+  <footer className="Footer">
+    <Link className="Footer-title" to="/">
+      Grant.io
+    </Link>
+    {/*
+      <div className="Footer-links">
+        <a className="Footer-links-link">about</a>
+        <a className="Footer-links-link">legal</a>
+        <a className="Footer-links-link">privacy policy</a>
+      </div>
+    */}
+  </footer>
 );
