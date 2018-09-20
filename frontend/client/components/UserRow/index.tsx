@@ -1,7 +1,7 @@
 import React from 'react';
 import ShortAddress from 'components/ShortAddress';
 import Identicon from 'components/Identicon';
-import * as Styled from './styled';
+import './style.less';
 
 interface Props {
   address: string;
@@ -9,17 +9,17 @@ interface Props {
 }
 
 const UserRow = ({ address, secondary }: Props) => (
-  <Styled.Container>
-    <Styled.Avatar>
+  <div className="UserRow">
+    <div className="UserRow-avatar">
       <Identicon address={address} />
-    </Styled.Avatar>
-    <Styled.Info>
-      <Styled.InfoMain>
+    </div>
+    <div className="UserRow-info">
+      <div className="UserRow-info-main">
         <ShortAddress address={address} />
-      </Styled.InfoMain>
-      {secondary && <Styled.InfoSecondary>{secondary}</Styled.InfoSecondary>}
-    </Styled.Info>
-  </Styled.Container>
+      </div>
+      {secondary && <p className="UserRow-info-secondary">{secondary}</p>}
+    </div>
+  </div>
 );
 
 export default UserRow;
