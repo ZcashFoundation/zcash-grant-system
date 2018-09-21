@@ -45,16 +45,24 @@ module.exports = {
     ],
     namedModules: true,
     noEmitOnErrors: false,
-    // concatenateModules: true,
-    // below settings bundle all vendor css in one file
-    // this allows SSR to render a reference to the hashed css
-    // if commons is split by module then flickering may occur on load
+
     splitChunks: {
+      chunks: 'async',
+      minSize: 30000,
+      minChunks: 1,
+      maxAsyncRequests: 5,
+      maxInitialRequests: 3,
+      automaticNameDelimiter: '~',
+      name: true,
       cacheGroups: {
-        commons: {
+        vendors: {
           test: /[\\/]node_modules[\\/]/,
-          name: 'vendor',
-          chunks: 'all',
+          priority: -10,
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true,
         },
       },
     },

@@ -5,12 +5,9 @@ import { ServerStyleSheet } from 'styled-components';
 import { getLoadableState } from 'loadable-components/server';
 import { StaticRouter as Router } from 'react-router-dom';
 import { Provider } from 'react-redux';
-// import IntlProvider from '../shared/i18n/IntlProvider';
 
 import log from './log';
 import { configureStore } from '../client/store/configure';
-// import DrizzleContext from '../shared/DrizzleContext';
-// import App from '../shared/App';
 import Html from './components/HTML';
 import Routes from '../client/Routes';
 
@@ -48,6 +45,7 @@ const extractLoadableIds = (tree: any): string[] => {
   return ids;
 };
 
+// TODO: write tests for this
 const chunkExtractFromLoadables = (loadableState: any) =>
   getStats().then((stats: any) => {
     const loadableIds = extractLoadableIds(loadableState.tree);
@@ -55,9 +53,18 @@ const chunkExtractFromLoadables = (loadableState: any) =>
       (m: any) =>
         m.reasons.filter((r: any) => loadableIds.indexOf(r.userRequest) > -1).length > 0,
     );
-    const chunks = mods.reduce((a: any[], m: any) => a.concat(m.chunks), []);
-    const files = stats.chunks
+    const chunks = mods.reduce((a: string[], m: any) => a.concat(m.chunks), []);
+    const origins = stats.chunks
       .filter((c: any) => chunks.indexOf(c.id) > -1)
+      .map((c: any) => ({ loc: c.origins[0].loc, moduleId: c.origins[0].moduleId }));
+    const origin = origins[0];
+    const files = stats.chunks
+      .filter(
+        (c: any) =>
+          c.origins.filter(
+            (o: any) => o.loc === origin.loc && o.moduleId === origin.moduleId,
+          ).length > 0,
+      )
       .reduce((a: string[], c: any) => a.concat(c.files), []);
     return {
       css: files.filter((f: string) => /.css$/.test(f)),
@@ -65,17 +72,7 @@ const chunkExtractFromLoadables = (loadableState: any) =>
     };
   });
 
-// react-router recommends agains redux - router integration, perhaps remove?
-// https://reacttraining.com/react-router/web/guides/redux-integration
-
-//     <DrizzleContext.Provider store={store}>
-//         <IntlProvider>
-//           <App />
-//         </IntlProvider>
-//     </DrizzleContext.Provider>
-
 const serverRenderer = () => async (req: Request, res: Response) => {
-  // const store = configureStore(req.url);
   const store = configureStore();
   const sheet = new ServerStyleSheet();
   const reactApp = (

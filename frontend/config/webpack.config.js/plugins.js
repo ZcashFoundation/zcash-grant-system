@@ -25,13 +25,17 @@ const client = [
   new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
   new ManifestPlugin({
     fileName: 'manifest.json',
-    writeToFileEmit: true, // fixes initial-only writing from WriteFileWebpackPlugin
+    // fixes initial-only writing from WriteFileWebpackPlugin
+    writeToFileEmit: true,
   }),
+  // this allows the server access to the dependency graph
+  // so it can find which js/css to add to initial page
   new StatsWriterPlugin({
     fileName: 'stats.json',
     fields: null,
     transform(data) {
       const trans = {};
+      trans.publicPath = data.publicPath;
       trans.modules = data.modules.map(m => ({
         id: m.id,
         chunks: m.chunks,
@@ -40,6 +44,7 @@ const client = [
       trans.chunks = data.chunks.map(c => ({
         id: c.id,
         files: c.files,
+        origins: c.origins,
       }));
       return JSON.stringify(trans, null, 2);
     },
