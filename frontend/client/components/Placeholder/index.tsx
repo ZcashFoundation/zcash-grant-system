@@ -1,5 +1,5 @@
 import React from 'react';
-import * as Styled from './styled';
+import './style.less';
 
 interface Props {
   title?: React.ReactNode;
@@ -8,10 +8,10 @@ interface Props {
 }
 
 const Placeholder: React.SFC<Props> = ({ style = {}, title, subtitle }) => (
-  <Styled.Container style={style}>
-    {title && <Styled.Title>{title}</Styled.Title>}
-    {subtitle && <Styled.Subtitle>{subtitle}</Styled.Subtitle>}
-  </Styled.Container>
+  <div className="Placeholder" style={style}>
+    {title && <h3 className="Placeholder-title">{title}</h3>}
+    {subtitle && <div className="Placeholder-subtitle">{subtitle}</div>}
+  </div>
 );
 
 export default Placeholder;

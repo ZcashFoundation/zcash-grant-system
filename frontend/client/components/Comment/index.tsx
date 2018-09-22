@@ -8,7 +8,7 @@ import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import { postProposalComment } from 'modules/proposals/actions';
 import { Comment as IComment, Proposal } from 'modules/proposals/reducers';
 import { AppState } from 'store/reducers';
-import * as Styled from './styled';
+import './style.less';
 
 interface OwnProps {
   comment: IComment;
@@ -49,31 +49,31 @@ class Comment extends React.Component<Props> {
     const { comment, proposalId } = this.props;
     const { isReplying, reply } = this.state;
     return (
-      <Styled.Container>
-        <Styled.Info>
-          <Styled.InfoThumb>
+      <div className="Comment">
+        <div className="Comment-info">
+          <div className="Comment-info-thumb">
             <Identicon address={comment.author.accountAddress} />
-          </Styled.InfoThumb>
-          {/* <Styled.InfoThumb src={comment.author.avatar['120x120']} /> */}
-          <Styled.InfoName>{comment.author.username}</Styled.InfoName>
-          <Styled.InfoTime>{moment(comment.dateCreated).fromNow()}</Styled.InfoTime>
-        </Styled.Info>
+          </div>
+          {/* <div className="Comment-info-thumb" src={comment.author.avatar['120x120']} /> */}
+          <div className="Comment-info-name">{comment.author.username}</div>
+          <div className="Comment-info-time">{moment(comment.dateCreated).fromNow()}</div>
+        </div>
 
-        <Styled.Body>
+        <div className="Comment-body">
           <Markdown source={comment.body} type={MARKDOWN_TYPE.REDUCED} />
-        </Styled.Body>
+        </div>
 
-        <Styled.Controls>
-          <Styled.ControlButton onClick={this.toggleReply}>
+        <div className="Comment-controls">
+          <a className="Comment-controls-button" onClick={this.toggleReply}>
             {isReplying ? 'Cancel' : 'Reply'}
-          </Styled.ControlButton>
-          {/*<Styled.ControlButton>Report</Styled.ControlButton>*/}
-        </Styled.Controls>
+          </a>
+          {/*<a className="Comment-controls-button">Report</a>*/}
+        </div>
 
         {(comment.replies.length || isReplying) && (
-          <Styled.Replies>
+          <div className="Comment-replies">
             {isReplying && (
-              <Styled.ReplyForm>
+              <div className="Comment-replies-form">
                 <MarkdownEditor
                   onChange={this.handleChangeReply}
                   type={MARKDOWN_TYPE.REDUCED}
@@ -82,7 +82,7 @@ class Comment extends React.Component<Props> {
                 <Button onClick={this.reply} disabled={!reply.length}>
                   Submit reply
                 </Button>
-              </Styled.ReplyForm>
+              </div>
             )}
             {comment.replies.map(subComment => (
               <ConnectedComment
@@ -91,9 +91,9 @@ class Comment extends React.Component<Props> {
                 proposalId={proposalId}
               />
             ))}
-          </Styled.Replies>
+          </div>
         )}
-      </Styled.Container>
+      </div>
     );
   }
 
