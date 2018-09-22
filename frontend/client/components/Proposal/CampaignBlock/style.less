@@ -1,0 +1,60 @@
+.ProposalCampaignBlock {
+  &-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+
+    &-label {
+      font-size: 1.1rem;
+      font-weight: 300;
+      opacity: 0.8;
+      letter-spacing: 0.1rem;
+      flex: 0 0 auto;
+      margin-right: 1rem;
+    }
+
+    &-value {
+      font-size: 1.1rem;
+      flex-basis: 0;
+      flex-grow: 1;
+      overflow: hidden;
+      text-align: right;
+    }
+  }
+
+  &-bar {
+    position: relative;
+    height: 14px;
+    background: #eaeaea;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+
+    &-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      background: #1890ff;
+      border-radius: 0.5rem;
+    }
+  }
+
+  &-fundingOver {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.5rem -1rem 0;
+    font-size: 1.15rem;
+    color: #e74c3c;
+
+    .anticon {
+      font-size: 1.5rem;
+      margin-right: 0.4rem;
+    }
+
+    &.is-success {
+      color: #2ecc71;
+    }
+  }
+}

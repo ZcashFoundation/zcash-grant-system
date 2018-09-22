@@ -3,7 +3,7 @@ import GovernanceMilestones from './Milestones';
 import GovernanceRefunds from './Refunds';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
 import Placeholder from 'components/Placeholder';
-import * as Styled from './styled';
+import './style.less';
 
 interface Props {
   proposal: ProposalWithCrowdFund;
@@ -27,17 +27,17 @@ export default class ProposalGovernance extends React.Component<Props> {
     }
 
     return (
-      <Styled.GovernanceContainer>
+      <div className="ProposalGovernance">
         <div style={{ flex: 1 }}>
           <h2 style={{ marginBottom: '1rem' }}>Milestone Voting</h2>
           <GovernanceMilestones proposal={proposal} />
         </div>
-        <Styled.GovernanceDivider />
+        <div className="ProposalGovernance-divider" />
         <div style={{ flex: 1 }}>
           <h2 style={{ marginBottom: '1rem' }}>Refunds</h2>
           <GovernanceRefunds proposal={proposal} />
         </div>
-      </Styled.GovernanceContainer>
+      </div>
     );
   }
 }

@@ -7,7 +7,6 @@ import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import UnitDisplay from 'components/UnitDisplay';
-import * as Styled from './styled';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
@@ -65,12 +64,12 @@ class Milestones extends React.Component<Props> {
       if (isImmediatePayout && !hasImmediatePayoutBeenPaid) {
         if (!hasImmediatePayoutStarted) {
           content = (
-            <Styled.MilestoneActionText>
+            <p className="ProposalGovernance-milestoneActionText">
               Congratulations on getting funded! You can now begin the process of
               receiving your initial payment. Click below to begin a milestone payout
               request. It will instantly be approved, and you’ll be able to request the
               funds immediately after.
-            </Styled.MilestoneActionText>
+            </p>
           );
           button = {
             text: 'Request initial payout',
@@ -79,9 +78,9 @@ class Milestones extends React.Component<Props> {
           };
         } else {
           content = (
-            <Styled.MilestoneActionText>
+            <p className="ProposalGovernance-milestoneActionText">
               Your initial payout is ready! Click below to claim it.
-            </Styled.MilestoneActionText>
+            </p>
           );
           button = {
             text: 'Receive initial payout',
@@ -91,26 +90,26 @@ class Milestones extends React.Component<Props> {
         }
       } else if (activeVoteMilestone) {
         content = (
-          <Styled.MilestoneActionText>
+          <p className="ProposalGovernance-milestoneActionText">
             The vote for your payout is in progress. If payout rejection votes don’t
             exceed 50% before{' '}
             {moment(activeVoteMilestone.payoutRequestVoteDeadline).format(
               'MMM Do, h:mm a',
             )}
             , you will be able to collect your payment then.
-          </Styled.MilestoneActionText>
+          </p>
         );
         showVoteProgress = true;
       } else if (uncollectedMilestone) {
         content = (
-          <Styled.MilestoneActionText>
+          <p className="ProposalGovernance-milestoneActionText">
             Congratulations! Your milestone payout request was succesful. Click below to
             receive your payment of{' '}
             <strong>
               <UnitDisplay value={uncollectedMilestone.amount} symbol="ETH" />
             </strong>
             .
-          </Styled.MilestoneActionText>
+          </p>
         );
         button = {
           text: 'Receive milestone payout',
@@ -119,12 +118,12 @@ class Milestones extends React.Component<Props> {
         };
       } else if (nextUnpaidMilestone) {
         content = (
-          <Styled.MilestoneActionText>
+          <p className="ProposalGovernance-milestoneActionText">
             You can request a payout for your next milestone, "Milestone Title". If fewer
             than 50% of funders vote against it before{' '}
             {moment(Date.now() + crowdFund.milestoneVotingPeriod).format('MMM Do h:mm a')}
             , you will be able to collect your payout here.
-          </Styled.MilestoneActionText>
+          </p>
         );
         button = {
           text: 'Request milestone payout',
@@ -156,7 +155,7 @@ class Milestones extends React.Component<Props> {
         }
 
         content = (
-          <Styled.MilestoneActionText>
+          <p className="ProposalGovernance-milestoneActionText">
             A milestone vote is currently in progress. If funders vote against paying out
             the milestone by over 50% before{' '}
             {moment(activeVoteMilestone.payoutRequestVoteDeadline).format(
@@ -164,20 +163,20 @@ class Milestones extends React.Component<Props> {
             )}
             , the team will not receive the funds.
             {contributor && ' Since you funded this proposal, you can vote below.'}
-          </Styled.MilestoneActionText>
+          </p>
         );
         showVoteProgress = true;
       } else if (nextUnpaidMilestone) {
         content = (
-          <Styled.MilestoneActionText>
+          <p className="ProposalGovernance-milestoneActionText">
             There is no milestone vote currently active.
-          </Styled.MilestoneActionText>
+          </p>
         );
       } else {
         content = (
-          <Styled.MilestoneActionText>
+          <p className="ProposalGovernance-milestoneActionText">
             All milestones have been paid out.
-          </Styled.MilestoneActionText>
+          </p>
         );
       }
     }
@@ -186,15 +185,15 @@ class Milestones extends React.Component<Props> {
       <>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {showVoteProgress && (
-            <Styled.ProgressContainer>
+            <div className="ProposalGovernance-progress">
               <Progress
                 type="dashboard"
                 percent={activeVoteMilestone.percentAgainstPayout}
                 format={p => `${p}%`}
                 status="exception"
               />
-              <Styled.ProgressText>voted against payout</Styled.ProgressText>
-            </Styled.ProgressContainer>
+              <div className="ProposalGovernance-progress-text">voted against payout</div>
+            </div>
           )}
           <div>
             {content}

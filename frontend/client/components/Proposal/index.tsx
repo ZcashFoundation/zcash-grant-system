@@ -17,7 +17,8 @@ import UpdatesTab from './Updates';
 import GovernanceTab from './Governance';
 import ContributorsTab from './Contributors';
 // import CommunityTab from './Community';
-import * as Styled from './styled';
+import './style.less';
+import classnames from 'classnames';
 import { withRouter } from 'react-router';
 import Web3Container from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
@@ -77,28 +78,37 @@ export class ProposalDetail extends React.Component<Props, State> {
     } else {
       const { crowdFund } = proposal;
       return (
-        <Styled.Container>
-          <Styled.Top>
-            <Styled.TopMain>
-              <Styled.PageTitle>
+        <div className="Proposal">
+          <div className="Proposal-top">
+            <div className="Proposal-top-main">
+              <h1 className="Proposal-top-main-title">
                 {proposal ? proposal.title : <span>&nbsp;</span>}
-              </Styled.PageTitle>
-              <Styled.Block style={{ flexGrow: 1 }}>
-                <Styled.BodyText id={bodyId} isExpanded={isBodyExpanded}>
+              </h1>
+              <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
+                <div
+                  id={bodyId}
+                  className={classnames({
+                    ['Proposal-top-main-block-bodyText']: true,
+                    ['is-expanded']: isBodyExpanded,
+                  })}
+                >
                   {proposal ? <Markdown source={proposal.body} /> : <Spin size="large" />}
-                </Styled.BodyText>
+                </div>
                 {showExpand && (
-                  <Styled.BodyExpand onClick={this.expandBody}>
+                  <button
+                    className="Proposal-top-main-block-bodyExpand"
+                    onClick={this.expandBody}
+                  >
                     Read more <Icon type="arrow-down" style={{ fontSize: '0.7rem' }} />
-                  </Styled.BodyExpand>
+                  </button>
                 )}
-              </Styled.Block>
-            </Styled.TopMain>
-            <Styled.TopSide>
+              </div>
+            </div>
+            <div className="Proposal-top-side">
               <CampaignBlock proposal={proposal} isPreview={isPreview} />
               <TeamBlock crowdFund={crowdFund} />
-            </Styled.TopSide>
-          </Styled.Top>
+            </div>
+          </div>
 
           {proposal && (
             <Tabs>
@@ -122,7 +132,7 @@ export class ProposalDetail extends React.Component<Props, State> {
               </Tabs.TabPane>
             </Tabs>
           )}
-        </Styled.Container>
+        </div>
       );
     }
   }
@@ -174,13 +184,13 @@ const ConnectedProposal = compose<Props, OwnProps>(
 export default (props: OwnProps) => (
   <Web3Container
     renderLoading={() => (
-      <Styled.Container>
-        <Styled.Top>
-          <Styled.TopMain>
+      <div className="Proposal">
+        <div className="Proposal-top">
+          <div className="Proposal-top-main">
             <Spin />
-          </Styled.TopMain>
-        </Styled.Top>
-      </Styled.Container>
+          </div>
+        </div>
+      </div>
     )}
     render={() => <ConnectedProposal {...props} />}
   />

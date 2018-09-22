@@ -2,7 +2,6 @@ import React from 'react';
 import { Spin } from 'antd';
 import { CrowdFund } from 'modules/proposals/reducers';
 import UserRow from 'components/UserRow';
-import * as ProposalStyled from '../styled';
 import Placeholder from 'components/Placeholder';
 import UnitDisplay from 'components/UnitDisplay';
 
@@ -38,16 +37,16 @@ const ContributorsBlock = ({ crowdFund }: Props) => {
   }
 
   return (
-    <ProposalStyled.SideBlock>
+    <div className="Proposal-top-side-block">
       {crowdFund.contributors.length ? (
         <>
-          <ProposalStyled.BlockTitle>Contributors</ProposalStyled.BlockTitle>
-          <ProposalStyled.Block>{content}</ProposalStyled.Block>
+          <h1 className="Proposal-top-main-block-title">Contributors</h1>
+          <div className="Proposal-top-main-block">{content}</div>
         </>
       ) : (
         content
       )}
-    </ProposalStyled.SideBlock>
+    </div>
   );
 };
 

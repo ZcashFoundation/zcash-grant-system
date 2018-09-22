@@ -12,7 +12,7 @@ import {
 import Comments from 'components/Comments';
 import Placeholder from 'components/Placeholder';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
-import * as Styled from './styled';
+import './style.less';
 
 interface OwnProps {
   proposalId: ProposalWithCrowdFund['proposalId'];
@@ -81,7 +81,7 @@ class ProposalComments extends React.Component<Props, State> {
 
     return (
       <>
-        <Styled.PostContainer>
+        <div className="ProposalComments-post">
           <MarkdownEditor
             onChange={this.handleCommentChange}
             type={MARKDOWN_TYPE.REDUCED}
@@ -90,7 +90,7 @@ class ProposalComments extends React.Component<Props, State> {
           <Button onClick={this.postComment} disabled={!comment.length}>
             Submit comment
           </Button>
-        </Styled.PostContainer>
+        </div>
         {content}
       </>
     );

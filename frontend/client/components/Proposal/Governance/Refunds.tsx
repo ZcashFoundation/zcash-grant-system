@@ -5,7 +5,7 @@ import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
 import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
-import * as Styled from './styled';
+import classnames from 'classnames';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
@@ -37,7 +37,6 @@ class GovernanceRefunds extends React.Component<Props> {
     const hasVotedForRefund = contributor && contributor.refundVote;
     const hasRefunded = contributor && contributor.refunded;
     const refundPct = crowdFund.percentVotingForRefund;
-    const color = refundPct < 10 ? '#1890ff' : refundPct < 50 ? '#faad14' : '#f5222d';
 
     let text;
     let button;
@@ -118,10 +117,19 @@ class GovernanceRefunds extends React.Component<Props> {
     return (
       <>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Styled.ProgressContainer stroke={color}>
+          <div
+            className={classnames({
+              ['ProposalGovernance-progress']: true,
+              [refundPct < 10
+                ? 'is-starting'
+                : refundPct < 50
+                  ? 'is-started'
+                  : 'is-finishing']: true,
+            })}
+          >
             <Progress type="dashboard" percent={refundPct} format={p => `${p}%`} />
-            <Styled.ProgressText>voted for a refund</Styled.ProgressText>
-          </Styled.ProgressContainer>
+            <div className="ProposalGovernance-progress-text">voted for a refund</div>
+          </div>
           <div>
             <p style={{ fontSize: '1rem' }}>{text}</p>
             {button && (

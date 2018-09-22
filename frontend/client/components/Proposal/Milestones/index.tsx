@@ -3,7 +3,7 @@ import moment from 'moment';
 import { Timeline, Spin, Icon } from 'antd';
 import { ProposalWithCrowdFund, MILESTONE_STATE } from 'modules/proposals/reducers';
 import UnitDisplay from 'components/UnitDisplay';
-import * as Styled from './styled';
+import './style.less';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
@@ -11,7 +11,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export default class Milestones extends React.Component<Props> {
+export default class ProposalMilestones extends React.Component<Props> {
   render() {
     const { proposal } = this.props;
 
@@ -21,7 +21,7 @@ export default class Milestones extends React.Component<Props> {
 
     const { milestones } = proposal;
     return (
-      <Timeline style={{ maxWidth: '800px' }}>
+      <Timeline className="ProposalMilestones" style={{ maxWidth: '800px' }}>
         {milestones.map((milestone, i) => {
           let paymentInfo;
           let icon;
@@ -30,7 +30,7 @@ export default class Milestones extends React.Component<Props> {
             case MILESTONE_STATE.PAID:
               color = 'green';
               paymentInfo = (
-                <Styled.MilestonePayoutAmount>
+                <div className="ProposalMilestones-milestone-payoutAmount">
                   The team was awarded{' '}
                   <strong>
                     <UnitDisplay value={milestone.amount} symbol="ETH" />
@@ -40,64 +40,64 @@ export default class Milestones extends React.Component<Props> {
                     : `on ${moment(milestone.payoutRequestVoteDeadline).format(
                         'MMM Do, YYYY',
                       )}`}
-                </Styled.MilestonePayoutAmount>
+                </div>
               );
               break;
             case MILESTONE_STATE.ACTIVE:
               icon = <Icon type="exclamation-circle-o" />;
               paymentInfo = (
-                <Styled.MilestonePayoutAmount>
+                <div className="ProposalMilestones-milestone-payoutAmount">
                   Payout vote is in progress! Go to the Governance tab to see more.
-                </Styled.MilestonePayoutAmount>
+                </div>
               );
               break;
             case MILESTONE_STATE.REJECTED:
               color = 'red';
               paymentInfo = (
                 <>
-                  <Styled.MilestonePayoutAmount>
+                  <div className="ProposalMilestones-milestone-payoutAmount">
                     Payout was voted against on{' '}
                     {moment(milestone.payoutRequestVoteDeadline).format('MMM Do, YYYY')}
-                  </Styled.MilestonePayoutAmount>
-                  <Styled.MilestonePayoutInfo>
+                  </div>
+                  <div className="ProposalMilestones-milestone-payoutInfo">
                     They can request another payout vote at any time
-                  </Styled.MilestonePayoutInfo>
+                  </div>
                 </>
               );
               break;
             default:
               paymentInfo = (
                 <>
-                  <Styled.MilestonePayoutAmount>
+                  <div className="ProposalMilestones-milestone-payoutAmount">
                     Rewards team with{' '}
                     <strong>
                       <UnitDisplay value={milestone.amount} symbol="ETH" />
                     </strong>
-                  </Styled.MilestonePayoutAmount>
-                  <Styled.MilestonePayoutInfo>
+                  </div>
+                  <div className="ProposalMilestones-milestone-payoutInfo">
                     {milestone.isImmediatePayout
                       ? 'Paid immediately upon funding completion'
                       : 'Paid only on approval after 7 day voting period'}
-                  </Styled.MilestonePayoutInfo>
+                  </div>
                 </>
               );
           }
 
           return (
             <Timeline.Item color={color} dot={icon} key={i}>
-              <Styled.Milestone>
+              <div className="ProposalMilestones-milestone">
                 {/* TODO: Real data from backend */}
-                <Styled.MilestoneTitle>{milestone.title}</Styled.MilestoneTitle>
+                <h3 className="ProposalMilestones-milestone-title">{milestone.title}</h3>
                 {!milestone.isImmediatePayout && (
-                  <Styled.MilestoneEstimate>
+                  <div className="ProposalMilestones-milestone-estimate">
                     Estimate: {moment(milestone.dateEstimated).format('MMMM YYYY')}
-                  </Styled.MilestoneEstimate>
+                  </div>
                 )}
-                <Styled.MilestoneDescription>
+                <p className="ProposalMilestones-milestone-description">
                   {milestone.body}
-                </Styled.MilestoneDescription>
+                </p>
                 {paymentInfo}
-              </Styled.Milestone>
+              </div>
             </Timeline.Item>
           );
         })}

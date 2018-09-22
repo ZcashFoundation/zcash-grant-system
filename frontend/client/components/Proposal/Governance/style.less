@@ -1,0 +1,62 @@
+@small-screen: 1080px;
+
+.ProposalGovernance {
+  display: flex;
+  padding-top: 1rem;
+
+  @media (max-width: @small-screen) {
+    flex-direction: column;
+  }
+
+  &-divider {
+    width: 1px;
+    background: rgba(0, 0, 0, 0.05);
+    margin: 0 2rem;
+
+    @media (max-width: @small-screen) {
+      height: 1px;
+      width: 100%;
+      margin: 2rem 0;
+    }
+  }
+
+  &-milestoneActionText {
+    font-size: 1rem;
+  }
+
+  &-progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 0 2rem 0.5rem 0;
+
+    .ant-progress-circle-path {
+      stroke: inherit;
+    }
+
+    &.is-starting {
+      .ant-progress-circle-path {
+        stroke: #1890ff;
+      }
+    }
+
+    &.is-started {
+      .ant-progress-circle-path {
+        stroke: #faad14;
+      }
+    }
+
+    &.is-finishing {
+      .ant-progress-circle-path {
+        stroke: #f5222d;
+      }
+    }
+
+    &-text {
+      white-space: nowrap;
+      opacity: 0.6;
+      font-size: 0.75rem;
+    }
+  }
+}
