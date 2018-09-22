@@ -1,6 +1,7 @@
 import React from 'react';
 import { Spin, Icon } from 'antd';
-import * as Styled from './styled';
+import classnames from 'classnames';
+import './style.less';
 
 interface State {
   email: string;
@@ -41,30 +42,39 @@ export default class NewsletterForm extends React.PureComponent<{}, State> {
     let buttonText = <span>Submit</span>;
     if (isLoading) {
       buttonText = (
-        <Styled.ButtonIcon key="loading">
+        <div className="NewsletterForm-button-icon" key="loading">
           <Spin indicator={<Icon spin type="loading" style={{ color: '#FFF' }} />} />
-        </Styled.ButtonIcon>
+        </div>
       );
     } else if (isSuccess) {
       buttonText = (
-        <Styled.ButtonIcon key="check">
+        <div className="NewsletterForm-button-icon" key="check">
           <Icon type="check" style={{ fontSize: 24 }} />
-        </Styled.ButtonIcon>
+        </div>
       );
     }
 
     return (
-      <Styled.Form onSubmit={this.handleSubmit}>
-        <Styled.Input
+      <form className="NewsletterForm" onSubmit={this.handleSubmit}>
+        <input
+          className={classnames({
+            ['NewsletterForm-input']: true,
+            ['is-success']: isSuccess,
+          })}
           value={email}
           placeholder="email@example.com"
           onChange={this.handleChange}
-          isSuccess={isSuccess}
         />
-        <Styled.Button isLoading={isLoading} isSuccess={isSuccess}>
+        <button
+          className={classnames({
+            ['NewsletterForm-button']: true,
+            ['is-success']: isSuccess,
+            ['is-loading']: isLoading,
+          })}
+        >
           {buttonText}
-        </Styled.Button>
-      </Styled.Form>
+        </button>
+      </form>
     );
   }
 }
