@@ -21,7 +21,6 @@ const tsBabelLoaderClient = {
       loader: 'babel-loader',
       options: {
         plugins: [
-          ['styled-components', { ssr: true, displayName: true }],
           'dynamic-import-webpack', // for client
           'loadable-components/babel',
           'react-hot-loader/babel',
@@ -46,7 +45,6 @@ const tsBabelLoaderServer = {
       loader: 'babel-loader',
       options: {
         plugins: [
-          ['styled-components', { ssr: true, displayName: true }],
           'dynamic-import-node', // for server
           'loadable-components/babel',
           '@babel/plugin-proposal-object-rest-spread',

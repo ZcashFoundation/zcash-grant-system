@@ -7,20 +7,12 @@ export interface Props {
   scripts: string[];
   state: string;
   loadableStateScript: string;
-  styleElements: any;
 }
 
 export default class HTML extends React.Component<Props> {
   render() {
     const head = Helmet.renderStatic();
-    const {
-      children,
-      scripts,
-      css,
-      state,
-      loadableStateScript,
-      styleElements,
-    } = this.props;
+    const { children, scripts, css, state, loadableStateScript } = this.props;
     return (
       <html lang="">
         <head>
@@ -41,7 +33,6 @@ export default class HTML extends React.Component<Props> {
           {css.map(href => {
             return <link key={href} rel="stylesheet" href={href} />;
           })}
-          {styleElements.map((styleEl: any) => styleEl)}
           <script
             dangerouslySetInnerHTML={{
               __html: `window.__PRELOADED_STATE__ = ${state}`,

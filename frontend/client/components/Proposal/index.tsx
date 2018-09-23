@@ -54,6 +54,8 @@ export class ProposalDetail extends React.Component<Props, State> {
   componentDidMount() {
     if (!this.props.proposal) {
       this.props.fetchProposal(this.props.proposalId);
+    } else {
+      this.checkBodyOverflow();
     }
     window.addEventListener('resize', this.checkBodyOverflow);
   }

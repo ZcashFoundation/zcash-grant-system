@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactMde, { ReactMdeTypes, ReactMdeCommands, ReactMdeProps } from 'react-mde';
+import classnames from 'classnames';
 import { convert, MARKDOWN_TYPE } from 'utils/markdown';
-import * as Styled from './styled';
+import './style.less';
 
 const commands: { [key in MARKDOWN_TYPE]: ReactMdeProps['commands'] } = {
   [MARKDOWN_TYPE.FULL]: [
@@ -64,7 +65,12 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
   render() {
     const type = this.props.type || MARKDOWN_TYPE.FULL;
     return (
-      <Styled.Container type={type}>
+      <div
+        className={classnames({
+          MarkdownEditor: true,
+          ['is-reduced']: type === MARKDOWN_TYPE.REDUCED,
+        })}
+      >
         <ReactMde
           onChange={this.handleChange}
           editorState={this.state.mdeState}
@@ -72,7 +78,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
           commands={commands[type]}
           layout="tabbed"
         />
-      </Styled.Container>
+      </div>
     );
   }
 }

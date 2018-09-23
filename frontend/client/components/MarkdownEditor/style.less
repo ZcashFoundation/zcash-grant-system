@@ -1,15 +1,12 @@
-import styled from 'styled-components';
-import { markdownStyles, MARKDOWN_TYPE } from 'utils/markdown';
+@import '~styles/markdown-styles-mixin.less';
 
-export const Container = styled<{ type: MARKDOWN_TYPE }, 'div'>('div')`
+.MarkdownEditor {
   .mde-preview .mde-preview-content {
     font-size: 1.1rem;
-    ${markdownStyles};
+    .markdown-styles-mixin();
   }
 
-  ${p =>
-    p.type === MARKDOWN_TYPE.REDUCED &&
-    `
+  &.is-reduced {
     .mde-preview .mde-preview-content {
       font-size: 0.9rem;
     }
@@ -38,5 +35,5 @@ export const Container = styled<{ type: MARKDOWN_TYPE }, 'div'>('div')`
     .mde-preview {
       min-height: 100px;
     }
-  `};
-`;
+  }
+}

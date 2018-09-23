@@ -1,7 +1,6 @@
 import React from 'react';
 import { Request, Response } from 'express';
 import { renderToString } from 'react-dom/server';
-import { ServerStyleSheet } from 'styled-components';
 import { getLoadableState } from 'loadable-components/server';
 import { StaticRouter as Router } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -74,7 +73,6 @@ const chunkExtractFromLoadables = (loadableState: any) =>
 
 const serverRenderer = () => async (req: Request, res: Response) => {
   const store = configureStore();
-  const sheet = new ServerStyleSheet();
   const reactApp = (
     <Provider store={store}>
       <Router location={req.url} context={{}}>
@@ -95,11 +93,8 @@ const serverRenderer = () => async (req: Request, res: Response) => {
     log.error(e);
     return res.status(500).send(disp + ' (more info in server logs)');
   }
-  // 2. styled components will gather styles & wrap in provider
-  const styleConnectedApp = sheet.collectStyles(reactApp);
-
-  const styleElements = sheet.getStyleElement();
-  const content = renderToString(styleConnectedApp);
+  // 2. render and collect state
+  const content = renderToString(reactApp);
   const state = JSON.stringify(store.getState());
 
   // ! ensure manifest.json is available
@@ -124,7 +119,6 @@ const serverRenderer = () => async (req: Request, res: Response) => {
       renderToString(
         <Html
           css={cssFiles}
-          styleElements={styleElements}
           scripts={jsFiles}
           state={state}
           loadableStateScript={loadableState.getScriptContent()}
