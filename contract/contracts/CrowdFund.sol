@@ -38,6 +38,7 @@ contract CrowdFund {
     uint public deadline;
     uint public raiseGoal;
     uint public amountRaised;
+    uint public frozenBalance;
     uint public minimumContributionAmount;
     uint public amountVotingForRefund;
     address public beneficiary;
@@ -213,6 +214,7 @@ contract CrowdFund {
             freezeReason = FreezeReason.MAJORITY_VOTING_TO_REFUND;
         }
         frozen = true;
+        frozenBalance = address(this).balance;
     }
 
     // anyone can refund a contributor if a crowdfund has been frozen
@@ -222,8 +224,7 @@ contract CrowdFund {
         require(!isRefunded, "Specified address is already refunded");
         contributors[refundAddress].refunded = true;
         uint contributionAmount = contributors[refundAddress].contributionAmount;
-        // TODO - maybe don't use address(this).balance
-        uint amountToRefund = contributionAmount.mul(address(this).balance).div(raiseGoal);
+        uint amountToRefund = contributionAmount.mul(address(this).balance).div(frozenBalance);
         refundAddress.transfer(amountToRefund);
         emit Withdrawn(refundAddress, amountToRefund);
     }

@@ -412,6 +412,24 @@ contract("CrowdFund", accounts => {
     assert.ok(finalBalanceThirdAccount.gt(initBalanceThirdAccount));
   });
 
+  it("refunds full amounts even if raise goal isn't reached", async () => {
+    const initialBalance = await web3.eth.getBalance(fourthAccount);
+    const contribution = raiseGoal / 2;
+    const receipt = await crowdFund.contribute({
+      from: fourthAccount,
+      value: contribution,
+      gasPrice: 0,
+    });
+    await crowdFund.refund({ from: firstTrusteeAccount });
+    await crowdFund.withdraw(fourthAccount);
+    const balance = await web3.eth.getBalance(fourthAccount);
+    const diff = initialBalance.minus(balance);
+    assert(
+      balance.equals(initialBalance),
+      `Expected full refund, but refund was short ${diff.toString()} wei`
+    );
+  });
+
   // [END] refund
   // [BEGIN] getContributorMilestoneVote
 
