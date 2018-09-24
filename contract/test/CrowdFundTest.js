@@ -313,7 +313,7 @@ contract("CrowdFund", accounts => {
     assertRevert(crowdFund.refund());
   });
 
-  it("allows trustee to refund while the CrowdFund is on-going", async () => {
+  it("allows trustee to refund while the CrowdFund is on-going and sets reason to 0", async () => {
     await crowdFund.contribute({
       from: fourthAccount,
       value: raiseGoal / 5
@@ -323,6 +323,7 @@ contract("CrowdFund", accounts => {
       fourthAccount
     );
     await crowdFund.refund({ from: firstTrusteeAccount });
+    assert.equal((await crowdFund.getFreezeReason()), 0);
     await crowdFund.withdraw(fourthAccount);
     const balanceAfterRefundFourthAccount = await web3.eth.getBalance(
       fourthAccount
@@ -375,7 +376,7 @@ contract("CrowdFund", accounts => {
     assertRevert(crowdFund.refund());
   });
 
-  it("refunds proportionally if majority is voting for refund after raise goal has been reached", async () => {
+  it("refunds proportionally if majority is voting for refund after raise goal has been reached and sets reason to 2", async () => {
     const tenthOfRaiseGoal = raiseGoal / 10;
     await crowdFund.contribute({
       from: fourthAccount,
@@ -402,6 +403,7 @@ contract("CrowdFund", accounts => {
     );
     await crowdFund.voteRefund(true, { from: thirdAccount });
     await crowdFund.refund();
+    assert.equal((await crowdFund.getFreezeReason()), 2)
     await crowdFund.withdraw(fourthAccount);
     await crowdFund.withdraw(thirdAccount);
     const finalBalanceFourthAccount = await web3.eth.getBalance(fourthAccount);

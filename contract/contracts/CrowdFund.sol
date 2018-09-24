@@ -5,6 +5,14 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract CrowdFund {
     using SafeMath for uint256;
 
+    enum FreezeReason {
+        CALLER_IS_TRUSTEE,
+        CROWD_FUND_FAILED,
+        MAJORITY_VOTING_TO_REFUND
+    }
+
+    FreezeReason freezeReason;
+
     struct Milestone {
         uint amount;
         uint amountVotingAgainstPayout;
@@ -197,6 +205,13 @@ contract CrowdFund {
         bool crowdFundFailed = isFailed();
         bool majorityVotingToRefund = isMajorityVoting(amountVotingForRefund);
         require(callerIsTrustee || crowdFundFailed || majorityVotingToRefund, "Required conditions for refund are not met");
+        if (callerIsTrustee) {
+            freezeReason = FreezeReason.CALLER_IS_TRUSTEE;
+        } else if (crowdFundFailed) {
+            freezeReason = FreezeReason.CROWD_FUND_FAILED;
+        } else {
+            freezeReason = FreezeReason.MAJORITY_VOTING_TO_REFUND;
+        }
         frozen = true;
     }
 
@@ -247,6 +262,10 @@ contract CrowdFund {
 
     function getContributorContributionAmount(address contributorAddress) public view returns (uint) {
         return contributors[contributorAddress].contributionAmount;
+    }
+
+    function getFreezeReason() public view returns (uint) {
+        return uint(freezeReason);
     }
 
     modifier onlyFrozen() {
