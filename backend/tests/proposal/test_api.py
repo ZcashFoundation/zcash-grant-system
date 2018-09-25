@@ -2,6 +2,7 @@ import json
 import random
 
 from grant.proposal.models import Proposal, CATEGORIES
+from grant.user.models import User, SocialMedia
 from ..config import BaseTestConfig
 
 milestones = [
@@ -13,8 +14,26 @@ milestones = [
         "immediatePayout": False
     }
 ]
+
+team = [
+    {
+        "accountAddress": "0x1",
+        "displayName": 'Groot',
+        "emailAddress": 'iam@groot.com',
+        "title": 'I am Groot!',
+        "avatar": {
+            "link": 'https://avatars2.githubusercontent.com/u/1393943?s=400&v=4'
+        },
+        "socialMedias": [
+            {
+                "link": 'https://github.com/groot'
+            }
+        ]
+    }
+]
+
 proposal = {
-    "accountAddress": "0x1",
+    "team": team,
     "crowdFundContractAddress": "0x20000",
     "content": "## My Proposal",
     "title": "Give Me Money",
@@ -35,9 +54,23 @@ class TestAPI(BaseTestConfig):
             content_type='application/json'
         )
 
-        self.assertEqual(Proposal.query.filter_by(
+        proposal_db = Proposal.query.filter_by(
             proposal_id=proposal["crowdFundContractAddress"]
-        ).first().title, proposal["title"])
+        ).first()
+        self.assertEqual(proposal_db.title, proposal["title"])
+
+        # User
+        user_db = User.query.filter_by(email_address=team[0]["emailAddress"]).first()
+        self.assertEqual(user_db.display_name, team[0]["displayName"])
+        self.assertEqual(user_db.title, team[0]["title"])
+        self.assertEqual(user_db.account_address, team[0]["accountAddress"])
+
+        # SocialMedia
+        social_media_db = SocialMedia.query.filter_by(social_media_link=team[0]["socialMedias"][0]["link"]).first()
+        self.assertTrue(social_media_db)
+
+        # Avatar
+        self.assertEqual(user_db.avatar.image_url, team[0]["avatar"]["link"])
 
     def test_create_new_proposal_comment(self):
         proposal_res = self.app.post(
@@ -47,12 +80,12 @@ class TestAPI(BaseTestConfig):
         )
         proposal_json = proposal_res.json
         proposal_id = proposal_json["proposalId"]
-        proposal_author_id = proposal_json["author"]["userid"]
+        proposal_user_id = proposal_json["team"][0]["userid"]
 
         comment_res = self.app.post(
             "/api/v1/proposals/{}/comments".format(proposal_id),
             data=json.dumps({
-                "authorId": proposal_author_id,
+                "userId": proposal_user_id,
                 "content": "What a comment"
             }),
             content_type='application/json'

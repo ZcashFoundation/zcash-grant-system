@@ -27,5 +27,8 @@ export function postProposal(payload: {
   category: PROPOSAL_CATEGORY;
   milestones: object[];
 }) {
-  return axios.post(`/api/v1/proposals/`, payload);
+  return axios.post(`/api/v1/proposals/`, {
+    ...payload,
+    team: [{ accountAddress: payload.accountAddress }],
+  });
 }

@@ -7,7 +7,7 @@ blueprint = Blueprint('milestone', __name__, url_prefix='/api/v1/milestones')
 
 
 @blueprint.route("/", methods=["GET"])
-def get_authors():
+def get_users():
     milestones = Milestone.query.all()
     result = milestones_schema.dump(milestones)
     return JSONResponse(result)
