@@ -265,11 +265,9 @@ class CreateFlow extends React.Component<Props, State> {
               </>
             )}
 
-            {process.env.NODE_ENV !== 'production' && (
-              <button className="CreateFlow-footer-example" onClick={this.fillInExample}>
-                <Icon type="fast-forward" />
-              </button>
-            )}
+            <button className="CreateFlow-footer-example" onClick={this.fillInExample}>
+              <Icon type="fast-forward" />
+            </button>
           </div>
         )}
         {isSavingDraft && (
