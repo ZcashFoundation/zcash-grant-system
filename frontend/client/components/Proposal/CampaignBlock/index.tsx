@@ -89,7 +89,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     if (proposal) {
       const { crowdFund } = proposal;
       const isFundingOver =
-        crowdFund.isRaiseGoalReached || crowdFund.deadline < Date.now();
+        crowdFund.isRaiseGoalReached ||
+        crowdFund.deadline < Date.now() ||
+        crowdFund.isFrozen;
       const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
       const remainingEthNum = parseFloat(
         web3.utils.fromWei(crowdFund.target.sub(crowdFund.funded), 'ether'),
@@ -150,7 +152,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               ) : (
                 <>
                   <Icon type="close-circle-o" />
-                  <span>Proposal didn’t reach target</span>
+                  <span>Proposal didn’t get funded</span>
                 </>
               )}
             </div>

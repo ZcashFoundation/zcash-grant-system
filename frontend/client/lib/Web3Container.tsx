@@ -14,7 +14,7 @@ export interface Web3RenderProps {
 }
 
 interface OwnProps {
-  render(props: Web3RenderProps & any): React.ReactNode;
+  render(props: Web3RenderProps & { props: any }): React.ReactNode;
   renderLoading(): React.ReactNode;
 }
 

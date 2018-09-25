@@ -214,6 +214,7 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
 
     case types.VOTE_REFUND_PENDING:
     case types.WITHDRAW_REFUND_PENDING:
+    case types.TRIGGER_REFUND_PENDING:
       return {
         ...state,
         isRefundActionPending: true,
@@ -221,12 +222,14 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
       };
     case types.VOTE_REFUND_FULFILLED:
     case types.WITHDRAW_REFUND_FULFILLED:
+    case types.TRIGGER_REFUND_FULFILLED:
       return {
         ...state,
         isRefundActionPending: false,
       };
     case types.VOTE_REFUND_REJECTED:
     case types.WITHDRAW_REFUND_REJECTED:
+    case types.TRIGGER_REFUND_REJECTED:
       return {
         ...state,
         refundActionError: payload,

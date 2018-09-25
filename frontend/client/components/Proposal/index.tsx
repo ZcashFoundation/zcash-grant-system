@@ -7,16 +7,16 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
 import { getProposal } from 'modules/proposals/selectors';
-import { Spin, Tabs, Icon } from 'antd';
+import { Spin, Tabs, Icon, Dropdown, Menu, Button } from 'antd';
 import CampaignBlock from './CampaignBlock';
 import TeamBlock from './TeamBlock';
 import Milestones from './Milestones';
-
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
 import GovernanceTab from './Governance';
 import ContributorsTab from './Contributors';
 // import CommunityTab from './Community';
+import CancelModal from './CancelModal';
 import './style.less';
 import classnames from 'classnames';
 import { withRouter } from 'react-router';
@@ -36,11 +36,16 @@ interface DispatchProps {
   fetchProposal: proposalActions.TFetchProposal;
 }
 
-type Props = StateProps & DispatchProps & OwnProps;
+interface Web3Props {
+  account: string;
+}
+
+type Props = StateProps & DispatchProps & Web3Props & OwnProps;
 
 interface State {
   isBodyExpanded: boolean;
   isBodyOverflowing: boolean;
+  isCancelOpen: boolean;
   bodyId: string;
 }
 
@@ -48,6 +53,7 @@ export class ProposalDetail extends React.Component<Props, State> {
   state: State = {
     isBodyExpanded: false,
     isBodyOverflowing: false,
+    isCancelOpen: false,
     bodyId: `body-${Math.floor(Math.random() * 1000000)}`,
   };
 
@@ -71,14 +77,37 @@ export class ProposalDetail extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposal, isPreview } = this.props;
-    const { isBodyExpanded, isBodyOverflowing, bodyId } = this.state;
+    const { proposal, isPreview, account } = this.props;
+    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, bodyId } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
 
     if (!proposal) {
       return <Spin />;
     } else {
       const { crowdFund } = proposal;
+      const isTrustee = crowdFund.trustees.includes(account);
+      const hasBeenFunded = crowdFund.isRaiseGoalReached;
+      const isProposalActive = !hasBeenFunded && crowdFund.deadline > Date.now();
+      const canRefund = (hasBeenFunded || isProposalActive) && !crowdFund.isFrozen;
+
+      const adminMenu = isTrustee && (
+        <Menu>
+          <Menu.Item
+            onClick={() => alert('Sorry, not yet implemented!')}
+            disabled={!isProposalActive}
+          >
+            Edit proposal
+          </Menu.Item>
+          <Menu.Item
+            style={{ color: canRefund ? '#e74c3c' : undefined }}
+            onClick={this.openCancelModal}
+            disabled={!canRefund}
+          >
+            {hasBeenFunded ? 'Refund contributors' : 'Cancel proposal'}
+          </Menu.Item>
+        </Menu>
+      );
+
       return (
         <div className="Proposal">
           <div className="Proposal-top">
@@ -105,6 +134,20 @@ export class ProposalDetail extends React.Component<Props, State> {
                   </button>
                 )}
               </div>
+              {isTrustee && (
+                <div className="Proposal-top-main-menu">
+                  <Dropdown
+                    overlay={adminMenu}
+                    trigger={['click']}
+                    placement="bottomRight"
+                  >
+                    <Button>
+                      <span>Actions</span>
+                      <Icon type="down" style={{ marginRight: '-0.25rem' }} />
+                    </Button>
+                  </Dropdown>
+                </div>
+              )}
             </div>
             <div className="Proposal-top-side">
               <CampaignBlock proposal={proposal} isPreview={isPreview} />
@@ -134,6 +177,13 @@ export class ProposalDetail extends React.Component<Props, State> {
               </Tabs.TabPane>
             </Tabs>
           )}
+          {isTrustee && (
+            <CancelModal
+              proposal={proposal}
+              isVisible={isCancelOpen}
+              handleClose={this.closeCancelModal}
+            />
+          )}
         </div>
       );
     }
@@ -161,6 +211,9 @@ export class ProposalDetail extends React.Component<Props, State> {
       this.setState({ isBodyOverflowing: true });
     }
   };
+
+  private openCancelModal = () => this.setState({ isCancelOpen: true });
+  private closeCancelModal = () => this.setState({ isCancelOpen: false });
 }
 
 function mapStateToProps(state: AppState, ownProps: OwnProps) {
@@ -178,7 +231,7 @@ const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
   mapDispatchToProps,
 );
 
-const ConnectedProposal = compose<Props, OwnProps>(
+const ConnectedProposal = compose<Props, OwnProps & Web3Props>(
   withRouter,
   withConnect,
 )(ProposalDetail);
@@ -194,6 +247,6 @@ export default (props: OwnProps) => (
         </div>
       </div>
     )}
-    render={() => <ConnectedProposal {...props} />}
+    render={({ accounts }) => <ConnectedProposal account={accounts[0]} {...props} />}
   />
 );

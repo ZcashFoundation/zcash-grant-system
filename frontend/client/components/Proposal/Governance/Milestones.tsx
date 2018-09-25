@@ -7,6 +7,7 @@ import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import UnitDisplay from 'components/UnitDisplay';
+import Placeholder from 'components/Placeholder';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
@@ -38,6 +39,19 @@ export class Milestones extends React.Component<Props> {
       milestoneActionError,
     } = this.props;
     const { crowdFund } = proposal;
+
+    if (!crowdFund.isRaiseGoalReached) {
+      return (
+        <Placeholder
+          title="Milestone governance isn’t available yet"
+          subtitle={`
+            Milestone history and voting status will be displayed here
+            once the project has been funded
+          `}
+        />
+      );
+    }
+
     const contributor = crowdFund.contributors.find(c => c.address === accounts[0]);
     const isTrustee = crowdFund.trustees.includes(accounts[0]);
     const firstMilestone = crowdFund.milestones[0];

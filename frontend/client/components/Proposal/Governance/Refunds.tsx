@@ -6,6 +6,7 @@ import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import classnames from 'classnames';
+import Placeholder from 'components/Placeholder';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
@@ -32,16 +33,63 @@ class GovernanceRefunds extends React.Component<Props> {
   render() {
     const { proposal, account, isRefundActionPending, refundActionError } = this.props;
     const { crowdFund } = proposal;
+    const isStillFunding =
+      !crowdFund.isRaiseGoalReached && crowdFund.deadline > Date.now();
+
+    if (isStillFunding && !crowdFund.isFrozen) {
+      return (
+        <Placeholder
+          title="Refund governance isn’t available yet"
+          subtitle={`
+            Refund voting and status will be displayed here once the
+            project has been funded, or if it the project is canceled
+            or fails to receive funding
+          `}
+        />
+      );
+    }
+
+    // TODO: Cyclomatic complexity is too damn high here. This state should be
+    // figured out on the backend and enumerated, not calculated in this component.
     const contributor = crowdFund.contributors.find(c => c.address === account);
     const isTrustee = crowdFund.trustees.includes(account);
     const hasVotedForRefund = contributor && contributor.refundVote;
     const hasRefunded = contributor && contributor.refunded;
     const refundPct = crowdFund.percentVotingForRefund;
+    const didFundingFail =
+      !crowdFund.isRaiseGoalReached && crowdFund.deadline < Date.now();
 
     let text;
     let button;
     if (!isTrustee && contributor) {
-      if (refundPct < 50) {
+      let canRefund = false;
+      if (hasRefunded) {
+        return (
+          <Alert
+            type="success"
+            message="Your refund has been processed"
+            description={`
+              We apologize for any inconvenience this propsal has caused you. Please
+              let us know if there's anything we could have done to improve your
+              experience.
+            `}
+            showIcon
+          />
+        );
+      } else if (refundPct > 50) {
+        text = `
+          The majority of funders have voted for a refund. Click below
+          to receive your refund.
+        `;
+        canRefund = true;
+      } else if (didFundingFail || crowdFund.isFrozen) {
+        text = `
+          The project was either canceled, or failed to reach its funding
+          target before the deadline. Click below to receive a refund of
+          your contribution.
+        `;
+        canRefund = true;
+      } else {
         text = `
           As a funder of this project, you have the right to vote for a refund. If the
           amount of funds contributed by refund voters exceeds half of the project's
@@ -60,47 +108,38 @@ class GovernanceRefunds extends React.Component<Props> {
             onClick: () => this.voteRefund(true),
           };
         }
-      } else {
-        if (hasRefunded) {
-          return (
-            <Alert
-              type="success"
-              message="Your refund has been processed"
-              description={`
-                We apologize for any inconvenience this propsal has caused you. Please
-                let us know if there's anything we could have done to improve your
-                experience.
-              `}
-              showIcon
-            />
-          );
-        } else {
-          text = (
-            <>
-              The majority of funders have voted for a refund. Click below to receive your
-              refund.
-              {!crowdFund.isFrozen && (
-                <Alert
-                  style={{ marginTop: '1rem' }}
-                  type="info"
-                  message={`
+      }
+
+      if (canRefund) {
+        text = (
+          <>
+            {text}
+            {!crowdFund.isFrozen && (
+              <Alert
+                style={{ marginTop: '1rem' }}
+                type="info"
+                showIcon
+                message={`
                   This will require multiple transactions to process, sorry
                   for the inconvenience
                 `}
-                  showIcon
-                />
-              )}
-            </>
-          );
-          button = {
-            text: 'Get your refund',
-            type: 'primary',
-            onClick: () => this.withdrawRefund(),
-          };
-        }
+              />
+            )}
+          </>
+        );
+        button = {
+          text: 'Get your refund',
+          type: 'primary',
+          onClick: () => this.withdrawRefund(),
+        };
       }
     } else {
-      if (refundPct < 50) {
+      if (crowdFund.isFrozen || didFundingFail) {
+        text = `
+          The project failed to receive funding or was canceled. Contributors are
+          open to refund their contributions.
+        `;
+      } else if (refundPct < 50) {
         text = `
           Funders can vote to request refunds. If the amount of funds contributed by
           refund voters exceeds half of the funds contributed, all funders will be able
