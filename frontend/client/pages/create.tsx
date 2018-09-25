@@ -5,9 +5,9 @@ import CreateFlow from 'components/CreateFlow';
 const Create = () => (
   <Web3Page
     title="Create a Proposal"
-    render={() => (
+    render={({ accounts }) => (
       <div style={{ paddingTop: '3rem', paddingBottom: '8rem' }}>
-        <CreateFlow />
+        <CreateFlow accounts={accounts} />
       </div>
     )}
     isFullScreen={true}

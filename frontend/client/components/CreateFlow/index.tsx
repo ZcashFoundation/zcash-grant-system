@@ -13,12 +13,14 @@ import Governance from './Governance';
 import Review from './Review';
 import Preview from './Preview';
 import Final from './Final';
-import exampleProposal from './example';
+import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { CreateFormState } from 'modules/create/types';
 import { getCreateErrors } from 'modules/create/utils';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
+import { Web3RenderProps } from 'lib/Web3Container';
+
 import './index.less';
 
 export enum CREATE_STEP {
@@ -97,6 +99,10 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   },
 };
 
+interface OwnProps {
+  accounts: Web3RenderProps['accounts'];
+}
+
 interface StateProps {
   form: AppState['create']['form'];
   isSavingDraft: AppState['create']['isSavingDraft'];
@@ -112,7 +118,7 @@ interface DispatchProps {
   resetCreateCrowdFund: typeof web3Actions['resetCreateCrowdFund'];
 }
 
-type Props = StateProps & DispatchProps & RouteComponentProps<any>;
+type Props = OwnProps & StateProps & DispatchProps & RouteComponentProps<any>;
 
 interface State {
   step: CREATE_STEP;
@@ -310,19 +316,20 @@ class CreateFlow extends React.Component<Props, State> {
   };
 
   private fillInExample = () => {
-    if (process.env.NODE_ENV !== 'production') {
-      this.updateForm(exampleProposal);
-      setTimeout(() => {
-        this.setState({
-          isExample: true,
-          step: CREATE_STEP.REVIEW,
-        });
-      }, 50);
-    }
+    const { accounts } = this.props;
+    const [payoutAddress, ...trustees] = accounts;
+
+    this.updateForm(createExampleProposal(payoutAddress, trustees || []));
+    setTimeout(() => {
+      this.setState({
+        isExample: true,
+        step: CREATE_STEP.REVIEW,
+      });
+    }, 50);
   };
 }
 
-const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
+const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
   (state: AppState) => ({
     form: state.create.form,
     isSavingDraft: state.create.isSavingDraft,
@@ -341,7 +348,7 @@ const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
   },
 );
 
-export default compose<Props, {}>(
+export default compose<Props, OwnProps>(
   withRouter,
   withConnect,
 )(CreateFlow);
