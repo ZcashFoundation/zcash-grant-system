@@ -29,7 +29,7 @@ interface ActionProps {
 
 type Props = OwnProps & Web3Props & StateProps & ActionProps;
 
-class Milestones extends React.Component<Props> {
+export class Milestones extends React.Component<Props> {
   render() {
     const {
       proposal,

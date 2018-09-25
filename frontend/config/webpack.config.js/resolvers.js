@@ -11,6 +11,7 @@ module.exports = {
     lib: `${paths.srcClient}/lib`,
     modules: `${paths.srcClient}/modules`,
     pages: `${paths.srcClient}/pages`,
+    static: `${paths.srcClient}/static`,
     store: `${paths.srcClient}/store`,
     styles: `${paths.srcClient}/styles`,
     typings: `${paths.srcClient}/typings`,

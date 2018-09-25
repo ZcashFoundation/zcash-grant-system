@@ -24,6 +24,7 @@
       "lib/*": ["./client/lib/*"],
       "modules/*": ["./client/modules/*"],
       "pages/*": ["./client/pages/*"],
+      "static/*": ["./client/static/*"],
       "store/*": ["./client/store/*"],
       "styles/*": ["./client/styles/*"],
       "typings/*": ["./client/typings/*"],
@@ -31,6 +32,6 @@
       "web3interact/*": ["./client/web3interact/*"]
     }
   },
-  "include": ["./client/**/*", "./server/**/*"],
+  "include": ["./client/**/*", "./server/**/*", "./stories/**/*"],
   "exclude": ["./client/static"]
 }

@@ -40,7 +40,7 @@ interface State {
   amountError: string | null;
 }
 
-class ProposalCampaignBlock extends React.Component<Props, State> {
+export class ProposalCampaignBlock extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {

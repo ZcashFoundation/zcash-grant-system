@@ -12,7 +12,8 @@
     "tsc": "tsc",
     "link-contracts": "cd client/lib && ln -s ../../build/contracts contracts",
     "ganache": "ganache-cli -b 5",
-    "truffle": "truffle exec ./bin/init-truffle.js && cd client/lib/contracts && truffle console"
+    "truffle": "truffle exec ./bin/init-truffle.js && cd client/lib/contracts && truffle console",
+    "storybook": "start-storybook -p 9001 -c .storybook"
   },
   "husky": {
     "hooks": {
@@ -64,6 +65,7 @@
     "ant-design-pro": "^2.0.0-beta.2",
     "antd": "^3.7.1",
     "axios": "^0.18.0",
+    "babel-core": "^7.0.0-bridge.0",
     "babel-loader": "^8.0.2",
     "babel-plugin-dynamic-import-node": "^2.1.0",
     "babel-plugin-dynamic-import-webpack": "^1.0.2",
@@ -147,10 +149,12 @@
     "xss": "1.0.3"
   },
   "devDependencies": {
+    "@storybook/react": "4.0.0-alpha.22",
     "@types/bn.js": "4.11.1",
     "@types/ethereumjs-util": "5.2.0",
     "@types/query-string": "6.1.0",
     "@types/showdown": "1.7.5",
+    "@types/storybook__react": "^3.0.9",
     "@types/web3": "1.0.3",
     "rimraf": "2.6.2"
   }

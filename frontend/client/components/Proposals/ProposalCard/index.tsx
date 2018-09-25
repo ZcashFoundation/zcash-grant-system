@@ -18,7 +18,7 @@ interface Props extends ProposalWithCrowdFund {
   web3: AppState['web3']['web3'];
 }
 
-class ProposalCard extends React.Component<Props> {
+export class ProposalCard extends React.Component<Props> {
   state = { redirect: '' };
   render() {
     if (this.state.redirect) {
