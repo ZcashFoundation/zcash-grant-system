@@ -22,7 +22,7 @@ export default class Header extends React.Component<Props> {
       >
         <Link to="/proposals" className="Header-button" style={{ display: 'flex' }}>
           <span className="Header-button-icon">
-            <Icon type="shop" />
+            <Icon type="appstore" />
           </span>
           <span className="Header-button-text">Explore</span>
         </Link>

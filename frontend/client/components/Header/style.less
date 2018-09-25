@@ -56,13 +56,16 @@
     color: inherit;
     letter-spacing: 0.05rem;
     cursor: pointer;
-    transition: transform 100ms ease;
+    opacity: 0.8;
+    transition: transform 100ms ease, opacity 100ms ease;
 
     &:hover,
     &:focus,
     &:active {
+      opacity: 1;
       transform: translateY(-1px);
       color: inherit;
+      text-decoration-color: transparent;
     }
 
     &-text {

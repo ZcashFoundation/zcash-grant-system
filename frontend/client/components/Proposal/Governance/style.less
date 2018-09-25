@@ -40,6 +40,21 @@
     text-align: center;
     margin: 0 2rem 0.5rem 0;
 
+    &-text {
+      white-space: nowrap;
+      opacity: 0.6;
+      font-size: 0.75rem;
+    }
+
+    // Ant progress overrides
+    .ant-progress-circle-path {
+      stroke: inherit;
+    }
+
+    .ant-progress-text {
+      color: inherit !important;
+    }
+
     &.is-starting {
       .ant-progress-circle-path {
         stroke: #1890ff;
@@ -56,12 +71,6 @@
       .ant-progress-circle-path {
         stroke: #f5222d;
       }
-    }
-
-    &-text {
-      white-space: nowrap;
-      opacity: 0.6;
-      font-size: 0.75rem;
     }
   }
 }
