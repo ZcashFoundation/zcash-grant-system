@@ -162,4 +162,22 @@ class TestAPI(BaseTestConfig):
         )
 
         users_json = users_get_resp.json
+        self.assertEqual(users_json[0]["avatar"]["imageUrl"], team[0]["avatar"]["link"])
+        self.assertEqual(users_json[0]["socialMedias"][0]["socialMediaLink"], team[0]["socialMedias"][0]["link"])
         self.assertEqual(users_json[0]["displayName"], team[0]["displayName"])
+
+    def test_get_single_user(self):
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal),
+            content_type='application/json'
+        )
+
+        users_get_resp = self.app.get(
+            "/api/v1/users/{}".format(proposal["team"][0]["emailAddress"])
+        )
+
+        users_json = users_get_resp.json
+        self.assertEqual(users_json["avatar"]["imageUrl"], team[0]["avatar"]["link"])
+        self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], team[0]["socialMedias"][0]["link"])
+        self.assertEqual(users_json["displayName"], team[0]["displayName"])
