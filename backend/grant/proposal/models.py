@@ -21,6 +21,13 @@ class ValidationException(Exception):
     pass
 
 
+proposal_team = db.Table(
+    'proposal_team', db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'))
+)
+
+
 class Proposal(db.Model):
     __tablename__ = "proposal"
 
@@ -33,21 +40,19 @@ class Proposal(db.Model):
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(255), nullable=False)
 
-    author_id = db.Column(db.Integer, db.ForeignKey("author.id"), nullable=False)
+    team = db.relationship("User", secondary=proposal_team)
     comments = db.relationship(Comment, backref="proposal", lazy=True)
     milestones = db.relationship("Milestone", backref="proposal", lazy=True)
 
     def __init__(
             self,
             stage: str,
-            author_id: int,
             proposal_id: str,
             title: str,
             content: str,
             category: str
     ):
         self.stage = stage
-        self.author_id = author_id
         self.proposal_id = proposal_id
         self.title = title
         self.content = content
@@ -57,7 +62,6 @@ class Proposal(db.Model):
     @staticmethod
     def validate(
             stage: str,
-            author_id: int,
             proposal_id: str,
             title: str,
             content: str,
@@ -86,9 +90,9 @@ class ProposalSchema(ma.Schema):
             "proposal_id",
             "body",
             "comments",
-            "author",
             "milestones",
-            "category"
+            "category",
+            "team"
         )
 
     date_created = ma.Method("get_date_created")
@@ -96,7 +100,7 @@ class ProposalSchema(ma.Schema):
     body = ma.Method("get_body")
 
     comments = ma.Nested("CommentSchema", many=True)
-    author = ma.Nested("AuthorSchema")
+    team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
 
     def get_body(self, obj):

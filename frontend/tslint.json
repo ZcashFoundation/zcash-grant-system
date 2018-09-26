@@ -9,5 +9,8 @@
     "interface-name": [true, "never-prefix"],
     "curly": [true, "ignore-same-line"],
     "no-console": false
+  },
+  "linterOptions": {
+    "exclude": ["client/lib/contracts/**/*.json"]
   }
 }

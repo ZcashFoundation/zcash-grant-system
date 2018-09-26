@@ -1,7 +1,7 @@
 """Settings module for test app."""
 ENV = 'development'
 TESTING = True
-SQLALCHEMY_DATABASE_URI = 'sqlite://'
+SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'
 SECRET_KEY = 'not-so-secret-in-tests'
 BCRYPT_LOG_ROUNDS = 4  # For faster tests; needs at least 4 to avoid "ValueError: Invalid rounds"
 DEBUG_TB_ENABLED = False

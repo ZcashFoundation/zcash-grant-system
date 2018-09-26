@@ -2,7 +2,8 @@ import { Store, createStore, applyMiddleware } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
 import thunkMiddleware, { ThunkMiddleware } from 'redux-thunk';
 import promiseMiddleware from 'redux-promise-middleware';
-import rootReducer, { combineInitialState } from './reducers';
+import { composeWithDevTools } from 'redux-devtools-extension';
+import rootReducer, { AppState, combineInitialState } from './reducers';
 // import rootSaga from './sagas';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -15,15 +16,15 @@ const bindMiddleware = (middleware: MiddleWare[]) => {
     const logger = createLogger({
       collapsed: true,
     });
-    const allMiddleware = [...middleware, logger];
-    const { composeWithDevTools } = require('redux-devtools-extension');
-    return composeWithDevTools(applyMiddleware(...allMiddleware));
+    middleware = [...middleware, logger];
   }
-  return applyMiddleware(...middleware);
+  return composeWithDevTools(applyMiddleware(...middleware));
 };
 
-export function configureStore(initialState = combineInitialState): Store {
-  const store: any = createStore(
+export function configureStore(
+  initialState: Partial<AppState> = combineInitialState,
+): Store {
+  const store: Store<AppState> = createStore(
     rootReducer,
     initialState,
     bindMiddleware([sagaMiddleware, thunkMiddleware, promiseMiddleware()]),
@@ -34,5 +35,13 @@ export function configureStore(initialState = combineInitialState): Store {
   // };
 
   // store.runSagaTask();
+
+  if (process.env.NODE_ENV === 'development') {
+    if (module.hot) {
+      module.hot.accept('./reducers', () =>
+        store.replaceReducer(require('./reducers').default),
+      );
+    }
+  }
   return store;
 }

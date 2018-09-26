@@ -313,7 +313,7 @@ contract("CrowdFund", accounts => {
     assertRevert(crowdFund.refund());
   });
 
-  it("allows trustee to refund while the CrowdFund is on-going", async () => {
+  it("allows trustee to refund while the CrowdFund is on-going and sets reason to 0", async () => {
     await crowdFund.contribute({
       from: fourthAccount,
       value: raiseGoal / 5
@@ -323,6 +323,7 @@ contract("CrowdFund", accounts => {
       fourthAccount
     );
     await crowdFund.refund({ from: firstTrusteeAccount });
+    assert.equal((await crowdFund.getFreezeReason()), 0);
     await crowdFund.withdraw(fourthAccount);
     const balanceAfterRefundFourthAccount = await web3.eth.getBalance(
       fourthAccount
@@ -375,7 +376,7 @@ contract("CrowdFund", accounts => {
     assertRevert(crowdFund.refund());
   });
 
-  it("refunds proportionally if majority is voting for refund after raise goal has been reached", async () => {
+  it("refunds proportionally if majority is voting for refund after raise goal has been reached and sets reason to 2", async () => {
     const tenthOfRaiseGoal = raiseGoal / 10;
     await crowdFund.contribute({
       from: fourthAccount,
@@ -402,12 +403,31 @@ contract("CrowdFund", accounts => {
     );
     await crowdFund.voteRefund(true, { from: thirdAccount });
     await crowdFund.refund();
+    assert.equal((await crowdFund.getFreezeReason()), 2)
     await crowdFund.withdraw(fourthAccount);
     await crowdFund.withdraw(thirdAccount);
     const finalBalanceFourthAccount = await web3.eth.getBalance(fourthAccount);
     const finalBalanceThirdAccount = await web3.eth.getBalance(thirdAccount);
     assert.ok(finalBalanceFourthAccount.gt(initBalanceFourthAccount));
     assert.ok(finalBalanceThirdAccount.gt(initBalanceThirdAccount));
+  });
+
+  it("refunds full amounts even if raise goal isn't reached", async () => {
+    const initialBalance = await web3.eth.getBalance(fourthAccount);
+    const contribution = raiseGoal / 2;
+    const receipt = await crowdFund.contribute({
+      from: fourthAccount,
+      value: contribution,
+      gasPrice: 0,
+    });
+    await crowdFund.refund({ from: firstTrusteeAccount });
+    await crowdFund.withdraw(fourthAccount);
+    const balance = await web3.eth.getBalance(fourthAccount);
+    const diff = initialBalance.minus(balance);
+    assert(
+      balance.equals(initialBalance),
+      `Expected full refund, but refund was short ${diff.toString()} wei`
+    );
   });
 
   // [END] refund
@@ -420,6 +440,18 @@ contract("CrowdFund", accounts => {
     await increaseTime(AFTER_VOTING_EXPIRES);
     const milestoneVote = await crowdFund.getContributorMilestoneVote.call(thirdAccount, 0);
     assert.equal(true, milestoneVote)
+  });
+
+
+  // [END] getContributorMilestoneVote
+
+  // [BEGIN] getContributorContributionAmount
+
+  it("returns amount a contributor has contributed", async () => {
+    const constributionAmount = raiseGoal / 5 
+    await crowdFund.contribute({ from: thirdAccount, value: constributionAmount });
+    const contractContributionAmount = await crowdFund.getContributorContributionAmount(thirdAccount)
+    assert.equal(contractContributionAmount.toNumber(), constributionAmount)
   });
 
 });

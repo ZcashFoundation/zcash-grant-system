@@ -1,23 +1,25 @@
 import React from 'react';
-const CrowdFundFactory = require('./contracts/CrowdFundFactory.json');
+import Web3 from 'web3';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
 import { web3Actions } from 'modules/web3';
+/* tslint:disable no-var-requires --- TODO: find a better way to import json */
+const CrowdFundFactory = require('./contracts/CrowdFundFactory.json');
 
 export interface Web3RenderProps {
-  web3: any;
+  web3: Web3;
   accounts: any[];
   contracts: any[];
 }
 
 interface OwnProps {
-  render(props: Web3RenderProps & any): React.ReactNode;
+  render(props: Web3RenderProps & { props: any }): React.ReactNode;
   renderLoading(): React.ReactNode;
 }
 
 interface StateProps {
-  web3: any | null;
+  web3: Web3 | null;
   isWeb3Locked: boolean;
   contracts: any[];
   contractsLoading: boolean;
@@ -28,9 +30,9 @@ interface StateProps {
 }
 
 interface ActionProps {
-  setContract(contract: any): void;
-  setAccounts(): void;
-  setWeb3(): void;
+  setContract: typeof web3Actions['setContract'];
+  setAccounts: typeof web3Actions['setAccounts'];
+  setWeb3: typeof web3Actions['setWeb3'];
 }
 
 type Props = OwnProps & StateProps & ActionProps;

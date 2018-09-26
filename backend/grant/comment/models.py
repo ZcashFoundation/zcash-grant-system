@@ -9,15 +9,14 @@ class Comment(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
-
     content = db.Column(db.Text, nullable=False)
 
     proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
-    author_id = db.Column(db.Integer, db.ForeignKey("author.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-    def __init__(self, proposal_id, author_id, content):
+    def __init__(self, proposal_id, user_id, content):
         self.proposal_id = proposal_id
-        self.author_id = author_id
+        self.user_id = user_id
         self.content = content
         self.date_created = datetime.datetime.now()
 
@@ -27,7 +26,7 @@ class CommentSchema(ma.Schema):
         model = Comment
         # Fields to expose
         fields = (
-            "author_id",
+            "user_id",
             "content",
             "proposal_id",
             "date_created",

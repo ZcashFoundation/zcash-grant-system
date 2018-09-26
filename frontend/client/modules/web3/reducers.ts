@@ -1,3 +1,4 @@
+import Web3 from 'web3';
 import types from './types';
 
 interface Contract {
@@ -5,7 +6,7 @@ interface Contract {
 }
 
 export interface Web3State {
-  web3: any | null;
+  web3: Web3 | null;
   isMissingWeb3: boolean;
   isWrongNetwork: boolean;
   isWeb3Locked: boolean;
@@ -27,6 +28,9 @@ export interface Web3State {
 
   isMilestoneActionPending: boolean;
   milestoneActionError: null | string;
+
+  isRefundActionPending: boolean;
+  refundActionError: null | string;
 }
 
 export const INITIAL_STATE: Web3State = {
@@ -52,6 +56,9 @@ export const INITIAL_STATE: Web3State = {
 
   isMilestoneActionPending: false,
   milestoneActionError: null,
+
+  isRefundActionPending: false,
+  refundActionError: null,
 };
 
 function addContract(state: Web3State, payload: Contract) {
@@ -106,6 +113,13 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
         ...state,
         crowdFundLoading: false,
         crowdFundError: payload,
+      };
+    case types.RESET_CROWD_FUND:
+      return {
+        ...state,
+        crowdFundLoading: false,
+        crowdFundError: null,
+        crowdFundCreatedAddress: null,
       };
 
     case types.CONTRACT_PENDING:
@@ -196,6 +210,30 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
         ...state,
         milestoneActionError: payload,
         isMilestoneActionPending: false,
+      };
+
+    case types.VOTE_REFUND_PENDING:
+    case types.WITHDRAW_REFUND_PENDING:
+    case types.TRIGGER_REFUND_PENDING:
+      return {
+        ...state,
+        isRefundActionPending: true,
+        refundActionError: null,
+      };
+    case types.VOTE_REFUND_FULFILLED:
+    case types.WITHDRAW_REFUND_FULFILLED:
+    case types.TRIGGER_REFUND_FULFILLED:
+      return {
+        ...state,
+        isRefundActionPending: false,
+      };
+    case types.VOTE_REFUND_REJECTED:
+    case types.WITHDRAW_REFUND_REJECTED:
+    case types.TRIGGER_REFUND_REJECTED:
+      return {
+        ...state,
+        refundActionError: payload,
+        isRefundActionPending: false,
       };
 
     default:

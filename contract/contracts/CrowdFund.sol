@@ -5,6 +5,14 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract CrowdFund {
     using SafeMath for uint256;
 
+    enum FreezeReason {
+        CALLER_IS_TRUSTEE,
+        CROWD_FUND_FAILED,
+        MAJORITY_VOTING_TO_REFUND
+    }
+
+    FreezeReason freezeReason;
+
     struct Milestone {
         uint amount;
         uint amountVotingAgainstPayout;
@@ -30,6 +38,7 @@ contract CrowdFund {
     uint public deadline;
     uint public raiseGoal;
     uint public amountRaised;
+    uint public frozenBalance;
     uint public minimumContributionAmount;
     uint public amountVotingForRefund;
     address public beneficiary;
@@ -197,7 +206,15 @@ contract CrowdFund {
         bool crowdFundFailed = isFailed();
         bool majorityVotingToRefund = isMajorityVoting(amountVotingForRefund);
         require(callerIsTrustee || crowdFundFailed || majorityVotingToRefund, "Required conditions for refund are not met");
+        if (callerIsTrustee) {
+            freezeReason = FreezeReason.CALLER_IS_TRUSTEE;
+        } else if (crowdFundFailed) {
+            freezeReason = FreezeReason.CROWD_FUND_FAILED;
+        } else {
+            freezeReason = FreezeReason.MAJORITY_VOTING_TO_REFUND;
+        }
         frozen = true;
+        frozenBalance = address(this).balance;
     }
 
     // anyone can refund a contributor if a crowdfund has been frozen
@@ -207,8 +224,7 @@ contract CrowdFund {
         require(!isRefunded, "Specified address is already refunded");
         contributors[refundAddress].refunded = true;
         uint contributionAmount = contributors[refundAddress].contributionAmount;
-        // TODO - maybe don't use address(this).balance
-        uint amountToRefund = contributionAmount.mul(address(this).balance).div(raiseGoal);
+        uint amountToRefund = contributionAmount.mul(address(this).balance).div(frozenBalance);
         refundAddress.transfer(amountToRefund);
         emit Withdrawn(refundAddress, amountToRefund);
     }
@@ -243,6 +259,14 @@ contract CrowdFund {
 
     function getContributorMilestoneVote(address contributorAddress, uint milestoneIndex) public view returns (bool) { 
         return contributors[contributorAddress].milestoneNoVotes[milestoneIndex];
+    }
+
+    function getContributorContributionAmount(address contributorAddress) public view returns (uint) {
+        return contributors[contributorAddress].contributionAmount;
+    }
+
+    function getFreezeReason() public view returns (uint) {
+        return uint(freezeReason);
     }
 
     modifier onlyFrozen() {

@@ -4,7 +4,7 @@ import BasicHead from './BasicHead';
 import Header from './Header';
 import Footer from './Footer';
 
-interface Props {
+export interface Props {
   title: string;
   isHeaderTransparent?: boolean;
   isFullScreen?: boolean;

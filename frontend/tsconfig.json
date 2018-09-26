@@ -15,8 +15,23 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "skipLibCheck": true,
-    "baseUrl": "./client",
-    "lib": ["dom", "es2016"]
+    "baseUrl": ".",
+    "lib": ["dom", "es2017"],
+    "paths": {
+      "contracts/*": ["../contract/build/contracts/*"],
+      "api/*": ["./client/api/*"],
+      "components/*": ["./client/components/*"],
+      "lib/*": ["./client/lib/*"],
+      "modules/*": ["./client/modules/*"],
+      "pages/*": ["./client/pages/*"],
+      "static/*": ["./client/static/*"],
+      "store/*": ["./client/store/*"],
+      "styles/*": ["./client/styles/*"],
+      "typings/*": ["./client/typings/*"],
+      "utils/*": ["./client/utils/*"],
+      "web3interact/*": ["./client/web3interact/*"]
+    }
   },
-  "include": ["./client", "node_modules/@types", "typings"]
+  "include": ["./client/**/*", "./server/**/*", "./stories/**/*"],
+  "exclude": ["./client/static"]
 }

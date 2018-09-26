@@ -1,28 +1,34 @@
 import axios from './axios';
 import { Proposal } from 'modules/proposals/reducers';
+import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
-  return axios.get('/api/proposals/');
+  return axios.get('/api/v1/proposals/');
 }
 
 export function getProposal(proposalId: number | string): Promise<{ data: Proposal }> {
-  return axios.get(`/api/proposals/${proposalId}`);
+  return axios.get(`/api/v1/proposals/${proposalId}`);
 }
 
 export function getProposalComments(proposalId: number | string) {
-  return axios.get(`/api/proposals/${proposalId}/comments`);
+  return axios.get(`/api/v1/proposals/${proposalId}/comments`);
 }
 
 export function getProposalUpdates(proposalId: number | string) {
-  return axios.get(`/api/proposals/${proposalId}/updates`);
+  return axios.get(`/api/v1/proposals/${proposalId}/updates`);
 }
 
 export function postProposal(payload: {
-  accountAddress;
-  crowdFundContractAddress;
-  content;
-  title;
-  milestones;
+  // TODO type Milestone
+  accountAddress: string;
+  crowdFundContractAddress: string;
+  content: string;
+  title: string;
+  category: PROPOSAL_CATEGORY;
+  milestones: object[];
 }) {
-  return axios.post(`/api/proposals/create`, payload);
+  return axios.post(`/api/v1/proposals/`, {
+    ...payload,
+    team: [{ accountAddress: payload.accountAddress }],
+  });
 }

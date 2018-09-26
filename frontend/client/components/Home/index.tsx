@@ -1,20 +1,23 @@
 import React from 'react';
-import * as Styled from './styled';
-import Link from 'next/link';
+import './style.less';
+import { Link } from 'react-router-dom';
 import { Icon } from 'antd';
 import AntWrap from 'components/AntWrap';
+import TeamsSvg from 'static/images/intro-teams.svg';
+import FundingSvg from 'static/images/intro-funding.svg';
+import CommunitySvg from 'static/images/intro-community.svg';
 
 const introBlobs = [
   {
-    image: 'static/images/intro-teams.svg',
+    Svg: TeamsSvg,
     text: 'Developers and teams propose projects for improving the ecosystem',
   },
   {
-    image: 'static/images/intro-funding.svg',
+    Svg: FundingSvg,
     text: 'Projects are funded by the community and paid as it’s built',
   },
   {
-    image: 'static/images/intro-community.svg',
+    Svg: CommunitySvg,
     text: 'Open discussion and project updates bring devs and the community together',
   },
 ];
@@ -23,39 +26,43 @@ export default class Home extends React.Component {
   render() {
     return (
       <AntWrap title="Home" isHeaderTransparent isFullScreen>
-        <Styled.Hero>
-          <Styled.HeroTitle>Community-first project funding</Styled.HeroTitle>
+        <div className="Home">
+          <div className="Home-hero">
+            <h1 className="Home-hero-title">
+              Decentralized funding for <br /> Blockchain ecosystem improvements
+            </h1>
 
-          <Styled.HeroButtons>
-            <Link href="/create">
-              <Styled.HeroButton isPrimary>Propose a Project</Styled.HeroButton>
-            </Link>
-            <Link href="/proposals">
-              <Styled.HeroButton>Explore Projects</Styled.HeroButton>
-            </Link>
-          </Styled.HeroButtons>
+            <div className="Home-hero-buttons">
+              <Link className="Home-hero-buttons-button is-primary" to="/create">
+                Propose a Project
+              </Link>
+              <Link className="Home-hero-buttons-button" to="/proposals">
+                Explore Projects
+              </Link>
+            </div>
 
-          <Styled.HeroScroll>
-            Learn More
-            <Icon type="down" />
-          </Styled.HeroScroll>
-        </Styled.Hero>
+            <button className="Home-hero-scroll">
+              Learn More
+              <Icon type="down" />
+            </button>
+          </div>
 
-        <Styled.Intro>
-          <Styled.IntroText>
-            Grant.io organizes creators and community members to incentivize ecosystem
-            improvements
-          </Styled.IntroText>
+          <div className="Home-intro">
+            <h3 className="Home-intro-text">
+              Grant.io organizes creators and community members to incentivize ecosystem
+              improvements
+            </h3>
 
-          <Styled.IntroBlobs>
-            {introBlobs.map((blob, i) => (
-              <Styled.IntroBlob key={i}>
-                <img src={blob.image} />
-                <p>{blob.text}</p>
-              </Styled.IntroBlob>
-            ))}
-          </Styled.IntroBlobs>
-        </Styled.Intro>
+            <div className="Home-intro-blobs">
+              {introBlobs.map((blob, i) => (
+                <div className="Home-intro-blobs-blob" key={i}>
+                  <blob.Svg />
+                  <p>{blob.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </AntWrap>
     );
   }

@@ -4,7 +4,7 @@ from grant import JSONResponse
 
 from .models import Comment, comments_schema
 
-blueprint = Blueprint("comment", __name__, url_prefix="/api/comment")
+blueprint = Blueprint("comment", __name__, url_prefix="/api/v1/comment")
 
 
 @blueprint.route("/", methods=["GET"])

@@ -1,0 +1,83 @@
+.CreateReview {
+  &-section {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+}
+
+.ReviewField {
+  display: flex;
+  flex-direction: row;
+
+  &-label {
+    width: 220px;
+    padding: 0 1.5rem 1rem 0;
+    font-size: 1.3rem;
+    opacity: 0.7;
+    text-align: right;
+
+    &-error {
+      color: #f5222d;
+      opacity: 0.8;
+      font-size: 0.8rem;
+    }
+  }
+
+  &-content {
+    flex: 1;
+    font-size: 1.3rem;
+    padding: 0 0 1rem 1.5rem;
+    border-left: 1px solid #ddd;
+
+    code {
+      font-size: 1rem;
+    }
+
+    &-empty {
+      font-size: 1.3rem;
+      opacity: 0.3;
+      letter-spacing: 0.1rem;
+    }
+
+    &-edit {
+      margin-bottom: 5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #3498db;
+      color: #3498db;
+      opacity: 0.8;
+      border-radius: 2px;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.ReviewMilestone {
+  padding-left: 0.5rem;
+  padding-bottom: 0.5rem;
+  transform: translateY(-0.3rem);
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+  
+  &-title {
+    font-size: 1.4rem;
+    margin: 0 0 0.3rem;
+  }
+
+  &-info {
+    font-size: 0.8rem;
+    margin-top: -0.3rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+  }
+
+  &-description {
+    font-size: 1rem;
+  }
+}

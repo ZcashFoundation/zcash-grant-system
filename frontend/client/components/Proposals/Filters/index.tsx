@@ -1,5 +1,6 @@
 import React from 'react';
-import { Select, Checkbox, Radio, Card, Divider, Affix } from 'antd';
+import { Select, Checkbox, Radio, Card, Divider } from 'antd';
+import { RadioChangeEvent } from 'antd/lib/radio';
 import {
   PROPOSAL_SORT,
   SORT_LABELS,
@@ -26,7 +27,7 @@ export default class ProposalFilters extends React.Component<Props> {
     const { sort, filters, handleChangeSort } = this.props;
 
     return (
-      <Affix offsetTop={20}>
+      <div>
         <Card title="Sort">
           <Select onChange={handleChangeSort} value={sort} style={{ width: '100%' }}>
             {Object.keys(PROPOSAL_SORT).map((s: PROPOSAL_SORT) => (
@@ -69,11 +70,11 @@ export default class ProposalFilters extends React.Component<Props> {
             </div>
           ))}
         </Card>
-      </Affix>
+      </div>
     );
   }
 
-  private handleCategoryChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  private handleCategoryChange = (ev: RadioChangeEvent) => {
     const { filters } = this.props;
     const category = ev.target.value as PROPOSAL_CATEGORY;
     const categories = ev.target.checked
@@ -86,7 +87,7 @@ export default class ProposalFilters extends React.Component<Props> {
     });
   };
 
-  private handleStageChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  private handleStageChange = (ev: RadioChangeEvent) => {
     this.props.handleChangeFilters({
       ...this.props.filters,
       stage: ev.target.value as PROPOSAL_STAGE,

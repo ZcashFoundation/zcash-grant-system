@@ -1,26 +1,25 @@
 import React from 'react';
 import ShortAddress from 'components/ShortAddress';
 import Identicon from 'components/Identicon';
-import * as Styled from './styled';
+import './style.less';
 
 interface Props {
   address: string;
+  secondary?: React.ReactNode;
 }
 
-// TODO - don't hardcode monero image
-
-const UserRow = ({ address }: Props) => (
-  <Styled.Container>
-    <Styled.Avatar>
+const UserRow = ({ address, secondary }: Props) => (
+  <div className="UserRow">
+    <div className="UserRow-avatar">
       <Identicon address={address} />
-    </Styled.Avatar>
-    <Styled.Info>
-      <Styled.InfoMain>
+    </div>
+    <div className="UserRow-info">
+      <div className="UserRow-info-main">
         <ShortAddress address={address} />
-      </Styled.InfoMain>
-      <Styled.InfoSecondary>{/* user.title */}</Styled.InfoSecondary>
-    </Styled.Info>
-  </Styled.Container>
+      </div>
+      {secondary && <p className="UserRow-info-secondary">{secondary}</p>}
+    </div>
+  </div>
 );
 
 export default UserRow;

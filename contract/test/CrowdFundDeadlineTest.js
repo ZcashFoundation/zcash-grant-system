@@ -45,9 +45,13 @@ contract("CrowdFund Deadline", accounts => {
     assert.equal(await crowdFund.isFailed.call(), true);
   });
 
-  it("allows anyone to refund after time is up and goal is not reached", async () => {
+  it("allows anyone to refund after time is up and goal is not reached and sets refund reason to 1", async () => {
     const fundAmount = raiseGoal / 10;
-    await crowdFund.contribute({ from: fourthAccount, value: fundAmount });
+    await crowdFund.contribute({
+      from: fourthAccount,
+      value: fundAmount,
+      gasPrice: 0,
+    });
     assert.equal(
       (await crowdFund.contributors(fourthAccount))[0].toNumber(),
       fundAmount
@@ -56,9 +60,10 @@ contract("CrowdFund Deadline", accounts => {
     const initBalance = await web3.eth.getBalance(fourthAccount);
     await increaseTime(AFTER_DEADLINE_EXPIRES);
     await crowdFund.refund();
+    assert.equal((await crowdFund.getFreezeReason()), 1)
     await crowdFund.withdraw(fourthAccount);
     const finalBalance = await web3.eth.getBalance(fourthAccount);
-    assert.ok(finalBalance.greaterThan(initBalance)); // hard to be exact due to the gas usage
+    assert.ok(finalBalance.equals(initBalance.plus(fundAmount)));
   });
 
   it("refunds remaining proportionally when fundraiser has failed", async () => {

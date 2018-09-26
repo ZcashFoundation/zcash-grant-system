@@ -1,28 +1,43 @@
+import Web3 from 'web3';
 import { CrowdFund, Milestone, MILESTONE_STATE } from 'modules/proposals/reducers';
 import { collectArrayElements } from 'utils/web3Utils';
+import { Wei } from 'utils/units';
 import BN from 'bn.js';
 
 export async function getCrowdFundState(
   crowdFundContract: any,
   account: string,
-  web3: any,
+  web3: Web3,
 ): Promise<CrowdFund> {
   const immediateFirstMilestonePayout = await crowdFundContract.methods
     .immediateFirstMilestonePayout()
     .call({ from: account });
-  const target = await crowdFundContract.methods.raiseGoal().call({ from: account });
+  const target = Wei(await crowdFundContract.methods.raiseGoal().call({ from: account }));
   const beneficiary = await crowdFundContract.methods
     .beneficiary()
     .call({ from: account });
   const isRaiseGoalReached = await crowdFundContract.methods
     .isRaiseGoalReached()
     .call({ from: account });
-  const funded = isRaiseGoalReached
-    ? target
-    : await web3.eth.getBalance(crowdFundContract._address);
+  // Types are messed up, this returns a str, not a number
+  // https://web3js.readthedocs.io/en/1.0/web3-eth.html#getbalance
+  const balance = Wei((await web3.eth.getBalance(crowdFundContract._address)) as any);
+  const funded = isRaiseGoalReached ? target : balance;
+  const percentFunded = isRaiseGoalReached
+    ? 100
+    : balance.divn(100).isZero()
+      ? 0
+      : balance
+          .mul(new BN(100))
+          .div(target)
+          .toNumber();
+  const amountVotingForRefund = isRaiseGoalReached
+    ? Wei(await crowdFundContract.methods.amountVotingForRefund().call({ from: account }))
+    : Wei('0');
+  const percentVotingForRefund = amountVotingForRefund.div(target.divn(100)).toNumber();
 
   const isFrozen = await crowdFundContract.methods.frozen().call({ from: account });
-  const trustees = await collectArrayElements(
+  const trustees = await collectArrayElements<string>(
     crowdFundContract.methods.trustees,
     account,
   );
@@ -35,14 +50,10 @@ export async function getCrowdFundState(
 
   const milestones = rawMilestones.map(
     (m: any, index): Milestone => {
-      const amount = new BN(m.amount);
+      const amount = Wei(m.amount);
       const payoutRequestVoteDeadline = parseInt(m.payoutRequestVoteDeadline, 10) * 1000;
-      const amountAgainstPayout = new BN(m.amountVotingAgainstPayout);
-      const percentAgainstPayout =
-        amountAgainstPayout
-          .muln(1000)
-          .div(new BN(target))
-          .toNumber() / 10; // results in one significant digit, e.g. 49.9
+      const amountAgainstPayout = Wei(m.amountVotingAgainstPayout);
+      const percentAgainstPayout = amountAgainstPayout.div(target.divn(100)).toNumber();
 
       // Figure out state if they've raised
       let state = MILESTONE_STATE.WAITING;
@@ -96,6 +107,11 @@ export async function getCrowdFundState(
               .call({ form: account }),
         ),
       );
+      contributor.contributionAmount = Wei(
+        await crowdFundContract.methods
+          .getContributorContributionAmount(addr)
+          .call({ from: account }),
+      );
       return contributor;
     }),
   );
@@ -115,8 +131,12 @@ export async function getCrowdFundState(
 
   return {
     immediateFirstMilestonePayout,
-    funded: parseFloat(web3.utils.fromWei(String(funded), 'ether')),
-    target: parseFloat(web3.utils.fromWei(String(target), 'ether')),
+    balance,
+    funded,
+    percentFunded,
+    target,
+    amountVotingForRefund,
+    percentVotingForRefund,
     beneficiary,
     deadline,
     trustees,

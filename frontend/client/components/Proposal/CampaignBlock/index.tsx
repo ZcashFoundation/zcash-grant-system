@@ -2,21 +2,23 @@ import React from 'react';
 import moment from 'moment';
 import { Spin, Form, Input, Button, Icon } from 'antd';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
-import * as Styled from './styled';
-import * as ProposalStyled from '../styled';
+import './style.less';
+import classnames from 'classnames';
 
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { web3Actions } from 'modules/web3';
-import { withRouter } from 'next/router';
-import Web3Container from 'lib/Web3Container';
+import { withRouter } from 'react-router';
+import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import ShortAddress from 'components/ShortAddress';
+import UnitDisplay from 'components/UnitDisplay';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
+  isPreview?: boolean;
 }
 
 interface StateProps {
@@ -27,14 +29,18 @@ interface ActionProps {
   fundCrowdFund: typeof web3Actions['fundCrowdFund'];
 }
 
-type Props = OwnProps & StateProps & ActionProps;
+interface Web3Props {
+  web3: Web3RenderProps['web3'];
+}
+
+type Props = OwnProps & StateProps & ActionProps & Web3Props;
 
 interface State {
   amountToRaise: string;
   amountError: string | null;
 }
 
-class CampaignBlock extends React.Component<Props, State> {
+export class ProposalCampaignBlock extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -52,15 +58,17 @@ class CampaignBlock extends React.Component<Props, State> {
       return;
     }
 
-    const { crowdFund } = this.props.proposal;
-    const remainingTarget = crowdFund.target - crowdFund.funded;
+    const { proposal, web3 } = this.props;
+    const { crowdFund } = proposal;
+    const remainingTarget = crowdFund.target.sub(crowdFund.funded);
     const amount = parseFloat(value);
     let amountError = null;
 
     if (Number.isNaN(amount)) {
       // They're entering some garbage, they’ll work it out
     } else {
-      amountError = getAmountError(amount, remainingTarget);
+      const remainingEthNum = parseFloat(web3.utils.fromWei(remainingTarget, 'ether'));
+      amountError = getAmountError(amount, remainingEthNum);
     }
 
     this.setState({ amountToRaise: value, amountError });
@@ -74,55 +82,68 @@ class CampaignBlock extends React.Component<Props, State> {
   };
 
   render() {
-    const { proposal, sendLoading } = this.props;
+    const { proposal, sendLoading, web3, isPreview } = this.props;
     const { amountToRaise, amountError } = this.state;
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
       const { crowdFund } = proposal;
       const isFundingOver =
-        crowdFund.isRaiseGoalReached || crowdFund.deadline < Date.now();
-      const isDisabled = isFundingOver || !!amountError || !amountFloat;
+        crowdFund.isRaiseGoalReached ||
+        crowdFund.deadline < Date.now() ||
+        crowdFund.isFrozen;
+      const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
+      const remainingEthNum = parseFloat(
+        web3.utils.fromWei(crowdFund.target.sub(crowdFund.funded), 'ether'),
+      );
 
       content = (
         <React.Fragment>
-          <Styled.Info>
-            <Styled.InfoLabel>Started</Styled.InfoLabel>
-            <Styled.InfoValue>
+          <div className="ProposalCampaignBlock-info">
+            <div className="ProposalCampaignBlock-info-label">Started</div>
+            <div className="ProposalCampaignBlock-info-value">
               {moment(proposal.dateCreated * 1000).fromNow()}
-            </Styled.InfoValue>
-          </Styled.Info>
-          <Styled.Info>
-            <Styled.InfoLabel>Category</Styled.InfoLabel>
-            <Styled.InfoValue>
+            </div>
+          </div>
+          <div className="ProposalCampaignBlock-info">
+            <div className="ProposalCampaignBlock-info-label">Category</div>
+            <div className="ProposalCampaignBlock-info-value">
               <Icon
                 type={CATEGORY_UI[proposal.category].icon}
                 style={{ color: CATEGORY_UI[proposal.category].color }}
               />{' '}
               {CATEGORY_UI[proposal.category].label}
-            </Styled.InfoValue>
-          </Styled.Info>
+            </div>
+          </div>
           {!isFundingOver && (
-            <Styled.Info>
-              <Styled.InfoLabel>Deadline</Styled.InfoLabel>
-              <Styled.InfoValue>{moment(crowdFund.deadline).fromNow()}</Styled.InfoValue>
-            </Styled.Info>
+            <div className="ProposalCampaignBlock-info">
+              <div className="ProposalCampaignBlock-info-label">Deadline</div>
+              <div className="ProposalCampaignBlock-info-value">
+                {moment(crowdFund.deadline).fromNow()}
+              </div>
+            </div>
           )}
-          <Styled.Info>
-            <Styled.InfoLabel>Beneficiary</Styled.InfoLabel>
-            <Styled.InfoValue>
+          <div className="ProposalCampaignBlock-info">
+            <div className="ProposalCampaignBlock-info-label">Beneficiary</div>
+            <div className="ProposalCampaignBlock-info-value">
               <ShortAddress address={crowdFund.beneficiary} />
-            </Styled.InfoValue>
-          </Styled.Info>
-          <Styled.Info>
-            <Styled.InfoLabel>Funding</Styled.InfoLabel>
-            <Styled.InfoValue>
-              {crowdFund.funded} / {crowdFund.target} ETH
-            </Styled.InfoValue>
-          </Styled.Info>
+            </div>
+          </div>
+          <div className="ProposalCampaignBlock-info">
+            <div className="ProposalCampaignBlock-info-label">Funding</div>
+            <div className="ProposalCampaignBlock-info-value">
+              <UnitDisplay value={crowdFund.funded} /> /{' '}
+              <UnitDisplay value={crowdFund.target} symbol="ETH" />
+            </div>
+          </div>
 
           {isFundingOver ? (
-            <Styled.FundingOverMessage isSuccess={crowdFund.isRaiseGoalReached}>
+            <div
+              className={classnames({
+                ['ProposalCampaignBlock-fundingOver']: true,
+                ['is-success']: crowdFund.isRaiseGoalReached,
+              })}
+            >
               {crowdFund.isRaiseGoalReached ? (
                 <>
                   <Icon type="check-circle-o" />
@@ -131,19 +152,20 @@ class CampaignBlock extends React.Component<Props, State> {
               ) : (
                 <>
                   <Icon type="close-circle-o" />
-                  <span>Proposal didn’t reach target</span>
+                  <span>Proposal didn’t get funded</span>
                 </>
               )}
-            </Styled.FundingOverMessage>
+            </div>
           ) : (
             <>
-              <Styled.Bar>
-                <Styled.BarInner
+              <div className="ProposalCampaignBlock-bar">
+                <div
+                  className="ProposalCampaignBlock-bar-inner"
                   style={{
-                    width: `${(crowdFund.funded / crowdFund.target) * 100}%`,
+                    width: `${crowdFund.percentFunded}%`,
                   }}
                 />
-              </Styled.Bar>
+              </div>
               <Form layout="vertical">
                 <Form.Item
                   validateStatus={amountError ? 'error' : undefined}
@@ -157,10 +179,11 @@ class CampaignBlock extends React.Component<Props, State> {
                     value={amountToRaise}
                     placeholder="0.5"
                     min={0}
-                    max={crowdFund.target - crowdFund.funded}
+                    max={remainingEthNum}
                     step={0.1}
                     onChange={this.handleAmountChange}
                     addonAfter="ETH"
+                    disabled={isPreview}
                   />
                 </Form.Item>
 
@@ -184,10 +207,10 @@ class CampaignBlock extends React.Component<Props, State> {
     }
 
     return (
-      <ProposalStyled.SideBlock>
-        <ProposalStyled.BlockTitle>Campaign</ProposalStyled.BlockTitle>
-        <ProposalStyled.Block>{content}</ProposalStyled.Block>
-      </ProposalStyled.SideBlock>
+      <div className="ProposalCampaignBlock Proposal-top-side-block">
+        <h1 className="Proposal-top-main-block-title">Campaign</h1>
+        <div className="Proposal-top-main-block">{content}</div>
+      </div>
     );
   }
 }
@@ -203,25 +226,21 @@ const withConnect = connect(
   { fundCrowdFund: web3Actions.fundCrowdFund },
 );
 
-const ConnectedCampaignBlock = withRouter(compose(withConnect)(CampaignBlock));
+const ConnectedProposalCampaignBlock = compose<Props, OwnProps & Web3Props>(
+  withRouter,
+  withConnect,
+)(ProposalCampaignBlock);
 
 export default (props: OwnProps) => (
   <Web3Container
     renderLoading={() => (
-      <ProposalStyled.SideBlock>
-        <ProposalStyled.BlockTitle>Campaign</ProposalStyled.BlockTitle>
-        <ProposalStyled.Block>
+      <div className="ProposalCampaignBlock Proposal-top-side-block">
+        <h1 className="Proposal-top-main-block-title">Campaign</h1>
+        <div className="Proposal-top-main-block">
           <Spin />
-        </ProposalStyled.Block>
-      </ProposalStyled.SideBlock>
+        </div>
+      </div>
     )}
-    render={({ web3, accounts, contracts }) => (
-      <ConnectedCampaignBlock
-        web3={web3}
-        accounts={accounts}
-        contract={contracts[0]}
-        {...props}
-      />
-    )}
+    render={({ web3 }) => <ConnectedProposalCampaignBlock {...props} web3={web3} />}
   />
 );

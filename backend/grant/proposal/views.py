@@ -4,16 +4,12 @@ from flask import Blueprint, request
 from sqlalchemy.exc import IntegrityError
 
 from grant import JSONResponse
-from .models import Proposal, proposals_schema, proposal_schema, db
+from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
+from grant.user.models import User, SocialMedia, Avatar
+from .models import Proposal, proposals_schema, proposal_schema, db
 
-blueprint = Blueprint("proposal", __name__, url_prefix="/api/proposals")
-
-
-def __adjust_dumped_proposal(proposal):
-    cur_author = proposal["author"]
-    proposal["team"] = [cur_author]
-    return proposal
+blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 
 
 @blueprint.route("/<proposal_id>", methods=["GET"])
@@ -21,21 +17,47 @@ def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
-        return JSONResponse(__adjust_dumped_proposal(dumped_proposal))
+        return JSONResponse(dumped_proposal)
     else:
         return JSONResponse(message="No proposal matching id", _statusCode=404)
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
 def get_proposal_comments(proposal_id):
-    proposals = Proposal.query.filter_by(proposal_id=proposal_id).first()
-    if proposals:
-        results = proposal_schema.dump(proposals)
+    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    if proposal:
+        dumped_proposal = proposal_schema.dump(proposal)
         return JSONResponse(
             proposal_id=proposal_id,
-            total_comments=len(results["comments"]),
-            comments=results["comments"]
+            total_comments=len(dumped_proposal["comments"]),
+            comments=dumped_proposal["comments"]
         )
+    else:
+        return JSONResponse(message="No proposal matching id", _statusCode=404)
+
+
+@blueprint.route("/<proposal_id>/comments", methods=["POST"])
+def post_proposal_comments(proposal_id):
+    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    if proposal:
+        incoming = request.get_json()
+        user_id = incoming["userId"]
+        content = incoming["content"]
+        user = User.query.filter_by(id=user_id).first()
+
+        if user:
+            comment = Comment(
+                proposal_id=proposal_id,
+                user_id=user_id,
+                content=content
+            )
+            db.session.add(comment)
+            db.session.commit()
+            dumped_comment = comment_schema.dump(comment)
+            return JSONResponse(dumped_comment, _statusCode=201)
+
+        else:
+            return JSONResponse(message="No user matching id", _statusCode=404)
     else:
         return JSONResponse(message="No proposal matching id", _statusCode=404)
 
@@ -51,38 +73,62 @@ def get_proposals():
         )
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
-    results = map(__adjust_dumped_proposal, proposals_schema.dump(proposals))
-    return JSONResponse(results)
+    dumped_proposals = proposals_schema.dump(proposals)
+    return JSONResponse(dumped_proposals)
 
 
-@blueprint.route("/create", methods=["POST"])
+@blueprint.route("/", methods=["POST"])
 def make_proposal():
-    from grant.author.models import Author
+    from grant.user.models import User
 
     incoming = request.get_json()
 
-    account_address = incoming["accountAddress"]
     proposal_id = incoming["crowdFundContractAddress"]
     content = incoming["content"]
     title = incoming["title"]
     milestones = incoming["milestones"]
     category = incoming["category"]
 
-    author = Author.query.filter_by(account_address=account_address).first()
-
-    if not author:
-        author = Author(account_address=account_address)
-        db.session.add(author)
-        db.session.commit()
-
     proposal = Proposal.create(
         stage="FUNDING_REQUIRED",
         proposal_id=proposal_id,
         content=content,
         title=title,
-        author_id=author.id,
         category=category
     )
+
+    team = incoming["team"]
+    if not len(team) > 0:
+        return JSONResponse(message="Team must be at least 1", _statusCode=400)
+    for team_member in team:
+        account_address = team_member.get("accountAddress")
+        display_name = team_member.get("displayName")
+        email_address = team_member.get("emailAddress")
+        title = team_member.get("title")
+        user = User.query.filter((User.account_address == account_address) | (User.email_address == email_address)).first()
+        if not user:
+            user = User(
+                account_address=account_address,
+                email_address=email_address,
+                display_name=display_name,
+                title=title
+            )
+            db.session.add(user)
+            db.session.commit()
+            proposal.team.append(user)
+
+            avatar_data = team_member.get("avatar")
+            if avatar_data:
+                avatar = Avatar(image_url=avatar_data.get('link'), user_id=user.id)
+                db.session.add(avatar)
+                db.session.commit()
+
+            social_medias = team_member.get("socialMedias")
+            if social_medias:
+                for social_media in social_medias:
+                    sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
+                    db.session.add(sm)
+                    db.session.commit()
 
     db.session.add(proposal)
     db.session.commit()
@@ -105,4 +151,4 @@ def make_proposal():
         return JSONResponse(message="Proposal with that hash already exists", _statusCode=409)
 
     results = proposal_schema.dump(proposal)
-    return JSONResponse(results, _statusCode=204)
+    return JSONResponse(results, _statusCode=201)

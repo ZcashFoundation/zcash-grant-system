@@ -1,0 +1,17 @@
+.ShortAddress {
+  display: flex;
+  flex-wrap: nowrap;
+  text-align: left;
+
+  &-bookend {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  &-middle {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 0 1 auto;
+  }
+}

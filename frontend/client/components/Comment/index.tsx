@@ -1,43 +1,125 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import moment from 'moment';
-import Markdown from 'react-markdown';
-import { Comment as IComment } from 'modules/proposals/reducers';
-import * as Styled from './styled';
+import { Button } from 'antd';
+import Markdown from 'components/Markdown';
+import Identicon from 'components/Identicon';
+import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
+import { postProposalComment } from 'modules/proposals/actions';
+import { Comment as IComment, Proposal } from 'modules/proposals/reducers';
+import { AppState } from 'store/reducers';
+import './style.less';
 
-interface Props {
+interface OwnProps {
   comment: IComment;
+  proposalId: Proposal['proposalId'];
 }
 
-export default class Comment extends React.Component<Props> {
+interface StateProps {
+  isPostCommentPending: AppState['proposal']['isPostCommentPending'];
+  postCommentError: AppState['proposal']['postCommentError'];
+}
+
+interface DispatchProps {
+  postProposalComment: typeof postProposalComment;
+}
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+interface State {
+  reply: string;
+  isReplying: boolean;
+}
+
+class Comment extends React.Component<Props> {
+  state: State = {
+    reply: '',
+    isReplying: false,
+  };
+
+  componentDidUpdate(prevProps: Props) {
+    // TODO: Come up with better check on if our comment post was a success
+    const { isPostCommentPending, postCommentError } = this.props;
+    if (!isPostCommentPending && !postCommentError && prevProps.isPostCommentPending) {
+      this.setState({ reply: '', isReplying: false });
+    }
+  }
+
   public render(): React.ReactNode {
-    const { comment } = this.props;
+    const { comment, proposalId } = this.props;
+    const { isReplying, reply } = this.state;
     return (
-      <Styled.Container>
-        <Styled.Info>
-          <Styled.InfoThumb src={comment.author.avatar['120x120']} />
-          <Styled.InfoName>{comment.author.username}</Styled.InfoName>
-          <Styled.InfoTime>
-            {moment(comment.dateCreated * 1000).fromNow()}
-          </Styled.InfoTime>
-        </Styled.Info>
+      <div className="Comment">
+        <div className="Comment-info">
+          <div className="Comment-info-thumb">
+            <Identicon address={comment.author.accountAddress} />
+          </div>
+          {/* <div className="Comment-info-thumb" src={comment.author.avatar['120x120']} /> */}
+          <div className="Comment-info-name">{comment.author.username}</div>
+          <div className="Comment-info-time">{moment(comment.dateCreated).fromNow()}</div>
+        </div>
 
-        <Styled.Body>
-          <Markdown source={comment.body} />
-        </Styled.Body>
+        <div className="Comment-body">
+          <Markdown source={comment.body} type={MARKDOWN_TYPE.REDUCED} />
+        </div>
 
-        <Styled.Controls>
-          <Styled.ControlButton>Reply</Styled.ControlButton>
-          {/*<Styled.ControlButton>Report</Styled.ControlButton>*/}
-        </Styled.Controls>
+        <div className="Comment-controls">
+          <a className="Comment-controls-button" onClick={this.toggleReply}>
+            {isReplying ? 'Cancel' : 'Reply'}
+          </a>
+          {/*<a className="Comment-controls-button">Report</a>*/}
+        </div>
 
-        {comment.replies && (
-          <Styled.Replies>
-            {comment.replies.map(reply => (
-              <Comment key={reply.commentId} comment={reply} />
+        {(comment.replies.length || isReplying) && (
+          <div className="Comment-replies">
+            {isReplying && (
+              <div className="Comment-replies-form">
+                <MarkdownEditor
+                  onChange={this.handleChangeReply}
+                  type={MARKDOWN_TYPE.REDUCED}
+                />
+                <div style={{ marginTop: '0.5rem' }} />
+                <Button onClick={this.reply} disabled={!reply.length}>
+                  Submit reply
+                </Button>
+              </div>
+            )}
+            {comment.replies.map(subComment => (
+              <ConnectedComment
+                key={subComment.commentId}
+                comment={subComment}
+                proposalId={proposalId}
+              />
             ))}
-          </Styled.Replies>
+          </div>
         )}
-      </Styled.Container>
+      </div>
     );
   }
+
+  private toggleReply = () => {
+    this.setState({ isReplying: !this.state.isReplying });
+  };
+
+  private handleChangeReply = (reply: string) => {
+    this.setState({ reply });
+  };
+
+  private reply = () => {
+    const { comment, proposalId } = this.props;
+    const { reply } = this.state;
+    this.props.postProposalComment(proposalId, reply, comment.commentId);
+  };
 }
+
+const ConnectedComment = connect<StateProps, DispatchProps, OwnProps, AppState>(
+  (state: AppState) => ({
+    isPostCommentPending: state.proposal.isPostCommentPending,
+    postCommentError: state.proposal.postCommentError,
+  }),
+  {
+    postProposalComment,
+  },
+)(Comment);
+
+export default ConnectedComment;

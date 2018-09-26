@@ -9,3 +9,4 @@ dist
 .env
 *.pid
 client/lib/contracts
+.vscode

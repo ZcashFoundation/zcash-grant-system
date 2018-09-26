@@ -3,14 +3,13 @@ import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
 import { Spin } from 'antd';
-import AntWrap from 'components/AntWrap';
+import AntWrap, { Props as AntWrapProps } from 'components/AntWrap';
 import { web3Actions } from 'modules/web3';
 import MetamaskIcon from 'static/images/metamask.png';
 import WrongNetworkIcon from 'static/images/wrong-network.png';
-import * as Styled from './styled';
+import './style.less';
 
-interface OwnProps {
-  title: string;
+interface OwnProps extends AntWrapProps {
   render(props: Web3RenderProps & any): React.ReactNode;
 }
 
@@ -27,68 +26,69 @@ interface ActionProps {
 type Props = OwnProps & StateProps & ActionProps;
 
 const Web3Page = (props: Props) => {
-  const { title, render, isMissingWeb3, isWeb3Locked, isWrongNetwork } = props;
+  const { render, isMissingWeb3, isWeb3Locked, isWrongNetwork, ...rest } = props;
   let content;
   let centerContent = false;
   if (isMissingWeb3) {
     centerContent = true;
     content = (
-      <Styled.ErrorContainer>
-        <Styled.ErrorIcon src={MetamaskIcon} />
-        <Styled.ErrorMessage>
+      <div className="Web3Page-error">
+        <img className="Web3Page-error-icon" src={MetamaskIcon} />
+        <p className="Web3Page-error-message">
           This page requires a web3 client to use. Either unlock or install the MetaMask
           browser extension and refresh to continue.
-        </Styled.ErrorMessage>
-        <Styled.ErrorMetamaskButton
+        </p>
+        <a
+          className="Web3Page-error-metamaskButton"
           href="https://metamask.io/"
           target="_blank"
           rel="noopener nofollow"
         >
           Get MetaMask
-        </Styled.ErrorMetamaskButton>
-      </Styled.ErrorContainer>
+        </a>
+      </div>
     );
   } else if (isWeb3Locked) {
     centerContent = true;
     content = (
-      <Styled.ErrorContainer>
-        <Styled.ErrorIcon src={MetamaskIcon} />
-        <Styled.ErrorMessage>
+      <div className="Web3Page-error">
+        <img className="Web3Page-error-icon" src={MetamaskIcon} />
+        <p className="Web3Page-error-message">
           It looks like your MetaMask account is locked. Please unlock it and click the
           button below to continue.
-        </Styled.ErrorMessage>
-        <Styled.ErrorMetamaskButton onClick={props.setAccounts}>
+        </p>
+        <a className="Web3Page-error-metamaskButton" onClick={props.setAccounts}>
           Try again
-        </Styled.ErrorMetamaskButton>
-      </Styled.ErrorContainer>
+        </a>
+      </div>
     );
   } else if (isWrongNetwork) {
     centerContent = true;
     content = (
-      <Styled.ErrorContainer>
-        <Styled.ErrorIcon src={WrongNetworkIcon} />
-        <Styled.ErrorMessage>
+      <div className="Web3Page-error">
+        <img className="Web3Page-error-icon" src={WrongNetworkIcon} />
+        <p className="Web3Page-error-message">
           The Grant.io smart contract is currently only supported on the{' '}
           <strong>Ropsten</strong> network. Please change your network to continue.
-        </Styled.ErrorMessage>
-      </Styled.ErrorContainer>
+        </p>
+      </div>
     );
   } else {
     content = (
       <Web3Container
         render={render}
         renderLoading={() => (
-          <Styled.PageLoading>
+          <div className="Web3Page-loading">
             <Spin size="large" />
-          </Styled.PageLoading>
+          </div>
         )}
       />
     );
   }
 
   return (
-    <AntWrap title={title} centerContent={centerContent}>
-      {content}
+    <AntWrap centerContent={centerContent} {...rest}>
+      <div className="Web3Page">{content}</div>
     </AntWrap>
   );
 };

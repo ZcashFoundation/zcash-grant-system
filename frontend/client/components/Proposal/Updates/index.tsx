@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Spin } from 'antd';
-import Markdown from 'react-markdown';
+import Markdown from 'components/Markdown';
 import moment from 'moment';
 import { AppState } from 'store/reducers';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
@@ -11,7 +11,7 @@ import {
   getIsFetchingUpdates,
   getUpdatesError,
 } from 'modules/proposals/selectors';
-import * as Styled from './styled';
+import './style.less';
 
 interface OwnProps {
   proposalId: ProposalWithCrowdFund['proposalId'];
@@ -58,26 +58,30 @@ class ProposalUpdates extends React.Component<Props> {
     } else if (updates) {
       if (updates.length) {
         content = updates.map(update => (
-          <Styled.Update>
-            <Styled.Title>{update.title}</Styled.Title>
-            <Styled.Date>
+          <div className="ProposalUpdates-update">
+            <h3 className="ProposalUpdates-update-title">{update.title}</h3>
+            <div className="ProposalUpdates-update-date">
               {moment(update.dateCreated * 1000).format('MMMM Do, YYYY')}
-            </Styled.Date>
-            <Styled.BodyPreview>
+            </div>
+            <div className="ProposalUpdates-update-body">
               <Markdown source={this.truncate(update.body)} />
-            </Styled.BodyPreview>
-            <Styled.Controls>
-              <Styled.ControlButton>Read more</Styled.ControlButton>
-              <Styled.ControlButton>{update.totalComments} comments</Styled.ControlButton>
-            </Styled.Controls>
-          </Styled.Update>
+            </div>
+            <div className="ProposalUpdates-update-controls">
+              <a className="ProposalUpdates-update-controls-button">Read more</a>
+              <a className="ProposalUpdates-update-controls-button">
+                {update.totalComments} comments
+              </a>
+            </div>
+          </div>
         ));
       } else {
-        content = <Styled.NoUpdates>No updates have been posted yet</Styled.NoUpdates>;
+        content = (
+          <h3 className="ProposalUpdates-noUpdates">No updates have been posted yet</h3>
+        );
       }
     }
 
-    return content;
+    return <div className="ProposalUpdates">{content}</div>;
   }
 
   private truncate(text: string) {

@@ -1,16 +1,18 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin, Icon } from 'antd';
+import { Spin, Button } from 'antd';
 import { AppState } from 'store/reducers';
 import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
-import { fetchProposalComments } from 'modules/proposals/actions';
+import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
 import {
   getProposalComments,
   getIsFetchingComments,
   getCommentsError,
 } from 'modules/proposals/selectors';
 import Comments from 'components/Comments';
-import * as Styled from './styled';
+import Placeholder from 'components/Placeholder';
+import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
+import './style.less';
 
 interface OwnProps {
   proposalId: ProposalWithCrowdFund['proposalId'];
@@ -24,11 +26,20 @@ interface StateProps {
 
 interface DispatchProps {
   fetchProposalComments: typeof fetchProposalComments;
+  postProposalComment: typeof postProposalComment;
 }
 
 type Props = DispatchProps & OwnProps & StateProps;
 
-class ProposalComments extends React.Component<Props> {
+interface State {
+  comment: string;
+}
+
+class ProposalComments extends React.Component<Props, State> {
+  state: State = {
+    comment: '',
+  };
+
   componentDidMount() {
     if (this.props.proposalId) {
       this.props.fetchProposalComments(this.props.proposalId);
@@ -42,7 +53,8 @@ class ProposalComments extends React.Component<Props> {
   }
 
   render() {
-    const { comments, isFetchingComments, commentsError } = this.props;
+    const { proposalId, comments, isFetchingComments, commentsError } = this.props;
+    const { comment } = this.state;
     let content = null;
 
     if (isFetchingComments) {
@@ -56,21 +68,41 @@ class ProposalComments extends React.Component<Props> {
       );
     } else if (comments) {
       if (comments.length) {
-        content = (
-          <>
-            <Comments comments={comments} />
-            <Styled.ForumButton>
-              Join the conversation <Icon type="message" />
-            </Styled.ForumButton>
-          </>
-        );
+        content = <Comments comments={comments} proposalId={proposalId} />;
       } else {
-        content = <h2>No comments have been made yet</h2>;
+        content = (
+          <Placeholder
+            title="No comments have been made yet"
+            subtitle="Why not be the first?"
+          />
+        );
       }
     }
 
-    return content;
+    return (
+      <>
+        <div className="ProposalComments-post">
+          <MarkdownEditor
+            onChange={this.handleCommentChange}
+            type={MARKDOWN_TYPE.REDUCED}
+          />
+          <div style={{ marginTop: '0.5rem' }} />
+          <Button onClick={this.postComment} disabled={!comment.length}>
+            Submit comment
+          </Button>
+        </div>
+        {content}
+      </>
+    );
   }
+
+  private handleCommentChange = (comment: string) => {
+    this.setState({ comment });
+  };
+
+  private postComment = () => {
+    this.props.postProposalComment(this.props.proposalId, this.state.comment);
+  };
 }
 
 export default connect(
@@ -81,5 +113,6 @@ export default connect(
   }),
   {
     fetchProposalComments,
+    postProposalComment,
   },
 )(ProposalComments);
