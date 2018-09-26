@@ -97,9 +97,12 @@ def make_proposal():
         category=category
     )
 
+    db.session.add(proposal)
+
     team = incoming["team"]
     if not len(team) > 0:
         return JSONResponse(message="Team must be at least 1", _statusCode=400)
+
     for team_member in team:
         account_address = team_member.get("accountAddress")
         display_name = team_member.get("displayName")
@@ -114,24 +117,21 @@ def make_proposal():
                 title=title
             )
             db.session.add(user)
-            db.session.commit()
-            proposal.team.append(user)
+            db.session.flush()
 
             avatar_data = team_member.get("avatar")
             if avatar_data:
                 avatar = Avatar(image_url=avatar_data.get('link'), user_id=user.id)
                 db.session.add(avatar)
-                db.session.commit()
 
             social_medias = team_member.get("socialMedias")
             if social_medias:
                 for social_media in social_medias:
                     sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
                     db.session.add(sm)
-                    db.session.commit()
 
-    db.session.add(proposal)
-    db.session.commit()
+
+        proposal.team.append(user)
 
     for each_milestone in milestones:
         m = Milestone(
@@ -144,6 +144,7 @@ def make_proposal():
         )
 
         db.session.add(m)
+
     try:
         db.session.commit()
     except IntegrityError as e:

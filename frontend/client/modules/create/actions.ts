@@ -36,7 +36,7 @@ export function saveDraft() {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     const { form } = getState().create;
     dispatch({ type: types.SAVE_DRAFT_PENDING });
-    await sleep(1000);
+    await sleep(100);
 
     // TODO: Replace with server side save
     localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(form));
