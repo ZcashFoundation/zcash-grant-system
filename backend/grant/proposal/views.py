@@ -108,7 +108,8 @@ def make_proposal():
         display_name = team_member.get("displayName")
         email_address = team_member.get("emailAddress")
         title = team_member.get("title")
-        user = User.query.filter((User.account_address == account_address) | (User.email_address == email_address)).first()
+        user = User.query.filter(
+            (User.account_address == account_address) | (User.email_address == email_address)).first()
         if not user:
             user = User(
                 account_address=account_address,
@@ -129,7 +130,6 @@ def make_proposal():
                 for social_media in social_medias:
                     sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
                     db.session.add(sm)
-
 
         proposal.team.append(user)
 

@@ -3,6 +3,7 @@ import json
 import random
 
 from grant.proposal.models import CATEGORIES
+from grant.proposal.models import Proposal
 from grant.user.models import User
 from ..config import BaseTestConfig
 
@@ -74,6 +75,62 @@ class TestAPI(BaseTestConfig):
         user_db = User.query.filter_by(email_address=proposal_by_email["team"][0]["emailAddress"]).first()
         self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
         self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
+
+    def test_associate_user_via_proposal_by_email(self):
+        proposal_by_email = copy.deepcopy(proposal)
+        del proposal_by_email["team"][0]["accountAddress"]
+
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal_by_email),
+            content_type='application/json'
+        )
+
+        # User
+        user_db = User.query.filter_by(email_address=proposal_by_email["team"][0]["emailAddress"]).first()
+        self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
+        self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
+        proposal_db = Proposal.query.filter_by(
+            proposal_id=proposal["crowdFundContractAddress"]
+        ).first()
+        self.assertEqual(proposal_db.team[0].id, user_db.id)
+
+    def test_associate_user_via_proposal_by_email_when_user_already_exists(self):
+        proposal_by_email = copy.deepcopy(proposal)
+        del proposal_by_email["team"][0]["accountAddress"]
+
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal_by_email),
+            content_type='application/json'
+        )
+
+        # User
+        user_db = User.query.filter_by(email_address=proposal_by_email["team"][0]["emailAddress"]).first()
+        self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
+        self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
+        proposal_db = Proposal.query.filter_by(
+            proposal_id=proposal["crowdFundContractAddress"]
+        ).first()
+        self.assertEqual(proposal_db.team[0].id, user_db.id)
+
+        new_proposal_by_email = copy.deepcopy(proposal)
+        new_proposal_by_email["crowdFundContractAddress"] = "0x2222"
+        del new_proposal_by_email["team"][0]["accountAddress"]
+
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(new_proposal_by_email),
+            content_type='application/json'
+        )
+
+        user_db = User.query.filter_by(email_address=new_proposal_by_email["team"][0]["emailAddress"]).first()
+        self.assertEqual(user_db.display_name, new_proposal_by_email["team"][0]["displayName"])
+        self.assertEqual(user_db.title, new_proposal_by_email["team"][0]["title"])
+        proposal_db = Proposal.query.filter_by(
+            proposal_id=proposal["crowdFundContractAddress"]
+        ).first()
+        self.assertEqual(proposal_db.team[0].id, user_db.id)
 
     def test_get_all_users(self):
         self.app.post(
