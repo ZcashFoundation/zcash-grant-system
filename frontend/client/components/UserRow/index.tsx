@@ -1,23 +1,20 @@
 import React from 'react';
-import ShortAddress from 'components/ShortAddress';
-import Identicon from 'components/Identicon';
+import UserAvatar from 'components/UserAvatar';
+import { TeamMember } from 'modules/create/types';
 import './style.less';
 
 interface Props {
-  address: string;
-  secondary?: React.ReactNode;
+  user: TeamMember;
 }
 
-const UserRow = ({ address, secondary }: Props) => (
+const UserRow = ({ user }: Props) => (
   <div className="UserRow">
     <div className="UserRow-avatar">
-      <Identicon address={address} />
+      <UserAvatar user={user} className="UserRow-avatar-img" />
     </div>
     <div className="UserRow-info">
-      <div className="UserRow-info-main">
-        <ShortAddress address={address} />
-      </div>
-      {secondary && <p className="UserRow-info-secondary">{secondary}</p>}
+      <div className="UserRow-info-main">{user.name}</div>
+      <p className="UserRow-info-secondary">{user.title}</p>
     </div>
   </div>
 );

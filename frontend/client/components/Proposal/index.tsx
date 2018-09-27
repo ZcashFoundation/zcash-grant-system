@@ -151,7 +151,7 @@ export class ProposalDetail extends React.Component<Props, State> {
             </div>
             <div className="Proposal-top-side">
               <CampaignBlock proposal={proposal} isPreview={isPreview} />
-              <TeamBlock crowdFund={crowdFund} />
+              <TeamBlock proposal={proposal} />
             </div>
           </div>
 

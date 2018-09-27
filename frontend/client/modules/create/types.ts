@@ -32,6 +32,7 @@ export interface Milestone {
   immediatePayout: boolean;
 }
 
+// TODO: Merge this or extend the `User` type in proposals/reducers.ts
 export interface TeamMember {
   name: string;
   title: string;

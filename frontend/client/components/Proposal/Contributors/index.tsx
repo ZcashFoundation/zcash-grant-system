@@ -1,7 +1,7 @@
 import React from 'react';
 import { Spin } from 'antd';
 import { CrowdFund } from 'modules/proposals/reducers';
-import UserRow from 'components/UserRow';
+import AddressRow from 'components/AddressRow';
 import Placeholder from 'components/Placeholder';
 import UnitDisplay from 'components/UnitDisplay';
 
@@ -14,7 +14,7 @@ const ContributorsBlock = ({ crowdFund }: Props) => {
   if (crowdFund) {
     if (crowdFund.contributors.length) {
       content = crowdFund.contributors.map(contributor => (
-        <UserRow
+        <AddressRow
           key={contributor.address}
           address={contributor.address}
           secondary={<UnitDisplay value={contributor.contributionAmount} symbol="ETH" />}

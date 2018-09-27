@@ -209,7 +209,7 @@ export function makeProposalPreviewFromForm(
     body: form.details,
     stage: 'preview',
     category: form.category,
-    team: [],
+    team: form.team,
     milestones: form.milestones.map((m, idx) => ({
       index: idx,
       title: m.title,

@@ -2,6 +2,7 @@ import types from './types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { Wei } from 'utils/units';
 import { findComment } from 'utils/helpers';
+import { TeamMember } from 'modules/create/types';
 
 export interface User {
   accountAddress: string;
@@ -77,7 +78,7 @@ export interface Proposal {
   stage: string;
   category: PROPOSAL_CATEGORY;
   milestones: ProposalMilestone[];
-  team: User[];
+  team: TeamMember[];
 }
 
 export interface ProposalWithCrowdFund extends Proposal {

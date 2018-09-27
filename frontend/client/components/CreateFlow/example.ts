@@ -1,4 +1,5 @@
 import { PROPOSAL_CATEGORY } from 'api/constants';
+import { SOCIAL_TYPE } from 'utils/social';
 import { CreateFormState } from 'modules/create/types';
 
 const createExampleProposal = (
@@ -18,7 +19,10 @@ const createExampleProposal = (
         )}.jpg`,
         ethAddress: payOutAddress,
         emailAddress: 'test@grant.io',
-        socialAccounts: {},
+        socialAccounts: {
+          [SOCIAL_TYPE.GITHUB]: 'dternyak',
+          [SOCIAL_TYPE.LINKEDIN]: 'dternyak',
+        },
       },
       {
         name: 'Jane Smith',
@@ -28,7 +32,10 @@ const createExampleProposal = (
         )}.jpg`,
         ethAddress: '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
         emailAddress: 'designer@tshirt.com',
-        socialAccounts: {},
+        socialAccounts: {
+          [SOCIAL_TYPE.KEYBASE]: 'willo',
+          [SOCIAL_TYPE.TWITTER]: 'wbobeirne',
+        },
       },
     ],
     details:

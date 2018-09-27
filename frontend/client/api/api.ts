@@ -1,15 +1,24 @@
 import axios from './axios';
 import { Proposal } from 'modules/proposals/reducers';
 import { TeamMember } from 'modules/create/types';
-import { socialAccountsToUrls } from 'utils/social';
+import { formatTeamMemberForPost, formatTeamMemberFromGet } from 'utils/api';
 import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
-  return axios.get('/api/v1/proposals/');
+  return axios.get('/api/v1/proposals/').then(res => {
+    res.data = res.data.map((proposal: any) => {
+      proposal.team = proposal.team.map(formatTeamMemberFromGet);
+      return proposal;
+    });
+    return res;
+  });
 }
 
 export function getProposal(proposalId: number | string): Promise<{ data: Proposal }> {
-  return axios.get(`/api/v1/proposals/${proposalId}`);
+  return axios.get(`/api/v1/proposals/${proposalId}`).then(res => {
+    res.data.team = res.data.team.map(formatTeamMemberFromGet);
+    return res;
+  });
 }
 
 export function getProposalComments(proposalId: number | string) {
@@ -33,15 +42,6 @@ export function postProposal(payload: {
   return axios.post(`/api/v1/proposals/`, {
     ...payload,
     // Team has a different shape for POST
-    team: payload.team.map(u => ({
-      displayName: u.name,
-      title: u.title,
-      accountAddress: u.ethAddress,
-      emailAddress: u.emailAddress,
-      avatar: { link: u.avatarUrl },
-      socialMedias: socialAccountsToUrls(u.socialAccounts).map(url => ({
-        link: url,
-      })),
-    })),
+    team: payload.team.map(formatTeamMemberForPost),
   });
 }

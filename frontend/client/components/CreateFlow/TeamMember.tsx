@@ -4,7 +4,7 @@ import { Input, Form, Col, Row, Button, Icon, Alert } from 'antd';
 import { SOCIAL_TYPE, SOCIAL_INFO } from 'utils/social';
 import { TeamMember } from 'modules/create/types';
 import { getCreateTeamMemberError } from 'modules/create/utils';
-import defaultUserImg from 'static/images/default-user.jpg';
+import UserAvatar from 'components/UserAvatar';
 import './TeamMember.less';
 
 interface Props {
@@ -37,7 +37,7 @@ export default class CreateFlowTeamMember extends React.PureComponent<Props, Sta
     return (
       <div className={classnames('TeamMember', isEditing && 'is-editing')}>
         <div className="TeamMember-avatar">
-          <img src={fields.avatarUrl || defaultUserImg} />
+          <UserAvatar className="TeamMember-avatar-img" user={fields} />
           {isEditing && (
             <Button className="TeamMember-avatar-change" onClick={this.handleChangePhoto}>
               Change

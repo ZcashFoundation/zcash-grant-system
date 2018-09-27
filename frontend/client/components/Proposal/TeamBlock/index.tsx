@@ -1,18 +1,16 @@
 import React from 'react';
 import { Spin } from 'antd';
-import { CrowdFund } from 'modules/proposals/reducers';
+import { Proposal } from 'modules/proposals/reducers';
 import UserRow from 'components/UserRow';
 
 interface Props {
-  crowdFund: CrowdFund;
+  proposal: Proposal;
 }
 
-const TeamBlock = ({ crowdFund }: Props) => {
+const TeamBlock = ({ proposal }: Props) => {
   let content;
-  if (crowdFund) {
-    content = crowdFund.trustees.map(trustee => (
-      <UserRow key={trustee} address={trustee} />
-    ));
+  if (proposal) {
+    content = proposal.team.map(user => <UserRow key={user.name} user={user} />);
   } else {
     content = <Spin />;
   }

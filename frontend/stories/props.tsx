@@ -1,4 +1,9 @@
-import { Contributor, Milestone, MILESTONE_STATE } from 'modules/proposals/reducers';
+import {
+  Contributor,
+  Milestone,
+  MILESTONE_STATE,
+  ProposalWithCrowdFund,
+} from 'modules/proposals/reducers';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import {
   fundCrowdFund,
@@ -155,7 +160,7 @@ export function getProposalWithCrowdFund({
     Object.assign(milestones[idx], mso);
   });
 
-  const proposal = {
+  const proposal: ProposalWithCrowdFund = {
     proposalId: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
     dateCreated: created / 1000,
     title: 'Crowdfund Title',
@@ -164,25 +169,28 @@ export function getProposalWithCrowdFund({
     category: PROPOSAL_CATEGORY.COMMUNITY,
     team: [
       {
-        accountAddress: '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
+        name: 'Test Proposer',
         title: '',
-        userid: 1,
-        username: '',
-        avatar: { '120x120': '' },
+        ethAddress: '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
+        emailAddress: '',
+        avatarUrl: '',
+        socialAccounts: {},
       },
       {
-        accountAddress: '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
+        name: 'Test Proposer',
         title: '',
-        userid: 2,
-        username: '',
-        avatar: { '120x120': '' },
+        ethAddress: '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+        emailAddress: '',
+        avatarUrl: '',
+        socialAccounts: {},
       },
       {
-        accountAddress: '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+        name: 'Test Proposer',
         title: '',
-        userid: 3,
-        username: '',
-        avatar: { '120x120': '' },
+        ethAddress: '0x529104532a9779ea9eae0c1e325b3368e0f8add4',
+        emailAddress: '',
+        avatarUrl: '',
+        socialAccounts: {},
       },
     ],
     milestones,
@@ -191,6 +199,7 @@ export function getProposalWithCrowdFund({
       trustees: [
         '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
         '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+        '0x529104532a9779ea9eae0c1e325b3368e0f8add4',
       ],
       contributors,
       milestones,
