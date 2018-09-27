@@ -1,5 +1,7 @@
 import axios from './axios';
 import { Proposal } from 'modules/proposals/reducers';
+import { TeamMember } from 'modules/create/types';
+import { socialAccountsToUrls } from 'utils/social';
 import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
@@ -26,9 +28,20 @@ export function postProposal(payload: {
   title: string;
   category: PROPOSAL_CATEGORY;
   milestones: object[];
+  team: TeamMember[];
 }) {
   return axios.post(`/api/v1/proposals/`, {
     ...payload,
-    team: [{ accountAddress: payload.accountAddress }],
+    // Team has a different shape for POST
+    team: payload.team.map(u => ({
+      displayName: u.name,
+      title: u.title,
+      accountAddress: u.ethAddress,
+      emailAddress: u.emailAddress,
+      avatar: { link: u.avatarUrl },
+      socialMedias: socialAccountsToUrls(u.socialAccounts).map(url => ({
+        link: url,
+      })),
+    })),
   });
 }

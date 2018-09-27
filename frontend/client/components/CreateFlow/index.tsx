@@ -6,7 +6,7 @@ import qs from 'query-string';
 import { withRouter, RouteComponentProps } from 'react-router';
 import { debounce } from 'underscore';
 import Basics from './Basics';
-// import Team from './Team';
+import Team from './Team';
 import Details from './Details';
 import Milestones from './Milestones';
 import Governance from './Governance';
@@ -25,7 +25,7 @@ import './index.less';
 
 export enum CREATE_STEP {
   BASICS = 'BASICS',
-  // TEAM = 'TEAM',
+  TEAM = 'TEAM',
   DETAILS = 'DETAILS',
   MILESTONES = 'MILESTONES',
   GOVERNANCE = 'GOVERNANCE',
@@ -34,7 +34,7 @@ export enum CREATE_STEP {
 
 const STEP_ORDER = [
   CREATE_STEP.BASICS,
-  // CREATE_STEP.TEAM,
+  CREATE_STEP.TEAM,
   CREATE_STEP.DETAILS,
   CREATE_STEP.MILESTONES,
   CREATE_STEP.GOVERNANCE,
@@ -57,14 +57,14 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
       'You don’t have to fill out everything at once right now, you can come back later.',
     component: Basics,
   },
-  // [CREATE_STEP.TEAM]: {
-  //   short: 'Team',
-  //   title: 'Assemble your team',
-  //   subtitle: 'Let everyone know if you’re flying solo, or who you’re working with',
-  //   help:
-  //     'More team members, real names, and linked social accounts adds legitimacy to your proposal',
-  //   component: Team,
-  // },
+  [CREATE_STEP.TEAM]: {
+    short: 'Team',
+    title: 'Assemble your team',
+    subtitle: 'Let everyone know if you’re flying solo, or who you’re working with',
+    help:
+      'More team members, real names, and linked social accounts adds legitimacy to your proposal',
+    component: Team,
+  },
   [CREATE_STEP.DETAILS]: {
     short: 'Details',
     title: 'Dive into the details',
@@ -198,7 +198,7 @@ class CreateFlow extends React.Component<Props, State> {
         <div className="CreateFlow">
           <div className="CreateFlow-header">
             <Steps current={currentIndex}>
-              {STEP_ORDER.slice(0, 4).map(s => (
+              {STEP_ORDER.slice(0, 5).map(s => (
                 <Steps.Step
                   key={s}
                   title={STEP_INFO[s].short}

@@ -2,12 +2,12 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Icon, Timeline } from 'antd';
 import moment from 'moment';
-import { Milestone } from 'modules/create/types';
 import { getCreateErrors, KeyOfForm, FIELD_NAME_MAP } from 'modules/create/utils';
 import Markdown from 'components/Markdown';
 import { AppState } from 'store/reducers';
 import { CREATE_STEP } from './index';
 import { CATEGORY_UI } from 'api/constants';
+import defaultUserImg from 'static/images/default-user.jpg';
 import './Review.less';
 
 interface OwnProps {
@@ -68,11 +68,17 @@ class CreateReview extends React.Component<Props> {
           },
         ],
       },
-      // {
-      //   step: CREATE_STEP.TEAM,
-      //   name: 'Team',
-      //   fields: [],
-      // },
+      {
+        step: CREATE_STEP.TEAM,
+        name: 'Team',
+        fields: [
+          {
+            key: 'team',
+            content: <ReviewTeam team={form.team} />,
+            error: errors.team && errors.team.join(' '),
+          },
+        ],
+      },
       {
         step: CREATE_STEP.DETAILS,
         name: 'Details',
@@ -178,7 +184,11 @@ export default connect<StateProps, {}, OwnProps, AppState>(state => ({
   form: state.create.form,
 }))(CreateReview);
 
-const ReviewMilestones = ({ milestones }: { milestones: Milestone[] }) => (
+const ReviewMilestones = ({
+  milestones,
+}: {
+  milestones: AppState['create']['form']['milestones'];
+}) => (
   <Timeline>
     {milestones.map(m => (
       <Timeline.Item>
@@ -194,4 +204,18 @@ const ReviewMilestones = ({ milestones }: { milestones: Milestone[] }) => (
       </Timeline.Item>
     ))}
   </Timeline>
+);
+
+const ReviewTeam = ({ team }: { team: AppState['create']['form']['team'] }) => (
+  <div className="ReviewTeam">
+    {team.map((u, idx) => (
+      <div className="ReviewTeam-member" key={idx}>
+        <img className="ReviewTeam-member-avatar" src={u.avatarUrl || defaultUserImg} />
+        <div className="ReviewTeam-member-info">
+          <div className="ReviewTeam-member-info-name">{u.name}</div>
+          <div className="ReviewTeam-member-info-title">{u.title}</div>
+        </div>
+      </div>
+    ))}
+  </div>
 );
