@@ -1,16 +1,14 @@
 import types from './types';
-
-// TODO: Replace this with full user object once auth is really done
-interface AuthedUser {
-  name: string;
-  email: string;
-  address: string;
-}
+// TODO: Use a common User type instead of this
+import { TeamMember } from 'modules/create/types';
 
 export interface AuthState {
-  user: AuthedUser | null;
+  user: TeamMember | null;
   isAuthingUser: boolean;
   authUserError: string | null;
+
+  checkedUsers: { [address: string]: TeamMember | false };
+  isCheckingUser: boolean;
 
   isCreatingUser: boolean;
   createUserError: string | null;
@@ -28,6 +26,9 @@ export const INITIAL_STATE: AuthState = {
 
   isCreatingUser: false,
   createUserError: null,
+
+  checkedUsers: {},
+  isCheckingUser: false,
 
   token: null,
   tokenAddress: null,
@@ -69,12 +70,41 @@ export default function createReducer(state: AuthState = INITIAL_STATE, action: 
         user: action.payload.user,
         token: action.payload.token,
         isCreatingUser: false,
+        checkedUsers: {
+          ...state.checkedUsers,
+          [action.payload.user.address]: action.payload.user,
+        },
       };
     case types.CREATE_USER_REJECTED:
       return {
         ...state,
         isCreatingUser: false,
         createUserError: action.payload,
+      };
+
+    case types.CHECK_USER_PENDING:
+      return {
+        ...state,
+        isCheckingUser: true,
+      };
+    case types.CHECK_USER_FULFILLED:
+      return {
+        ...state,
+        isCheckingUser: false,
+        checkedUsers: action.payload.user
+          ? {
+              ...state.checkedUsers,
+              [action.payload.address]: action.payload.user,
+            }
+          : {
+              ...state.checkedUsers,
+              [action.payload.address]: false,
+            },
+      };
+    case types.CHECK_USER_REJECTED:
+      return {
+        ...state,
+        isCheckingUser: false,
       };
 
     case types.SIGN_TOKEN_PENDING:

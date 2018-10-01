@@ -2,43 +2,102 @@ import types from './types';
 import { Dispatch } from 'redux';
 import { sleep } from 'utils/helpers';
 import { AppState } from 'store/reducers';
+import { createUser as apiCreateUser, getUser as apiGetUser } from 'api/api';
 
 type GetState = () => AppState;
 
-export function authUser() {
-  return async (dispatch: Dispatch<any>, getState: GetState) => {
-    const token = getState().auth.token;
-    if (!token) {
-      return;
-    }
-
-    // TODO: Implement authentication
+export function authUser(address: string) {
+  return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.AUTH_USER_PENDING });
-    await sleep(500);
-    dispatch({
-      type: types.AUTH_USER_REJECTED,
-      payload: 'Auth not implemented yet',
-      error: true,
-    });
+
+    // TODO: Actually auth using a signed token
+    try {
+      const res = await apiGetUser(address);
+      dispatch({
+        type: types.AUTH_USER_FULFILLED,
+        payload: res.data,
+      });
+    } catch (err) {
+      dispatch({
+        type: types.AUTH_USER_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
   };
 }
 
-export function createUser(address: string, name: string, email: string) {
+export function createUser(user: {
+  address: string;
+  email: string;
+  name: string;
+  title: string;
+}) {
   return async (dispatch: Dispatch<any>) => {
-    // TODO: Implement user creation
     dispatch({ type: types.CREATE_USER_PENDING });
-    await sleep(500);
-    dispatch({
-      type: types.CREATE_USER_FULFILLED,
-      payload: {
-        user: {
-          address,
-          name,
-          email,
+
+    try {
+      // TODO: Pass real token
+      const token = Math.random().toString();
+      const res = await apiCreateUser({
+        accountAddress: user.address,
+        emailAddress: user.email,
+        displayName: user.name,
+        title: user.title,
+        token,
+      });
+      dispatch({
+        type: types.CREATE_USER_FULFILLED,
+        payload: {
+          user: res.data,
+          token,
         },
-        token: Math.random(),
-      },
-    });
+      });
+    } catch (err) {
+      dispatch({
+        type: types.CREATE_USER_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}
+
+export function checkUser(address: string) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
+    const checkedUsers = getState().auth.checkedUsers;
+    if (checkedUsers[address] !== undefined) {
+      return;
+    }
+
+    dispatch({ type: types.CHECK_USER_PENDING });
+
+    try {
+      const res = await apiGetUser(address);
+      dispatch({
+        type: types.CHECK_USER_FULFILLED,
+        payload: {
+          address,
+          user: res.data,
+        },
+      });
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        dispatch({
+          type: types.CHECK_USER_FULFILLED,
+          payload: {
+            address,
+            user: false,
+          },
+        });
+      } else {
+        dispatch({
+          type: types.CHECK_USER_REJECTED,
+          payload: err.message || err.toString(),
+          error: true,
+        });
+      }
+    }
   };
 }
 

@@ -14,7 +14,7 @@ class ProfilePage extends React.Component<Props> {
     return (
       <AntWrap title={user ? user.name : 'Profile'}>
         <h1>Hello, {user && user.name}</h1>
-        <Identicon address={user.address} />
+        <Identicon address={user.ethAddress} />
       </AntWrap>
     );
   }

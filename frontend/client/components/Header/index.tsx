@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 import { Spin, Icon } from 'antd';
+import UserAvatar from 'components/UserAvatar';
 import Identicon from 'components/Identicon';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
@@ -46,8 +47,7 @@ class Header extends React.Component<Props> {
 
     let avatar;
     if (user) {
-      // TODO: Load user's avatar as well
-      avatar = <Identicon address={user.address} />;
+      avatar = <UserAvatar user={user} />;
     } else if (accounts && accounts[0]) {
       avatar = <Identicon address={accounts[0]} />;
     } else if (accountsLoading || isAuthingUser) {

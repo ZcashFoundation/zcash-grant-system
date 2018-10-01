@@ -1,7 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Spin } from 'antd';
 import { AppState } from 'store/reducers';
 import { AUTH_PROVIDER } from 'utils/auth';
+import { authActions } from 'modules/auth';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
 import SelectProvider from './SelectProvider';
@@ -10,9 +12,15 @@ import './index.less';
 
 interface StateProps {
   web3Accounts: AppState['web3']['accounts'];
+  checkedUsers: AppState['auth']['checkedUsers'];
+  isCheckingUser: AppState['auth']['isCheckingUser'];
 }
 
-type Props = StateProps;
+interface DispatchProps {
+  checkUser: typeof authActions['checkUser'];
+}
+
+type Props = StateProps & DispatchProps;
 
 interface State {
   provider: AUTH_PROVIDER | null;
@@ -31,7 +39,14 @@ class AuthFlow extends React.Component<Props> {
     SIGN_IN: {
       title: () => 'Prove your Identity',
       subtitle: () => 'Log into your Grant.io account by proving your identity',
-      render: () => <SignIn />,
+      render: () => {
+        const user = this.props.checkedUsers[this.state.address];
+        return (
+          user && (
+            <SignIn provider={this.state.provider} user={user} reset={this.resetState} />
+          )
+        );
+      },
     },
     SIGN_UP: {
       title: () => 'Claim your Identity',
@@ -83,17 +98,26 @@ class AuthFlow extends React.Component<Props> {
         provider: AUTH_PROVIDER.WEB3,
         address: web3Accounts[0],
       });
+      this.props.checkUser(web3Accounts[0]);
     }
   }
 
   render() {
+    const { checkedUsers, isCheckingUser } = this.props;
     const { provider, address } = this.state;
+    const checkedUser = checkedUsers[address];
     let page;
 
     if (provider) {
       if (address) {
         // TODO: If address results in user, show SIGN_IN.
-        page = this.pages.SIGN_UP;
+        if (isCheckingUser) {
+          return <Spin size="large" />;
+        } else if (checkedUser) {
+          page = this.pages.SIGN_IN;
+        } else {
+          page = this.pages.SIGN_UP;
+        }
       } else {
         page = this.pages.PROVIDE_IDENTITY;
       }
@@ -116,6 +140,7 @@ class AuthFlow extends React.Component<Props> {
 
   private setAddress = (address: string) => {
     this.setState({ address });
+    this.props.checkUser(address);
   };
 
   private resetState = () => {
@@ -123,6 +148,13 @@ class AuthFlow extends React.Component<Props> {
   };
 }
 
-export default connect<StateProps, {}, {}, AppState>(state => ({
-  web3Accounts: state.web3.accounts,
-}))(AuthFlow);
+export default connect<StateProps, DispatchProps, {}, AppState>(
+  state => ({
+    web3Accounts: state.web3.accounts,
+    checkedUsers: state.auth.checkedUsers,
+    isCheckingUser: state.auth.isCheckingUser,
+  }),
+  {
+    checkUser: authActions.checkUser,
+  },
+)(AuthFlow);
