@@ -1,0 +1,31 @@
+@twitter-color: #009cf7;
+@reddit-color: #ff4500;
+@facebook-color: #4063b6;
+@linkedin-color: #0074b8;
+
+.SocialShare {
+  &-button {
+    display: block;
+    opacity: 0.8;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    .social-mixin(@name, @color) {
+      &.is-@{name} {
+        color: desaturate(@color, 80%);
+
+        &:hover,
+        &:active {
+          color: @color;
+        }
+      }
+    }
+    .social-mixin(twitter, @twitter-color);
+    .social-mixin(reddit, @reddit-color);
+    .social-mixin(facebook, @facebook-color);
+    .social-mixin(linkedin, @linkedin-color);
+  }
+}

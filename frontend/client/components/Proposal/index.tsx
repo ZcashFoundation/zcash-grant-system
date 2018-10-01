@@ -22,6 +22,7 @@ import classnames from 'classnames';
 import { withRouter } from 'react-router';
 import Web3Container from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
+import SocialShare from 'components/SocialShare';
 
 interface OwnProps {
   proposalId: string;
@@ -111,6 +112,15 @@ export class ProposalDetail extends React.Component<Props, State> {
       return (
         <div className="Proposal">
           <div className="Proposal-top">
+            <div className="Proposal-top-social">
+              <SocialShare
+                url={window.location.href}
+                title={`${proposal.title} needs funding on Grant-io!`}
+                text={`${
+                  proposal.title
+                } needs funding on Grant.io! Come help make this proposal a reality by funding it.`}
+              />
+            </div>
             <div className="Proposal-top-main">
               <h1 className="Proposal-top-main-title">
                 {proposal ? proposal.title : <span>&nbsp;</span>}
