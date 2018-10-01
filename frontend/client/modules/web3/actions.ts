@@ -25,7 +25,7 @@ function handleWrongNetworkError(dispatch: (action: any) => void) {
 export type TSetWeb3 = typeof setWeb3;
 export function setWeb3() {
   return (dispatch: Dispatch<any>) => {
-    dispatch({
+    return dispatch({
       type: types.WEB3,
       payload: getWeb3(),
     });

@@ -61,7 +61,7 @@ const chunkExtractFromLoadables = (loadableState: any) =>
       .filter(
         (c: any) =>
           c.origins.filter(
-            (o: any) => o.loc === origin.loc && o.moduleId === origin.moduleId,
+            (o: any) => origin && o.loc === origin.loc && o.moduleId === origin.moduleId,
           ).length > 0,
       )
       .reduce((a: string[], c: any) => a.concat(c.files), []);
