@@ -1,0 +1,64 @@
+.AuthButton {
+  // Needed to override inherited styles
+  &.Header-links-link {
+    display: flex;
+    align-items: center;
+    margin-right: -0.2rem;
+    transform: none;
+    transition: opacity 200ms ease, transform 200ms ease;
+
+    &.is-loading {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+  }
+
+  &:hover {
+    .anticon {
+      opacity: 1;
+    }
+  }
+
+  &-avatar {
+    position: relative;
+    height: 2.4rem;
+    width: 2.4rem;
+    margin-left: 0.6rem;
+    border-radius: 100%;
+    overflow: hidden;
+    background: rgba(#FFF, 0.2);
+    box-shadow: 0 0.5px 2px rgba(#000, 0.3);
+
+    img {
+      height: 100%;
+      width: 100%;
+      border-radius: 100%;
+    }
+
+    .ant-spin {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      line-height: 0;
+    }
+
+    &-locked {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(#000, 0.2);
+
+      .anticon {
+        color: #FFF;
+        font-size: 1.4rem;
+        opacity: 0.8;
+      }
+    }
+  }
+}

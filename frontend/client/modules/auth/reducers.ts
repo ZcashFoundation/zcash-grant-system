@@ -136,6 +136,7 @@ export default function createReducer(state: AuthState = INITIAL_STATE, action: 
         ...state,
         user: null,
         token: null,
+        tokenAddress: null,
       };
   }
   return state;

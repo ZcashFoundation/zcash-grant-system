@@ -127,15 +127,15 @@ const cases: { [index: string]: any } = {
 
 const initialStoreStateA = JSON.parse(JSON.stringify(combineInitialState));
 initialStoreStateA.web3.accounts = [trustee];
-const storeTrustee = configureStore(initialStoreStateA);
+const storeTrustee = configureStore(initialStoreStateA).store;
 
 const initialStoreStateB = JSON.parse(JSON.stringify(combineInitialState));
 initialStoreStateB.web3.accounts = [contributor];
-const storeContributor = configureStore(initialStoreStateB);
+const storeContributor = configureStore(initialStoreStateB).store;
 
 const initialStoreStateC = JSON.parse(JSON.stringify(combineInitialState));
 initialStoreStateC.web3.accounts = ['0x0'];
-const storeOutsider = configureStore(initialStoreStateC);
+const storeOutsider = configureStore(initialStoreStateC).store;
 
 const trusteeStories = storiesOf('Proposal/Milestones/trustee', module);
 
