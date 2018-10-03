@@ -24,6 +24,7 @@ class Routes extends React.Component<any> {
         <Route exact path="/proposals" component={Proposals} />
         <Route path="/proposals/:id" component={Proposal} />
         <AuthRoute exact path="/profile" component={Profile} />
+        <Route path="/profile/:id" component={Profile} />
         <AuthRoute path="/auth" component={Auth} onlyLoggedOut />
         <Route path="/*" render={() => <Exception type="404" />} />
       </Switch>

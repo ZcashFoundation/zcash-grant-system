@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { storiesOf } from '@storybook/react';
 
 import 'components/UserRow/style.less';
@@ -54,12 +55,14 @@ const cases = [
 ];
 
 storiesOf('UserRow', module).add('all', () => (
-  <div style={{ padding: '2em' }}>
-    {cases.map(c => (
-      <div key={c.disp} style={{ marginBottom: '2rem' }}>
-        <div style={{ fontSize: '0.9em', paddingBottom: '0.5rem' }}>{`${c.disp}`}</div>
-        <UserRow {...c.props} />
-      </div>
-    ))}
-  </div>
+  <BrowserRouter>
+    <div style={{ padding: '2em' }}>
+      {cases.map(c => (
+        <div key={c.disp} style={{ marginBottom: '2rem' }}>
+          <div style={{ fontSize: '0.9em', paddingBottom: '0.5rem' }}>{`${c.disp}`}</div>
+          <UserRow {...c.props} />
+        </div>
+      ))}
+    </div>
+  </BrowserRouter>
 ));

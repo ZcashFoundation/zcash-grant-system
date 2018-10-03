@@ -1,6 +1,7 @@
 import React from 'react';
 import UserAvatar from 'components/UserAvatar';
 import { TeamMember } from 'modules/create/types';
+import { Link } from 'react-router-dom';
 import './style.less';
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
 }
 
 const UserRow = ({ user }: Props) => (
-  <div className="UserRow">
+  <Link to={`/profile/${user.ethAddress || user.emailAddress}`} className="UserRow">
     <div className="UserRow-avatar">
       <UserAvatar user={user} className="UserRow-avatar-img" />
     </div>
@@ -16,7 +17,7 @@ const UserRow = ({ user }: Props) => (
       <div className="UserRow-info-main">{user.name}</div>
       <p className="UserRow-info-secondary">{user.title}</p>
     </div>
-  </div>
+  </Link>
 );
 
 export default UserRow;
