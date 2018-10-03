@@ -1,12 +1,17 @@
 import { combineReducers } from 'redux';
+import { persistReducer } from 'redux-persist';
 import web3, { Web3State, INITIAL_STATE as web3InitialState } from 'modules/web3';
 import proposal, {
   ProposalState,
   INITIAL_STATE as proposalInitialState,
 } from 'modules/proposals';
 import create, { CreateState, INITIAL_STATE as createInitialState } from 'modules/create';
+import authReducer, {
+  AuthState,
+  INITIAL_STATE as authInitialState,
+  authPersistConfig,
+} from 'modules/auth';
 import users, { UsersState, INITIAL_STATE as usersInitialState } from 'modules/users';
-import auth, { AuthState, INITIAL_STATE as authInitialState } from 'modules/auth';
 
 export interface AppState {
   proposal: ProposalState;
@@ -28,6 +33,6 @@ export default combineReducers<AppState>({
   proposal,
   web3,
   create,
+  auth: persistReducer(authPersistConfig, authReducer),
   users,
-  auth,
 });

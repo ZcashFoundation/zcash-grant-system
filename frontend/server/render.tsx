@@ -72,7 +72,7 @@ const chunkExtractFromLoadables = (loadableState: any) =>
   });
 
 const serverRenderer = () => async (req: Request, res: Response) => {
-  const store = configureStore();
+  const { store } = configureStore();
   const reactApp = (
     <Provider store={store}>
       <Router location={req.url} context={{}}>

@@ -15,7 +15,10 @@ export function authUser(address: string) {
       const res = await apiGetUser(address);
       dispatch({
         type: types.AUTH_USER_FULFILLED,
-        payload: res.data,
+        payload: {
+          user: res.data,
+          token: '123fake', // TODO: Use real token
+        },
       });
     } catch (err) {
       dispatch({
