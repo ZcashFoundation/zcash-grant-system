@@ -87,6 +87,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     } else {
       const { crowdFund } = proposal;
       const isTrustee = crowdFund.trustees.includes(account);
+      const isContributor = !!crowdFund.contributors.find(c => c.address === account);
       const hasBeenFunded = crowdFund.isRaiseGoalReached;
       const isProposalActive = !hasBeenFunded && crowdFund.deadline > Date.now();
       const canRefund = (hasBeenFunded || isProposalActive) && !crowdFund.isFrozen;
@@ -179,9 +180,11 @@ export class ProposalDetail extends React.Component<Props, State> {
                 <div style={{ marginTop: '1.5rem' }} />
                 <UpdatesTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Governance" key="governance">
-                <GovernanceTab proposal={proposal} />
-              </Tabs.TabPane>
+              {isContributor && (
+                <Tabs.TabPane tab="Refund" key="refund">
+                  <GovernanceTab proposal={proposal} />
+                </Tabs.TabPane>
+              )}
               <Tabs.TabPane tab="Contributors" key="contributors">
                 <ContributorsTab crowdFund={proposal.crowdFund} />
               </Tabs.TabPane>

@@ -1,25 +1,23 @@
 import React from 'react';
 import moment from 'moment';
 import { connect } from 'react-redux';
-import { Button, Progress, Spin, Alert } from 'antd';
+import { Button, Progress, Alert } from 'antd';
 import { ProposalWithCrowdFund, MILESTONE_STATE } from 'modules/proposals/reducers';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
-import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import UnitDisplay from 'components/UnitDisplay';
 import Placeholder from 'components/Placeholder';
+import './MilestoneAction.less';
+import { REJECTED } from 'redux-promise-middleware';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
 }
 
-interface Web3Props {
-  accounts: Web3RenderProps['accounts'];
-}
-
 interface StateProps {
   isMilestoneActionPending: AppState['web3']['isMilestoneActionPending'];
   milestoneActionError: AppState['web3']['milestoneActionError'];
+  accounts: AppState['web3']['accounts'];
 }
 
 interface ActionProps {
@@ -28,7 +26,7 @@ interface ActionProps {
   voteMilestonePayout: typeof web3Actions['voteMilestonePayout'];
 }
 
-type Props = OwnProps & Web3Props & StateProps & ActionProps;
+type Props = OwnProps & StateProps & ActionProps;
 
 export class Milestones extends React.Component<Props> {
   render() {
@@ -39,7 +37,6 @@ export class Milestones extends React.Component<Props> {
       milestoneActionError,
     } = this.props;
     const { crowdFund } = proposal;
-
     if (!crowdFund.isRaiseGoalReached) {
       return (
         <Placeholder
@@ -51,22 +48,21 @@ export class Milestones extends React.Component<Props> {
         />
       );
     }
-
     const contributor = crowdFund.contributors.find(c => c.address === accounts[0]);
     const isTrustee = crowdFund.trustees.includes(accounts[0]);
-    const firstMilestone = crowdFund.milestones[0];
+    const firstMilestone = proposal.milestones[0];
     const isImmediatePayout = crowdFund.immediateFirstMilestonePayout;
     // TODO: Should this information be abstracted to a lib or redux?
     const hasImmediatePayoutStarted =
       isImmediatePayout && firstMilestone.payoutRequestVoteDeadline;
     const hasImmediatePayoutBeenPaid = isImmediatePayout && firstMilestone.isPaid;
-    const activeVoteMilestone = crowdFund.milestones.find(
+    const activeVoteMilestone = proposal.milestones.find(
       m => m.state === MILESTONE_STATE.ACTIVE,
     );
-    const uncollectedMilestone = crowdFund.milestones.find(
+    const uncollectedMilestone = proposal.milestones.find(
       m => m.state === MILESTONE_STATE.PAID && !m.isPaid,
     );
-    const nextUnpaidMilestone = crowdFund.milestones.find(
+    const nextUnpaidMilestone = proposal.milestones.find(
       m => m.state !== MILESTONE_STATE.PAID,
     );
 
@@ -78,7 +74,7 @@ export class Milestones extends React.Component<Props> {
       if (isImmediatePayout && !hasImmediatePayoutBeenPaid) {
         if (!hasImmediatePayoutStarted) {
           content = (
-            <p className="ProposalGovernance-milestoneActionText">
+            <p className="MilestoneAction-text">
               Congratulations on getting funded! You can now begin the process of
               receiving your initial payment. Click below to begin a milestone payout
               request. It will instantly be approved, and you’ll be able to request the
@@ -92,7 +88,7 @@ export class Milestones extends React.Component<Props> {
           };
         } else {
           content = (
-            <p className="ProposalGovernance-milestoneActionText">
+            <p className="MilestoneAction-text">
               Your initial payout is ready! Click below to claim it.
             </p>
           );
@@ -104,7 +100,7 @@ export class Milestones extends React.Component<Props> {
         }
       } else if (activeVoteMilestone) {
         content = (
-          <p className="ProposalGovernance-milestoneActionText">
+          <p className="MilestoneAction-text">
             The vote for your payout is in progress. If payout rejection votes don’t
             exceed 50% before{' '}
             {moment(activeVoteMilestone.payoutRequestVoteDeadline).format(
@@ -116,7 +112,7 @@ export class Milestones extends React.Component<Props> {
         showVoteProgress = true;
       } else if (uncollectedMilestone) {
         content = (
-          <p className="ProposalGovernance-milestoneActionText">
+          <p className="MilestoneAction-text">
             Congratulations! Your milestone payout request was succesful. Click below to
             receive your payment of{' '}
             <strong>
@@ -132,9 +128,11 @@ export class Milestones extends React.Component<Props> {
         };
       } else if (nextUnpaidMilestone) {
         content = (
-          <p className="ProposalGovernance-milestoneActionText">
-            You can request a payout for your next milestone, "Milestone Title". If fewer
-            than 50% of funders vote against it before{' '}
+          <p className="MilestoneAction-text">
+            {nextUnpaidMilestone.state === REJECTED
+              ? 'You can make another request for this milestone payout. '
+              : 'You can request a payout for this milestone. '}
+            If fewer than 50% of funders vote against it before{' '}
             {moment(Date.now() + crowdFund.milestoneVotingPeriod).format('MMM Do h:mm a')}
             , you will be able to collect your payout here.
           </p>
@@ -169,7 +167,7 @@ export class Milestones extends React.Component<Props> {
         }
 
         content = (
-          <p className="ProposalGovernance-milestoneActionText">
+          <p className="MilestoneAction-text">
             A milestone vote is currently in progress. If funders vote against paying out
             the milestone by over 50% before{' '}
             {moment(activeVoteMilestone.payoutRequestVoteDeadline).format(
@@ -182,31 +180,29 @@ export class Milestones extends React.Component<Props> {
         showVoteProgress = true;
       } else if (nextUnpaidMilestone) {
         content = (
-          <p className="ProposalGovernance-milestoneActionText">
+          <p className="MilestoneAction-text">
             There is no milestone vote currently active.
           </p>
         );
       } else {
         content = (
-          <p className="ProposalGovernance-milestoneActionText">
-            All milestones have been paid out.
-          </p>
+          <p className="MilestoneAction-text">All milestones have been paid out.</p>
         );
       }
     }
 
     return (
-      <>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="MilestonAction">
+        <div className="MilestoneAction-top">
           {showVoteProgress && (
-            <div className="ProposalGovernance-progress">
+            <div className="MilestoneAction-progress">
               <Progress
                 type="dashboard"
                 percent={activeVoteMilestone.percentAgainstPayout}
                 format={p => `${p}%`}
                 status="exception"
               />
-              <div className="ProposalGovernance-progress-text">voted against payout</div>
+              <div className="MilestoneAction-progress-text">voted against payout</div>
             </div>
           )}
           <div>
@@ -232,7 +228,7 @@ export class Milestones extends React.Component<Props> {
             showIcon
           />
         )}
-      </>
+      </div>
     );
   }
 
@@ -254,6 +250,7 @@ export class Milestones extends React.Component<Props> {
 
 const ConnectedMilestones = connect(
   (state: AppState) => ({
+    accounts: state.web3.accounts,
     isMilestoneActionPending: state.web3.isMilestoneActionPending,
     milestoneActionError: state.web3.milestoneActionError,
   }),
@@ -264,11 +261,4 @@ const ConnectedMilestones = connect(
   },
 )(Milestones);
 
-export default (props: OwnProps) => (
-  <Web3Container
-    renderLoading={() => <Spin />}
-    render={({ accounts }: Web3RenderProps) => (
-      <ConnectedMilestones accounts={accounts} {...props} />
-    )}
-  />
-);
+export default (props: OwnProps) => <ConnectedMilestones {...props} />;

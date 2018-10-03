@@ -1,12 +1,13 @@
 @small-screen: 1080px;
 
-.ProposalGovernance {
-  display: flex;
-  justify-content: center;
-  padding-top: 1rem;
+.MilestoneAction {
+  &-top {
+    display: flex;
+    align-items: center;
+  }
 
-  &-content {
-    max-width: 800px;
+  &-text {
+    font-size: 1rem;
   }
 
   &-progress {
@@ -23,10 +24,6 @@
     }
 
     // Ant progress overrides
-    .ant-progress-circle-path {
-      stroke: inherit;
-    }
-
     .ant-progress-text {
       color: inherit !important;
     }
