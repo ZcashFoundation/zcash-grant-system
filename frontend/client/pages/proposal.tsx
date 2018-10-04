@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Web3Page from 'components/Web3Page';
 import Proposal from 'components/Proposal';
 
 import { withRouter, RouteComponentProps } from 'react-router';
@@ -12,12 +11,7 @@ class ProposalPage extends Component<RouteProps> {
   }
   render() {
     const proposalId = this.props.match.params.id;
-    return (
-      <Web3Page
-        title={`Proposal ${proposalId}`}
-        render={() => <Proposal proposalId={proposalId} />}
-      />
-    );
+    return <Proposal proposalId={proposalId} />;
   }
 }
 

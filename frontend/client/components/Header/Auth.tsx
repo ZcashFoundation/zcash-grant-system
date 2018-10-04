@@ -5,25 +5,17 @@ import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 import UserAvatar from 'components/UserAvatar';
 import Identicon from 'components/Identicon';
-import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import './Auth.less';
 
 interface StateProps {
   user: AppState['auth']['user'];
   isAuthingUser: AppState['auth']['isAuthingUser'];
-  web3: AppState['web3']['web3'];
   accounts: AppState['web3']['accounts'];
   accountsLoading: AppState['web3']['accountsLoading'];
-  accountsError: AppState['web3']['accountsError'];
 }
 
-interface DispatchProps {
-  setWeb3: typeof web3Actions['setWeb3'];
-  setAccounts: typeof web3Actions['setAccounts'];
-}
-
-type Props = StateProps & DispatchProps;
+type Props = StateProps;
 
 interface State {
   isMenuOpen: boolean;
@@ -33,17 +25,6 @@ class HeaderAuth extends React.Component<Props> {
   state: State = {
     isMenuOpen: false,
   };
-
-  componentDidMount() {
-    this.props.setWeb3();
-  }
-
-  componentDidUpdate() {
-    const { web3, accounts, accountsLoading, accountsError } = this.props;
-    if (web3 && !accounts.length && !accountsLoading && !accountsError) {
-      this.props.setAccounts();
-    }
-  }
 
   render() {
     const { accounts, accountsLoading, user, isAuthingUser } = this.props;
@@ -65,7 +46,7 @@ class HeaderAuth extends React.Component<Props> {
       <Link
         to={isAuthed ? '/profile' : '/auth'}
         className={classnames('AuthButton Header-links-link', isLoading && 'is-loading')}
-        onClick={isAuthed && this.toggleMenu}
+        onClick={this.toggleMenu}
       >
         {isAuthed ? '' : 'Sign in'}
         {avatar && (
@@ -87,7 +68,7 @@ class HeaderAuth extends React.Component<Props> {
     }
 
     const menu = (
-      <Menu style={{ minWidth: '100px' }}>
+      <Menu style={{ minWidth: '100px' }} onClick={this.closeMenu}>
         <Menu.Item>
           <Link to="/profile">Profile</Link>
         </Menu.Item>
@@ -114,12 +95,17 @@ class HeaderAuth extends React.Component<Props> {
     );
   }
 
-  private toggleMenu = (ev?: React.MouseEvent<HTMLAnchorElement>) => {
+  private toggleMenu = (ev?: React.MouseEvent<HTMLElement>) => {
+    if (!this.props.user) {
+      return;
+    }
     if (ev) {
       ev.preventDefault();
     }
     this.setState({ isMenuOpen: !this.state.isMenuOpen });
   };
+
+  private closeMenu = () => this.setState({ isMenuOpen: false });
 
   private handleVisibilityChange = (visibility: boolean) => {
     // Handle the dropdown component's built in close events
@@ -127,17 +113,9 @@ class HeaderAuth extends React.Component<Props> {
   };
 }
 
-export default connect<StateProps, DispatchProps, {}, AppState>(
-  state => ({
-    user: state.auth.user,
-    isAuthingUser: state.auth.isAuthingUser,
-    web3: state.web3.web3,
-    accounts: state.web3.accounts,
-    accountsLoading: state.web3.accountsLoading,
-    accountsError: state.web3.accountsError,
-  }),
-  {
-    setWeb3: web3Actions.setWeb3,
-    setAccounts: web3Actions.setAccounts,
-  },
-)(HeaderAuth);
+export default connect<StateProps, {}, {}, AppState>(state => ({
+  user: state.auth.user,
+  isAuthingUser: state.auth.isAuthingUser,
+  accounts: state.web3.accounts,
+  accountsLoading: state.web3.accountsLoading,
+}))(HeaderAuth);

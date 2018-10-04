@@ -1,5 +1,4 @@
 import React from 'react';
-import AntWrap from 'components/AntWrap';
 import { UsersState } from 'modules/users/reducers';
 import { withRouter, RouteComponentProps, Redirect } from 'react-router-dom';
 import { usersActions } from 'modules/users';
@@ -47,7 +46,7 @@ class Profile extends React.Component<Props> {
       if (authUser.ethAddress) {
         return <Redirect to={`/profile/${authUser.ethAddress}`} />;
       } else {
-        return <Exception type="404" />;
+        return <Redirect to="auth" />;
       }
     }
 
@@ -55,11 +54,7 @@ class Profile extends React.Component<Props> {
     const waiting = !user || !user.hasFetched;
 
     if (waiting) {
-      return (
-        <AntWrap title="Profile">
-          <Spin />
-        </AntWrap>
-      );
+      return <Spin />;
     }
 
     if (user.fetchError) {
@@ -72,55 +67,49 @@ class Profile extends React.Component<Props> {
     const noneCommented = user.hasFetchedComments && comments.length === 0;
 
     return (
-      <AntWrap title={`Profile - ${user.name}`}>
-        <div className="Profile">
-          <ProfileUser user={user} />
-          <Tabs>
-            <Tabs.TabPane
-              tab={TabTitle('Created', createdProposals.length)}
-              key="created"
-              disabled={!user.hasFetchedCreated}
-            >
-              <div>
-                {noneCreated && (
-                  <PlaceHolder subtitle="Has not created any proposals yet" />
-                )}
-                {createdProposals.map(p => (
-                  <ProfileProposal key={p.proposalId} proposal={p} />
-                ))}
-              </div>
-            </Tabs.TabPane>
-            <Tabs.TabPane
-              tab={TabTitle('Funded', fundedProposals.length)}
-              key="funded"
-              disabled={!user.hasFetchedFunded}
-            >
-              <div>
-                {noneFunded && (
-                  <PlaceHolder subtitle="Has not funded any proposals yet" />
-                )}
-                {createdProposals.map(p => (
-                  <ProfileProposal key={p.proposalId} proposal={p} />
-                ))}
-              </div>
-            </Tabs.TabPane>
-            <Tabs.TabPane
-              tab={TabTitle('Comments', comments.length)}
-              key="comments"
-              disabled={!user.hasFetchedComments}
-            >
-              <div>
-                {noneCommented && (
-                  <PlaceHolder subtitle="Has not made any comments yet" />
-                )}
-                {comments.map(c => (
-                  <ProfileComment key={c.commentId} userName={user.name} comment={c} />
-                ))}
-              </div>
-            </Tabs.TabPane>
-          </Tabs>
-        </div>
-      </AntWrap>
+      <div className="Profile">
+        <ProfileUser user={user} />
+        <Tabs>
+          <Tabs.TabPane
+            tab={TabTitle('Created', createdProposals.length)}
+            key="created"
+            disabled={!user.hasFetchedCreated}
+          >
+            <div>
+              {noneCreated && (
+                <PlaceHolder subtitle="Has not created any proposals yet" />
+              )}
+              {createdProposals.map(p => (
+                <ProfileProposal key={p.proposalId} proposal={p} />
+              ))}
+            </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane
+            tab={TabTitle('Funded', fundedProposals.length)}
+            key="funded"
+            disabled={!user.hasFetchedFunded}
+          >
+            <div>
+              {noneFunded && <PlaceHolder subtitle="Has not funded any proposals yet" />}
+              {createdProposals.map(p => (
+                <ProfileProposal key={p.proposalId} proposal={p} />
+              ))}
+            </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane
+            tab={TabTitle('Comments', comments.length)}
+            key="comments"
+            disabled={!user.hasFetchedComments}
+          >
+            <div>
+              {noneCommented && <PlaceHolder subtitle="Has not made any comments yet" />}
+              {comments.map(c => (
+                <ProfileComment key={c.commentId} userName={user.name} comment={c} />
+              ))}
+            </div>
+          </Tabs.TabPane>
+        </Tabs>
+      </div>
     );
   }
   private fetchData() {

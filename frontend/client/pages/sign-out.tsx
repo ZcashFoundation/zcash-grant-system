@@ -4,7 +4,6 @@ import { Button } from 'antd';
 import { Link } from 'react-router-dom';
 import Result from 'ant-design-pro/lib/Result';
 import { authActions } from 'modules/auth';
-import AntWrap from 'components/AntWrap';
 
 interface Props {
   logout: typeof authActions['logout'];
@@ -17,26 +16,24 @@ class SignInPage extends React.Component<Props> {
 
   render() {
     return (
-      <AntWrap title="Signed out">
-        <Result
-          type="success"
-          title="You are now signed out"
-          actions={
-            <>
-              <Link to="/auth" style={{ marginRight: '0.5rem' }}>
-                <Button type="primary" size="large">
-                  Change account
-                </Button>
-              </Link>
-              <Link to="/">
-                <Button type="default" size="large">
-                  Return Home
-                </Button>
-              </Link>
-            </>
-          }
-        />
-      </AntWrap>
+      <Result
+        type="success"
+        title="You are now signed out"
+        actions={
+          <>
+            <Link to="/auth" style={{ marginRight: '0.5rem' }}>
+              <Button type="primary" size="large">
+                Change account
+              </Button>
+            </Link>
+            <Link to="/">
+              <Button type="default" size="large">
+                Return Home
+              </Button>
+            </Link>
+          </>
+        }
+      />
     );
   }
 }

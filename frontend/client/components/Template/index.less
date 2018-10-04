@@ -1,0 +1,39 @@
+.Template {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  &-content {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+    padding: 0 2.5rem;
+
+    .is-fullscreen & {
+      padding: 0;
+    }
+
+    &-inner {
+      width: 100%;
+      padding-top: 2.5rem;
+      padding-bottom: 2.5rem;
+      min-height: 280px;
+
+      .is-fullscreen & {
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+      
+      .is-centered & {
+        align-self: center;
+      }
+
+      &-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 280px;
+      }
+    }
+  }
+}
