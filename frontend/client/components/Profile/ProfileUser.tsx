@@ -1,8 +1,8 @@
 import React from 'react';
-import { TeamMember } from 'modules/create/types';
+import { SocialInfo, TeamMember } from 'types';
 import UserAvatar from 'components/UserAvatar';
 import './ProfileUser.less';
-import { SOCIAL_INFO, SocialInfo, socialAccountToUrl } from 'utils/social';
+import { SOCIAL_INFO, socialAccountToUrl } from 'utils/social';
 import ShortAddress from 'components/ShortAddress';
 
 interface OwnProps {

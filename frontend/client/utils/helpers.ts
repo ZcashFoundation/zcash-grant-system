@@ -1,4 +1,4 @@
-import { Comment } from 'modules/proposals/reducers';
+import { Comment } from 'types';
 
 export function isNumeric(n: any) {
   return !isNaN(parseFloat(n)) && isFinite(n);

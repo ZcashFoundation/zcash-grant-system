@@ -1,5 +1,5 @@
 import React from 'react';
-import { Proposal, ProposalComments } from 'modules/proposals/reducers';
+import { Proposal, ProposalComments } from 'types';
 import Comment from 'components/Comment';
 
 interface Props {

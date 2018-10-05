@@ -1,22 +1,3 @@
-import { TeamMember } from 'modules/create/types';
-import { Wei } from 'utils/units';
-
-export interface UserProposal {
-  proposalId: string;
-  title: string;
-  brief: string;
-  team: TeamMember[];
-  funded: Wei;
-  target: Wei;
-}
-
-export interface UserComment {
-  commentId: number | string;
-  body: string;
-  dateCreated: number;
-  proposal: UserProposal;
-}
-
 enum UsersActions {
   FETCH_USER = 'FETCH_USER',
   FETCH_USER_PENDING = 'FETCH_USER_PENDING',

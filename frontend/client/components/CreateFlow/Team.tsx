@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from 'antd';
-import { CreateFormState, TeamMember } from 'modules/create/types';
+import { CreateFormState, TeamMember } from 'types';
 import TeamMemberComponent from './TeamMember';
 import './Team.less';
 

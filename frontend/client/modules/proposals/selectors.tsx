@@ -1,5 +1,5 @@
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund, ProposalComments, ProposalUpdates } from './reducers';
+import { ProposalWithCrowdFund, ProposalComments, ProposalUpdates } from 'types';
 
 export function getProposals(state: AppState) {
   return state.proposal.proposals;

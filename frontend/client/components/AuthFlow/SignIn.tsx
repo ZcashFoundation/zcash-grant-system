@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Button } from 'antd';
 import { authActions } from 'modules/auth';
-import { TeamMember } from 'modules/create/types';
+import { TeamMember } from 'types';
 import { AppState } from 'store/reducers';
 import { AUTH_PROVIDER } from 'utils/auth';
 import Identicon from 'components/Identicon';

@@ -1,6 +1,6 @@
 import types from './types';
 // TODO: Use a common User type instead of this
-import { TeamMember } from 'modules/create/types';
+import { TeamMember } from 'types';
 
 export interface AuthState {
   user: TeamMember | null;

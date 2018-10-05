@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input, Form, Icon, Select } from 'antd';
 import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
-import { CreateFormState } from 'modules/create/types';
+import { CreateFormState } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 
 interface State {

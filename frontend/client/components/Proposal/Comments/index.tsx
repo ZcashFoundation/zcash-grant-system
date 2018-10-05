@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Spin, Button } from 'antd';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
 import {
   getProposalComments,

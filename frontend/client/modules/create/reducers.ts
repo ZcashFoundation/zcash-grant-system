@@ -1,4 +1,5 @@
-import types, { CreateFormState } from './types';
+import types from './types';
+import { CreateFormState } from 'types';
 import { ONE_DAY } from 'utils/time';
 
 export interface CreateState {

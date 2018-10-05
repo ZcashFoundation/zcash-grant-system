@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
-import { UserComment } from 'modules/users/types';
+import { UserComment } from 'types';
 import './ProfileComment.less';
 
 interface OwnProps {

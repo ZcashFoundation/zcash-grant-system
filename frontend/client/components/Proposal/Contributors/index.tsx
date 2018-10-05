@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spin } from 'antd';
-import { CrowdFund } from 'modules/proposals/reducers';
+import { CrowdFund } from 'types';
 import AddressRow from 'components/AddressRow';
 import Placeholder from 'components/Placeholder';
 import UnitDisplay from 'components/UnitDisplay';

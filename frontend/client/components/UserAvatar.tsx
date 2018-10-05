@@ -1,6 +1,6 @@
 import React from 'react';
 import Identicon from 'components/Identicon';
-import { TeamMember } from 'modules/create/types';
+import { TeamMember } from 'types';
 import defaultUserImg from 'static/images/default-user.jpg';
 
 interface Props {

@@ -6,7 +6,7 @@ import Markdown from 'components/Markdown';
 import Identicon from 'components/Identicon';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import { postProposalComment } from 'modules/proposals/actions';
-import { Comment as IComment, Proposal } from 'modules/proposals/reducers';
+import { Comment as IComment, Proposal } from 'types';
 import { AppState } from 'store/reducers';
 import './style.less';
 

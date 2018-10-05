@@ -1,6 +1,6 @@
 import React from 'react';
 import UserAvatar from 'components/UserAvatar';
-import { TeamMember } from 'modules/create/types';
+import { TeamMember } from 'types';
 import { Link } from 'react-router-dom';
 import './style.less';
 

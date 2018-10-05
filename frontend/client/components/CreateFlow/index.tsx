@@ -15,7 +15,7 @@ import Preview from './Preview';
 import Final from './Final';
 import createExampleProposal from './example';
 import { createActions } from 'modules/create';
-import { CreateFormState } from 'modules/create/types';
+import { CreateFormState } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';

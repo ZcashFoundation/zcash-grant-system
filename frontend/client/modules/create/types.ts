@@ -1,6 +1,3 @@
-import { PROPOSAL_CATEGORY } from 'api/constants';
-import { SocialAccountMap } from 'utils/social';
-
 enum CreateTypes {
   UPDATE_FORM = 'UPDATE_FORM',
 
@@ -23,35 +20,3 @@ enum CreateTypes {
 }
 
 export default CreateTypes;
-
-export interface Milestone {
-  title: string;
-  description: string;
-  date: string;
-  payoutPercent: number;
-  immediatePayout: boolean;
-}
-
-// TODO: Merge this or extend the `User` type in proposals/reducers.ts
-export interface TeamMember {
-  name: string;
-  title: string;
-  avatarUrl: string;
-  ethAddress: string;
-  emailAddress: string;
-  socialAccounts: SocialAccountMap;
-}
-
-export interface CreateFormState {
-  title: string;
-  brief: string;
-  category: PROPOSAL_CATEGORY | null;
-  amountToRaise: string;
-  details: string;
-  payOutAddress: string;
-  trustees: string[];
-  milestones: Milestone[];
-  team: TeamMember[];
-  deadline: number | null;
-  milestoneDeadline: number | null;
-}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Spin, Progress, Button, Alert } from 'antd';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';

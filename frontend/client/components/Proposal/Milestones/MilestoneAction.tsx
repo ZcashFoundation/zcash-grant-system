@@ -2,7 +2,7 @@ import React from 'react';
 import moment from 'moment';
 import { connect } from 'react-redux';
 import { Button, Progress, Alert } from 'antd';
-import { ProposalWithCrowdFund, MILESTONE_STATE } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund, MILESTONE_STATE } from 'types';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import UnitDisplay from 'components/UnitDisplay';

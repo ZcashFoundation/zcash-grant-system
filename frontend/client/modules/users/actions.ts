@@ -1,7 +1,8 @@
-import types, { UserProposal, UserComment } from './types';
+import { UserProposal, UserComment } from 'types';
+import types from './types';
 import { getUser, getProposals } from 'api/api';
 import { Dispatch } from 'redux';
-import { Proposal } from 'modules/proposals/reducers';
+import { Proposal } from 'types';
 import BN from 'bn.js';
 
 export function fetchUser(userFetchId: string) {

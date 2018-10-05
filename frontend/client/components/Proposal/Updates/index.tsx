@@ -4,7 +4,7 @@ import { Spin } from 'antd';
 import Markdown from 'components/Markdown';
 import moment from 'moment';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import { fetchProposalUpdates } from 'modules/proposals/actions';
 import {
   getProposalUpdates,

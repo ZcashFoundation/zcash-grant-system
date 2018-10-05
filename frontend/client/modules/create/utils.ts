@@ -1,7 +1,7 @@
-import { CreateFormState, Milestone, TeamMember } from './types';
+import { CreateFormState, CreateMilestone } from 'types';
+import { TeamMember } from 'types';
 import { isValidEthAddress, getAmountError } from 'utils/validators';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
-import { MILESTONE_STATE } from 'modules/proposals/reducers';
+import { MILESTONE_STATE, ProposalWithCrowdFund } from 'types';
 import { ProposalContractData, ProposalBackendData } from 'modules/web3/actions';
 import { Wei, toWei } from 'utils/units';
 
@@ -164,7 +164,7 @@ export function getCreateTeamMemberError(user: TeamMember) {
   return '';
 }
 
-function milestoneToMilestoneAmount(milestone: Milestone, raiseGoal: Wei) {
+function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Wei) {
   return raiseGoal.divn(100).mul(Wei(milestone.payoutPercent.toString()));
 }
 

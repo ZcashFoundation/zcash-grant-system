@@ -5,7 +5,7 @@ import Markdown from 'components/Markdown';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import { getProposal } from 'modules/proposals/selectors';
 import { Spin, Tabs, Icon, Dropdown, Menu, Button } from 'antd';
 import CampaignBlock from './CampaignBlock';

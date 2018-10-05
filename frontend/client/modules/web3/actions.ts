@@ -8,7 +8,7 @@ import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { AppState } from 'store/reducers';
 import { Wei } from 'utils/units';
-import { TeamMember } from 'modules/create/types';
+import { TeamMember } from 'types';
 
 type GetState = () => AppState;
 

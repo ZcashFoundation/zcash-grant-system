@@ -1,6 +1,7 @@
 import lodash from 'lodash';
-import types, { UserProposal, UserComment } from './types';
-import { TeamMember } from 'modules/create/types';
+import { UserProposal, UserComment } from 'types';
+import types from './types';
+import { TeamMember } from 'types';
 
 export interface UserState extends TeamMember {
   isFetching: boolean;

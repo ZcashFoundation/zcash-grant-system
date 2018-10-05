@@ -2,7 +2,7 @@ import lodash from 'lodash';
 import React from 'react';
 import moment from 'moment';
 import { Alert, Steps, Spin } from 'antd';
-import { ProposalWithCrowdFund, MILESTONE_STATE } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund, MILESTONE_STATE } from 'types';
 import UnitDisplay from 'components/UnitDisplay';
 import MilestoneAction from './MilestoneAction';
 import { AppState } from 'store/reducers';

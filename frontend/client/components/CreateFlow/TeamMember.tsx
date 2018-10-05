@@ -1,8 +1,8 @@
 import React from 'react';
 import classnames from 'classnames';
 import { Input, Form, Col, Row, Button, Icon, Alert } from 'antd';
-import { SOCIAL_TYPE, SOCIAL_INFO } from 'utils/social';
-import { TeamMember } from 'modules/create/types';
+import { SOCIAL_INFO } from 'utils/social';
+import { SOCIAL_TYPE, TeamMember } from 'types';
 import { getCreateTeamMemberError } from 'modules/create/utils';
 import UserAvatar from 'components/UserAvatar';
 import './TeamMember.less';

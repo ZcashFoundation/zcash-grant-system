@@ -1,11 +1,11 @@
 import React from 'react';
 import { Form, Input, DatePicker, Card, Icon, Alert, Checkbox, Button } from 'antd';
 import moment from 'moment';
-import { CreateFormState, Milestone } from 'modules/create/types';
+import { CreateFormState, CreateMilestone } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 
 interface State {
-  milestones: Milestone[];
+  milestones: CreateMilestone[];
 }
 
 interface Props {
@@ -42,7 +42,7 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
     }
   }
 
-  handleMilestoneChange = (index: number, milestone: Milestone) => {
+  handleMilestoneChange = (index: number, milestone: CreateMilestone) => {
     const milestones = [...this.state.milestones];
     milestones[index] = milestone;
     this.setState({ milestones }, () => {
@@ -107,9 +107,9 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
 
 interface MilestoneFieldsProps {
   index: number;
-  milestone: Milestone;
+  milestone: CreateMilestone;
   error: null | false | string;
-  onChange(index: number, milestone: Milestone): void;
+  onChange(index: number, milestone: CreateMilestone): void;
   onRemove(index: number): void;
 }
 

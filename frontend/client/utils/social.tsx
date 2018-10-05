@@ -1,20 +1,7 @@
 import React from 'react';
 import { Icon } from 'antd';
 import keybaseIcon from 'static/images/keybase.svg';
-
-export enum SOCIAL_TYPE {
-  GITHUB = 'GITHUB',
-  TWITTER = 'TWITTER',
-  LINKEDIN = 'LINKEDIN',
-  KEYBASE = 'KEYBASE',
-}
-
-export interface SocialInfo {
-  type: SOCIAL_TYPE;
-  name: string;
-  format: string;
-  icon: React.ReactNode;
-}
+import { SOCIAL_TYPE, SocialAccountMap, SocialInfo } from 'types';
 
 const accountNameRegex = '([a-zA-Z0-9-_]*)';
 export const SOCIAL_INFO: { [key in SOCIAL_TYPE]: SocialInfo } = {
@@ -43,8 +30,6 @@ export const SOCIAL_INFO: { [key in SOCIAL_TYPE]: SocialInfo } = {
     icon: <Icon component={keybaseIcon} />,
   },
 };
-
-export type SocialAccountMap = Partial<{ [key in SOCIAL_TYPE]: string }>;
 
 function urlToAccount(format: string, url: string): string | false {
   const matches = url.match(new RegExp(format));

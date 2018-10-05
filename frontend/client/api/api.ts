@@ -1,6 +1,5 @@
 import axios from './axios';
-import { Proposal } from 'modules/proposals/reducers';
-import { TeamMember } from 'modules/create/types';
+import { Proposal, TeamMember } from 'types';
 import { formatTeamMemberForPost, formatTeamMemberFromGet } from 'utils/api';
 import { PROPOSAL_CATEGORY } from './constants';
 

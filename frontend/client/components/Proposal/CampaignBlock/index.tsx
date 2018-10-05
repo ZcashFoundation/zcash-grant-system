@@ -1,7 +1,7 @@
 import React from 'react';
 import moment from 'moment';
 import { Spin, Form, Input, Button, Icon } from 'antd';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import './style.less';
 import classnames from 'classnames';
 

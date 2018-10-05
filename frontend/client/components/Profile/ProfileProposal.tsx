@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { UserProposal } from 'modules/users/types';
+import { UserProposal } from 'types';
 import './ProfileProposal.less';
 import UserRow from 'components/UserRow';
 import UnitDisplay from 'components/UnitDisplay';

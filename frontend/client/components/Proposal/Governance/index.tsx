@@ -1,6 +1,6 @@
 import React from 'react';
 import GovernanceRefunds from './Refunds';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import './style.less';
 
 interface Props {

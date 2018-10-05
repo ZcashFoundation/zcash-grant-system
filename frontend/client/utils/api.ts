@@ -1,4 +1,4 @@
-import { TeamMember } from 'modules/create/types';
+import { TeamMember } from 'types';
 import { socialAccountsToUrls, socialUrlsToAccounts } from 'utils/social';
 
 export function formatTeamMemberForPost(user: TeamMember) {

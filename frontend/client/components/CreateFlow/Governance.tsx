@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input, Form, Icon, Button, Radio } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
-import { CreateFormState } from 'modules/create/types';
+import { CreateFormState } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { ONE_DAY } from 'utils/time';
 

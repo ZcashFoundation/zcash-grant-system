@@ -1,6 +1,5 @@
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import { SOCIAL_TYPE } from 'utils/social';
-import { CreateFormState } from 'modules/create/types';
+import { SOCIAL_TYPE, CreateFormState } from 'types';
 
 const createExampleProposal = (
   payOutAddress: string,

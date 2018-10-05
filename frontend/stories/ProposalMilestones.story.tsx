@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from 'store/configure';
 import { combineInitialState } from 'store/reducers';
 import Milestones from 'components/Proposal/Milestones';
-import { MILESTONE_STATE } from 'modules/proposals/reducers';
+import { MILESTONE_STATE } from 'types';
 const { WAITING, ACTIVE, PAID, REJECTED } = MILESTONE_STATE;
 
 import 'styles/style.less';

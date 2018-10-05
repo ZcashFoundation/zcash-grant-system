@@ -4,7 +4,7 @@ import { Progress, Icon, Spin } from 'antd';
 import moment from 'moment';
 import { Redirect } from 'react-router-dom';
 import { CATEGORY_UI } from 'api/constants';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import './style.less';
 import { Dispatch, bindActionCreators } from 'redux';
 import * as web3Actions from 'modules/web3/actions';

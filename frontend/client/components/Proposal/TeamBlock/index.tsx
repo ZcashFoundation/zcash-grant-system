@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spin } from 'antd';
-import { Proposal } from 'modules/proposals/reducers';
+import { Proposal } from 'types';
 import UserRow from 'components/UserRow';
 
 interface Props {

@@ -4,7 +4,7 @@ import {
   MILESTONE_STATE,
   ProposalWithCrowdFund,
   ProposalMilestone,
-} from 'modules/proposals/reducers';
+} from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import {
   fundCrowdFund,
