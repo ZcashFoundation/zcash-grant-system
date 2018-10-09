@@ -28,10 +28,11 @@
       "store/*": ["./client/store/*"],
       "styles/*": ["./client/styles/*"],
       "typings/*": ["./client/typings/*"],
+      "types/*": ["./types/*"],
       "utils/*": ["./client/utils/*"],
       "web3interact/*": ["./client/web3interact/*"]
     }
   },
-  "include": ["./client/**/*", "./server/**/*", "./stories/**/*"],
+  "include": ["./client/**/*", "./server/**/*", "./stories/**/*", "./types/**/*"],
   "exclude": ["./client/static"]
 }

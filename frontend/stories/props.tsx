@@ -1,4 +1,10 @@
-import { Contributor, Milestone, MILESTONE_STATE } from 'modules/proposals/reducers';
+import {
+  Contributor,
+  Milestone,
+  MILESTONE_STATE,
+  ProposalWithCrowdFund,
+  ProposalMilestone,
+} from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import {
   fundCrowdFund,
@@ -37,6 +43,7 @@ export function getProposalWithCrowdFund({
   deadline = Date.now() + 1000 * 60 * 60 * 10,
   milestoneOverrides = [],
   contributorOverrides = [],
+  milestoneCount = 3,
 }: {
   amount?: number;
   funded?: number;
@@ -44,11 +51,12 @@ export function getProposalWithCrowdFund({
   deadline?: number;
   milestoneOverrides?: Array<Partial<Milestone>>;
   contributorOverrides?: Array<Partial<Contributor>>;
+  milestoneCount?: number;
 }) {
   const amountBn = oneEth.mul(new BN(amount));
   const fundedBn = oneEth.mul(new BN(funded));
 
-  const contributors = [
+  let contributors = [
     {
       address: '0xAAA91bde2303f2f43325b2108d26f1eaba1e32b',
       contributionAmount: new BN(0),
@@ -89,73 +97,65 @@ export function getProposalWithCrowdFund({
     Object.assign(contributors[idx], co);
   });
 
-  const milestones = [
-    {
-      title: 'Milestone A',
-      body: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
-             tempor incididunt ut labore et dolore magna aliqua.`,
-      content: '',
-      dateCreated: '2018-09-23T19:06:15.844399+00:00',
-      dateEstimated: '2018-10-01T00:00:00+00:00',
-      immediatePayout: true,
-      index: 0,
-      state: MILESTONE_STATE.WAITING,
-      amount: amountBn,
-      amountAgainstPayout: new BN(0),
-      percentAgainstPayout: 0,
-      payoutRequestVoteDeadline: 0,
-      isPaid: false,
-      isImmediatePayout: true,
-      payoutPercent: '33',
-      stage: 'NOT_REQUESTED',
-    },
-    {
-      title: 'Milestone B',
-      body: `Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris 
-             nisi ut aliquip ex ea commodo consequat.`,
-      content: '',
-      dateCreated: '2018-09-23T19:06:15.844399+00:00',
-      dateEstimated: '2018-11-01T00:00:00+00:00',
-      immediatePayout: false,
-      index: 1,
-      state: MILESTONE_STATE.WAITING,
-      amount: amountBn,
-      amountAgainstPayout: new BN(0),
-      percentAgainstPayout: 0,
-      payoutRequestVoteDeadline: Date.now(),
-      isPaid: false,
-      isImmediatePayout: false,
-      payoutPercent: '33',
-      stage: 'NOT_REQUESTED',
-    },
-    {
-      title: 'Milestone C',
-      body: `Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris 
-             nisi ut aliquip ex ea commodo consequat.`,
-      content: '',
-      dateCreated: '2018-09-23T19:06:15.844399+00:00',
-      dateEstimated: '2018-12-01T00:00:00+00:00',
-      immediatePayout: false,
-      index: 2,
-      state: MILESTONE_STATE.WAITING,
-      amount: amountBn,
-      amountAgainstPayout: new BN(0),
-      percentAgainstPayout: 0,
-      payoutRequestVoteDeadline: Date.now(),
-      isPaid: false,
-      isImmediatePayout: false,
-      payoutPercent: '33',
-      stage: 'NOT_REQUESTED',
-    },
-  ];
+  if (funded === 0) {
+    contributors = [];
+  }
 
-  const eachMilestoneAmount = fundedBn.div(new BN(milestones.length));
+  const genMilestoneTitle = () => {
+    const ts = ['40chr ', 'Really ', 'Really ', 'Long ', 'Milestone Title'];
+    const rand = Math.floor(Math.random() * Math.floor(ts.length));
+    return ts.slice(rand).join('');
+  };
+
+  const genMilestone = (overrides: Partial<ProposalMilestone> = {}) => {
+    const now = new Date();
+    if (overrides.index) {
+      const estimate = new Date(now.setMonth(now.getMonth() + overrides.index));
+      overrides.dateEstimated = estimate.toISOString();
+    }
+
+    return Object.assign(
+      {
+        title: 'Milestone A',
+        body: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
+             tempor incididunt ut labore et dolore magna aliqua.`,
+        content: '',
+        dateEstimated: '2018-10-01T00:00:00+00:00',
+        immediatePayout: true,
+        index: 0,
+        state: MILESTONE_STATE.WAITING,
+        amount: amountBn,
+        amountAgainstPayout: new BN(0),
+        percentAgainstPayout: 0,
+        payoutRequestVoteDeadline: 0,
+        isPaid: false,
+        isImmediatePayout: true,
+        payoutPercent: '33',
+        stage: 'NOT_REQUESTED',
+      },
+      overrides,
+    );
+  };
+
+  const milestones = [...Array(milestoneCount).keys()].map(i => {
+    const overrides = {
+      index: i,
+      title: genMilestoneTitle(),
+      immediatePayout: i === 0,
+      isImmediatePayout: i === 0,
+      payoutRequestVoteDeadline: i !== 0 ? Date.now() + 3600000 : 0,
+      payoutPercent: '' + (1 / milestoneCount) * 100,
+    };
+    return genMilestone(overrides);
+  });
+
+  const eachMilestoneAmount = amountBn.div(new BN(milestones.length));
   milestones.forEach(ms => (ms.amount = eachMilestoneAmount));
   milestoneOverrides.forEach((mso, idx) => {
     Object.assign(milestones[idx], mso);
   });
 
-  const proposal = {
+  const proposal: ProposalWithCrowdFund = {
     proposalId: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
     dateCreated: created / 1000,
     title: 'Crowdfund Title',
@@ -164,25 +164,28 @@ export function getProposalWithCrowdFund({
     category: PROPOSAL_CATEGORY.COMMUNITY,
     team: [
       {
-        accountAddress: '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
+        name: 'Test Proposer',
         title: '',
-        userid: 1,
-        username: '',
-        avatar: { '120x120': '' },
+        ethAddress: '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
+        emailAddress: '',
+        avatarUrl: '',
+        socialAccounts: {},
       },
       {
-        accountAddress: '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
+        name: 'Test Proposer',
         title: '',
-        userid: 2,
-        username: '',
-        avatar: { '120x120': '' },
+        ethAddress: '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+        emailAddress: '',
+        avatarUrl: '',
+        socialAccounts: {},
       },
       {
-        accountAddress: '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+        name: 'Test Proposer',
         title: '',
-        userid: 3,
-        username: '',
-        avatar: { '120x120': '' },
+        ethAddress: '0x529104532a9779ea9eae0c1e325b3368e0f8add4',
+        emailAddress: '',
+        avatarUrl: '',
+        socialAccounts: {},
       },
     ],
     milestones,
@@ -191,6 +194,7 @@ export function getProposalWithCrowdFund({
       trustees: [
         '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
         '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+        '0x529104532a9779ea9eae0c1e325b3368e0f8add4',
       ],
       contributors,
       milestones,

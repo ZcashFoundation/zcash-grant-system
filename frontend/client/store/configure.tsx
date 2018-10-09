@@ -3,8 +3,9 @@ import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
 import thunkMiddleware, { ThunkMiddleware } from 'redux-thunk';
 import promiseMiddleware from 'redux-promise-middleware';
 import { composeWithDevTools } from 'redux-devtools-extension';
+import { persistStore } from 'redux-persist';
 import rootReducer, { AppState, combineInitialState } from './reducers';
-// import rootSaga from './sagas';
+import rootSaga from './sagas';
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -21,20 +22,15 @@ const bindMiddleware = (middleware: MiddleWare[]) => {
   return composeWithDevTools(applyMiddleware(...middleware));
 };
 
-export function configureStore(
-  initialState: Partial<AppState> = combineInitialState,
-): Store {
+export function configureStore(initialState: Partial<AppState> = combineInitialState) {
   const store: Store<AppState> = createStore(
     rootReducer,
     initialState,
     bindMiddleware([sagaMiddleware, thunkMiddleware, promiseMiddleware()]),
   );
+  const persistor = process.env.SERVER_SIDE_RENDER ? undefined : persistStore(store);
 
-  // store.runSagaTask = () => {
-  //   store.sagaTask = sagaMiddleware.run(rootSaga);
-  // };
-
-  // store.runSagaTask();
+  sagaMiddleware.run(rootSaga);
 
   if (process.env.NODE_ENV === 'development') {
     if (module.hot) {
@@ -43,5 +39,6 @@ export function configureStore(
       );
     }
   }
-  return store;
+
+  return { store, persistor };
 }

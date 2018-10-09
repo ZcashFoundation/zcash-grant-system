@@ -1,4 +1,5 @@
-import types, { CreateFormState } from './types';
+import types from './types';
+import { CreateFormState } from 'types';
 import { ONE_DAY } from 'utils/time';
 
 export interface CreateState {
@@ -23,6 +24,7 @@ export const INITIAL_STATE: CreateState = {
     payOutAddress: '',
     trustees: [],
     milestones: [],
+    team: [],
     deadline: ONE_DAY * 60,
     milestoneDeadline: ONE_DAY * 7,
   },
@@ -91,7 +93,7 @@ export default function createReducer(state: CreateState = INITIAL_STATE, action
         form: action.payload
           ? {
               ...state.form,
-              ...(action.payload || {}),
+              ...action.payload,
             }
           : state.form,
       };

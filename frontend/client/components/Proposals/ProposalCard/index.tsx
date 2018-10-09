@@ -4,14 +4,14 @@ import { Progress, Icon, Spin } from 'antd';
 import moment from 'moment';
 import { Redirect } from 'react-router-dom';
 import { CATEGORY_UI } from 'api/constants';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import './style.less';
 import { Dispatch, bindActionCreators } from 'redux';
 import * as web3Actions from 'modules/web3/actions';
 import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
-import Identicon from 'components/Identicon';
+import UserAvatar from 'components/UserAvatar';
 import UnitDisplay from 'components/UnitDisplay';
 
 interface Props extends ProposalWithCrowdFund {
@@ -24,8 +24,15 @@ export class ProposalCard extends React.Component<Props> {
     if (this.state.redirect) {
       return <Redirect push to={this.state.redirect} />;
     }
-    const { title, proposalId, category, dateCreated, web3, crowdFund } = this.props;
-    const team = [...this.props.team].reverse();
+    const {
+      title,
+      proposalId,
+      category,
+      dateCreated,
+      web3,
+      crowdFund,
+      team,
+    } = this.props;
 
     if (!web3) {
       return <Spin />;
@@ -58,12 +65,15 @@ export class ProposalCard extends React.Component<Props> {
 
           <div className="ProposalCard-team">
             <div className="ProposalCard-team-name">
-              {team[0].accountAddress}{' '}
-              {team.length > 1 && <small>+{team.length - 1} other</small>}
+              {team[0].name} {team.length > 1 && <small>+{team.length - 1} other</small>}
             </div>
             <div className="ProposalCard-team-avatars">
-              {team.reverse().map(u => (
-                <Identicon key={u.userid} address={u.accountAddress} />
+              {[...team].reverse().map((u, idx) => (
+                <UserAvatar
+                  key={idx}
+                  className="ProposalCard-team-avatars-avatar"
+                  user={u}
+                />
               ))}
             </div>
           </div>

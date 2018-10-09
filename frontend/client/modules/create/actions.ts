@@ -1,5 +1,6 @@
 import { Dispatch } from 'redux';
-import types, { CreateFormState } from './types';
+import { CreateFormState } from 'types';
+import types from './types';
 import { sleep } from 'utils/helpers';
 import { AppState } from 'store/reducers';
 import { createCrowdFund } from 'modules/web3/actions';

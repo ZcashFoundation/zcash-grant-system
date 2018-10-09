@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Modal, Alert } from 'antd';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 

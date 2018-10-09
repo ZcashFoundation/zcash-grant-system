@@ -3,7 +3,7 @@ import { compose } from 'recompose';
 import { connect } from 'react-redux';
 import { proposalActions } from 'modules/proposals';
 import { getProposals } from 'modules/proposals/selectors';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
 import { Input, Divider, Spin, Drawer, Icon, Button } from 'antd';

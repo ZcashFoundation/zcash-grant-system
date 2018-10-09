@@ -1,7 +1,7 @@
-import { CreateFormState, Milestone } from './types';
+import { CreateFormState, CreateMilestone } from 'types';
+import { TeamMember } from 'types';
 import { isValidEthAddress, getAmountError } from 'utils/validators';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
-import { MILESTONE_STATE } from 'modules/proposals/reducers';
+import { MILESTONE_STATE, ProposalWithCrowdFund } from 'types';
 import { ProposalContractData, ProposalBackendData } from 'modules/web3/actions';
 import { Wei, toWei } from 'utils/units';
 
@@ -13,6 +13,7 @@ interface CreateFormErrors {
   brief?: string;
   category?: string;
   amountToRaise?: string;
+  team?: string[];
   details?: string;
   payOutAddress?: string;
   trustees?: string[];
@@ -27,6 +28,7 @@ export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
   brief: 'Brief',
   category: 'Category',
   amountToRaise: 'Target amount',
+  team: 'Team',
   details: 'Details',
   payOutAddress: 'Payout address',
   trustees: 'Trustees',
@@ -40,7 +42,7 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, milestones, amountToRaise, payOutAddress, trustees } = form;
+  const { title, team, milestones, amountToRaise, payOutAddress, trustees } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -52,6 +54,9 @@ export function getCreateErrors(
 
     if (!milestones || !milestones.length) {
       errors.milestones = ['Must have at least one milestone'];
+    }
+    if (!team || !team.length) {
+      errors.team = ['Must have at least one team member'];
     }
   }
 
@@ -126,10 +131,40 @@ export function getCreateErrors(
     errors.milestones = milestoneErrors;
   }
 
+  // Team
+  let didTeamError = false;
+  const teamErrors = team.map(u => {
+    if (!u.name || !u.title || !u.emailAddress || !u.ethAddress) {
+      didTeamError = true;
+      return '';
+    }
+
+    const err = getCreateTeamMemberError(u);
+    didTeamError = didTeamError || !!err;
+    return err;
+  });
+  if (didTeamError) {
+    errors.team = teamErrors;
+  }
+
   return errors;
 }
 
-function milestoneToMilestoneAmount(milestone: Milestone, raiseGoal: Wei) {
+export function getCreateTeamMemberError(user: TeamMember) {
+  if (user.name.length > 30) {
+    return 'Display name can only be 30 characters maximum';
+  } else if (user.title.length > 30) {
+    return 'Title can only be 30 characters maximum';
+  } else if (!/.+\@.+\..+/.test(user.emailAddress)) {
+    return 'That doesn’t look like a valid email address';
+  } else if (!isValidEthAddress(user.ethAddress)) {
+    return 'That doesn’t look like a valid ETH address';
+  }
+
+  return '';
+}
+
+function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Wei) {
   return raiseGoal.divn(100).mul(Wei(milestone.payoutPercent.toString()));
 }
 
@@ -157,6 +192,7 @@ export function formToBackendData(form: CreateFormState): ProposalBackendData {
     title: form.title,
     category: form.category,
     content: form.details,
+    team: form.team,
   };
 }
 
@@ -173,7 +209,7 @@ export function makeProposalPreviewFromForm(
     body: form.details,
     stage: 'preview',
     category: form.category,
-    team: [],
+    team: form.team,
     milestones: form.milestones.map((m, idx) => ({
       index: idx,
       title: m.title,

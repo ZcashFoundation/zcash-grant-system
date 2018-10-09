@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 
 interface Props {
   proposalId: ProposalWithCrowdFund['proposalId'];

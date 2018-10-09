@@ -12,6 +12,7 @@ import serverRender from './render';
 // @ts-ignore
 import * as paths from '../config/paths';
 
+process.env.SERVER_SIDE_RENDER = 'true';
 const isDev = process.env.NODE_ENV === 'development';
 
 dotenv.config();

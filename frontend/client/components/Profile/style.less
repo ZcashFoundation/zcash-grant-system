@@ -1,0 +1,37 @@
+@small-query: ~'(max-width: 640px)';
+
+.Profile {
+  max-width: 800px;
+  margin: 0 auto;
+
+  & .ant-tabs-nav .ant-tabs-tab {
+    padding-right: 5px;
+  }
+
+  @media @small-query {
+    & .ant-tabs-nav .ant-tabs-tab {
+      margin-right: 0;
+    }
+  }
+
+  &-tabBadge {
+    transform: scale(0.8) translate(-0.4rem);
+
+    & .ant-badge-count {
+      box-shadow: none;
+      background-color: transparent;
+    }
+
+    &.is-zero {
+      & .ant-badge-count {
+        color: inherit;
+      }
+    }
+
+    &.is-not-zero {
+      & .ant-badge-count {
+        color: inherit;
+      }
+    }
+  }
+}

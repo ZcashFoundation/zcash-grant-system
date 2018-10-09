@@ -17,8 +17,14 @@ const paths = {
   serverBuild: resolveApp('build/server'),
   srcClient: resolveApp('client'),
   srcServer: resolveApp('server'),
+  srcTypes: resolveApp('types'),
 };
 
-paths.resolveModules = [paths.srcClient, paths.srcServer, resolveApp('node_modules')];
+paths.resolveModules = [
+  paths.srcClient,
+  paths.srcServer,
+  paths.srcTypes,
+  resolveApp('node_modules'),
+];
 
 module.exports = paths;

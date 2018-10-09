@@ -15,6 +15,7 @@ module.exports = {
     store: `${paths.srcClient}/store`,
     styles: `${paths.srcClient}/styles`,
     typings: `${paths.srcClient}/typings`,
+    types: `${paths.srcTypes}`,
     utils: `${paths.srcClient}/utils`,
     web3interact: `${paths.srcClient}/web3interact`,
   },

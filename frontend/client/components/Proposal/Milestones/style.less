@@ -1,35 +1,164 @@
+@medium-query: ~'(max-width: 920px)';
+@small-query: ~'(max-width: 480px)';
+
 .ProposalMilestones {
+  width: 100%;
+
+  .ant-steps-customization();
+
+  .ant-steps-item-title > div {
+    position: relative;
+  }
+  &.do-titles-overflow {
+    .ant-steps-item,
+    .ant-steps-item-icon {
+      margin-right: 0.4rem;
+    }
+    .ant-steps-item-title {
+      width: 0;
+      padding-right: 0;
+      color: rgba(0, 0, 0, 0) !important;
+
+      & > div {
+        position: absolute;
+      }
+    }
+
+    .ProposalMilestones-milestone-title {
+      display: block;
+    }
+  }
+
   &-milestone {
-    margin-left: 0.5rem;
-    margin-bottom: 2rem;
+    min-height: 15rem;
+    margin-top: 2rem;
+
+    @media @small-query {
+      margin-top: 0;
+      margin-left: 0;
+    }
 
     &-title {
+      display: none;
+      white-space: nowrap;
       font-size: 1.5rem;
       margin-bottom: 0;
       transform: translateY(-0.5rem);
+      @media @small-query {
+        display: block !important;
+      }
     }
 
-    &-estimate {
-      margin-top: -0.5rem;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      opacity: 0.5;
-      font-style: italic;
+    &-status {
+      white-space: nowrap;
+      @media @small-query {
+        margin-bottom: 0.6rem;
+      }
+
+      & > div {
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        opacity: 0.8;
+        display: inline-block;
+        @media @small-query {
+          margin-bottom: 0;
+          display: block;
+        }
+      }
+
+      & > div + div {
+        padding-left: 0.5em;
+        margin-left: 0.5em;
+        border-left: 1px solid rgba(0, 0, 0, 0.35);
+        @media @small-query {
+          padding-left: 0;
+          margin-left: 0;
+          border-left: none;
+        }
+      }
+    }
+
+    &-body {
+      display: flex;
+
+      @media @medium-query {
+        flex-direction: column;
+        margin-left: 0.4rem;
+      }
     }
 
     &-description {
       font-size: 1.1rem;
     }
 
-    &-payoutAmount {
-      margin-bottom: 0.2rem;
-      font-size: 0.9rem;
-      opacity: 0.8;
+    &-description,
+    &-action {
+      flex: 1;
     }
 
-    &-payoutInfo {
-      opacity: 0.5;
-      font-size: 0.7rem;
+    &-divider {
+      width: 1px;
+      background: rgba(0, 0, 0, 0.05);
+      margin: 0 2rem;
+
+      @media @medium-query {
+        height: 1px;
+        width: 100%;
+        margin: 1rem 0;
+      }
+    }
+  }
+}
+
+.ant-steps-customization() {
+  @media @small-query {
+    display: flex;
+    .ant-steps {
+      width: 50px;
+      margin-left: -2rem;
+      .ant-steps-item {
+        margin-right: 0;
+      }
+      .ant-steps-item-title {
+        display: none;
+      }
+    }
+  }
+
+  .ant-steps-item {
+    cursor: pointer;
+  }
+
+  .ant-steps-item-override(@status, @color, @title-color) {
+    .ant-steps-item-@{status} {
+      &.is-active {
+        .ant-steps-item-icon {
+          background: @color;
+          border-color: @color;
+          & > .ant-steps-icon {
+            color: #fff;
+            font-weight: 600;
+          }
+        }
+        .ant-steps-item-title {
+          color: @title-color;
+        }
+      }
+    }
+  }
+  .ant-steps-item-override(wait, #949191, #949191);
+  .ant-steps-item-override(finish, #1890ff, #4c4c4c);
+  .ant-steps-item-override(error, #f5222d, #f5222d);
+
+  .ant-steps-item-process {
+    &.is-inactive {
+      .ant-steps-item-icon {
+        background: #fff;
+        border-color: #1890ff;
+        & > .ant-steps-icon {
+          color: #1890ff;
+        }
+      }
     }
   }
 }

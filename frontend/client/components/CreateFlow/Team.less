@@ -1,0 +1,53 @@
+.TeamForm {
+  max-width: 660px;
+  padding: 0 1rem;
+  width: 100%;
+  margin: 0 auto;
+
+  &-add {
+    display: flex;
+    width: 100%;
+    padding: 1rem;
+    align-items: center;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 80ms ease, transform 80ms ease;
+    outline: none;
+
+    &:hover,
+    &:focus {
+      opacity: 1;
+    }
+    &:active {
+      transform: translateY(2px);
+    }
+
+    &-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1.25rem;
+      width: 7.4rem;
+      height: 7.4rem;
+      border: 2px dashed #2ecc71;
+      color: #2ecc71;
+      border-radius: 8px;
+      font-size: 2rem;
+    }
+
+    &-text {
+      text-align: left;
+
+      &-title {
+        font-size: 1.6rem;
+        font-weight: 300;
+        color: #2ecc71;
+      }
+
+      &-subtitle {
+        opacity: 0.7;
+        font-size: 1rem;
+      }
+    }
+  }
+}

@@ -1,0 +1,110 @@
+@addresses-max-width: 36rem;
+@addresses-width: 10rem;
+@addresses-padding: 1rem;
+
+
+.ChooseAddress {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  // Shared styles between addresses and loader
+  &-addresses,
+  &-loading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    max-width: 36rem;
+    margin-bottom: 1rem;
+  }
+
+  &-buttons {
+    display: flex;
+    justify-content: center;
+
+    &-button {
+      margin: 0 0.25rem;
+    }
+  }
+
+  &-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 30rem;
+    margin: 0 auto 2rem;
+
+    .ant-alert {
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+.AddressChoice {
+  width: 10rem;
+  padding: 1rem;
+  margin: 0 0.75rem 1rem;
+  background: #FFF;
+  border: 1px solid rgba(#000, 0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 100ms ease, border-color 100ms ease;
+  outline: none;
+
+  &:hover,
+  &:focus {
+    transform: translateY(-2px);
+    border-color: rgba(#000, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+    border-color: rgba(#000, 0.28);
+  }
+
+  &-avatar {
+    display: block;
+    width: 6rem;
+    height: 6rem;
+    margin: 0 auto 1rem;
+    border-radius: 100%;
+
+    .is-fake & {
+      background: #000;
+      color: #000;
+      opacity: 0.2;
+    }
+  }
+
+  &-name,
+  &-address {
+    margin: 0 auto;
+
+    .is-fake & {
+      background: #000;
+      color: #000;
+      transform: scaleY(0.8);
+    }
+  }
+
+  &-name {
+    font-size: 1rem;
+
+    .is-fake & {
+      opacity: 0.2;
+      width: 60%;
+    }
+  }
+
+  &-address {
+    opacity: 0.6;
+    font-size: 0.8rem;
+
+    .is-fake & {
+      opacity: 0.1;
+      width: 80%;
+    }
+  }
+}

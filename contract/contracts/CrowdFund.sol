@@ -165,7 +165,7 @@ contract CrowdFund {
         contributors[msg.sender].milestoneNoVotes[index] = vote;
         if (!vote) {
             milestones[index].amountVotingAgainstPayout = milestones[index].amountVotingAgainstPayout.sub(contributors[msg.sender].contributionAmount);
-        } else if (vote) {
+        } else {
             milestones[index].amountVotingAgainstPayout = milestones[index].amountVotingAgainstPayout.add(contributors[msg.sender].contributionAmount);
         }
     }
@@ -195,8 +195,7 @@ contract CrowdFund {
         contributors[msg.sender].refundVote = vote;
         if (!vote) {
             amountVotingForRefund = amountVotingForRefund.sub(contributors[msg.sender].contributionAmount);
-        }
-        else if (vote) {
+        } else {
             amountVotingForRefund = amountVotingForRefund.add(contributors[msg.sender].contributionAmount);
         }
     }

@@ -7,7 +7,7 @@ import {
 } from 'api/api';
 import { Dispatch } from 'redux';
 import Web3 from 'web3';
-import { ProposalWithCrowdFund, Proposal, Comment } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund, Proposal, Comment } from 'types';
 import { signData } from 'modules/web3/actions';
 import getContract from 'lib/getContract';
 import CrowdFund from 'lib/contracts/CrowdFund.json';

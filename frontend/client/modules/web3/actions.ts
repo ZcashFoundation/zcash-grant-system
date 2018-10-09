@@ -8,6 +8,7 @@ import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { AppState } from 'store/reducers';
 import { Wei } from 'utils/units';
+import { TeamMember } from 'types';
 
 type GetState = () => AppState;
 
@@ -24,7 +25,7 @@ function handleWrongNetworkError(dispatch: (action: any) => void) {
 export type TSetWeb3 = typeof setWeb3;
 export function setWeb3() {
   return (dispatch: Dispatch<any>) => {
-    dispatch({
+    return dispatch({
       type: types.WEB3,
       payload: getWeb3(),
     });
@@ -112,6 +113,7 @@ export interface ProposalBackendData {
   title: string;
   content: string;
   category: PROPOSAL_CATEGORY;
+  team: TeamMember[];
 }
 
 export type TCreateCrowdFund = typeof createCrowdFund;
@@ -136,7 +138,7 @@ export function createCrowdFund(
       immediateFirstMilestonePayout,
     } = contractData;
 
-    const { content, title, category } = backendData;
+    const { content, title, category, team } = backendData;
 
     const state = getState();
     const accounts = state.web3.accounts;
@@ -163,6 +165,7 @@ export function createCrowdFund(
             title,
             milestones,
             category,
+            team,
           });
           dispatch({
             type: types.CROWD_FUND_CREATED,

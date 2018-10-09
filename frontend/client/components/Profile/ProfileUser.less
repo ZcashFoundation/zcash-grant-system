@@ -1,0 +1,71 @@
+.ProfileUser {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  &-avatar {
+    position: relative;
+    flex: 0 0 auto;
+    height: 10.5rem;
+    width: 10.5rem;
+    margin-right: 1.25rem;
+
+    &-img {
+      height: 100%;
+      width: 100%;
+      border-radius: 1rem;
+    }
+  }
+
+  &-info {
+    // no overflow of flexbox
+    min-width: 0;
+
+    &-name {
+      font-size: 1.6rem;
+      font-weight: 300;
+    }
+
+    &-title {
+      font-size: 1rem;
+      opacity: 0.7;
+      margin-bottom: 0.3rem;
+    }
+
+    &-address {
+      position: relative;
+      font-size: 1rem;
+      margin-bottom: 0.7rem;
+
+      &:last-child {
+        margin-bottom: 1rem;
+      }
+
+      & > span {
+        position: absolute;
+        top: 1.2rem;
+        font-size: 0.7rem;
+        opacity: 0.7;
+      }
+    }
+
+    &-social {
+      display: flex;
+
+      & a {
+        display: block;
+        color: inherit;
+      }
+
+      &-icon {
+        height: 1.3rem;
+        font-size: 1.3rem;
+        margin-right: 0.5rem;
+        transition: transform 100ms;
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+}

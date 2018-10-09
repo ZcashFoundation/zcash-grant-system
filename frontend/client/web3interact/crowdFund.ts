@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import { CrowdFund, Milestone, MILESTONE_STATE } from 'modules/proposals/reducers';
+import { CrowdFund, Milestone, MILESTONE_STATE } from 'types';
 import { collectArrayElements } from 'utils/web3Utils';
 import { Wei } from 'utils/units';
 import BN from 'bn.js';

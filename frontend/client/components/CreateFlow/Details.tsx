@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form } from 'antd';
 import MarkdownEditor from 'components/MarkdownEditor';
-import { CreateFormState } from 'modules/create/types';
+import { CreateFormState } from 'types';
 
 interface State {
   details: string;

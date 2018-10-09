@@ -4,17 +4,19 @@ import defaultUserImg from 'static/images/default-user.jpg';
 
 interface Props {
   address?: string;
+  className?: string;
   style?: React.CSSProperties;
 }
 
 export default class Identicon extends React.PureComponent<Props> {
   render() {
-    const blockie = this.props.address ? makeBlockie(this.props.address) : defaultUserImg;
+    const { address, className } = this.props;
+    const blockie = address ? makeBlockie(address) : defaultUserImg;
     const style = {
       display: 'block',
       ...(this.props.style || {}),
     };
 
-    return <img style={style} src={blockie} />;
+    return <img className={className} style={style} src={blockie} />;
   }
 }

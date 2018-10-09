@@ -1,5 +1,3 @@
-import { PROPOSAL_CATEGORY } from 'api/constants';
-
 enum CreateTypes {
   UPDATE_FORM = 'UPDATE_FORM',
 
@@ -22,24 +20,3 @@ enum CreateTypes {
 }
 
 export default CreateTypes;
-
-export interface Milestone {
-  title: string;
-  description: string;
-  date: string;
-  payoutPercent: number;
-  immediatePayout: boolean;
-}
-
-export interface CreateFormState {
-  title: string;
-  brief: string;
-  category: PROPOSAL_CATEGORY | null;
-  amountToRaise: string;
-  details: string;
-  payOutAddress: string;
-  trustees: string[];
-  milestones: Milestone[];
-  deadline: number | null;
-  milestoneDeadline: number | null;
-}

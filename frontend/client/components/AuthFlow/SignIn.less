@@ -1,0 +1,47 @@
+.SignIn {
+  &-container {
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(#000, 0.2);
+  }
+
+  &-identity {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.25rem;
+
+    &-identicon {
+      border-radius: 100%;
+      width: 3.6rem;
+      height: 3.6rem;
+      margin-right: 0.75rem;
+      box-shadow: 0 1px 2px rgba(#000, 0.3);
+    }
+
+    &-info {
+      width: 0;
+      flex: 1 1 auto;
+
+      &-name {
+        font-size: 1.4rem;
+      }
+
+      &-address {
+        font-size: 0.8rem;
+        // Bug: <code /> doesn't seem to like opacity, so apply to children
+        > * {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+
+  &-back {
+    margin-top: 2rem;
+    opacity: 0.7;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+}

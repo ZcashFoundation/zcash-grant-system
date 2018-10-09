@@ -57,21 +57,45 @@ class UserSchema(ma.Schema):
     class Meta:
         model = User
         # Fields to expose
-        fields = ("account_address", "userid", "title", "email_address", "display_name", "title")
+        fields = (
+            "account_address",
+            "title",
+            "email_address",
+            "social_medias",
+            "avatar",
+            "display_name",
+            "userid"
 
+        )
+
+    social_medias = ma.Nested("SocialMediaSchema", many=True)
+    avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
-    title = ma.Method("get_title")
-    avatar = ma.Method("get_avatar")
 
     def get_userid(self, obj):
         return obj.id
 
-    def get_title(self, obj):
-        return ""
-
-    def get_avatar(self, obj):
-        return "https://forum.getmonero.org/uploads/profile/small_no_picture.jpg"
-
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+
+
+class SocialMediaSchema(ma.Schema):
+    class Meta:
+        model = SocialMedia
+        # Fields to expose
+        fields = ("social_media_link",)
+
+social_media_schema = SocialMediaSchema()
+social_media_schemas = SocialMediaSchema(many=True)
+
+
+class AvatarSchema(ma.Schema):
+    class Meta:
+        model = SocialMedia
+        # Fields to expose
+        fields = ("image_url",)
+
+
+avatar_schema = AvatarSchema()
+avatar_schemas = AvatarSchema(many=True)

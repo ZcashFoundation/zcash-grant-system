@@ -5,7 +5,7 @@ import Markdown from 'components/Markdown';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'modules/proposals/reducers';
+import { ProposalWithCrowdFund } from 'types';
 import { getProposal } from 'modules/proposals/selectors';
 import { Spin, Tabs, Icon, Dropdown, Menu, Button } from 'antd';
 import CampaignBlock from './CampaignBlock';
@@ -22,6 +22,7 @@ import classnames from 'classnames';
 import { withRouter } from 'react-router';
 import Web3Container from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
+import SocialShare from 'components/SocialShare';
 
 interface OwnProps {
   proposalId: string;
@@ -86,6 +87,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     } else {
       const { crowdFund } = proposal;
       const isTrustee = crowdFund.trustees.includes(account);
+      const isContributor = !!crowdFund.contributors.find(c => c.address === account);
       const hasBeenFunded = crowdFund.isRaiseGoalReached;
       const isProposalActive = !hasBeenFunded && crowdFund.deadline > Date.now();
       const canRefund = (hasBeenFunded || isProposalActive) && !crowdFund.isFrozen;
@@ -111,6 +113,15 @@ export class ProposalDetail extends React.Component<Props, State> {
       return (
         <div className="Proposal">
           <div className="Proposal-top">
+            <div className="Proposal-top-social">
+              <SocialShare
+                url={window.location.href}
+                title={`${proposal.title} needs funding on Grant-io!`}
+                text={`${
+                  proposal.title
+                } needs funding on Grant.io! Come help make this proposal a reality by funding it.`}
+              />
+            </div>
             <div className="Proposal-top-main">
               <h1 className="Proposal-top-main-title">
                 {proposal ? proposal.title : <span>&nbsp;</span>}
@@ -151,7 +162,7 @@ export class ProposalDetail extends React.Component<Props, State> {
             </div>
             <div className="Proposal-top-side">
               <CampaignBlock proposal={proposal} isPreview={isPreview} />
-              <TeamBlock crowdFund={crowdFund} />
+              <TeamBlock proposal={proposal} />
             </div>
           </div>
 
@@ -169,9 +180,11 @@ export class ProposalDetail extends React.Component<Props, State> {
                 <div style={{ marginTop: '1.5rem' }} />
                 <UpdatesTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Governance" key="governance">
-                <GovernanceTab proposal={proposal} />
-              </Tabs.TabPane>
+              {isContributor && (
+                <Tabs.TabPane tab="Refund" key="refund">
+                  <GovernanceTab proposal={proposal} />
+                </Tabs.TabPane>
+              )}
               <Tabs.TabPane tab="Contributors" key="contributors">
                 <ContributorsTab crowdFund={proposal.crowdFund} />
               </Tabs.TabPane>
