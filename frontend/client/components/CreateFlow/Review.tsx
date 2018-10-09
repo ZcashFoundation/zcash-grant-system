@@ -7,8 +7,8 @@ import Markdown from 'components/Markdown';
 import { AppState } from 'store/reducers';
 import { CREATE_STEP } from './index';
 import { CATEGORY_UI } from 'api/constants';
-import defaultUserImg from 'static/images/default-user.jpg';
 import './Review.less';
+import UserAvatar from 'components/UserAvatar';
 
 interface OwnProps {
   setStep(step: CREATE_STEP): void;
@@ -138,7 +138,7 @@ class CreateReview extends React.Component<Props> {
     return (
       <div className="CreateReview">
         {sections.map(s => (
-          <div className="CreateReview-section">
+          <div className="CreateReview-section" key={s.step}>
             {s.fields.map(f => (
               <div className="ReviewField" key={f.key}>
                 <div className="ReviewField-label">
@@ -191,7 +191,7 @@ const ReviewMilestones = ({
 }) => (
   <Timeline>
     {milestones.map(m => (
-      <Timeline.Item>
+      <Timeline.Item key={m.title}>
         <div className="ReviewMilestone">
           <div className="ReviewMilestone-title">{m.title}</div>
           <div className="ReviewMilestone-info">
@@ -210,7 +210,7 @@ const ReviewTeam = ({ team }: { team: AppState['create']['form']['team'] }) => (
   <div className="ReviewTeam">
     {team.map((u, idx) => (
       <div className="ReviewTeam-member" key={idx}>
-        <img className="ReviewTeam-member-avatar" src={u.avatarUrl || defaultUserImg} />
+        <UserAvatar className="ReviewTeam-member-avatar" user={u} />
         <div className="ReviewTeam-member-info">
           <div className="ReviewTeam-member-info-name">{u.name}</div>
           <div className="ReviewTeam-member-info-title">{u.title}</div>
