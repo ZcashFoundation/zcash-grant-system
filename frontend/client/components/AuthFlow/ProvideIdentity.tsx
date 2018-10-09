@@ -1,10 +1,12 @@
 import React from 'react';
+import loadable from 'loadable-components';
 import { AUTH_PROVIDER } from 'utils/auth';
-import AddressProvider from './providers/Address';
-import LedgerProvider from './providers/Ledger';
-import TrezorProvider from './providers/Trezor';
-import Web3Provider from './providers/Web3';
 import './ProvideIdentity.less';
+
+const AddressProvider = loadable(() => import('./providers/Address'));
+const LedgerProvider = loadable(() => import('./providers/Ledger'));
+const TrezorProvider = loadable(() => import('./providers/Trezor'));
+const Web3Provider = loadable(() => import('./providers/Web3'));
 
 const PROVIDER_COMPONENTS = {
   [AUTH_PROVIDER.ADDRESS]: AddressProvider,
