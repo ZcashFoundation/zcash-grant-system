@@ -1,17 +1,25 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { Icon } from 'antd';
 import { CreateFormState, TeamMember } from 'types';
 import TeamMemberComponent from './TeamMember';
 import './Team.less';
+import { AppState } from 'store/reducers';
 
 interface State {
   team: TeamMember[];
 }
 
-interface Props {
+interface StateProps {
+  authUser: AppState['auth']['user'];
+}
+
+interface OwnProps {
   initialState?: Partial<State>;
   updateForm(form: Partial<CreateFormState>): void;
 }
+
+type Props = OwnProps & StateProps;
 
 const MAX_TEAM_SIZE = 6;
 const DEFAULT_STATE: State = {
@@ -27,7 +35,7 @@ const DEFAULT_STATE: State = {
   ],
 };
 
-export default class CreateFlowTeam extends React.PureComponent<Props, State> {
+class CreateFlowTeam extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -36,18 +44,23 @@ export default class CreateFlowTeam extends React.PureComponent<Props, State> {
     };
 
     // Don't allow for empty team array
-    // TODO: Default first user to auth'd user
     if (!this.state.team.length) {
       this.state = {
         ...this.state,
         team: [...DEFAULT_STATE.team],
       };
     }
+
+    // Auth'd user is always first member of a team
+    if (props.authUser) {
+      this.state.team[0] = {
+        ...props.authUser,
+      };
+    }
   }
 
   render() {
     const { team } = this.state;
-
     return (
       <div className="TeamForm">
         {team.map((user, idx) => (
@@ -99,3 +112,9 @@ export default class CreateFlowTeam extends React.PureComponent<Props, State> {
     this.props.updateForm({ team });
   };
 }
+
+const withConnect = connect<StateProps>((state: AppState) => ({
+  authUser: state.auth.user,
+}));
+
+export default withConnect(CreateFlowTeam);

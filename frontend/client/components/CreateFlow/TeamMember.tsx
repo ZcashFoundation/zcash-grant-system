@@ -159,13 +159,15 @@ export default class CreateFlowTeamMember extends React.PureComponent<Props, Sta
                   );
                 })}
               </div>
-              <button className="TeamMember-info-edit" onClick={this.toggleEditing}>
-                <Icon type="form" /> Edit
-              </button>
               {index !== 0 && (
-                <button className="TeamMember-info-remove" onClick={this.removeMember}>
-                  <Icon type="close-circle" theme="filled" />
-                </button>
+                <>
+                  <button className="TeamMember-info-edit" onClick={this.toggleEditing}>
+                    <Icon type="form" /> Edit
+                  </button>
+                  <button className="TeamMember-info-remove" onClick={this.removeMember}>
+                    <Icon type="close-circle" theme="filled" />
+                  </button>
+                </>
               )}
             </>
           )}
