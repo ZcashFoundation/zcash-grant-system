@@ -92,9 +92,15 @@
           overflow: hidden;
           font-size: 1.1rem;
 
+          @media (max-width: @collapse-width) {
+            flex-basis: auto;
+            max-height: 300px;
+          }
+
           &.is-expanded {
             overflow: visible;
             flex-basis: auto;
+            max-height: none;
           }
         }
 
@@ -127,8 +133,9 @@
 
       &-menu {
         position: absolute;
-        top: 1rem;
+        top: 1.5rem;
         right: 0;
+        transform: translateY(-50%);
       }
     }
 
@@ -143,19 +150,24 @@
         justify-content: space-between;
 
         > * {
+          width: 50%;
           flex: 1;
         }
 
-        > *:first-child {
-          margin-right: 1rem;
+        > *:last-child {
+          margin-left: 1rem;
         }
       }
 
       @media (max-width: @single-col-width) {
         flex-direction: column;
 
-        > *:first-child {
-          margin-right: 0;
+        > * {
+          width: auto;
+        }
+
+        > *:last-child {
+          margin-left: 0;
         }
       }
 
