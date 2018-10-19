@@ -10,14 +10,13 @@ const resolveWeb3 = (resolve: (web3: Web3) => void, reject: (err: Error) => void
   }
 
   let { web3 } = window as Web3Window;
-  const alreadyInjected = typeof web3 !== 'undefined'; // i.e. Mist/Metamask
   const localProvider = `http://localhost:8545`;
 
   // To test what it's like to not have web3, uncomment the reject. Otherwise
   // localProvider will always kick in.
   // return reject(new Error('No web3 instance available'));
 
-  if (alreadyInjected) {
+  if (typeof web3 !== 'undefined') {
     console.info(`Injected web3 detected.`);
     web3 = new Web3(web3.currentProvider);
   } else if (process.env.NODE_ENV !== 'production') {

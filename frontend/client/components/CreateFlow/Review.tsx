@@ -6,7 +6,7 @@ import { getCreateErrors, KeyOfForm, FIELD_NAME_MAP } from 'modules/create/utils
 import Markdown from 'components/Markdown';
 import { AppState } from 'store/reducers';
 import { CREATE_STEP } from './index';
-import { CATEGORY_UI } from 'api/constants';
+import { CATEGORY_UI, PROPOSAL_CATEGORY } from 'api/constants';
 import './Review.less';
 import UserAvatar from 'components/UserAvatar';
 
@@ -23,7 +23,7 @@ type Props = OwnProps & StateProps;
 interface Field {
   key: KeyOfForm;
   content: React.ReactNode;
-  error: string | undefined | false;
+  error: string | Falsy;
 }
 
 interface Section {
@@ -36,7 +36,7 @@ class CreateReview extends React.Component<Props> {
   render() {
     const { form } = this.props;
     const errors = getCreateErrors(this.props.form);
-    const catUI = CATEGORY_UI[form.category] || ({} as any);
+    const catUI = CATEGORY_UI[form.category as PROPOSAL_CATEGORY] || ({} as any);
     const sections: Section[] = [
       {
         step: CREATE_STEP.BASICS,
@@ -121,13 +121,15 @@ class CreateReview extends React.Component<Props> {
           },
           {
             key: 'deadline',
-            content: `${Math.floor(moment.duration(form.deadline * 1000).asDays())} days`,
+            content: `${Math.floor(
+              moment.duration((form.deadline || 0) * 1000).asDays(),
+            )} days`,
             error: errors.deadline,
           },
           {
             key: 'milestoneDeadline',
             content: `${Math.floor(
-              moment.duration(form.milestoneDeadline * 1000).asDays(),
+              moment.duration((form.milestoneDeadline || 0) * 1000).asDays(),
             )} days`,
             error: errors.milestoneDeadline,
           },

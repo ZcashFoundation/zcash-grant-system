@@ -4,6 +4,7 @@ import { compose } from 'recompose';
 import { Steps, Icon, Spin, Alert } from 'antd';
 import qs from 'query-string';
 import { withRouter, RouteComponentProps } from 'react-router';
+import { History } from 'history';
 import { debounce } from 'underscore';
 import Basics from './Basics';
 import Team from './Team';
@@ -46,7 +47,7 @@ interface StepInfo {
   title: React.ReactNode;
   subtitle: React.ReactNode;
   help: React.ReactNode;
-  component: React.ComponentClass<any>;
+  component: any;
 }
 const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   [CREATE_STEP.BASICS]: {
@@ -145,22 +146,12 @@ class CreateFlow extends React.Component<Props, State> {
       isExample: false,
     };
     this.debouncedUpdateForm = debounce(this.updateForm, 800);
+    this.historyUnlisten = this.props.history.listen(this.handlePop);
   }
 
   componentDidMount() {
     this.props.resetCreateCrowdFund();
     this.props.fetchDraft();
-    this.historyUnlisten = this.props.history.listen((location, action) => {
-      if (action === 'POP') {
-        const searchValues = qs.parse(location.search);
-        const urlStep = searchValues.step && searchValues.step.toUpperCase();
-        if (urlStep && CREATE_STEP[urlStep]) {
-          this.setStep(urlStep as CREATE_STEP, true);
-        } else {
-          this.setStep(CREATE_STEP.BASICS, true);
-        }
-      }
-    });
   }
 
   componentWillUnmount() {
@@ -313,6 +304,18 @@ class CreateFlow extends React.Component<Props, State> {
   private checkFormErrors = () => {
     const errors = getCreateErrors(this.props.form);
     return !!Object.keys(errors).length;
+  };
+
+  private handlePop: History.LocationListener = (location, action) => {
+    if (action === 'POP') {
+      const searchValues = qs.parse(location.search);
+      const urlStep = searchValues.step && searchValues.step.toUpperCase();
+      if (urlStep && CREATE_STEP[urlStep]) {
+        this.setStep(urlStep as CREATE_STEP, true);
+      } else {
+        this.setStep(CREATE_STEP.BASICS, true);
+      }
+    }
   };
 
   private fillInExample = () => {

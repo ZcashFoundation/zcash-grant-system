@@ -1,8 +1,10 @@
 import React from 'react';
 import { Input, Form, Icon, Select } from 'antd';
+import { SelectValue } from 'antd/lib/select';
 import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
 import { CreateFormState } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
+import { typedKeys } from 'utils/ts';
 
 interface State {
   title: string;
@@ -37,8 +39,8 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
     });
   };
 
-  handleCategoryChange = (value: PROPOSAL_CATEGORY) => {
-    this.setState({ category: value }, () => {
+  handleCategoryChange = (value: SelectValue) => {
+    this.setState({ category: value as PROPOSAL_CATEGORY }, () => {
       this.props.updateForm(this.state);
     });
   };
@@ -85,7 +87,7 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
             value={category || undefined}
             onChange={this.handleCategoryChange}
           >
-            {Object.keys(PROPOSAL_CATEGORY).map((c: PROPOSAL_CATEGORY) => (
+            {typedKeys(PROPOSAL_CATEGORY).map(c => (
               <Select.Option value={c} key={c}>
                 <Icon
                   type={CATEGORY_UI[c].icon}

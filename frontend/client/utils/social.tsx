@@ -54,7 +54,7 @@ export function socialUrlsToAccounts(urls: string[]): SocialAccountMap {
 }
 
 export function socialAccountsToUrls(accounts: SocialAccountMap): string[] {
-  return Object.keys(accounts).map((key: SOCIAL_TYPE) => {
-    return socialAccountToUrl(accounts[key], key);
+  return Object.entries(accounts).map(([key, value]) => {
+    return socialAccountToUrl(value as string, key as SOCIAL_TYPE);
   });
 }

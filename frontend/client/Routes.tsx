@@ -196,7 +196,7 @@ const routeConfigs: RouteConfig[] = [
     // 404
     route: {
       path: '/*',
-      render: () => <Exception type="404" />,
+      render: () => <Exception code="404" />,
     },
     template: {
       title: 'Page not found',
@@ -209,7 +209,9 @@ type Props = RouteComponentProps<any>;
 class Routes extends React.PureComponent<Props> {
   render() {
     const { pathname } = this.props.location;
-    const currentRoute = routeConfigs.find(config => !!matchPath(pathname, config.route));
+    const currentRoute =
+      routeConfigs.find(config => !!matchPath(pathname, config.route)) ||
+      routeConfigs[routeConfigs.length - 1];
     const routeComponents = routeConfigs.map(config => {
       const { route, onlyLoggedIn, onlyLoggedOut } = config;
       if (onlyLoggedIn || onlyLoggedOut) {

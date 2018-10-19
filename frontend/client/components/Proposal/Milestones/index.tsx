@@ -43,7 +43,7 @@ interface State {
 }
 
 class ProposalMilestones extends React.Component<Props, State> {
-  stepTitleRefs: Array<React.RefObject<HTMLDivElement>>;
+  stepTitleRefs: Array<React.RefObject<HTMLDivElement>> = [];
   ref: React.RefObject<HTMLDivElement>;
   throttledUpdateDoTitlesOverflow: () => void;
   constructor(props: Props) {
@@ -261,23 +261,34 @@ class ProposalMilestones extends React.Component<Props, State> {
 
   private updateDoTitlesOverflow = () => {
     // hmr can sometimes muck up refs, let's make sure they all exist
-    if (!this.stepTitleRefs.reduce((a, r) => !!r.current && a)) return;
+    if (!this.ref || !this.ref.current || !this.stepTitleRefs) {
+      return;
+    }
+    if (!this.stepTitleRefs.reduce((a, r) => !!r.current && a, true)) {
+      return;
+    }
+
     let doTitlesOverflow = false;
     const stepCount = this.stepTitleRefs.length;
     if (stepCount > 1) {
       // avoiding style calculation here by hardcoding antd icon width + padding + margin
       const iconWidths = stepCount * 56;
       const totalWidth = this.ref.current.clientWidth;
-      const last = this.stepTitleRefs.slice(stepCount - 1).pop().current;
-      // last title gets full space
-      const lastWidth = last.clientWidth;
-      const remainingWidth = totalWidth - (lastWidth + iconWidths);
-      const remainingWidthSingle = remainingWidth / (stepCount - 1);
-      // first titles have to share remaining space
-      this.stepTitleRefs.slice(0, stepCount - 1).forEach(r => {
-        doTitlesOverflow =
-          doTitlesOverflow || r.current.clientWidth > remainingWidthSingle;
-      });
+      const last = this.stepTitleRefs[stepCount - 1].current;
+      if (last) {
+        // last title gets full space
+        const lastWidth = last.clientWidth;
+        const remainingWidth = totalWidth - (lastWidth + iconWidths);
+        const remainingWidthSingle = remainingWidth / (stepCount - 1);
+        // first titles have to share remaining space
+        doTitlesOverflow = this.stepTitleRefs
+          .slice(0, stepCount - 1)
+          .reduce(
+            (prev, r) =>
+              prev || (r.current ? r.current.clientWidth : 0) > remainingWidthSingle,
+            false,
+          );
+      }
     }
     this.setState({ doTitlesOverflow });
   };

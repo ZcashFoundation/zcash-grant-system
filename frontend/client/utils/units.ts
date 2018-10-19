@@ -96,10 +96,10 @@ const fromWei = (wei: Wei, unit: UnitKey) => {
 const toWei = (value: string | number, unitType: number | UnitKey): Wei => {
   value = value.toString();
   let decimal;
-  if (typeof unitType === 'number') {
-    decimal = unitType;
-  } else if (typeof unitType === 'string') {
+  if (typeof unitType === 'string') {
     decimal = getDecimalFromEtherUnit(unitType);
+  } else {
+    decimal = unitType;
   }
   const wei = convertedToBaseUnit(value, decimal);
   return Wei(wei);

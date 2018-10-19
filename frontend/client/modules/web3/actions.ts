@@ -259,6 +259,9 @@ export function fundCrowdFund(crowdFundContract: any, value: number | string) {
     const account = state.web3.accounts[0];
 
     try {
+      if (!web3) {
+        throw new Error('No web3 instance available');
+      }
       await crowdFundContract.methods
         .contribute()
         .send({ from: account, value: web3.utils.toWei(String(value), 'ether') })
@@ -416,6 +419,10 @@ export function signData(data: any, dataTypes: any, _: string) {
 
     return new Promise((resolve, reject) => {
       try {
+        if (!web3) {
+          throw new Error('No web3 instance available!');
+        }
+
         // TODO: This typing is hella broken
         (web3.currentProvider as any).sendAsync(
           {

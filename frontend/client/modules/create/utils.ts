@@ -4,6 +4,8 @@ import { isValidEthAddress, getAmountError } from 'utils/validators';
 import { MILESTONE_STATE, ProposalWithCrowdFund } from 'types';
 import { ProposalContractData, ProposalBackendData } from 'modules/web3/actions';
 import { Wei, toWei } from 'utils/units';
+import { ONE_DAY } from 'utils/time';
+import { PROPOSAL_CATEGORY } from 'api/constants';
 
 // TODO: Raise this limit
 export const TARGET_ETH_LIMIT = 10;
@@ -46,11 +48,11 @@ export function getCreateErrors(
 
   // Required fields with no extra validation
   if (!skipRequired) {
-    Object.entries(form).forEach((item: [KeyOfForm, any]) => {
-      if (!item[1]) {
-        errors[item[0]] = `${FIELD_NAME_MAP[item[0]]} is required`;
+    for (const key in form) {
+      if (!form[key as KeyOfForm]) {
+        errors[key as KeyOfForm] = `${FIELD_NAME_MAP[key as KeyOfForm]} is required`;
       }
-    });
+    }
 
     if (!milestones || !milestones.length) {
       errors.milestones = ['Must have at least one milestone'];
@@ -61,12 +63,12 @@ export function getCreateErrors(
   }
 
   // Title
-  if (title.length > 60) {
+  if (title && title.length > 60) {
     errors.title = 'Title can only be 60 characters maximum';
   }
 
   // Amount to raise
-  const amountFloat = parseFloat(amountToRaise);
+  const amountFloat = amountToRaise ? parseFloat(amountToRaise) : 0;
   if (amountToRaise && !Number.isNaN(amountFloat)) {
     const amountError = getAmountError(amountFloat, TARGET_ETH_LIMIT);
     if (amountError) {
@@ -80,71 +82,77 @@ export function getCreateErrors(
   }
 
   // Trustees
-  let didTrusteeError = false;
-  const trusteeErrors = trustees.map((address, idx) => {
-    if (!address) {
-      return '';
-    }
+  if (trustees) {
+    let didTrusteeError = false;
+    const trusteeErrors = trustees.map((address, idx) => {
+      if (!address) {
+        return '';
+      }
 
-    let err = '';
-    if (!isValidEthAddress(address)) {
-      err = 'That doesn’t look like a valid address';
-    } else if (trustees.indexOf(address) !== idx) {
-      err = 'That address is already a trustee';
-    } else if (payOutAddress === address) {
-      err = 'That address is already a trustee';
-    }
+      let err = '';
+      if (!isValidEthAddress(address)) {
+        err = 'That doesn’t look like a valid address';
+      } else if (trustees.indexOf(address) !== idx) {
+        err = 'That address is already a trustee';
+      } else if (payOutAddress === address) {
+        err = 'That address is already a trustee';
+      }
 
-    didTrusteeError = didTrusteeError || !!err;
-    return err;
-  });
-  if (didTrusteeError) {
-    errors.trustees = trusteeErrors;
+      didTrusteeError = didTrusteeError || !!err;
+      return err;
+    });
+    if (didTrusteeError) {
+      errors.trustees = trusteeErrors;
+    }
   }
 
   // Milestones
-  let didMilestoneError = false;
-  let cumulativeMilestonePct = 0;
-  const milestoneErrors = milestones.map((ms, idx) => {
-    if (!ms.title || !ms.description || !ms.date || !ms.payoutPercent) {
-      didMilestoneError = true;
-      return '';
-    }
+  if (milestones) {
+    let didMilestoneError = false;
+    let cumulativeMilestonePct = 0;
+    const milestoneErrors = milestones.map((ms, idx) => {
+      if (!ms.title || !ms.description || !ms.date || !ms.payoutPercent) {
+        didMilestoneError = true;
+        return '';
+      }
 
-    let err = '';
-    if (ms.title.length > 40) {
-      err = 'Title length can only be 40 characters maximum';
-    } else if (ms.description.length > 200) {
-      err = 'Description can only be 200 characters maximum';
-    }
+      let err = '';
+      if (ms.title.length > 40) {
+        err = 'Title length can only be 40 characters maximum';
+      } else if (ms.description.length > 200) {
+        err = 'Description can only be 200 characters maximum';
+      }
 
-    // Last one shows percentage errors
-    cumulativeMilestonePct += ms.payoutPercent;
-    if (idx === milestones.length - 1 && cumulativeMilestonePct !== 100) {
-      err = `Payout percentages doesn’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
-    }
+      // Last one shows percentage errors
+      cumulativeMilestonePct += ms.payoutPercent;
+      if (idx === milestones.length - 1 && cumulativeMilestonePct !== 100) {
+        err = `Payout percentages doesn’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
+      }
 
-    didMilestoneError = didMilestoneError || !!err;
-    return err;
-  });
-  if (didMilestoneError) {
-    errors.milestones = milestoneErrors;
+      didMilestoneError = didMilestoneError || !!err;
+      return err;
+    });
+    if (didMilestoneError) {
+      errors.milestones = milestoneErrors;
+    }
   }
 
   // Team
-  let didTeamError = false;
-  const teamErrors = team.map(u => {
-    if (!u.name || !u.title || !u.emailAddress || !u.ethAddress) {
-      didTeamError = true;
-      return '';
-    }
+  if (team) {
+    let didTeamError = false;
+    const teamErrors = team.map(u => {
+      if (!u.name || !u.title || !u.emailAddress || !u.ethAddress) {
+        didTeamError = true;
+        return '';
+      }
 
-    const err = getCreateTeamMemberError(u);
-    didTeamError = didTeamError || !!err;
-    return err;
-  });
-  if (didTeamError) {
-    errors.team = teamErrors;
+      const err = getCreateTeamMemberError(u);
+      didTeamError = didTeamError || !!err;
+      return err;
+    });
+    if (didTeamError) {
+      errors.team = teamErrors;
+    }
   }
 
   return errors;
@@ -173,7 +181,7 @@ export function formToContractData(form: CreateFormState): ProposalContractData 
   const milestoneAmounts = form.milestones.map(m =>
     milestoneToMilestoneAmount(m, targetInWei),
   );
-  const immediateFirstMilestonePayout = form.milestones[0].immediatePayout;
+  const immediateFirstMilestonePayout = form.milestones[0]!.immediatePayout;
 
   return {
     ethAmount: targetInWei,
@@ -181,8 +189,8 @@ export function formToContractData(form: CreateFormState): ProposalContractData 
     trusteesAddresses: form.trustees,
     milestoneAmounts,
     milestones: form.milestones,
-    durationInMinutes: form.deadline,
-    milestoneVotingPeriodInMinutes: form.milestoneDeadline,
+    durationInMinutes: form.deadline || ONE_DAY * 60,
+    milestoneVotingPeriodInMinutes: form.milestoneDeadline || ONE_DAY * 7,
     immediateFirstMilestonePayout,
   };
 }
@@ -190,7 +198,7 @@ export function formToContractData(form: CreateFormState): ProposalContractData 
 export function formToBackendData(form: CreateFormState): ProposalBackendData {
   return {
     title: form.title,
-    category: form.category,
+    category: form.category as PROPOSAL_CATEGORY,
     content: form.details,
     team: form.team,
   };
@@ -208,7 +216,7 @@ export function makeProposalPreviewFromForm(
     title: form.title,
     body: form.details,
     stage: 'preview',
-    category: form.category,
+    category: form.category || PROPOSAL_CATEGORY.DAPP,
     team: form.team,
     milestones: form.milestones.map((m, idx) => ({
       index: idx,

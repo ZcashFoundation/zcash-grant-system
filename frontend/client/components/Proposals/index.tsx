@@ -1,5 +1,4 @@
 import React from 'react';
-import { compose } from 'recompose';
 import { connect } from 'react-redux';
 import { proposalActions } from 'modules/proposals';
 import { getProposals } from 'modules/proposals/selectors';
@@ -242,12 +241,10 @@ function mapDispatchToProps(dispatch: Dispatch) {
   return bindActionCreators(proposalActions, dispatch);
 }
 
-const withConnect = connect(
+const ConnectedProposals = connect(
   mapStateToProps,
   mapDispatchToProps,
-);
-
-const ConnectedProposals = compose(withConnect)(Proposals);
+)(Proposals);
 
 export default () => (
   <Web3Container renderLoading={() => <Spin />} render={() => <ConnectedProposals />} />

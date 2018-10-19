@@ -108,7 +108,7 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
 interface MilestoneFieldsProps {
   index: number;
   milestone: CreateMilestone;
-  error: null | false | string;
+  error: Falsy | string;
   onChange(index: number, milestone: CreateMilestone): void;
   onRemove(index: number): void;
 }

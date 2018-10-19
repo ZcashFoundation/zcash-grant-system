@@ -22,6 +22,12 @@ const content: { [index: string]: IExceptionProps } = {
   },
 };
 
-export default (props: IExceptionProps) => (
-  <Exception type={props.type} {...content[props.type]} />
+interface Props {
+  code: '403' | '404' | '500';
+}
+
+const ExceptionComponent: React.SFC<Props> = ({ code }) => (
+  <Exception type={code} {...content[code]} />
 );
+
+export default ExceptionComponent;

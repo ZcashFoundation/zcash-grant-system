@@ -43,7 +43,7 @@ class Profile extends React.Component<Props> {
     const userLookupParam = this.props.match.params.id;
     const { authUser } = this.props;
     if (!userLookupParam) {
-      if (authUser.ethAddress) {
+      if (authUser && authUser.ethAddress) {
         return <Redirect to={`/profile/${authUser.ethAddress}`} />;
       } else {
         return <Redirect to="auth" />;
@@ -58,7 +58,7 @@ class Profile extends React.Component<Props> {
     }
 
     if (user.fetchError) {
-      return <Exception type="404" />;
+      return <Exception code="404" />;
     }
 
     const { createdProposals, fundedProposals, comments } = user;
@@ -134,8 +134,8 @@ const TabTitle = (disp: string, count: number) => (
   </div>
 );
 
-const withConnect = connect<StateProps, DispatchProps>(
-  (state: AppState) => ({
+const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
+  state => ({
     usersMap: state.users.map,
     authUser: state.auth.user,
   }),
@@ -147,7 +147,7 @@ const withConnect = connect<StateProps, DispatchProps>(
   },
 );
 
-export default compose<Props, any>(
+export default compose<Props, {}>(
   withRouter,
   withConnect,
 )(Profile);

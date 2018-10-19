@@ -30,7 +30,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  proposal: ProposalWithCrowdFund;
+  proposal: ProposalWithCrowdFund | null;
 }
 
 interface DispatchProps {

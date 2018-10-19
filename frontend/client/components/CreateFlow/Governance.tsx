@@ -143,7 +143,7 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
 
   private handleRadioChange = (event: RadioChangeEvent) => {
     const { value, name } = event.target;
-    this.setState({ [name]: value } as any, () => {
+    this.setState({ [name as string]: value } as any, () => {
       this.props.updateForm(this.state);
     });
   };
@@ -172,7 +172,7 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
 interface TrusteeFieldsProps {
   index: number;
   value: string;
-  error: null | false | string;
+  error: string | Falsy;
   onChange(index: number, value: string): void;
   onRemove(index: number): void;
 }

@@ -4,6 +4,7 @@ import UserAvatar from 'components/UserAvatar';
 import './ProfileUser.less';
 import { SOCIAL_INFO, socialAccountToUrl } from 'utils/social';
 import ShortAddress from 'components/ShortAddress';
+import { typedKeys } from 'utils/ts';
 
 interface OwnProps {
   user: TeamMember;
@@ -38,10 +39,14 @@ export default class Profile extends React.Component<OwnProps> {
             )}
           </div>
           <div className="ProfileUser-info-social">
-            {Object.values(SOCIAL_INFO).map(
+            {typedKeys(SOCIAL_INFO).map(
               s =>
-                (socialAccounts[s.type] && (
-                  <Social key={s.type} account={socialAccounts[s.type]} info={s} />
+                (socialAccounts[s] && (
+                  <Social
+                    key={s}
+                    account={socialAccounts[s] as string}
+                    info={SOCIAL_INFO[s]}
+                  />
                 )) ||
                 null,
             )}
