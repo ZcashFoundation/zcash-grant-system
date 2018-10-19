@@ -3,6 +3,7 @@ from flask import Blueprint, request
 from grant import JSONResponse
 from .models import User, users_schema, user_schema, db
 from ..proposal.models import Proposal, proposal_team
+from ..email.send import send_email
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -58,6 +59,12 @@ def create_user():
     db.session.add(user)
     db.session.flush()
     db.session.commit()
+
+    send_email(email_address, 'signup', {
+        'display_name': display_name,
+        # TODO: Make this dynamic
+        'confirm_url': 'https://grant.io/user/confirm',
+    })
 
     result = user_schema.dump(user)
     return JSONResponse(result)

@@ -2,9 +2,7 @@
 
 This is the backend component of [Grant.io](http://grant.io).
 
-
-## Database Setup
-
+## Environment Setup
 
 Run the following commands to bootstrap your environment.
 Note: db setup is configured in .env when running locally. SQLLite is used by default in /tmp/
@@ -19,6 +17,11 @@ Note: db setup is configured in .env when running locally. SQLLite is used by de
     # Create environment variables file, edit as needed
     cp .env.example .env
 
+If you want emails to work properly, you'll both need a SendGrid secret api key in `.env`,
+and if you’re running Python 3.6+ on macOS, you'll need to
+[fix your certificates](https://stackoverflow.com/a/42334357).
+
+## Database Setup
 
 Once you have installed your DBMS, run the following to create your app's
 database tables and perform the initial migration
