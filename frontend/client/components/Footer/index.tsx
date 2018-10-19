@@ -7,12 +7,19 @@ export default () => (
     <Link className="Footer-title" to="/">
       Grant.io
     </Link>
-    {/*
-      <div className="Footer-links">
-        <a className="Footer-links-link">about</a>
-        <a className="Footer-links-link">legal</a>
-        <a className="Footer-links-link">privacy policy</a>
-      </div>
-    */}
+    <div className="Footer-links">
+      <Link to="/about" className="Footer-links-link">
+        about
+      </Link>
+      <Link to="/contact" className="Footer-links-link">
+        contact
+      </Link>
+      <Link to="/tos" className="Footer-links-link">
+        terms of service
+      </Link>
+      <Link to="/privacy" className="Footer-links-link">
+        privacy policy
+      </Link>
+    </div>
   </footer>
 );
