@@ -1,8 +1,9 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, g
 
 from grant import JSONResponse
 from .models import User, users_schema, user_schema, db
 from ..proposal.models import Proposal, proposal_team
+from ..utils.auth import requires_sm
 from ..email.send import send_email
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
@@ -21,10 +22,16 @@ def get_users():
     return JSONResponse(result)
 
 
+@blueprint.route("/me", methods=["GET"])
+@requires_sm
+def get_me():
+    dumped_user = user_schema.dump(g.current_user)
+    return JSONResponse(dumped_user)
+
+
 @blueprint.route("/<user_identity>", methods=["GET"])
 def get_user(user_identity):
-    user = User.query.filter(
-        (User.account_address == user_identity) | (User.email_address == user_identity)).first()
+    user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)
     if user:
         result = user_schema.dump(user)
         return JSONResponse(result)
@@ -32,6 +39,7 @@ def get_user(user_identity):
         return JSONResponse(
             message="User with account_address or user_identity matching {} not found".format(user_identity),
             _statusCode=404)
+
 
 @blueprint.route("/", methods=["POST"])
 def create_user():
@@ -41,9 +49,7 @@ def create_user():
     display_name = incoming["displayName"]
     title = incoming["title"]
 
-    # TODO: Move create and validation stuff into User model
-    existing_user = User.query.filter(
-            (User.account_address == account_address) | (User.email_address == email_address)).first()
+    existing_user = User.get_by_email_or_account_address(email_address=email_address, account_address=account_address)
     if existing_user:
         return JSONResponse(
             message="User with that address or email already exists",

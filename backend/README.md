@@ -31,7 +31,7 @@ database tables and perform the initial migration
 
 
 ## Running the App
-Depending on what you need to run, there are several servies that need to be started
+Depending on what you need to run, there are several services that need to be started
 
 If you just need the API, you can run
 
@@ -85,3 +85,11 @@ To create a proposal, run
 
     flask create_proposal "FUNDING_REQUIRED" 1 123 "My Awesome Proposal" "### Hi! I have a great proposal"
 
+## External Services
+To decode EIP-712 signed messages, a Grant.io deployed service was created `https://eip-712.herokuapp.com`.
+
+To adjust this endpoint, simply export `AUTH_URL` with a new endpoint value:
+
+    export AUTH_URL=http://new-endpoint.com
+
+To learn more about this auth service, you can visit the repo [here](https://github.com/grant-project/eip-712-server).

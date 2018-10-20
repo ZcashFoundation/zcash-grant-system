@@ -181,3 +181,27 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(users_json["avatar"]["imageUrl"], team[0]["avatar"]["link"])
         self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], team[0]["socialMedias"][0]["link"])
         self.assertEqual(users_json["displayName"], team[0]["displayName"])
+
+    def test_create_user(self):
+        self.app.post(
+            "/api/v1/users/",
+            data=json.dumps(team[0]),
+            content_type='application/json'
+        )
+
+        # User
+        user_db = User.get_by_email_or_account_address(account_address=team[0]["accountAddress"])
+        self.assertEqual(user_db.display_name, team[0]["displayName"])
+        self.assertEqual(user_db.title, team[0]["title"])
+        self.assertEqual(user_db.account_address, team[0]["accountAddress"])
+
+    def test_create_user_duplicate_400(self):
+        self.test_create_user()
+
+        response = self.app.post(
+            "/api/v1/users/",
+            data=json.dumps(team[0]),
+            content_type='application/json'
+        )
+
+        self.assert400(response)
