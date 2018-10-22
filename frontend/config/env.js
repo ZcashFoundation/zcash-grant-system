@@ -26,6 +26,15 @@ dotenvFiles.forEach(dotenvFile => {
   }
 });
 
+if (!process.env.PUBLIC_HOST_URL) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'The process.env.PUBLIC_HOST_URL environment variable is required but was not specified.',
+    );
+  }
+  process.env.PUBLIC_HOST_URL = 'http://localhost:' + (process.env.PORT || 3000);
+}
+
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .split(path.delimiter)
@@ -38,6 +47,7 @@ module.exports = () => {
     PORT: process.env.PORT || 3000,
     NODE_ENV: process.env.NODE_ENV || 'development',
     BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:5000',
+    PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,
   };
 
   // Stringify all values so we can feed into Webpack DefinePlugin

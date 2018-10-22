@@ -25,3 +25,14 @@ export function findComment(
 
   return null;
 }
+
+export function urlToPublic(url: string) {
+  let withPublicHost = url.match(/^https?:/) ? url : process.env.PUBLIC_HOST_URL + url;
+  if (process.env.NODE_ENV === 'development' && process.env.PUBLIC_HOST_URL) {
+    withPublicHost = withPublicHost.replace(
+      /^http:\/\/localhost(:\d+)/,
+      process.env.PUBLIC_HOST_URL,
+    );
+  }
+  return withPublicHost;
+}

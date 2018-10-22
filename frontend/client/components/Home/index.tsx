@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from 'antd';
+import HeaderDetails from 'components/HeaderDetails';
 import TeamsSvg from 'static/images/intro-teams.svg';
 import FundingSvg from 'static/images/intro-funding.svg';
 import CommunitySvg from 'static/images/intro-community.svg';
@@ -25,6 +26,11 @@ export default class Home extends React.Component {
   render() {
     return (
       <div className="Home">
+        <HeaderDetails
+          title="Home"
+          description="Grant.io organizes creators and community members to incentivize ecosystem
+          improvements"
+        />
         <div className="Home-hero">
           <h1 className="Home-hero-title">
             Decentralized funding for <br /> Blockchain ecosystem improvements
