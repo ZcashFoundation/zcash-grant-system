@@ -1,6 +1,24 @@
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { SOCIAL_TYPE, CreateFormState } from 'types';
 
+function generateRandomAddress() {
+  return (
+    '0x' +
+    Math.random()
+      .toString(16)
+      .substring(2, 12) +
+    Math.random()
+      .toString(16)
+      .substring(2, 12) +
+    Math.random()
+      .toString(16)
+      .substring(2, 12) +
+    Math.random()
+      .toString(16)
+      .substring(2, 12)
+  );
+}
+
 const createExampleProposal = (
   payOutAddress: string,
   trustees: string[],
@@ -29,7 +47,7 @@ const createExampleProposal = (
         avatarUrl: `https://randomuser.me/api/portraits/women/${Math.floor(
           Math.random() * 80,
         )}.jpg`,
-        ethAddress: '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+        ethAddress: generateRandomAddress(),
         emailAddress: 'designer@tshirt.com',
         socialAccounts: {
           [SOCIAL_TYPE.KEYBASE]: 'willo',

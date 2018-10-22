@@ -4,6 +4,7 @@ import { RadioChangeEvent } from 'antd/lib/radio';
 import { CreateFormState } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { ONE_DAY } from 'utils/time';
+import { DONATION } from 'utils/constants';
 
 interface State {
   payOutAddress: string;
@@ -43,7 +44,7 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
           <Input
             size="large"
             name="payOutAddress"
-            placeholder="0xe12a34230e5e7fc73d094e52025135e4fbf24653"
+            placeholder={DONATION.ETH}
             type="text"
             value={payOutAddress}
             onChange={this.handleInputChange}
@@ -192,7 +193,7 @@ const TrusteeFields = ({
     <div style={{ display: 'flex' }}>
       <Input
         size="large"
-        placeholder="0xe12a34230e5e7fc73d094e52025135e4fbf24653"
+        placeholder={DONATION.ETH}
         type="text"
         value={value}
         onChange={ev => onChange(index, ev.currentTarget.value)}
