@@ -53,3 +53,6 @@ markdownify
 # email
 flask-sendgrid==0.6
 sendgrid==5.3.0
+
+# input validation
+flask-yolo2API

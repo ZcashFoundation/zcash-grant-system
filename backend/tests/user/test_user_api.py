@@ -6,6 +6,7 @@ from grant.proposal.models import CATEGORIES
 from grant.proposal.models import Proposal
 from grant.user.models import User
 from ..config import BaseTestConfig
+from mock import patch
 
 milestones = [
     {
@@ -182,7 +183,10 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], team[0]["socialMedias"][0]["link"])
         self.assertEqual(users_json["displayName"], team[0]["displayName"])
 
-    def test_create_user(self):
+    @patch('grant.email.send.send_email')
+    def test_create_user(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+
         self.app.post(
             "/api/v1/users/",
             data=json.dumps(team[0]),
@@ -195,7 +199,9 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(user_db.title, team[0]["title"])
         self.assertEqual(user_db.account_address, team[0]["accountAddress"])
 
-    def test_create_user_duplicate_400(self):
+    @patch('grant.email.send.send_email')
+    def test_create_user_duplicate_400(self, mock_send_email):
+        mock_send_email.return_value.ok = True
         self.test_create_user()
 
         response = self.app.post(
@@ -204,4 +210,4 @@ class TestAPI(BaseTestConfig):
             content_type='application/json'
         )
 
-        self.assert400(response)
+        self.assertEqual(response.status_code, 409)
