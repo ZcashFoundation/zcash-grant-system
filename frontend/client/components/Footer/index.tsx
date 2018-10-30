@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Logo from 'static/images/logo-name.svg';
 import './style.less';
 
 export default () => (
   <footer className="Footer">
     <Link className="Footer-title" to="/">
-      Grant.io
+      <Logo className="Footer-title-logo" />
     </Link>
     <div className="Footer-links">
       <Link to="/about" className="Footer-links-link">

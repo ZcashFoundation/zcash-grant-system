@@ -164,6 +164,7 @@
     "@types/showdown": "1.7.5",
     "@types/storybook__react": "^3.0.9",
     "@types/web3": "1.0.3",
-    "rimraf": "2.6.2"
+    "rimraf": "2.6.2",
+    "webapp-webpack-plugin": "2.3.1"
   }
 }

@@ -1,10 +1,13 @@
 const webpack = require('webpack');
+const path = require('path');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const { StatsWriterPlugin } = require('webpack-stats-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ModuleDependencyWarning = require('./module-dependency-warning');
+const WebappWebpackPlugin = require('webapp-webpack-plugin');
 
 const env = require('../env')();
+const paths = require('../paths');
 
 const shared = [new ModuleDependencyWarning()];
 
@@ -27,6 +30,19 @@ const client = [
     fileName: 'manifest.json',
     // fixes initial-only writing from WriteFileWebpackPlugin
     writeToFileEmit: true,
+  }),
+  new WebappWebpackPlugin({
+    logo: path.resolve(paths.srcClient, 'static/images/favicon.png'),
+    cache: true,
+    inject: false,
+    favicons: {
+      appName: 'Grant.io',
+      appDescription: 'Decentralized funding for Blockchain ecosystem improvements',
+      developerName: 'Grant.io',
+      developerURL: 'https://grant.io/about',
+      background: '#ffffff',
+      theme_color: '#ffffff',
+    },
   }),
   // this allows the server access to the dependency graph
   // so it can find which js/css to add to initial page

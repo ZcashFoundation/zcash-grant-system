@@ -55,7 +55,7 @@ class HeaderDrawer extends React.Component<Props> {
         onClose={onClose}
         placement="left"
       >
-        <div className="HeaderDrawer-title">Grant.io</div>
+        <div className="HeaderDrawer-title">Navigation</div>
         <Menu mode="inline" style={{ borderRight: 0 }}>
           <Menu.ItemGroup className="HeaderDrawer-user" title={userTitle}>
             {user ? (
