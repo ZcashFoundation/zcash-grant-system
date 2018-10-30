@@ -1,0 +1,4 @@
+# admin listen port
+PORT=3500
+# backend url
+BACKEND_URL=http://localhost:5000

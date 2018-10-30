@@ -3,7 +3,7 @@
 from flask import Flask
 from flask_cors import CORS
 
-from grant import commands, proposal, user, comment, milestone
+from grant import commands, proposal, user, comment, milestone, admin
 from grant.extensions import bcrypt, migrate, db, ma, mail
 
 
@@ -34,6 +34,7 @@ def register_blueprints(app):
     app.register_blueprint(proposal.views.blueprint)
     app.register_blueprint(user.views.blueprint)
     app.register_blueprint(milestone.views.blueprint)
+    app.register_blueprint(admin.views.blueprint)
 
 
 def register_shellcontext(app):

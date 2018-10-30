@@ -1,0 +1,40 @@
+.Template {
+  &-sider {
+    overflow: auto;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+
+    &-logo {
+      color: #ffffff;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+  }
+
+  &-layout {
+    margin-left: 200px;
+    background: #ffffff;
+
+    &-content {
+      padding: 1rem;
+      overflow: initial;
+    }
+  }
+
+  &-errors {
+    background: rgba(0, 0, 0, 0.3);
+    position: fixed;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    top: 0;
+    padding: 0.8rem;
+    width: 100%;
+    z-index: 100;
+    & > div {
+      margin: 0.2rem;
+      width: 400px;
+    }
+  }
+}
