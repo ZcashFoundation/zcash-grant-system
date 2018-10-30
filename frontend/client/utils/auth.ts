@@ -34,6 +34,21 @@ export const AUTH_PROVIDERS: { [key in AUTH_PROVIDER]: AuthProvider } = {
   },
 };
 
-export function generateAuthMessage(address: string): string {
-  return `I am proving the identity of ${address} on Grant.io`;
+export function generateAuthSignatureData(address: string) {
+  const message = `I am proving the identity of ${address} on Grant.io`;
+  const time = new Date().toUTCString();
+  return {
+    data: { message, time },
+    types: {
+      message: {
+        name: 'Message Proof',
+        type: 'string',
+      },
+      time: {
+        name: 'Time',
+        type: 'string',
+      },
+    },
+    primaryType: 'message',
+  };
 }
