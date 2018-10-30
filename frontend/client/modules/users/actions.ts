@@ -1,9 +1,11 @@
-import { UserProposal, UserComment } from 'types';
+import { UserProposal, UserComment, TeamMember } from 'types';
 import types from './types';
-import { getUser, getProposals } from 'api/api';
+import { getUser, updateUser as apiUpdateUser, getProposals } from 'api/api';
 import { Dispatch } from 'redux';
 import { Proposal } from 'types';
 import BN from 'bn.js';
+import { cleanClone } from 'utils/helpers';
+import { INITIAL_TEAM_MEMBER_STATE } from 'modules/users/reducers';
 
 export function fetchUser(userFetchId: string) {
   return async (dispatch: Dispatch<any>) => {
@@ -16,6 +18,22 @@ export function fetchUser(userFetchId: string) {
       });
     } catch (error) {
       dispatch({ type: types.FETCH_USER_REJECTED, payload: { userFetchId, error } });
+    }
+  };
+}
+
+export function updateUser(user: TeamMember) {
+  const userClone = cleanClone(INITIAL_TEAM_MEMBER_STATE, user);
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({ type: types.UPDATE_USER_PENDING, payload: { user } });
+    try {
+      const { data: updatedUser } = await apiUpdateUser(userClone);
+      dispatch({
+        type: types.UPDATE_USER_FULFILLED,
+        payload: { user: updatedUser },
+      });
+    } catch (error) {
+      dispatch({ type: types.UPDATE_USER_REJECTED, payload: { user, error } });
     }
   };
 }

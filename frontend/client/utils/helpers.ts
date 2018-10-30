@@ -1,3 +1,4 @@
+import { pick } from 'lodash';
 import { Comment } from 'types';
 
 export function isNumeric(n: any) {
@@ -24,6 +25,14 @@ export function findComment(
   }
 
   return null;
+}
+
+// clone and filter keys by keySource object's keys
+export function cleanClone<T extends object>(keySource: T, target: Partial<T>) {
+  const sourceKeys = Object.keys(keySource);
+  const fullClone = { ...(target as object) };
+  const clone = pick(fullClone, sourceKeys);
+  return clone as T;
 }
 
 export function urlToPublic(url: string) {

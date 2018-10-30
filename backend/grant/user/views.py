@@ -2,7 +2,7 @@ from animal_case import animalify
 from flask import Blueprint, g, jsonify
 from flask_yoloapi import endpoint, parameter
 
-from .models import User, users_schema, user_schema, db
+from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 from ..email.send import send_email
 from ..proposal.models import Proposal, proposal_team
 from ..utils.auth import requires_sm
@@ -71,6 +71,44 @@ def create_user(account_address, email_address, display_name, title):
         # TODO: Make this dynamic
         'confirm_url': 'https://grant.io/user/confirm',
     })
+
+    result = user_schema.dump(user)
+    return result
+
+
+@blueprint.route("/<user_identity>", methods=["PUT"])
+@endpoint.api(
+    parameter('displayName', type=str, required=False),
+    parameter('title', type=str, required=False),
+    parameter('socialMedias', type=list, required=False),
+    parameter('avatar', type=dict, required=False)
+)
+def update_user(user_identity, display_name, title, social_medias, avatar):
+    user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)
+    if not user:
+        return {"message": "User with that address or email not found"}, 404
+
+    if display_name is not None:
+        user.display_name = display_name
+
+    if title is not None:
+        user.title = title
+
+    if social_medias is not None:
+        sm_query = SocialMedia.query.filter_by(user_id=user.id)
+        sm_query.delete()
+        for social_media in social_medias:
+            sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
+            db.session.add(sm)
+
+    if avatar is not None:
+        Avatar.query.filter_by(user_id=user.id).delete()
+        avatar_link = avatar.get('link')
+        if avatar_link:
+            avatar_obj = Avatar(image_url=avatar_link, user_id=user.id)
+            db.session.add(avatar_obj)
+
+    db.session.commit()
 
     result = user_schema.dump(user)
     return result

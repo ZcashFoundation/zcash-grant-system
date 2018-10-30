@@ -211,3 +211,59 @@ class TestAPI(BaseTestConfig):
         )
 
         self.assertEqual(response.status_code, 409)
+
+    def test_update_user_remove_social_and_avatar(self):
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal),
+            content_type='application/json'
+        )
+
+        updated_user = copy.deepcopy(team[0])
+        updated_user['displayName'] = 'Billy'
+        updated_user['title'] = 'Commander'
+        updated_user['socialMedias'] = []
+        updated_user['avatar'] = {}
+
+        user_update_resp = self.app.put(
+            "/api/v1/users/{}".format(proposal["team"][0]["accountAddress"]),
+            data=json.dumps(updated_user),
+            content_type='application/json'
+        )
+
+        users_json = user_update_resp.json
+        self.assertFalse(users_json["avatar"])
+        self.assertFalse(len(users_json["socialMedias"]))
+        self.assertEqual(users_json["displayName"], updated_user["displayName"])
+        self.assertEqual(users_json["title"], updated_user["title"])
+
+    def test_update_user(self):
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal),
+            content_type='application/json'
+        )
+
+        updated_user = copy.deepcopy(team[0])
+        updated_user['displayName'] = 'Billy'
+        updated_user['title'] = 'Commander'
+        updated_user['socialMedias'] = [
+            {
+                "link": "https://github.com/billyman"
+            }
+        ]
+        updated_user['avatar'] = {
+            "link": "https://x.io/avatar.png"
+        }
+
+        user_update_resp = self.app.put(
+            "/api/v1/users/{}".format(proposal["team"][0]["accountAddress"]),
+            data=json.dumps(updated_user),
+            content_type='application/json'
+        )
+
+        users_json = user_update_resp.json
+        self.assertEqual(users_json["avatar"]["imageUrl"], updated_user["avatar"]["link"])
+        self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], updated_user["socialMedias"][0]["link"])
+        self.assertEqual(users_json["displayName"], updated_user["displayName"])
+        self.assertEqual(users_json["title"], updated_user["title"])
