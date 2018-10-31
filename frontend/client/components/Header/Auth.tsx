@@ -107,9 +107,11 @@ class HeaderAuth extends React.Component<Props> {
 
   private closeMenu = () => this.setState({ isMenuOpen: false });
 
-  private handleVisibilityChange = (visibility: boolean) => {
+  private handleVisibilityChange = (visibility?: boolean) => {
     // Handle the dropdown component's built in close events
-    this.setState({ isMenuOpen: visibility });
+    if (visibility) {
+      this.setState({ isMenuOpen: visibility });
+    }
   };
 }
 

@@ -1,0 +1,30 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "outDir": "dist",
+    "jsx": "react",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "baseUrl": "src",
+    "lib": ["dom", "es2017"],
+    "paths": {
+      "src/*": ["./*"],
+      "contracts/*": ["../../contract/build/*"],
+      "components/*": ["./components/*"],
+      "styles/*": ["./styles/*"]
+    }
+  },
+  "include": ["./src/**/*"],
+  "exclude": ["./src/static"]
+}

@@ -39,7 +39,7 @@ interface Props {
 }
 
 interface State {
-  mdeState: ReactMdeTypes.MdeState;
+  mdeState: ReactMdeTypes.MdeState | null;
 }
 
 export default class MarkdownEditor extends React.PureComponent<Props, State> {
@@ -55,7 +55,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
 
   handleChange = (mdeState: ReactMdeTypes.MdeState) => {
     this.setState({ mdeState });
-    this.props.onChange(mdeState.markdown);
+    this.props.onChange(mdeState.markdown || '');
   };
 
   generatePreview = (md: string) => {
@@ -73,7 +73,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
       >
         <ReactMde
           onChange={this.handleChange}
-          editorState={this.state.mdeState}
+          editorState={this.state.mdeState as ReactMdeTypes.MdeState}
           generateMarkdownPreview={this.generatePreview}
           commands={commands[type]}
           layout="tabbed"

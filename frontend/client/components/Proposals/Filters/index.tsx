@@ -1,6 +1,7 @@
 import React from 'react';
 import { Select, Checkbox, Radio, Card, Divider } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
+import { SelectValue } from 'antd/lib/select';
 import {
   PROPOSAL_SORT,
   SORT_LABELS,
@@ -9,9 +10,10 @@ import {
   PROPOSAL_STAGE,
   STAGE_UI,
 } from 'api/constants';
+import { typedKeys } from 'utils/ts';
 
 export interface Filters {
-  categories: PROPOSAL_CATEGORY[];
+  categories: string[];
   stage: PROPOSAL_STAGE | null;
 }
 
@@ -24,13 +26,13 @@ interface Props {
 
 export default class ProposalFilters extends React.Component<Props> {
   render() {
-    const { sort, filters, handleChangeSort } = this.props;
+    const { sort, filters } = this.props;
 
     return (
       <div>
         <Card title="Sort">
-          <Select onChange={handleChangeSort} value={sort} style={{ width: '100%' }}>
-            {Object.keys(PROPOSAL_SORT).map((s: PROPOSAL_SORT) => (
+          <Select onChange={this.handleChangeSort} value={sort} style={{ width: '100%' }}>
+            {typedKeys(PROPOSAL_SORT).map(s => (
               <Select.Option key={s} value={s}>
                 {SORT_LABELS[s]}
               </Select.Option>
@@ -42,7 +44,7 @@ export default class ProposalFilters extends React.Component<Props> {
 
         <Card title="Filter" extra={<a onClick={this.resetFilters}>Reset</a>}>
           <h3>Category</h3>
-          {Object.keys(PROPOSAL_CATEGORY).map((c: PROPOSAL_CATEGORY) => (
+          {typedKeys(PROPOSAL_CATEGORY).map(c => (
             <div key={c} style={{ marginBottom: '0.25rem' }}>
               <Checkbox
                 checked={filters.categories.includes(c)}
@@ -57,7 +59,7 @@ export default class ProposalFilters extends React.Component<Props> {
           <Divider />
 
           <h3>Proposal stage</h3>
-          {Object.keys(PROPOSAL_STAGE).map((s: PROPOSAL_STAGE) => (
+          {typedKeys(PROPOSAL_STAGE).map(s => (
             <div key={s} style={{ marginBottom: '0.25rem' }}>
               <Radio
                 value={s}
@@ -92,6 +94,10 @@ export default class ProposalFilters extends React.Component<Props> {
       ...this.props.filters,
       stage: ev.target.value as PROPOSAL_STAGE,
     });
+  };
+
+  private handleChangeSort = (sort: SelectValue) => {
+    this.props.handleChangeSort(sort as PROPOSAL_SORT);
   };
 
   private resetFilters = (ev?: React.MouseEvent<HTMLAnchorElement>) => {

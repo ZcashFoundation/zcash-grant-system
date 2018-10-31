@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { storiesOf } from '@storybook/react';
+import { DONATION } from 'utils/constants';
 
 import 'components/UserRow/style.less';
 import UserRow from 'components/UserRow';
@@ -9,7 +10,7 @@ const user = {
   name: 'Dana Hayes',
   title: 'QA Engineer',
   avatarUrl: 'https://randomuser.me/api/portraits/women/19.jpg',
-  ethAddress: '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
+  ethAddress: DONATION.ETH,
   emailAddress: 'test@test.test',
   socialAccounts: {},
 };

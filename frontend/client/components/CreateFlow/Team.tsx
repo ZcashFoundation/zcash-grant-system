@@ -113,7 +113,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
   };
 }
 
-const withConnect = connect<StateProps>((state: AppState) => ({
+const withConnect = connect<StateProps, {}, {}, AppState>(state => ({
   authUser: state.auth.user,
 }));
 

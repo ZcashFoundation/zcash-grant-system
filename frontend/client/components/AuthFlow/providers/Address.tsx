@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Input, Button } from 'antd';
+import { Form, Button } from 'antd';
 import { isValidEthAddress } from 'utils/validators';
+import AddressInput from 'components/AddressInput';
 import './Address.less';
 
 interface Props {
@@ -20,14 +21,12 @@ export default class AddressProvider extends React.Component<Props, State> {
     const { address } = this.state;
     return (
       <Form className="AddressProvider" onSubmit={this.handleSubmit}>
-        <Form.Item className="AddressProvider-address">
-          <Input
-            size="large"
-            value={address}
-            onChange={this.handleChange}
-            placeholder="0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520"
-          />
-        </Form.Item>
+        <AddressInput
+          className="AddressProvider-address"
+          value={address}
+          onChange={this.handleChange}
+          inputProps={{ size: 'large' }}
+        />
 
         <Button
           type="primary"

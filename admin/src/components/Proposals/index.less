@@ -1,0 +1,196 @@
+@controls-height: 40px;
+
+.Proposals {
+  margin-top: @controls-height + 0.5rem;
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  &-controls {
+    height: @controls-height;
+    padding: 0.25rem 1rem;
+    margin-left: -1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 216px;
+    z-index: 5;
+    background: white;
+
+    &-status {
+      position: fixed;
+      top: 0.2rem;
+      right: 0.2rem;
+      color: white;
+      padding: 0 0.4rem;
+      border-radius: 0.5rem;
+      background: rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  &-proposal {
+    display: flex;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgb(214, 214, 214);
+    margin-bottom: 1rem;
+
+    &-controls {
+      margin: 0 0.5rem 0.2rem 0;
+      background: rgba(0, 0, 0, 0.1);
+      padding: 0.1rem;
+      border-radius: 0.5rem;
+      width: fit-content;
+    }
+
+    &-img {
+      width: 100px;
+      height: 100px;
+      margin-right: 0.5rem;
+      background: rgba(0, 0, 0, 0.1);
+
+      & img {
+        width: 100%;
+      }
+    }
+
+    & button {
+      cursor: pointer;
+      margin: 0 0.3rem 0 0;
+      outline: none !important;
+
+      &:hover {
+        color: #1890ff;
+      }
+    }
+
+    &-body {
+      margin: 0;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      max-height: 600px;
+      overflow-y: scroll;
+
+      & img {
+        max-width: 100%;
+      }
+
+      ul,
+      ol {
+        padding-left: 30px;
+        font-size: 1.05rem;
+      }
+
+      ul {
+        list-style: circle;
+      }
+
+      ol {
+        list-style: decimal;
+      }
+    }
+
+    &-milestones {
+      display: flex;
+      flex-flow: wrap;
+
+      & > div {
+        width: 316px;
+        margin: 0 1rem 1rem 0;
+
+        & > div > span {
+          display: inline-block;
+          margin-left: 0.3rem;
+          font-size: 0.8rem;
+          opacity: 0.7;
+        }
+      }
+    }
+
+    &-comments {
+      border-left: 1rem solid rgba(0, 0, 0, 0.1);
+      & > div {
+        margin: 0.2rem 0 0.2rem 0.4rem;
+      }
+    }
+
+    &-contract {
+      &-method {
+        opacity: 0.7;
+      }
+
+      &-array {
+        margin-left: 0.7rem;
+        margin-bottom: 0.2rem;
+
+        &-milestones,
+        &-contributors {
+          display: flex;
+
+          & span {
+            opacity: 0.7;
+          }
+
+          & > div {
+            margin-right: 0.5rem;
+            padding: 0.2rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+          }
+        }
+      }
+
+      &-status {
+        display: inline-block;
+        width: 0.6rem;
+        height: 0.6rem;
+        border-radius: 0.3rem;
+        margin-right: 0.2rem;
+
+        &.is-unloaded {
+          background-color: rgb(197, 197, 197);
+        }
+        &.is-loading {
+          background-color: rgb(241, 177, 0);
+        }
+        &.is-waiting {
+          background-color: rgb(0, 226, 230);
+        }
+        &.is-loaded {
+          background-color: rgb(0, 165, 25);
+        }
+        &.is-error {
+          background-color: rgb(194, 0, 0);
+        }
+      }
+
+      &-method {
+        margin-top: 0.5rem;
+      }
+
+      &-inputs {
+        display: inline-block;
+        min-width: 300px;
+        background: rgba(0, 0, 0, 0.1);
+        padding: 0.23rem;
+        border-radius: 0.2rem;
+        margin-right: 0.5rem;
+      }
+
+      &-input {
+        margin-right: 0.5rem;
+
+        &.is-wei,
+        &.is-string,
+        &.is-integer {
+          width: 13rem;
+        }
+      }
+
+      & .ant-alert {
+        max-width: 600px;
+        margin: 0.5rem 0 0.5rem 0.8rem;
+      }
+    }
+  }
+}

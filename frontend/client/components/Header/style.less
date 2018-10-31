@@ -18,6 +18,10 @@
   text-shadow: none;
   box-shadow: 0 1px rgba(0, 0, 0, 0.1);
 
+  svg {
+    fill: #333;
+  }
+
   &.is-transparent {
     position: absolute;
     color: #fff;
@@ -28,31 +32,32 @@
     svg {
       fill: #fff;
     }
-
-    .Header-title {
-      transform: translateY(0px) translate(-50%, -50%);
-    }
   }
 
   &-title {
+    display: flex;
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translateY(-2px) translate(-50%, -50%);
-    font-size: 1.8rem;
+    transform: translate(-50%, -50%);
     margin: 0;
     color: inherit;
-    letter-spacing: 0.08rem;
-    font-weight: 500;
-    transition: transform 100ms ease;
+    transition: transform 100ms ease, opacity 100ms ease;
     flex-grow: 1;
     text-align: center;
+    opacity: 0.92;
 
     &:hover,
-    &:focus,
-    &:active {
+    &:focus {
       color: inherit;
-      transform: translateY(-4px) translate(-50%, -50%);
+      transform: translateY(-2px) translate(-50%, -50%);
+      opacity: 1;
+    }
+
+    &-logo {
+      height: 2rem;
+      width: auto;
+      transform: translateY(10%);
     }
   }
 

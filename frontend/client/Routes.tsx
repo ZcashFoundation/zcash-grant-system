@@ -22,6 +22,10 @@ const SignOut = loadable(() => import('pages/sign-out'));
 const Profile = loadable(() => import('pages/profile'));
 const Settings = loadable(() => import('pages/settings'));
 const Exception = loadable(() => import('pages/exception'));
+const Tos = loadable(() => import('pages/tos'));
+const About = loadable(() => import('pages/about'));
+const Privacy = loadable(() => import('pages/privacy'));
+const Contact = loadable(() => import('pages/contact'));
 
 import 'styles/style.less';
 
@@ -108,6 +112,54 @@ const routeConfigs: RouteConfig[] = [
     onlyLoggedIn: true,
   },
   {
+    // Terms of Service page
+    route: {
+      path: '/tos',
+      component: Tos,
+      exact: true,
+    },
+    template: {
+      title: 'Terms of Service',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // About page
+    route: {
+      path: '/about',
+      component: About,
+      exact: true,
+    },
+    template: {
+      title: 'About',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Privacy page
+    route: {
+      path: '/privacy',
+      component: Privacy,
+      exact: true,
+    },
+    template: {
+      title: 'Privacy Policy',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Contact page
+    route: {
+      path: '/contact',
+      component: Contact,
+      exact: true,
+    },
+    template: {
+      title: 'Contact',
+    },
+    onlyLoggedIn: false,
+  },
+  {
     // User profile
     route: {
       path: '/profile/:id',
@@ -144,7 +196,7 @@ const routeConfigs: RouteConfig[] = [
     // 404
     route: {
       path: '/*',
-      render: () => <Exception type="404" />,
+      render: () => <Exception code="404" />,
     },
     template: {
       title: 'Page not found',
@@ -157,7 +209,9 @@ type Props = RouteComponentProps<any>;
 class Routes extends React.PureComponent<Props> {
   render() {
     const { pathname } = this.props.location;
-    const currentRoute = routeConfigs.find(config => !!matchPath(pathname, config.route));
+    const currentRoute =
+      routeConfigs.find(config => !!matchPath(pathname, config.route)) ||
+      routeConfigs[routeConfigs.length - 1];
     const routeComponents = routeConfigs.map(config => {
       const { route, onlyLoggedIn, onlyLoggedOut } = config;
       if (onlyLoggedIn || onlyLoggedOut) {

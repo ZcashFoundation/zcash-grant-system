@@ -1,0 +1,12 @@
+.next
+node_modules
+.idea
+build
+out
+src/build
+dist
+*.log
+.env
+*.pid
+client/lib/contracts
+.vscode

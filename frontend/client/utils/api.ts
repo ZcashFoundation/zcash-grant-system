@@ -7,7 +7,7 @@ export function formatTeamMemberForPost(user: TeamMember) {
     title: user.title,
     accountAddress: user.ethAddress,
     emailAddress: user.emailAddress,
-    avatar: user.avatarUrl ? { link: user.avatarUrl } : undefined,
+    avatar: user.avatarUrl ? { link: user.avatarUrl } : {},
     socialMedias: socialAccountsToUrls(user.socialAccounts).map(url => ({
       link: url,
     })),

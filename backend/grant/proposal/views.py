@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from flask import Blueprint, request
+from animal_case import animalify
+from flask import Blueprint, jsonify
+from flask_yoloapi import endpoint, parameter
 from sqlalchemy.exc import IntegrityError
 
-from grant import JSONResponse
 from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
@@ -17,9 +18,9 @@ def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
-        return JSONResponse(dumped_proposal)
+        return jsonify(animalify(dumped_proposal))
     else:
-        return JSONResponse(message="No proposal matching id", _statusCode=404)
+        return jsonify(message="No proposal matching id"), 404
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
@@ -27,22 +28,23 @@ def get_proposal_comments(proposal_id):
     proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
-        return JSONResponse(
+        return jsonify(animalify(
             proposal_id=proposal_id,
             total_comments=len(dumped_proposal["comments"]),
             comments=dumped_proposal["comments"]
-        )
+        ))
     else:
-        return JSONResponse(message="No proposal matching id", _statusCode=404)
+        return jsonify(message="No proposal matching id", _statusCode=404)
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
-def post_proposal_comments(proposal_id):
+@endpoint.api(
+    parameter('userId', type=int, required=True),
+    parameter('content', type=str, required=True)
+)
+def post_proposal_comments(proposal_id, user_id, content):
     proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
     if proposal:
-        incoming = request.get_json()
-        user_id = incoming["userId"]
-        content = incoming["content"]
         user = User.query.filter_by(id=user_id).first()
 
         if user:
@@ -54,17 +56,19 @@ def post_proposal_comments(proposal_id):
             db.session.add(comment)
             db.session.commit()
             dumped_comment = comment_schema.dump(comment)
-            return JSONResponse(dumped_comment, _statusCode=201)
+            return dumped_comment, 201
 
         else:
-            return JSONResponse(message="No user matching id", _statusCode=404)
+            return {"message": "No user matching id"}, 404
     else:
-        return JSONResponse(message="No proposal matching id", _statusCode=404)
+        return {"message": "No proposal matching id"}, 404
 
 
 @blueprint.route("/", methods=["GET"])
-def get_proposals():
-    stage = request.args.get("stage")
+@endpoint.api(
+    parameter('stage', type=str, required=False)
+)
+def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(stage=stage)
@@ -74,24 +78,27 @@ def get_proposals():
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
     dumped_proposals = proposals_schema.dump(proposals)
-    return JSONResponse(dumped_proposals)
+    return dumped_proposals
 
 
 @blueprint.route("/", methods=["POST"])
-def make_proposal():
+@endpoint.api(
+    parameter('crowdFundContractAddress', type=str, required=True),
+    parameter('content', type=str, required=True),
+    parameter('title', type=str, required=True),
+    parameter('milestones', type=list, required=True),
+    parameter('category', type=str, required=True),
+    parameter('team', type=list, required=True)
+)
+def make_proposal(crowd_fund_contract_address, content, title, milestones, category, team):
     from grant.user.models import User
-
-    incoming = request.get_json()
-
-    proposal_id = incoming["crowdFundContractAddress"]
-    content = incoming["content"]
-    title = incoming["title"]
-    milestones = incoming["milestones"]
-    category = incoming["category"]
+    existing_proposal = Proposal.query.filter_by(proposal_id=crowd_fund_contract_address).first()
+    if existing_proposal:
+        return {"message": "Oops! Something went wrong."}, 409
 
     proposal = Proposal.create(
         stage="FUNDING_REQUIRED",
-        proposal_id=proposal_id,
+        proposal_id=crowd_fund_contract_address,
         content=content,
         title=title,
         category=category
@@ -99,9 +106,8 @@ def make_proposal():
 
     db.session.add(proposal)
 
-    team = incoming["team"]
     if not len(team) > 0:
-        return JSONResponse(message="Team must be at least 1", _statusCode=400)
+        return {"message": "Team must be at least 1"}, 400
 
     for team_member in team:
         account_address = team_member.get("accountAddress")
@@ -149,7 +155,7 @@ def make_proposal():
         db.session.commit()
     except IntegrityError as e:
         print(e)
-        return JSONResponse(message="Proposal with that hash already exists", _statusCode=409)
+        return {"message": "Oops! Something went wrong."}, 409
 
     results = proposal_schema.dump(proposal)
-    return JSONResponse(results, _statusCode=201)
+    return results, 201

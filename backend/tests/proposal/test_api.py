@@ -48,7 +48,7 @@ class TestAPI(BaseTestConfig):
             proposal_id=proposal["crowdFundContractAddress"]
         ).first())
 
-        self.app.post(
+        resp = self.app.post(
             "/api/v1/proposals/",
             data=json.dumps(proposal),
             content_type='application/json'
@@ -92,3 +92,18 @@ class TestAPI(BaseTestConfig):
         )
 
         self.assertTrue(comment_res.json)
+
+    def test_create_new_proposal_duplicate(self):
+        proposal_res = self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal),
+            content_type='application/json'
+        )
+
+        proposal_res2 = self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal),
+            content_type='application/json'
+        )
+
+        self.assertEqual(proposal_res2.status_code, 409)

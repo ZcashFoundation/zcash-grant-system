@@ -3,8 +3,8 @@
 from flask import Flask
 from flask_cors import CORS
 
-from grant import commands, proposal, user, comment, milestone
-from grant.extensions import bcrypt, migrate, db, ma
+from grant import commands, proposal, user, comment, milestone, admin
+from grant.extensions import bcrypt, migrate, db, ma, mail
 
 
 def create_app(config_object="grant.settings"):
@@ -23,6 +23,7 @@ def register_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
     ma.init_app(app)
+    mail.init_app(app)
     CORS(app)
     return None
 
@@ -33,6 +34,8 @@ def register_blueprints(app):
     app.register_blueprint(proposal.views.blueprint)
     app.register_blueprint(user.views.blueprint)
     app.register_blueprint(milestone.views.blueprint)
+    app.register_blueprint(admin.views.blueprint)
+
 
 def register_shellcontext(app):
     """Register shell context objects."""

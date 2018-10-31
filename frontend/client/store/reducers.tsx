@@ -1,4 +1,4 @@
-import { combineReducers } from 'redux';
+import { combineReducers, Reducer } from 'redux';
 import { persistReducer } from 'redux-persist';
 import web3, { Web3State, INITIAL_STATE as web3InitialState } from 'modules/web3';
 import proposal, {
@@ -33,6 +33,7 @@ export default combineReducers<AppState>({
   proposal,
   web3,
   create,
-  auth: persistReducer(authPersistConfig, authReducer),
   users,
+  // Don't allow for redux-persist's _persist key to be touched in our code
+  auth: (persistReducer(authPersistConfig, authReducer) as any) as Reducer<AuthState>,
 });

@@ -10,7 +10,6 @@ import { Dispatch, bindActionCreators } from 'redux';
 import * as web3Actions from 'modules/web3/actions';
 import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
-import { compose } from 'recompose';
 import UserAvatar from 'components/UserAvatar';
 import UnitDisplay from 'components/UnitDisplay';
 
@@ -106,9 +105,7 @@ function mapStateToProps(state: AppState) {
   };
 }
 
-const withConnect = connect(
+export default connect(
   mapStateToProps,
   mapDispatchToProps,
-);
-
-export default compose(withConnect)(ProposalCard);
+)(ProposalCard);

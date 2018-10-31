@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import HeaderAuth from './Auth';
 import HeaderDrawer from './Drawer';
 import MenuIcon from 'static/images/menu.svg';
+import Logo from 'static/images/logo-name.svg';
 import './style.less';
 
 interface Props {
@@ -46,7 +47,7 @@ export default class Header extends React.Component<Props, State> {
         </div>
 
         <Link className="Header-title" to="/">
-          Grant.io
+          <Logo className="Header-title-logo" />
         </Link>
 
         <div className="Header-links is-right">

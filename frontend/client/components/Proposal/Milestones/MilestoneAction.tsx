@@ -194,17 +194,18 @@ export class Milestones extends React.Component<Props> {
     return (
       <div className="MilestonAction">
         <div className="MilestoneAction-top">
-          {showVoteProgress && (
-            <div className="MilestoneAction-progress">
-              <Progress
-                type="dashboard"
-                percent={activeVoteMilestone.percentAgainstPayout}
-                format={p => `${p}%`}
-                status="exception"
-              />
-              <div className="MilestoneAction-progress-text">voted against payout</div>
-            </div>
-          )}
+          {showVoteProgress &&
+            activeVoteMilestone && (
+              <div className="MilestoneAction-progress">
+                <Progress
+                  type="dashboard"
+                  percent={activeVoteMilestone.percentAgainstPayout}
+                  format={p => `${p}%`}
+                  status="exception"
+                />
+                <div className="MilestoneAction-progress-text">voted against payout</div>
+              </div>
+            )}
           <div>
             {content}
             {button && (

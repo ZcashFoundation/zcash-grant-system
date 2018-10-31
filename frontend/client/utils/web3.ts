@@ -19,3 +19,16 @@ export async function collectArrayElements<T>(
   }
   return arrayElements;
 }
+
+interface Web3ErrorResponse {
+  code: number;
+  message: string;
+}
+
+export function web3ErrorToString(err: Web3ErrorResponse): string {
+  return err.message
+    .split('\n')[0]
+    .split(':')
+    .slice(-1)[0]
+    .trim();
+}

@@ -52,6 +52,16 @@ class User(db.Model):
         self.display_name = display_name
         self.title = title
 
+    @staticmethod
+    def get_by_email_or_account_address(email_address: str = None, account_address: str = None):
+        if not email_address and not account_address:
+            raise ValueError("Either email_address or account_address is required to get a user")
+
+        return User.query.filter(
+            (User.account_address == account_address) |
+            (User.email_address == email_address)
+        ).first()
+
 
 class UserSchema(ma.Schema):
     class Meta:
@@ -85,6 +95,7 @@ class SocialMediaSchema(ma.Schema):
         model = SocialMedia
         # Fields to expose
         fields = ("social_media_link",)
+
 
 social_media_schema = SocialMediaSchema()
 social_media_schemas = SocialMediaSchema(many=True)

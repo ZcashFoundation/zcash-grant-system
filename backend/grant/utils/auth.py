@@ -1,10 +1,14 @@
+import ast
+import json
 from functools import wraps
 
+import requests
 from flask import request, g, jsonify
 from itsdangerous import SignatureExpired, BadSignature
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
-from grant.settings import SECRET_KEY
+from grant.settings import SECRET_KEY, AUTH_URL
+from ..user.models import User
 
 TWO_WEEKS = 1209600
 
@@ -37,6 +41,36 @@ def requires_auth(f):
             if user:
                 g.current_user = user
                 return f(*args, **kwargs)
+
+        return jsonify(message="Authentication is required to access this resource"), 401
+
+    return decorated
+
+
+def requires_sm(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        typed_data = request.headers.get('RawTypedData', None)
+        signature = request.headers.get('MsgSignature', None)
+
+        if typed_data and signature:
+            loaded_typed_data = ast.literal_eval(typed_data)
+            url = AUTH_URL + "/message/recover"
+            payload = json.dumps({"sig": signature, "data": loaded_typed_data})
+            headers = {'content-type': 'application/json'}
+            response = requests.request("POST", url, data=payload, headers=headers)
+            json_response = response.json()
+            recovered_address = json_response.get('recoveredAddress')
+
+            if not recovered_address:
+                return jsonify(message="No user exists with address: {}".format(recovered_address)), 401
+
+            user = User.get_by_email_or_account_address(account_address=recovered_address)
+            if not user:
+                return jsonify(message="No user exists with address: {}".format(recovered_address)), 401
+
+            g.current_user = user
+            return f(*args, **kwargs)
 
         return jsonify(message="Authentication is required to access this resource"), 401
 

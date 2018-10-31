@@ -2,9 +2,7 @@
 
 This is the backend component of [Grant.io](http://grant.io).
 
-
-## Database Setup
-
+## Environment Setup
 
 Run the following commands to bootstrap your environment.
 Note: db setup is configured in .env when running locally. SQLLite is used by default in /tmp/
@@ -19,6 +17,11 @@ Note: db setup is configured in .env when running locally. SQLLite is used by de
     # Create environment variables file, edit as needed
     cp .env.example .env
 
+If you want emails to work properly, you'll both need a SendGrid secret api key in `.env`,
+and if you’re running Python 3.6+ on macOS, you'll need to
+[fix your certificates](https://stackoverflow.com/a/42334357).
+
+## Database Setup
 
 Once you have installed your DBMS, run the following to create your app's
 database tables and perform the initial migration
@@ -28,7 +31,7 @@ database tables and perform the initial migration
 
 
 ## Running the App
-Depending on what you need to run, there are several servies that need to be started
+Depending on what you need to run, there are several services that need to be started
 
 If you just need the API, you can run
 
@@ -82,3 +85,11 @@ To create a proposal, run
 
     flask create_proposal "FUNDING_REQUIRED" 1 123 "My Awesome Proposal" "### Hi! I have a great proposal"
 
+## External Services
+To decode EIP-712 signed messages, a Grant.io deployed service was created `https://eip-712.herokuapp.com`.
+
+To adjust this endpoint, simply export `AUTH_URL` with a new endpoint value:
+
+    export AUTH_URL=http://new-endpoint.com
+
+To learn more about this auth service, you can visit the repo [here](https://github.com/grant-project/eip-712-server).

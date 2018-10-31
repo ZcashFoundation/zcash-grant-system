@@ -6,6 +6,7 @@ from grant.proposal.models import CATEGORIES
 from grant.proposal.models import Proposal
 from grant.user.models import User
 from ..config import BaseTestConfig
+from mock import patch
 
 milestones = [
     {
@@ -181,3 +182,88 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(users_json["avatar"]["imageUrl"], team[0]["avatar"]["link"])
         self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], team[0]["socialMedias"][0]["link"])
         self.assertEqual(users_json["displayName"], team[0]["displayName"])
+
+    @patch('grant.email.send.send_email')
+    def test_create_user(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+
+        self.app.post(
+            "/api/v1/users/",
+            data=json.dumps(team[0]),
+            content_type='application/json'
+        )
+
+        # User
+        user_db = User.get_by_email_or_account_address(account_address=team[0]["accountAddress"])
+        self.assertEqual(user_db.display_name, team[0]["displayName"])
+        self.assertEqual(user_db.title, team[0]["title"])
+        self.assertEqual(user_db.account_address, team[0]["accountAddress"])
+
+    @patch('grant.email.send.send_email')
+    def test_create_user_duplicate_400(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+        self.test_create_user()
+
+        response = self.app.post(
+            "/api/v1/users/",
+            data=json.dumps(team[0]),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+
+    def test_update_user_remove_social_and_avatar(self):
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal),
+            content_type='application/json'
+        )
+
+        updated_user = copy.deepcopy(team[0])
+        updated_user['displayName'] = 'Billy'
+        updated_user['title'] = 'Commander'
+        updated_user['socialMedias'] = []
+        updated_user['avatar'] = {}
+
+        user_update_resp = self.app.put(
+            "/api/v1/users/{}".format(proposal["team"][0]["accountAddress"]),
+            data=json.dumps(updated_user),
+            content_type='application/json'
+        )
+
+        users_json = user_update_resp.json
+        self.assertFalse(users_json["avatar"])
+        self.assertFalse(len(users_json["socialMedias"]))
+        self.assertEqual(users_json["displayName"], updated_user["displayName"])
+        self.assertEqual(users_json["title"], updated_user["title"])
+
+    def test_update_user(self):
+        self.app.post(
+            "/api/v1/proposals/",
+            data=json.dumps(proposal),
+            content_type='application/json'
+        )
+
+        updated_user = copy.deepcopy(team[0])
+        updated_user['displayName'] = 'Billy'
+        updated_user['title'] = 'Commander'
+        updated_user['socialMedias'] = [
+            {
+                "link": "https://github.com/billyman"
+            }
+        ]
+        updated_user['avatar'] = {
+            "link": "https://x.io/avatar.png"
+        }
+
+        user_update_resp = self.app.put(
+            "/api/v1/users/{}".format(proposal["team"][0]["accountAddress"]),
+            data=json.dumps(updated_user),
+            content_type='application/json'
+        )
+
+        users_json = user_update_resp.json
+        self.assertEqual(users_json["avatar"]["imageUrl"], updated_user["avatar"]["link"])
+        self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], updated_user["socialMedias"][0]["link"])
+        self.assertEqual(users_json["displayName"], updated_user["displayName"])
+        self.assertEqual(users_json["title"], updated_user["title"])

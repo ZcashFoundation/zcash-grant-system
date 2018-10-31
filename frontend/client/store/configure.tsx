@@ -3,7 +3,7 @@ import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
 import thunkMiddleware, { ThunkMiddleware } from 'redux-thunk';
 import promiseMiddleware from 'redux-promise-middleware';
 import { composeWithDevTools } from 'redux-devtools-extension';
-import { persistStore } from 'redux-persist';
+import { persistStore, Persistor } from 'redux-persist';
 import rootReducer, { AppState, combineInitialState } from './reducers';
 import rootSaga from './sagas';
 
@@ -28,7 +28,10 @@ export function configureStore(initialState: Partial<AppState> = combineInitialS
     initialState,
     bindMiddleware([sagaMiddleware, thunkMiddleware, promiseMiddleware()]),
   );
-  const persistor = process.env.SERVER_SIDE_RENDER ? undefined : persistStore(store);
+  // Don't persist server side, but don't mess up types for client side
+  const persistor: Persistor = process.env.SERVER_SIDE_RENDER
+    ? (undefined as any)
+    : persistStore(store);
 
   sagaMiddleware.run(rootSaga);
 

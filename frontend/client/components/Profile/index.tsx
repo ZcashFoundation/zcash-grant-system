@@ -6,6 +6,7 @@ import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { Spin, Tabs, Badge } from 'antd';
+import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
 import ProfileProposal from './ProfileProposal';
 import ProfileComment from './ProfileComment';
@@ -43,7 +44,7 @@ class Profile extends React.Component<Props> {
     const userLookupParam = this.props.match.params.id;
     const { authUser } = this.props;
     if (!userLookupParam) {
-      if (authUser.ethAddress) {
+      if (authUser && authUser.ethAddress) {
         return <Redirect to={`/profile/${authUser.ethAddress}`} />;
       } else {
         return <Redirect to="auth" />;
@@ -58,7 +59,7 @@ class Profile extends React.Component<Props> {
     }
 
     if (user.fetchError) {
-      return <Exception type="404" />;
+      return <Exception code="404" />;
     }
 
     const { createdProposals, fundedProposals, comments } = user;
@@ -68,6 +69,13 @@ class Profile extends React.Component<Props> {
 
     return (
       <div className="Profile">
+        {/* TODO: SSR fetch user details */}
+        {/* TODO: customize details for funders/creators */}
+        <HeaderDetails
+          title={`${user.name} is funding projects on Grant.io`}
+          description={`Join ${user.name} in funding the future!`}
+          image={user.avatarUrl}
+        />
         <ProfileUser user={user} />
         <Tabs>
           <Tabs.TabPane
@@ -134,8 +142,8 @@ const TabTitle = (disp: string, count: number) => (
   </div>
 );
 
-const withConnect = connect<StateProps, DispatchProps>(
-  (state: AppState) => ({
+const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
+  state => ({
     usersMap: state.users.map,
     authUser: state.auth.user,
   }),
@@ -147,7 +155,7 @@ const withConnect = connect<StateProps, DispatchProps>(
   },
 );
 
-export default compose<Props, any>(
+export default compose<Props, {}>(
   withRouter,
   withConnect,
 )(Profile);

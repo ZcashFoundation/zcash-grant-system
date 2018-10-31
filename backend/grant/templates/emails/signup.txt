@@ -1,0 +1,5 @@
+We're excited to have you get started. First, you need to confirm your email address. Just go to the URL below:
+
+{{ args.confirm_url }}
+
+Don’t know why you got this email? Don’t worry, you can safely ignore it. We won’t send you anymore.

@@ -15,7 +15,7 @@ interface Props {
    * @type {TokenValue | Wei}
    * @memberof Props
    */
-  value?: TokenValue | Wei | null;
+  value: TokenValue | Wei;
   /**
    * @description Symbol to display to the right of the value, such as 'ETH'
    * @type {string}

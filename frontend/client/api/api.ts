@@ -64,3 +64,12 @@ export function createUser(payload: {
     return res;
   });
 }
+
+export function updateUser(user: TeamMember): Promise<{ data: TeamMember }> {
+  return axios
+    .put(`/api/v1/users/${user.ethAddress}`, formatTeamMemberForPost(user))
+    .then(res => {
+      res.data = formatTeamMemberFromGet(res.data);
+      return res;
+    });
+}

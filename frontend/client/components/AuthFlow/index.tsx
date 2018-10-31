@@ -40,24 +40,26 @@ class AuthFlow extends React.Component<Props> {
       title: () => 'Prove your Identity',
       subtitle: () => 'Log into your Grant.io account by proving your identity',
       render: () => {
-        const user = this.props.checkedUsers[this.state.address];
+        const { address, provider } = this.state;
+        const user = address && this.props.checkedUsers[address];
         return (
-          user && (
-            <SignIn provider={this.state.provider} user={user} reset={this.resetState} />
-          )
+          user &&
+          provider && <SignIn provider={provider} user={user} reset={this.resetState} />
         );
       },
     },
     SIGN_UP: {
       title: () => 'Claim your Identity',
       subtitle: () => 'Create a Grant.io account by claiming your identity',
-      render: () => (
-        <SignUp
-          address={this.state.address}
-          provider={this.state.provider}
-          reset={this.resetState}
-        />
-      ),
+      render: () => {
+        const { address, provider } = this.state;
+        return (
+          address &&
+          provider && (
+            <SignUp address={address} provider={provider} reset={this.resetState} />
+          )
+        );
+      },
     },
     SELECT_PROVIDER: {
       title: () => 'Provide an Identity',
@@ -80,13 +82,17 @@ class AuthFlow extends React.Component<Props> {
             return 'Connect with MetaMask';
         }
       },
-      render: () => (
-        <ProvideIdentity
-          provider={this.state.provider}
-          onSelectAddress={this.setAddress}
-          reset={this.resetState}
-        />
-      ),
+      render: () => {
+        return (
+          this.state.provider && (
+            <ProvideIdentity
+              provider={this.state.provider}
+              onSelectAddress={this.setAddress}
+              reset={this.resetState}
+            />
+          )
+        );
+      },
     },
   };
 
@@ -105,7 +111,7 @@ class AuthFlow extends React.Component<Props> {
   render() {
     const { checkedUsers, isCheckingUser } = this.props;
     const { provider, address } = this.state;
-    const checkedUser = checkedUsers[address];
+    const checkedUser = address && checkedUsers[address];
     let page;
 
     if (provider) {

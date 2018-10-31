@@ -8,17 +8,21 @@
   height: 140px;
 
   &-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #fff;
-    transition: transform 100ms ease;
+    margin-bottom: 0.75rem;
+    opacity: 0.95;
+    transition: transform 100ms ease, opacity 100ms ease;
 
     &:hover,
     &:focus,
     &:active {
+      opacity: 1;
       transform: translateY(-1px);
       color: inherit;
+    }
+
+    &-logo {
+      height: 2.6rem;
+      fill: #FFF;
     }
   }
 

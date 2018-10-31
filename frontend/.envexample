@@ -3,3 +3,6 @@ FUND_ETH_ADDRESSES=0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520,0xDECAF9CD2367cdbb
 
 # Disable typescript checking for dev building (reduce build time & resource usage)
 NO_DEV_TS_CHECK=true
+
+# Set the public host url (no trailing slash)
+PUBLIC_HOST_URL=https://demo.grant.io

@@ -1,23 +1,36 @@
 import types from './types';
 import { Dispatch } from 'redux';
 import { sleep } from 'utils/helpers';
+import { generateAuthSignatureData } from 'utils/auth';
 import { AppState } from 'store/reducers';
 import { createUser as apiCreateUser, getUser as apiGetUser } from 'api/api';
+import { signData } from 'modules/web3/actions';
 
 type GetState = () => AppState;
 
-export function authUser(address: string) {
+const getAuthToken = (address: string, dispatch: Dispatch<any>) => {
+  const sigData = generateAuthSignatureData(address);
+  return (dispatch(
+    signData(sigData.data, sigData.types, sigData.primaryType),
+  ) as any) as string;
+};
+
+// Auth from previous state
+export function authUser(address: string, signature?: Falsy | string) {
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.AUTH_USER_PENDING });
 
-    // TODO: Actually auth using a signed token
     try {
       const res = await apiGetUser(address);
+      if (!signature) {
+        signature = await getAuthToken(address, dispatch);
+      }
+
       dispatch({
         type: types.AUTH_USER_FULFILLED,
         payload: {
           user: res.data,
-          token: '123fake', // TODO: Use real token
+          token: signature,
         },
       });
     } catch (err) {
@@ -40,8 +53,7 @@ export function createUser(user: {
     dispatch({ type: types.CREATE_USER_PENDING });
 
     try {
-      // TODO: Pass real token
-      const token = Math.random().toString();
+      const token = await getAuthToken(user.address, dispatch);
       const res = await apiCreateUser({
         accountAddress: user.address,
         emailAddress: user.email,

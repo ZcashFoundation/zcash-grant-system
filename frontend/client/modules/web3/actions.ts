@@ -4,6 +4,7 @@ import getWeb3 from 'lib/getWeb3';
 import { postProposal } from 'api/api';
 import getContract, { WrongNetworkError } from 'lib/getContract';
 import { sleep } from 'utils/helpers';
+import { web3ErrorToString } from 'utils/web3';
 import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { AppState } from 'store/reducers';
@@ -259,6 +260,9 @@ export function fundCrowdFund(crowdFundContract: any, value: number | string) {
     const account = state.web3.accounts[0];
 
     try {
+      if (!web3) {
+        throw new Error('No web3 instance available');
+      }
       await crowdFundContract.methods
         .contribute()
         .send({ from: account, value: web3.utils.toWei(String(value), 'ether') })
@@ -415,7 +419,21 @@ export function signData(data: any, dataTypes: any, _: string) {
     // const chainId = await web3.eth.net.getId();
 
     return new Promise((resolve, reject) => {
+      const handleErr = (err: any) => {
+        console.error(err);
+        dispatch({
+          type: types.SIGN_DATA_REJECTED,
+          payload: err.message || err.toString(),
+          error: true,
+        });
+        reject(err);
+      };
+
       try {
+        if (!web3) {
+          throw new Error('No web3 instance available!');
+        }
+
         // TODO: This typing is hella broken
         (web3.currentProvider as any).sendAsync(
           {
@@ -440,25 +458,19 @@ export function signData(data: any, dataTypes: any, _: string) {
             // }), accounts[0]],
           },
           (err: Error | undefined, res: any) => {
-            console.log(err, res);
             if (err) {
-              throw err;
+              return handleErr(err);
             }
             if (res.error) {
-              throw new Error(res.error.message);
+              const msg = web3ErrorToString(res.error);
+              return handleErr(new Error(msg));
             }
             dispatch({ type: types.SIGN_DATA_FULFILLED, payload: res.result });
             resolve(res.result);
           },
         );
       } catch (err) {
-        console.error(err);
-        dispatch({
-          type: types.SIGN_DATA_REJECTED,
-          payload: err.message || err.toString(),
-          error: true,
-        });
-        reject(err);
+        handleErr(err);
       }
     });
   };

@@ -146,7 +146,7 @@ interface AddressChoiceProps {
 const AddressChoice: React.SFC<AddressChoiceProps> = props => (
   <button
     className={classnames('AddressChoice', props.isFake && 'is-fake')}
-    onClick={props.onClick ? () => props.onClick(props.address) : undefined}
+    onClick={() => props.onClick && props.onClick(props.address)}
   >
     {/* TODO: Use user avatar + name if they have an account */}
     {props.isFake ? (

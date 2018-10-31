@@ -9,6 +9,8 @@ import log from './log';
 import { configureStore } from '../client/store/configure';
 import Html from './components/HTML';
 import Routes from '../client/Routes';
+import linkTags from './linkTags';
+import metaTags from './metaTags';
 
 import fs from 'fs';
 import path from 'path';
@@ -65,6 +67,7 @@ const chunkExtractFromLoadables = (loadableState: any) =>
           ).length > 0,
       )
       .reduce((a: string[], c: any) => a.concat(c.files), []);
+
     return {
       css: files.filter((f: string) => /.css$/.test(f)),
       js: files.filter((f: string) => /.js$/.test(f)),
@@ -113,6 +116,12 @@ const serverRenderer = () => async (req: Request, res: Response) => {
   const jsFiles = [...loadableFiles.js, 'vendor.js', 'bundle.js']
     .map(f => res.locals.assetPath(f))
     .filter(Boolean);
+  const mappedLinkTags = linkTags
+    .map(l => ({ ...l, href: res.locals.assetPath(l.href) }))
+    .filter(l => !!l.href);
+  const mappedMetaTags = metaTags
+    .map(m => ({ ...m, content: res.locals.assetPath(m.content) }))
+    .filter(m => !!m.content);
 
   return res.send(
     '<!doctype html>' +
@@ -120,6 +129,8 @@ const serverRenderer = () => async (req: Request, res: Response) => {
         <Html
           css={cssFiles}
           scripts={jsFiles}
+          linkTags={mappedLinkTags}
+          metaTags={mappedMetaTags}
           state={state}
           loadableStateScript={loadableState.getScriptContent()}
         >
