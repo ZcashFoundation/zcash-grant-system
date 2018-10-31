@@ -1,3 +1,5 @@
+@import 'variables.less';
+
 * {
   margin: 0;
   padding: 0;
@@ -7,10 +9,13 @@
 html {
   font-size: 16px;
 
-  @media (max-width: 900px) {
+  @media @tablet-query {
     font-size: 14px;
   }
-  @media (max-width: 600px) {
+  @media @mobile-query {
     font-size: 12px;
+  }
+  @media @tiny-query {
+    font-size: 11px;
   }
 }

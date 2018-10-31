@@ -1,3 +1,5 @@
+@import '~styles/variables.less';
+
 .ProposalCampaignBlock {
   &-info {
     display: flex;
@@ -36,7 +38,7 @@
       top: 0;
       left: 0;
       bottom: 0;
-      background: #1890ff;
+      background: @primary-color;
       border-radius: 0.5rem;
     }
   }
@@ -47,7 +49,7 @@
     align-items: center;
     margin: 0.5rem -1rem 0;
     font-size: 1.15rem;
-    color: #e74c3c;
+    color: @error-color;
 
     .anticon {
       font-size: 1.5rem;
@@ -55,7 +57,7 @@
     }
 
     &.is-success {
-      color: #2ecc71;
+      color: @success-color;
     }
   }
 }

@@ -1,3 +1,4 @@
+@import '~styles/variables.less';
 @header-height: 62px;
 @small-query: ~'(max-width: 660px)';
 @big-query: ~'(min-width: 661px)';
@@ -6,11 +7,6 @@
   top: 0;
   left: 0;
   right: 0;
-  height: @header-height;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 3rem;
   z-index: 999;
   position: relative;
   color: #333;
@@ -24,14 +20,18 @@
 
   &.is-transparent {
     position: absolute;
-    color: #fff;
     background: transparent;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     box-shadow: none;
+  }
 
-    svg {
-      fill: #fff;
-    }
+  &-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: @header-height;
+    padding: 0 3rem;
+    max-width: @max-content-width;
+    margin: 0 auto;
   }
 
   &-title {
@@ -58,6 +58,10 @@
       height: 2rem;
       width: auto;
       transform: translateY(10%);
+
+      .is-transparent & {
+        transform: scale(1.4) translateY(20%);
+      }
     }
   }
 
@@ -121,7 +125,11 @@
     bottom: 0;
     left: 50%;
     transform: translate(-50%, 50%);
-    background: linear-gradient(to right, #8e2de2, #4a00e0);
+    background: linear-gradient(
+      to right,
+      @primary-color-light,
+      @primary-color-dark
+    );
     color: #fff;
     width: 70px;
     height: 18px;

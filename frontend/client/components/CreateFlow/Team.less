@@ -1,3 +1,5 @@
+@import '~styles/variables.less';
+
 .TeamForm {
   max-width: 660px;
   padding: 0 1rem;
@@ -29,8 +31,8 @@
       margin-right: 1.25rem;
       width: 7.4rem;
       height: 7.4rem;
-      border: 2px dashed #2ecc71;
-      color: #2ecc71;
+      border: 2px dashed @success-color;
+      color: @success-color;
       border-radius: 8px;
       font-size: 2rem;
     }
@@ -41,7 +43,7 @@
       &-title {
         font-size: 1.6rem;
         font-weight: 300;
-        color: #2ecc71;
+        color: @success-color;
       }
 
       &-subtitle {

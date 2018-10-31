@@ -1,3 +1,5 @@
+@import '~styles/variables.less';
+
 .CreateReview {
   &-section {
     max-width: 980px;
@@ -17,7 +19,7 @@
     text-align: right;
 
     &-error {
-      color: #f5222d;
+      color: @error-color;
       opacity: 0.8;
       font-size: 0.8rem;
     }
@@ -43,8 +45,8 @@
       margin-bottom: 5rem;
       padding: 0.5rem 1rem;
       font-size: 1rem;
-      border: 1px solid #3498db;
-      color: #3498db;
+      border: 1px solid @primary-color;
+      color: @primary-color;
       opacity: 0.8;
       border-radius: 2px;
       cursor: pointer;

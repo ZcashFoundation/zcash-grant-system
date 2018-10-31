@@ -1,3 +1,4 @@
+@import '~styles/variables.less';
 @medium-query: ~'(max-width: 920px)';
 @small-query: ~'(max-width: 480px)';
 
@@ -146,17 +147,17 @@
       }
     }
   }
-  .ant-steps-item-override(wait, #949191, #949191);
-  .ant-steps-item-override(finish, #1890ff, #4c4c4c);
-  .ant-steps-item-override(error, #f5222d, #f5222d);
+  .ant-steps-item-override(wait, @primary-color, @text-color);
+  .ant-steps-item-override(finish, @primary-color, @text-color);
+  .ant-steps-item-override(error, @error-color, @error-color);
 
   .ant-steps-item-process {
     &.is-inactive {
       .ant-steps-item-icon {
         background: #fff;
-        border-color: #1890ff;
+        border-color: @primary-color;
         & > .ant-steps-icon {
-          color: #1890ff;
+          color: @primary-color;
         }
       }
     }
