@@ -27,6 +27,22 @@ proposal_team = db.Table(
     db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'))
 )
 
+class ProposalUpdate(db.Model):
+    __tablename__ = "proposal_update"
+
+    id = db.Column(db.Integer(), primary_key=True)
+    date_created = db.Column(db.DateTime)
+
+    proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+
+    def __init__(self, proposal_id: int, title: str, content: str):
+        self.proposal_id = proposal_id
+        self.title = title
+        self.content = content
+        self.date_created = datetime.datetime.now()
+
 
 class Proposal(db.Model):
     __tablename__ = "proposal"
@@ -42,6 +58,7 @@ class Proposal(db.Model):
 
     team = db.relationship("User", secondary=proposal_team)
     comments = db.relationship(Comment, backref="proposal", lazy=True)
+    updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True)
     milestones = db.relationship("Milestone", backref="proposal", lazy=True)
 
     def __init__(
@@ -90,6 +107,7 @@ class ProposalSchema(ma.Schema):
             "proposal_id",
             "body",
             "comments",
+            "updates",
             "milestones",
             "category",
             "team"
@@ -100,6 +118,7 @@ class ProposalSchema(ma.Schema):
     body = ma.Method("get_body")
 
     comments = ma.Nested("CommentSchema", many=True)
+    updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
 
@@ -115,3 +134,28 @@ class ProposalSchema(ma.Schema):
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
+
+
+class ProposalUpdateSchema(ma.Schema):
+    class Meta:
+        model = ProposalUpdate
+        # Fields to expose
+        fields = (
+            "date_created",
+            "proposal_id",
+            "title",
+            "content"
+        )
+
+    date_created = ma.Method("get_date_created")
+    proposal_id = ma.Method("get_proposal_id")
+
+    def get_proposal_id(self, obj):
+        return obj.proposal_id
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+
+proposal_update_schema = ProposalUpdateSchema()
+proposals_update_schema = ProposalUpdateSchema(many=True)

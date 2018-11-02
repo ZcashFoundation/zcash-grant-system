@@ -1,5 +1,5 @@
 import axios from './axios';
-import { Proposal, TeamMember } from 'types';
+import { Proposal, TeamMember, Update } from 'types';
 import { formatTeamMemberForPost, formatTeamMemberFromGet } from 'utils/api';
 import { PROPOSAL_CATEGORY } from './constants';
 
@@ -76,4 +76,16 @@ export function updateUser(user: TeamMember): Promise<{ data: TeamMember }> {
 
 export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
+}
+
+export function postProposalUpdate(
+  proposalId: string,
+  title: string,
+  content: string,
+): Promise<{ data: Update }> {
+  return axios
+    .post(`/api/v1/proposals/${proposalId}/updates`, {
+      title,
+      content,
+    });
 }

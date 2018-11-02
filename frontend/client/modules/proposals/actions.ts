@@ -100,7 +100,10 @@ export function fetchProposalUpdates(proposalId: ProposalWithCrowdFund['proposal
   return (dispatch: Dispatch<any>) => {
     dispatch({
       type: types.PROPOSAL_UPDATES,
-      payload: getProposalUpdates(proposalId),
+      payload: getProposalUpdates(proposalId).then(res => ({
+        proposalId,
+        updates: res.data,
+      })),
     });
   };
 }

@@ -1,7 +1,7 @@
 export interface Update {
   updateId: number | string;
   title: string;
-  body: string;
+  content: string;
   dateCreated: number;
   totalComments: number;
 }

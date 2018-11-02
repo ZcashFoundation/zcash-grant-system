@@ -16,6 +16,7 @@ import UpdatesTab from './Updates';
 import GovernanceTab from './Governance';
 import ContributorsTab from './Contributors';
 // import CommunityTab from './Community';
+import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
 import './style.less';
 import classnames from 'classnames';
@@ -46,6 +47,7 @@ type Props = StateProps & DispatchProps & Web3Props & OwnProps;
 interface State {
   isBodyExpanded: boolean;
   isBodyOverflowing: boolean;
+  isUpdateOpen: boolean;
   isCancelOpen: boolean;
   bodyId: string;
 }
@@ -54,6 +56,7 @@ export class ProposalDetail extends React.Component<Props, State> {
   state: State = {
     isBodyExpanded: false,
     isBodyOverflowing: false,
+    isUpdateOpen: false,
     isCancelOpen: false,
     bodyId: `body-${Math.floor(Math.random() * 1000000)}`,
   };
@@ -79,7 +82,7 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   render() {
     const { proposal, isPreview, account } = this.props;
-    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, bodyId } = this.state;
+    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, isUpdateOpen, bodyId } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
 
     if (!proposal) {
@@ -94,6 +97,9 @@ export class ProposalDetail extends React.Component<Props, State> {
 
       const adminMenu = isTrustee && (
         <Menu>
+          <Menu.Item onClick={this.openUpdateModal}>
+            Post an Update
+          </Menu.Item>
           <Menu.Item
             onClick={() => alert('Sorry, not yet implemented!')}
             disabled={!isProposalActive}
@@ -177,7 +183,6 @@ export class ProposalDetail extends React.Component<Props, State> {
                 <CommentsTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Updates" key="updates" disabled={isPreview}>
-                <div style={{ marginTop: '1.5rem' }} />
                 <UpdatesTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
               {isContributor && (
@@ -191,11 +196,18 @@ export class ProposalDetail extends React.Component<Props, State> {
             </Tabs>
           )}
           {isTrustee && (
-            <CancelModal
-              proposal={proposal}
-              isVisible={isCancelOpen}
-              handleClose={this.closeCancelModal}
-            />
+            <>
+              <UpdateModal
+                proposalId={proposal.proposalId}
+                isVisible={isUpdateOpen}
+                handleClose={this.closeUpdateModal}
+              />
+              <CancelModal
+                proposal={proposal}
+                isVisible={isCancelOpen}
+                handleClose={this.closeCancelModal}
+              />
+            </>
           )}
         </div>
       );
@@ -224,6 +236,9 @@ export class ProposalDetail extends React.Component<Props, State> {
       this.setState({ isBodyOverflowing: true });
     }
   };
+
+  private openUpdateModal = () => this.setState({ isUpdateOpen: true });
+  private closeUpdateModal = () => this.setState({ isUpdateOpen: false });
 
   private openCancelModal = () => this.setState({ isCancelOpen: true });
   private closeCancelModal = () => this.setState({ isCancelOpen: false });

@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
-from .models import Proposal, proposals_schema, proposal_schema, db
+from .models import Proposal, proposals_schema, proposal_schema, ProposalUpdate, proposal_update_schema, db
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 
@@ -159,3 +159,51 @@ def make_proposal(crowd_fund_contract_address, content, title, milestones, categ
 
     results = proposal_schema.dump(proposal)
     return results, 201
+
+
+@blueprint.route("/<proposal_id>/updates", methods=["GET"])
+@endpoint.api()
+def get_proposal_updates(proposal_id):
+    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    if proposal:
+        dumped_proposal = proposal_schema.dump(proposal)
+        return dumped_proposal["updates"]
+    else:
+        return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/updates/<update_id>", methods=["GET"])
+@endpoint.api()
+def get_proposal_update(proposal_id, update_id):
+    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    if proposal:
+        update = ProposalUpdate.query.filter_by(proposal_id=proposal.id, id=update_id).first()
+        if update:
+            return update
+        else:
+            return {"message": "No update matching id"}
+    else:
+        return {"message": "No proposal matching id"}, 404
+
+
+# TODO: Add authentication to endpoint
+@blueprint.route("/<proposal_id>/updates", methods=["POST"])
+@endpoint.api(
+    parameter('title', type=str, required=True),
+    parameter('content', type=str, required=True)
+)
+def post_proposal_update(proposal_id, title, content):
+    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    if proposal:
+        update = ProposalUpdate(
+            proposal_id=proposal.id,
+            title=title,
+            content=content
+        )
+        db.session.add(update)
+        db.session.commit()
+
+        dumped_update = proposal_update_schema.dump(update)
+        return dumped_update, 201
+    else:
+        return {"message": "No proposal matching id"}, 404

@@ -55,7 +55,6 @@ export interface ProposalComments {
 
 export interface ProposalUpdates {
   proposalId: ProposalWithCrowdFund['proposalId'];
-  totalUpdates: number;
   updates: Update[];
 }
 

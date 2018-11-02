@@ -51,9 +51,9 @@ export function getProposalUpdates(
 export function getProposalUpdateCount(
   state: AppState,
   proposalId: ProposalWithCrowdFund['proposalId'],
-): ProposalUpdates['totalUpdates'] | null {
+): number | null {
   const pu = state.proposal.proposalUpdates[proposalId];
-  return pu ? pu.totalUpdates : null;
+  return pu ? pu.updates.length : null;
 }
 
 export function getIsFetchingUpdates(state: AppState) {
