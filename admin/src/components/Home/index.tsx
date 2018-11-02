@@ -13,7 +13,8 @@ class Home extends React.Component {
     return (
       <div className="Home">
         <h1>Home</h1>
-        <div>isLoggedIn: {store.isLoggedIn ? 'true' : 'false'}</div>
+        <div>isLoggedIn: {JSON.stringify(store.isLoggedIn)}</div>
+        <div>web3 enabled: {JSON.stringify(store.web3Enabled)}</div>
         <div>web3 type: {store.web3Type}</div>
         <div>ethereum network: {store.ethNetId}</div>
         <div>ethereum account: {store.ethAccount}</div>

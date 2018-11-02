@@ -85,13 +85,7 @@ def stats():
 @endpoint.api()
 @auth_required
 def delete_user(id):
-    user = User.get_by_email_or_account_address(email_address=id, account_address=id)
-    # TODO: fix delete
-    if user:
-        db.session.delete(user)
-        db.session.commit()
-        return {}, 204
-    return {"message": "No such user."}, 404
+    return {"message": "Not implemented."}, 400
 
 
 @blueprint.route("/users", methods=["GET"])
@@ -124,10 +118,4 @@ def get_proposals():
 @endpoint.api()
 @auth_required
 def delete_proposal(id):
-    proposal = Proposal.query.filter_by(proposal_id=id).first()
-    if proposal:
-        # TODO: fix delete function
-        db.session.delete(proposal)
-        db.session.commit()
-        return {}, 204
-    return {"message": "No such proposal."}, 404
+    return {"message": "Not implemented."}, 400

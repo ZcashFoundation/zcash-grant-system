@@ -190,31 +190,34 @@ class ProposalItemNaked extends React.Component<Proposal> {
               </div>
             }
           />
-          <Field
-            title={`web3 (${p.contractStatus || 'not loaded'})`}
-            value={
-              <div className="Proposals-proposal-contract">
-                <Button
-                  icon="reload"
-                  size="small"
-                  title="refresh contract"
-                  onClick={() => store.populateProposalContract(p.proposalId)}
-                >
-                  refresh contract
-                </Button>
-                {Object.keys(p.contract)
-                  .map(k => k as keyof Contract)
-                  .map(k => (
-                    <ContractMethod
-                      key={k}
-                      proposalId={p.proposalId}
-                      name={k}
-                      {...p.contract[k]}
-                    />
-                  ))}
-              </div>
-            }
-          />
+          {!store.web3Enabled && <Field title="web3" value={'UNAVAILABLE'} />}
+          {store.web3Enabled && (
+            <Field
+              title={`web3 (${p.contractStatus || 'not loaded'})`}
+              value={
+                <div className="Proposals-proposal-contract">
+                  <Button
+                    icon="reload"
+                    size="small"
+                    title="refresh contract"
+                    onClick={() => store.populateProposalContract(p.proposalId)}
+                  >
+                    refresh contract
+                  </Button>
+                  {Object.keys(p.contract)
+                    .map(k => k as keyof Contract)
+                    .map(k => (
+                      <ContractMethod
+                        key={k}
+                        proposalId={p.proposalId}
+                        name={k}
+                        {...p.contract[k]}
+                      />
+                    ))}
+                </div>
+              }
+            />
+          )}
         </div>
       </div>
     );
