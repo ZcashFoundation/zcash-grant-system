@@ -1,5 +1,8 @@
 from grant.comment.models import Comment
+from grant.email.models import EmailVerification
 from grant.extensions import ma, db
+from grant.utils.misc import make_url
+from grant.email.send import send_email
 
 
 class SocialMedia(db.Model):
@@ -40,6 +43,7 @@ class User(db.Model):
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True)
     comments = db.relationship(Comment, backref="user", lazy=True)
     avatar = db.relationship(Avatar, uselist=False, back_populates="user")
+    email_verification = db.relationship(EmailVerification, uselist=False, back_populates="user", lazy=True)
 
     # TODO - add create and validate methods
 
@@ -53,6 +57,29 @@ class User(db.Model):
         self.title = title
 
     @staticmethod
+    def create(email_address=None, account_address=None, display_name=None, title=None):
+        user = User(
+            account_address=account_address,
+            email_address=email_address,
+            display_name=display_name,
+            title=title
+        )
+        db.session.add(user)
+        db.session.flush()
+
+        # Setup & send email verification
+        ev = EmailVerification(user_id=user.id)
+        db.session.add(ev)
+        db.session.commit()
+
+        send_email(user.email_address, 'signup', {
+            'display_name': user.display_name,
+            'confirm_url': make_url(f'/email/verify?code={ev.code}')
+        })
+
+        return user
+
+    @staticmethod
     def get_by_email_or_account_address(email_address: str = None, account_address: str = None):
         if not email_address and not account_address:
             raise ValueError("Either email_address or account_address is required to get a user")
@@ -61,7 +88,6 @@ class User(db.Model):
             (User.account_address == account_address) |
             (User.email_address == email_address)
         ).first()
-
 
 class UserSchema(ma.Schema):
     class Meta:

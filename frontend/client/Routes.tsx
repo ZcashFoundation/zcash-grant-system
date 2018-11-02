@@ -26,6 +26,7 @@ const Tos = loadable(() => import('pages/tos'));
 const About = loadable(() => import('pages/about'));
 const Privacy = loadable(() => import('pages/privacy'));
 const Contact = loadable(() => import('pages/contact'));
+const VerifyEmail = loadable(() => import('pages/email-verify'));
 
 import 'styles/style.less';
 
@@ -190,6 +191,17 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Signed out',
+    },
+  },
+  {
+    // Verify email
+    route: {
+      path: '/email/verify',
+      component: VerifyEmail,
+      exact: true,
+    },
+    template: {
+      title: 'Verify email',
     },
   },
   {

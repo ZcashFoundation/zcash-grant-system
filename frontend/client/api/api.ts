@@ -73,3 +73,7 @@ export function updateUser(user: TeamMember): Promise<{ data: TeamMember }> {
       return res;
     });
 }
+
+export function verifyEmail(code: string): Promise<any> {
+  return axios.post(`/api/v1/email/${code}/verify`);
+}

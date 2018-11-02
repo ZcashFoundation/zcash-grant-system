@@ -2,10 +2,10 @@ from animal_case import animalify
 from flask import Blueprint, g, jsonify
 from flask_yoloapi import endpoint, parameter
 
+
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
-from ..email.send import send_email
-from ..proposal.models import Proposal, proposal_team
-from ..utils.auth import requires_sm
+from grant.proposal.models import Proposal, proposal_team
+from grant.utils.auth import requires_sm
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -56,22 +56,12 @@ def create_user(account_address, email_address, display_name, title):
         return {"message": "User with that address or email already exists"}, 409
 
     # TODO: Handle avatar & social stuff too
-    user = User(
+    user = User.create(
         account_address=account_address,
         email_address=email_address,
         display_name=display_name,
         title=title
     )
-    db.session.add(user)
-    db.session.flush()
-    db.session.commit()
-
-    send_email(email_address, 'signup', {
-        'display_name': display_name,
-        # TODO: Make this dynamic
-        'confirm_url': 'https://grant.io/user/confirm',
-    })
-
     result = user_schema.dump(user)
     return result
 
