@@ -1,5 +1,4 @@
-from flask import Blueprint, jsonify
-from animal_case import animalify
+from flask import Blueprint
 from flask_yoloapi import endpoint, parameter
 
 from .models import EmailVerification, db
@@ -24,7 +23,7 @@ def verify_email(code):
 @endpoint.api()
 def unsubscribe_email():
     ev = EmailVerification.query.filter_by(code=code).first()
-    if ev:    
+    if ev:
         return {"message": "Not yet implemented"}, 500
     else:
         return {"message": "Invalid email code"}, 400

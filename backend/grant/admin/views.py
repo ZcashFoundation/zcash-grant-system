@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import Blueprint, g, jsonify, session
+from flask import Blueprint, g, session
 from flask_yoloapi import endpoint, parameter
 from hashlib import sha256
 from uuid import uuid4

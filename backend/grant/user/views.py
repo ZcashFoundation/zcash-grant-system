@@ -1,5 +1,4 @@
-from animal_case import animalify
-from flask import Blueprint, g, jsonify
+from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 
 
@@ -27,20 +26,22 @@ def get_users(proposal_id):
 
 @blueprint.route("/me", methods=["GET"])
 @requires_sm
+@endpoint.api()
 def get_me():
     dumped_user = user_schema.dump(g.current_user)
-    return jsonify(animalify(dumped_user))
+    return dumped_user
 
 
 @blueprint.route("/<user_identity>", methods=["GET"])
+@endpoint.api()
 def get_user(user_identity):
     user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)
     if user:
         result = user_schema.dump(user)
-        return jsonify(animalify(result))
+        return result
     else:
-        return jsonify(
-            message="User with account_address or user_identity matching {} not found".format(user_identity)), 404
+        message = "User with account_address or user_identity matching {} not found".format(user_identity)
+        return {"message": message}, 404
 
 
 @blueprint.route("/", methods=["POST"])
@@ -71,7 +72,7 @@ def create_user(account_address, email_address, display_name, title):
     parameter('displayName', type=str, required=False),
     parameter('title', type=str, required=False),
     parameter('socialMedias', type=list, required=False),
-    parameter('avatar', type=dict, required=False)
+    parameter('avatar', type=dict, required=False),
 )
 def update_user(user_identity, display_name, title, social_medias, avatar):
     user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)
