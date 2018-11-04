@@ -1,11 +1,10 @@
-from animal_case import animalify
-from flask import Blueprint, g, jsonify
+from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 
+
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
-from ..email.send import send_email
-from ..proposal.models import Proposal, proposal_team
-from ..utils.auth import requires_sm
+from grant.proposal.models import Proposal, proposal_team
+from grant.utils.auth import requires_sm
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -27,20 +26,22 @@ def get_users(proposal_id):
 
 @blueprint.route("/me", methods=["GET"])
 @requires_sm
+@endpoint.api()
 def get_me():
     dumped_user = user_schema.dump(g.current_user)
-    return jsonify(animalify(dumped_user))
+    return dumped_user
 
 
 @blueprint.route("/<user_identity>", methods=["GET"])
+@endpoint.api()
 def get_user(user_identity):
     user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)
     if user:
         result = user_schema.dump(user)
-        return jsonify(animalify(result))
+        return result
     else:
-        return jsonify(
-            message="User with account_address or user_identity matching {} not found".format(user_identity)), 404
+        message = "User with account_address or user_identity matching {} not found".format(user_identity)
+        return {"message": message}, 404
 
 
 @blueprint.route("/", methods=["POST"])
@@ -56,22 +57,12 @@ def create_user(account_address, email_address, display_name, title):
         return {"message": "User with that address or email already exists"}, 409
 
     # TODO: Handle avatar & social stuff too
-    user = User(
+    user = User.create(
         account_address=account_address,
         email_address=email_address,
         display_name=display_name,
         title=title
     )
-    db.session.add(user)
-    db.session.flush()
-    db.session.commit()
-
-    send_email(email_address, 'signup', {
-        'display_name': display_name,
-        # TODO: Make this dynamic
-        'confirm_url': 'https://grant.io/user/confirm',
-    })
-
     result = user_schema.dump(user)
     return result
 
@@ -81,7 +72,7 @@ def create_user(account_address, email_address, display_name, title):
     parameter('displayName', type=str, required=False),
     parameter('title', type=str, required=False),
     parameter('socialMedias', type=list, required=False),
-    parameter('avatar', type=dict, required=False)
+    parameter('avatar', type=dict, required=False),
 )
 def update_user(user_identity, display_name, title, social_medias, avatar):
     user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)

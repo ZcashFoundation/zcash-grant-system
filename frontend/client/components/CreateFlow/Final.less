@@ -1,3 +1,5 @@
+@import '~styles/variables.less';
+
 .CreateFinal {
   position: absolute;
   top: 50%;
@@ -23,10 +25,10 @@
       font-size: 3.2rem;
     }
     &.is-error .anticon {
-      color: #e74c3c;
+      color: @error-color;
     }
     &.is-success .anticon {
-      color: #2ecc71;
+      color: @success-color;
     }
 
     &-text {

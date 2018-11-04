@@ -13,6 +13,7 @@ env.read_env()
 
 ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
+SITE_URL = env.str('SITE_URL', default='https://grant.io')
 AUTH_URL = env.str('AUTH_URL', default='https://eip-712.herokuapp.com')
 SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL")
 QUEUES = ["default"]

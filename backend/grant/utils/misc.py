@@ -1,5 +1,8 @@
 import datetime
 import time
+import random
+import string
+from grant.settings import SITE_URL
 
 epoch = datetime.datetime.utcfromtimestamp(0)
 
@@ -15,3 +18,11 @@ def dt_to_ms(dt):
 
 def dt_to_unix(dt):
     return int(time.mktime(dt.timetuple()))
+
+def gen_random_code(length=32):
+  return ''.join(
+    [random.choice(string.ascii_letters + string.digits) for n in range(length)]
+  )
+
+def make_url(path: str):
+  return f'{SITE_URL}{path}'

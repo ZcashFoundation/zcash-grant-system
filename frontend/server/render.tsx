@@ -1,9 +1,12 @@
+import fs from 'fs';
+import path from 'path';
 import React from 'react';
 import { Request, Response } from 'express';
 import { renderToString } from 'react-dom/server';
 import { getLoadableState } from 'loadable-components/server';
 import { StaticRouter as Router } from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { I18nextProvider } from 'react-i18next';
 
 import log from './log';
 import { configureStore } from '../client/store/configure';
@@ -11,9 +14,8 @@ import Html from './components/HTML';
 import Routes from '../client/Routes';
 import linkTags from './linkTags';
 import metaTags from './metaTags';
+import i18n from './i18n';
 
-import fs from 'fs';
-import path from 'path';
 // @ts-ignore
 import * as paths from '../config/paths';
 const isDev = process.env.NODE_ENV === 'development';
@@ -76,12 +78,22 @@ const chunkExtractFromLoadables = (loadableState: any) =>
 
 const serverRenderer = () => async (req: Request, res: Response) => {
   const { store } = configureStore();
+
+  // i18n
+  const locale = (req as any).language;
+  const resources = i18n.getResourceBundle(locale, 'common');
+  const i18nClient = JSON.stringify({ locale, resources });
+  const i18nServer = i18n.cloneInstance();
+  i18nServer.changeLanguage(locale);
+
   const reactApp = (
-    <Provider store={store}>
-      <Router location={req.url} context={{}}>
-        <Routes />
-      </Router>
-    </Provider>
+    <I18nextProvider i18n={i18nServer}>
+      <Provider store={store}>
+        <Router location={req.url} context={{}}>
+          <Routes />
+        </Router>
+      </Provider>
+    </I18nextProvider>
   );
 
   let loadableState;
@@ -132,6 +144,7 @@ const serverRenderer = () => async (req: Request, res: Response) => {
           linkTags={mappedLinkTags}
           metaTags={mappedMetaTags}
           state={state}
+          i18n={i18nClient}
           loadableStateScript={loadableState.getScriptContent()}
         >
           {content}

@@ -1,4 +1,5 @@
 import React from 'react';
+import classnames from 'classnames';
 import { convert, MARKDOWN_TYPE } from 'utils/markdown';
 import './Markdown.less';
 
@@ -15,8 +16,8 @@ export default class Markdown extends React.PureComponent<Props> {
     const divProps = rest as any;
     return (
       <div
-        className="Markdown"
         {...divProps}
+        className={classnames('Markdown', divProps.className)}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );

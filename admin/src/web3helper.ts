@@ -18,7 +18,7 @@ import {
 
 type Web3Method<T> = (index: number) => TransactionObject<T>;
 
-export function initializeWeb3(app: TApp) {
+export async function initializeWeb3(app: TApp): Promise<null | Web3> {
   let web3 = (window as any).web3;
   if (web3) {
     app.web3Type = 'injected';
@@ -30,19 +30,25 @@ export function initializeWeb3(app: TApp) {
     app.web3Type = 'local - ' + localProviderString;
   } else {
     console.error('No web3 detected!');
-    return;
+    app.web3Enabled = false;
+    return null;
   }
-  getNetwork(app, web3);
-  getAccount(app, web3);
-  checkCrowdFundFactory(app, web3);
-  window.setInterval(() => getAccount(app, web3), 10000);
-  return web3;
-}
-
-function getNetwork(app: TApp, web3: Web3) {
-  web3.eth.net.getId((_, netId) => {
-    app.ethNetId = netId;
-  });
+  try {
+    app.ethNetId = await web3.eth.net.getId();
+    getAccount(app, web3);
+    window.setInterval(() => getAccount(app, web3), 10000);
+    checkCrowdFundFactory(app, web3);
+    app.web3Enabled = true;
+    return web3;
+  } catch (e) {
+    if (e.message && e.message.startsWith('Invalid JSON RPC response:')) {
+      console.warn('Unable to interact with web3. Web3 will be disabled.');
+    } else {
+      console.error('There was a problem interacting with web3.', e);
+    }
+    app.web3Enabled = false;
+    return null;
+  }
 }
 
 async function getAccount(app: TApp, web3: Web3) {

@@ -31,31 +31,33 @@ export default class Header extends React.Component<Props, State> {
           ['is-transparent']: isTransparent,
         })}
       >
-        <div className="Header-links is-left is-desktop">
-          <Link to="/proposals" className="Header-links-link">
-            Browse
+        <div className="Header-inner">
+          <div className="Header-links is-left is-desktop">
+            <Link to="/proposals" className="Header-links-link">
+              Browse
+            </Link>
+            <Link to="/create" className="Header-links-link">
+              Start a Proposal
+            </Link>
+          </div>
+
+          <div className="Header-links is-left is-mobile">
+            <button className="Header-links-link is-menu" onClick={this.openDrawer}>
+              <MenuIcon className="Header-links-link-icon" />
+            </button>
+          </div>
+
+          <Link className="Header-title" to="/">
+            <Logo className="Header-title-logo" />
           </Link>
-          <Link to="/create" className="Header-links-link">
-            Start a Proposal
-          </Link>
+
+          <div className="Header-links is-right">
+            <HeaderAuth />
+          </div>
+
+          {!isTransparent && <div className="Header-alphaBanner">Alpha</div>}
+          <HeaderDrawer isOpen={isDrawerOpen} onClose={this.closeDrawer} />
         </div>
-
-        <div className="Header-links is-left is-mobile">
-          <button className="Header-links-link is-menu" onClick={this.openDrawer}>
-            <MenuIcon className="Header-links-link-icon" />
-          </button>
-        </div>
-
-        <Link className="Header-title" to="/">
-          <Logo className="Header-title-logo" />
-        </Link>
-
-        <div className="Header-links is-right">
-          <HeaderAuth />
-        </div>
-
-        {!isTransparent && <div className="Header-alphaBanner">Alpha</div>}
-        <HeaderDrawer isOpen={isDrawerOpen} onClose={this.closeDrawer} />
       </div>
     );
   }

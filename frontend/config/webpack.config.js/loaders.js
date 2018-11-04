@@ -1,3 +1,4 @@
+const hash = require('string-hash');
 const _ = require('lodash');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
@@ -140,16 +141,22 @@ const svgLoaderClient = {
   issuer: {
     test: /\.tsx?$/,
   },
-  use: [
-    {
-      loader: '@svgr/webpack',
-      options: {
-        svgoConfig: {
-          plugins: [{ inlineStyles: { onlyMatchedOnce: false } }],
-        },
+  use: ({ resource }) => ({
+    loader: '@svgr/webpack',
+    options: {
+      svgoConfig: {
+        plugins: [{
+          inlineStyles: {
+            onlyMatchedOnce: false
+          },
+        }, {
+          cleanupIDs: {
+            prefix: `svg-${hash(resource)}`,
+          },
+        }],
       },
     },
-  ], // svg -> react component
+  }), // svg -> react component
 };
 
 const svgLoaderServer = svgLoaderClient;

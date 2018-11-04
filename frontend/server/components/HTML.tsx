@@ -8,6 +8,7 @@ export interface Props {
   linkTags: Array<React.LinkHTMLAttributes<HTMLLinkElement>>;
   metaTags: Array<React.MetaHTMLAttributes<HTMLMetaElement>>;
   state: string;
+  i18n: string;
   loadableStateScript: string;
 }
 
@@ -16,6 +17,7 @@ const HTML: React.SFC<Props> = ({
   scripts,
   css,
   state,
+  i18n,
   linkTags,
   metaTags,
   loadableStateScript,
@@ -61,6 +63,11 @@ const HTML: React.SFC<Props> = ({
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__PRELOADED_STATE__ = ${state}`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__PRELOADED_I18N__ = ${i18n}`,
           }}
         />
       </head>

@@ -1,3 +1,5 @@
+@import '~styles/variables.less';
+
 @keyframes draft-notification-popup {
   from {
     opacity: 0;
@@ -74,7 +76,7 @@
       transition-timing-function: ease;
 
       &.is-primary {
-        background: #3498db;
+        background: @primary-color;
         color: #FFF;
         border: none;
       }

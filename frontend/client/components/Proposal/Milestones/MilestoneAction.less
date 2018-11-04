@@ -1,3 +1,4 @@
+@import '~styles/variables.less';
 @small-screen: 1080px;
 
 .MilestoneAction {
@@ -30,19 +31,19 @@
 
     &.is-starting {
       .ant-progress-circle-path {
-        stroke: #1890ff;
+        stroke: @primary-color;
       }
     }
 
     &.is-started {
       .ant-progress-circle-path {
-        stroke: #faad14;
+        stroke: @warning-color;
       }
     }
 
     &.is-finishing {
       .ant-progress-circle-path {
-        stroke: #f5222d;
+        stroke: @error-color;
       }
     }
   }

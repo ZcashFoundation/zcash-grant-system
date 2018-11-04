@@ -1,4 +1,5 @@
 import { cloneDeep } from 'lodash';
+import Web3 from 'web3';
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
 import { User, Proposal, INITIAL_CONTRACT, Contract, ContractMethodInput } from './types';
@@ -73,6 +74,7 @@ const app = store({
   proposalsFetched: false,
   proposals: [] as Proposal[],
   web3Type: '',
+  web3Enabled: false,
   ethNetId: -1,
   ethAccount: '',
   crowdFundFactoryDefinitionStatus: '',
@@ -185,7 +187,8 @@ function handleApiError(e: AxiosError) {
 app.checkLogin();
 window.setInterval(app.checkLogin, 10000);
 
-const web3 = initializeWeb3(app);
+let web3: null | Web3 = null;
+initializeWeb3(app).then(x => (web3 = x));
 
 export type TApp = typeof app;
 export default app;

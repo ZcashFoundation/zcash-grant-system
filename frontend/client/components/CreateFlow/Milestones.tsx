@@ -159,7 +159,7 @@ const MilestoneFields = ({
       <DatePicker.MonthPicker
         style={{ flex: 1, marginRight: '0.5rem' }}
         placeholder="Expected completion date"
-        value={milestone.date ? moment(milestone.date) : undefined}
+        value={milestone.date ? moment(milestone.date, 'MMMM YYYY') : undefined}
         format="MMMM YYYY"
         allowClear={false}
         onChange={(_, date) => onChange(index, { ...milestone, date })}

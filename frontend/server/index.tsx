@@ -6,11 +6,13 @@ import manifestHelpers from 'express-manifest-helpers';
 import * as bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import expressWinston from 'express-winston';
+import i18nMiddleware from 'i18next-express-middleware';
 
-import log from './log';
-import serverRender from './render';
 // @ts-ignore
 import * as paths from '../config/paths';
+import log from './log';
+import serverRender from './render';
+import i18n from './i18n';
 
 process.env.SERVER_SIDE_RENDER = 'true';
 const isDev = process.env.NODE_ENV === 'development';
@@ -22,13 +24,15 @@ const app = express();
 // log requests
 app.use(expressWinston.logger({ winstonInstance: log }));
 
+// i18next
+app.use(i18nMiddleware.handle(i18n));
+
 if (isDev) {
   app.use(
     paths.publicPath,
     express.static(path.join(paths.clientBuild, paths.publicPath)),
   );
-  // tslint:disable-next-line:variable-name
-  app.use('/favicon.ico', (_req, res) => {
+  app.use('/favicon.ico', (_, res) => {
     res.send('');
   });
 } else {
@@ -37,8 +41,7 @@ if (isDev) {
     paths.publicPath,
     express.static(path.join(paths.clientBuild, paths.publicPath)),
   );
-  // tslint:disable-next-line:variable-name
-  app.use('/favicon.ico', (_req, res) => {
+  app.use('/favicon.ico', (_, res) => {
     res.send('');
   });
 }

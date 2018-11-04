@@ -5,6 +5,7 @@ const { StatsWriterPlugin } = require('webpack-stats-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ModuleDependencyWarning = require('./module-dependency-warning');
 const WebappWebpackPlugin = require('webapp-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const env = require('../env')();
 const paths = require('../paths');
@@ -44,6 +45,15 @@ const client = [
       theme_color: '#ffffff',
     },
   }),
+  new CopyWebpackPlugin([
+    {
+      from: 'client/static/locales/**/*.json',
+      transformPath(targetPath, absolutePath) {
+        const match = targetPath.match(/locales\/(.+)\/(.+\.json)$/);
+        return `locales/${match[1]}/${match[2]}`;
+      },
+    },
+  ]),
   // this allows the server access to the dependency graph
   // so it can find which js/css to add to initial page
   new StatsWriterPlugin({

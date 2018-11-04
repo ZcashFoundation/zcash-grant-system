@@ -78,12 +78,12 @@ function addComments(state: ProposalState, payload: { data: ProposalComments }) 
   };
 }
 
-function addUpdates(state: ProposalState, payload: { data: ProposalUpdates }) {
+function addUpdates(state: ProposalState, payload: ProposalUpdates) {
   return {
     ...state,
     proposalUpdates: {
       ...state.proposalUpdates,
-      [payload.data.proposalId]: payload.data,
+      [payload.proposalId]: payload,
     },
     isFetchingUpdates: false,
   };

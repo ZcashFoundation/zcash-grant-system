@@ -3,8 +3,10 @@ import { connect } from 'react-redux';
 import { Spin } from 'antd';
 import Markdown from 'components/Markdown';
 import moment from 'moment';
+import Placeholder from 'components/Placeholder';
+import FullUpdate from './FullUpdate';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'types';
+import { ProposalWithCrowdFund, Update } from 'types';
 import { fetchProposalUpdates } from 'modules/proposals/actions';
 import {
   getProposalUpdates,
@@ -29,7 +31,15 @@ interface DispatchProps {
 
 type Props = DispatchProps & OwnProps & StateProps;
 
-class ProposalUpdates extends React.Component<Props> {
+interface State {
+  activeUpdate: Update | null;
+}
+
+class ProposalUpdates extends React.Component<Props, State> {
+  state: State = {
+    activeUpdate: null,
+  };
+
   componentDidMount() {
     if (this.props.proposalId) {
       this.props.fetchProposalUpdates(this.props.proposalId);
@@ -44,30 +54,45 @@ class ProposalUpdates extends React.Component<Props> {
 
   render() {
     const { updates, isFetchingUpdates, updatesError } = this.props;
+    const { activeUpdate } = this.state;
     let content = null;
 
     if (isFetchingUpdates) {
       content = <Spin />;
     } else if (updatesError) {
       content = (
-        <>
-          <h2>Something went wrong</h2>
-          <p>{updatesError}</p>
-        </>
+        <Placeholder
+          title="Something went wrong"
+          subtitle={updatesError}
+        />
       );
     } else if (updates) {
-      if (updates.length) {
+      if (activeUpdate) {
+        content = (
+          <FullUpdate
+            update={activeUpdate}
+            goBack={() => this.setActiveUpdate(null)}
+          />
+        );
+      }
+      else if (updates.length) {
         content = updates.map(update => (
-          <div className="ProposalUpdates-update">
+          <div
+            key={update.updateId}
+            className="ProposalUpdates-update"
+            onClick={() => this.setActiveUpdate(update)}
+          >
             <h3 className="ProposalUpdates-update-title">{update.title}</h3>
             <div className="ProposalUpdates-update-date">
               {moment(update.dateCreated * 1000).format('MMMM Do, YYYY')}
             </div>
             <div className="ProposalUpdates-update-body">
-              <Markdown source={this.truncate(update.body)} />
+              <Markdown source={this.truncate(update.content)} />
             </div>
             <div className="ProposalUpdates-update-controls">
-              <a className="ProposalUpdates-update-controls-button">Read more</a>
+              <a className="ProposalUpdates-update-controls-button">
+                Read more
+              </a>
               <a className="ProposalUpdates-update-controls-button">
                 {update.totalComments} comments
               </a>
@@ -76,13 +101,20 @@ class ProposalUpdates extends React.Component<Props> {
         ));
       } else {
         content = (
-          <h3 className="ProposalUpdates-noUpdates">No updates have been posted yet</h3>
+          <Placeholder
+            title="No updates have been posted"
+            subtitle="Check back later to see updates from the team"
+          />
         );
       }
     }
 
     return <div className="ProposalUpdates">{content}</div>;
   }
+
+  private setActiveUpdate = (activeUpdate: Update | null) => {
+    this.setState({ activeUpdate });
+  };
 
   private truncate(text: string) {
     if (text.length < 250) {

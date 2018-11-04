@@ -1,3 +1,5 @@
+@import '~styles/variables.less';
+
 .Template {
   display: flex;
   flex-direction: column;
@@ -15,6 +17,8 @@
 
     &-inner {
       width: 100%;
+      max-width: @max-content-width;
+      margin: 0 auto;
       padding-top: 2.5rem;
       padding-bottom: 2.5rem;
       min-height: 280px;
@@ -22,6 +26,7 @@
       .is-fullscreen & {
         padding-top: 0;
         padding-bottom: 0;
+        max-width: none;
       }
       
       .is-centered & {

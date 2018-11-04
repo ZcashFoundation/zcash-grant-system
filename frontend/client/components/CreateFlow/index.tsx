@@ -164,7 +164,7 @@ class CreateFlow extends React.Component<Props, State> {
     const { isFetchingDraft, isSavingDraft, hasFetchedDraft } = this.props;
     const { step, isPreviewing, isPublishing } = this.state;
 
-    if (isFetchingDraft) {
+    if (isFetchingDraft && !isPublishing) {
       return (
         <div className="CreateFlow-loading">
           <Spin size="large" />
