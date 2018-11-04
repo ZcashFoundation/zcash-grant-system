@@ -1,18 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { withNamespaces, WithNamespaces } from 'react-i18next';
 import HeaderDetails from 'components/HeaderDetails';
 import Rocket from 'static/images/rocket.svg';
 import './style.less';
 
-export default class Home extends React.Component {
+class Home extends React.Component<WithNamespaces> {
   render() {
+    const { t } = this.props;
     return (
       <div className="Home">
-        <HeaderDetails
-          title="Home"
-          description="Grant.io organizes creators and community members to incentivize ecosystem
-          improvements"
-        />
+        <HeaderDetails title={t('home.title')} description={t('home.description')} />
         <div className="Home-hero">
           <div className="Home-hero-background">
             <div className="Home-hero-background-planets">
@@ -24,15 +22,15 @@ export default class Home extends React.Component {
 
           <div className="Home-hero-inner">
             <h1 className="Home-hero-title">
-              Decentralized funding for <br /> Blockchain ecosystem improvements
+              {t('home.heroTitle1')} <br /> {t('home.heroTitle2')}
             </h1>
 
             <div className="Home-hero-buttons">
               <Link className="Home-hero-buttons-button is-primary" to="/create">
-                Propose a Project
+                {t('home.createButton')}
               </Link>
               <Link className="Home-hero-buttons-button" to="/proposals">
-                Explore Projects
+                {t('home.exploreButton')}
               </Link>
             </div>
           </div>
@@ -41,3 +39,5 @@ export default class Home extends React.Component {
     );
   }
 }
+
+export default withNamespaces()(Home);
