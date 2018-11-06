@@ -48,9 +48,12 @@ class SignIn extends React.Component<Props> {
           </Button>
         </div>
 
-        <p className="SignIn-back">
-          Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
-        </p>
+        {/*
+          Temporarily only supporting web3, so there are no other identites
+          <p className="SignIn-back">
+            Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
+          </p>
+        */}
       </div>
     );
   }

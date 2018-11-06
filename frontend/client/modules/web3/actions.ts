@@ -33,6 +33,10 @@ export function setWeb3() {
   };
 }
 
+export function enableWeb3() {
+  return { type: types.ENABLE_WEB3_PENDING };
+}
+
 export type TSetContract = typeof setContract;
 export function setContract(json: any, deployedAddress?: string) {
   return (dispatch: Dispatch<any>, getState: GetState) => {

@@ -32,3 +32,12 @@ export function web3ErrorToString(err: Web3ErrorResponse): string {
     .slice(-1)[0]
     .trim();
 }
+
+export function safeEnable(): Promise<void> {
+  const w = typeof window === 'undefined' ? {} : (window as any);
+  if (!w.ethereum || !w.ethereum.enable) {
+    return Promise.reject('No web3 client installed');
+  }
+
+  return w.ethereum.enable();
+}

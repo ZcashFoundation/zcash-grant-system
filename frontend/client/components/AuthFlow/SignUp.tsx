@@ -101,9 +101,12 @@ class SignUp extends React.Component<Props, State> {
           </Form>
         </div>
 
-        <p className="SignUp-back">
-          Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
-        </p>
+        {/*
+          Temporarily only supporting web3, so there are no other identites
+          <p className="SignUp-back">
+            Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
+          </p>
+        */}
       </div>
     );
   }
