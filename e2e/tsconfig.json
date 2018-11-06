@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "sourceMap": true,
+    "module": "commonjs",
+    "target": "es5",
+    "lib": ["dom", "es6"],
+    "jsx": "react",
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "compileOnSave": false
+}
