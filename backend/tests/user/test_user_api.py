@@ -158,7 +158,7 @@ class TestAPI(BaseTestConfig):
         )
 
         # User
-        user_db = User.get_by_email_or_account_address(account_address=team[0]["accountAddress"])
+        user_db = User.get_by_identifier(account_address=team[0]["accountAddress"])
         self.assertEqual(user_db.display_name, team[0]["displayName"])
         self.assertEqual(user_db.title, team[0]["title"])
         self.assertEqual(user_db.account_address, team[0]["accountAddress"])

@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification
 from grant.extensions import ma, db
@@ -80,13 +81,13 @@ class User(db.Model):
         return user
 
     @staticmethod
-    def get_by_email_or_account_address(email_address: str = None, account_address: str = None):
+    def get_by_identifier(email_address: str = None, account_address: str = None):
         if not email_address and not account_address:
             raise ValueError("Either email_address or account_address is required to get a user")
 
         return User.query.filter(
-            (User.account_address == account_address) |
-            (User.email_address == email_address)
+            (func.lower(User.account_address) == func.lower(account_address)) |
+            (func.lower(User.email_address) == func.lower(email_address))
         ).first()
 
 class UserSchema(ma.Schema):

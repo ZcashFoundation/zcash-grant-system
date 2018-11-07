@@ -4,7 +4,7 @@ from flask_yoloapi import endpoint, parameter
 
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 from grant.proposal.models import Proposal, proposal_team
-from grant.utils.auth import requires_sm, verify_signed_auth, BadSignatureException
+from grant.utils.auth import requires_sm, requires_same_user_auth, verify_signed_auth, BadSignatureException
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -35,7 +35,7 @@ def get_me():
 @blueprint.route("/<user_identity>", methods=["GET"])
 @endpoint.api()
 def get_user(user_identity):
-    user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)
+    user = User.get_by_identifier(email_address=user_identity, account_address=user_identity)
     if user:
         result = user_schema.dump(user)
         return result
@@ -61,7 +61,7 @@ def create_user(
     signed_message,
     raw_typed_data
 ):
-    existing_user = User.get_by_email_or_account_address(email_address=email_address, account_address=account_address)
+    existing_user = User.get_by_identifier(email_address=email_address, account_address=account_address)
     if existing_user:
         return {"message": "User with that address or email already exists"}, 409
 
@@ -95,7 +95,7 @@ def create_user(
     parameter('rawTypedData', type=str, required=True)
 )
 def auth_user(account_address, signed_message, raw_typed_data):
-    existing_user = User.get_by_email_or_account_address(account_address=account_address)
+    existing_user = User.get_by_identifier(account_address=account_address)
     if not existing_user:
         return {"message": "No user exists with that address"}, 400
 
@@ -114,6 +114,7 @@ def auth_user(account_address, signed_message, raw_typed_data):
     return user_schema.dump(existing_user)
 
 @blueprint.route("/<user_identity>", methods=["PUT"])
+@requires_same_user_auth
 @endpoint.api(
     parameter('displayName', type=str, required=False),
     parameter('title', type=str, required=False),
@@ -121,9 +122,12 @@ def auth_user(account_address, signed_message, raw_typed_data):
     parameter('avatar', type=dict, required=False),
 )
 def update_user(user_identity, display_name, title, social_medias, avatar):
-    user = User.get_by_email_or_account_address(email_address=user_identity, account_address=user_identity)
+    user = User.get_by_identifier(email_address=user_identity, account_address=user_identity)
     if not user:
         return {"message": "User with that address or email not found"}, 404
+
+    if user.id != g.current_user.id:
+        return {"message": "You are not authorized to edit this user"}, 403
 
     if display_name is not None:
         user.display_name = display_name

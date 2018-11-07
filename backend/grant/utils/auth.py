@@ -9,6 +9,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from grant.settings import SECRET_KEY, AUTH_URL
 from ..user.models import User
+from ..proposal.models import Proposal
 
 TWO_WEEKS = 1209600
 
@@ -66,6 +67,7 @@ def requires_auth(f):
     return decorated
 
 
+# Decorator that requires you to have EIP-712 message signature headers for auth
 def requires_sm(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -79,7 +81,7 @@ def requires_sm(f):
             except BadSignatureException:
                 return jsonify(message="Invalid auth message signature"), 401
 
-            user = User.get_by_email_or_account_address(account_address=auth_address)
+            user = User.get_by_identifier(account_address=auth_address)
             if not user:
                 return jsonify(message="No user exists with address: {}".format(auth_address)), 401
 
@@ -89,3 +91,39 @@ def requires_sm(f):
         return jsonify(message="Authentication is required to access this resource"), 401
 
     return decorated
+
+# Decorator that requires you to be the user you're interacting with
+def requires_same_user_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        user_identity = kwargs["user_identity"]
+        if not user_identity:
+            return jsonify(message="Decorator requires_same_user_auth requires path variable <user_identity>"), 500
+
+        user = User.get_by_identifier(account_address=user_identity, email_address=user_identity)
+        if user != g.current_user:
+            return jsonify(message="You are not authorized to modify this user"), 403
+        
+        return f(*args, **kwargs)
+    
+    return requires_sm(decorated)
+
+# Decorator that requires you to be a team member of a proposal to access
+def requires_team_member_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        proposal_id = kwargs["proposal_id"]
+        if not proposal_id:
+            return jsonify(message="Decorator requires_team_member_auth requires path variable <proposal_id>"), 500
+
+        proposal = Proposal.query.filter_by(id=proposal_id).first()
+        if not proposal:
+            return jsonify(message="No proposal exists with id: {}".format(proposal_id)), 404
+
+        if not g.current_user in proposal.team:
+            return jsonify(message="You are not authorized to modify this proposal"), 403
+
+        g.current_proposal = proposal
+        return f(*args, **kwargs)
+    
+    return requires_sm(decorated)
