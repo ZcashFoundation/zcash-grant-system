@@ -9,7 +9,7 @@ import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { AppState } from 'store/reducers';
 import { Wei } from 'utils/units';
-import { TeamMember } from 'types';
+import { TeamMember, AuthSignatureData } from 'types';
 
 type GetState = () => AppState;
 
@@ -412,17 +412,14 @@ export function withdrawRefund(crowdFundContract: any, address: string) {
   };
 }
 
-// TODO: Fill me out with all param types.
-// TODO: _ will be primaryType for EIP-712
-export function signData(data: any, dataTypes: any, _: string) {
+// TODO: Fill out params with typed data
+export function signData(data: object, dataTypes: object, primaryType: string) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({ type: types.SIGN_DATA_PENDING });
     const state = getState();
     const { web3, accounts } = state.web3;
-    // Needed for EIP-712
-    // const chainId = await web3.eth.net.getId();
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const handleErr = (err: any) => {
         console.error(err);
         dispatch({
@@ -438,28 +435,30 @@ export function signData(data: any, dataTypes: any, _: string) {
           throw new Error('No web3 instance available!');
         }
 
-        // TODO: This typing is hella broken
+        const chainId = await web3.eth.net.getId();
+        const rawTypedData = {
+          domain: {
+            name: 'Grant.io',
+            version: 1,
+            chainId,
+          },
+          types: {
+            ...dataTypes,
+            EIP712Domain: [
+              { name: 'name', type: 'string' },
+              { name: 'version', type: 'string' },
+              { name: 'chainId', type: 'uint256' },
+            ],
+          },
+          message: data,
+          primaryType,
+        };
+
         (web3.currentProvider as any).sendAsync(
           {
-            method: 'eth_signTypedData',
-            params: [
-              Object.keys(dataTypes).map(k => ({
-                ...dataTypes[k],
-                value: data[k],
-              })),
-              accounts[0],
-            ],
-            // EIP-712
-            // params: [JSON.stringify({
-            //   primaryType,
-            //   domain: {
-            //     origin: window.location.origin,
-            //     version: 1,
-            //     chainId,
-            //   },
-            //   types: dataTypes,
-            //   message: data,
-            // }), accounts[0]],
+            method: 'eth_signTypedData_v3',
+            params: [accounts[0], JSON.stringify(rawTypedData)],
+            from: accounts[0],
           },
           (err: Error | undefined, res: any) => {
             if (err) {
@@ -469,8 +468,12 @@ export function signData(data: any, dataTypes: any, _: string) {
               const msg = web3ErrorToString(res.error);
               return handleErr(new Error(msg));
             }
-            dispatch({ type: types.SIGN_DATA_FULFILLED, payload: res.result });
-            resolve(res.result);
+            const payload: AuthSignatureData = {
+              signedMessage: res.result,
+              rawTypedData,
+            };
+            dispatch({ type: types.SIGN_DATA_FULFILLED, payload });
+            resolve(payload);
           },
         );
       } catch (err) {

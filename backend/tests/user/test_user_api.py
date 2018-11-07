@@ -1,48 +1,11 @@
 import copy
 import json
-import random
 
-from grant.proposal.models import CATEGORIES
 from grant.proposal.models import Proposal
 from grant.user.models import User
 from ..config import BaseTestConfig
+from ..test_data import team, proposal
 from mock import patch
-
-milestones = [
-    {
-        "title": "All the money straightaway",
-        "description": "cool stuff with it",
-        "date": "June 2019",
-        "payoutPercent": "100",
-        "immediatePayout": False
-    }
-]
-
-team = [
-    {
-        "accountAddress": "0x1",
-        "displayName": 'Groot',
-        "emailAddress": 'iam@groot.com',
-        "title": 'I am Groot!',
-        "avatar": {
-            "link": 'https://avatars2.githubusercontent.com/u/1393943?s=400&v=4'
-        },
-        "socialMedias": [
-            {
-                "link": 'https://github.com/groot'
-            }
-        ]
-    }
-]
-
-proposal = {
-    "team": team,
-    "crowdFundContractAddress": "0x20000",
-    "content": "## My Proposal",
-    "title": "Give Me Money",
-    "milestones": milestones,
-    "category": random.choice(CATEGORIES)
-}
 
 
 class TestAPI(BaseTestConfig):

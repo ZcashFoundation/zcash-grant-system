@@ -31,6 +31,25 @@ def verify_token(token):
     return data
 
 
+# Custom exception for bad auth
+class BadSignatureException(Exception):
+    pass
+
+def verify_signed_auth(signature, typed_data):
+    loaded_typed_data = ast.literal_eval(typed_data)
+    url = AUTH_URL + "/message/recover"
+    payload = json.dumps({"sig": signature, "data": loaded_typed_data})
+    headers = {'content-type': 'application/json'}
+    response = requests.request("POST", url, data=payload, headers=headers)
+    json_response = response.json()
+    recovered_address = json_response.get('recoveredAddress')
+
+    if not recovered_address:
+        raise BadSignatureException("Authorization signature is invalid")
+
+    return recovered_address
+    
+
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -50,24 +69,19 @@ def requires_auth(f):
 def requires_sm(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        typed_data = request.headers.get('RawTypedData', None)
         signature = request.headers.get('MsgSignature', None)
+        typed_data = request.headers.get('RawTypedData', None)
 
         if typed_data and signature:
-            loaded_typed_data = ast.literal_eval(typed_data)
-            url = AUTH_URL + "/message/recover"
-            payload = json.dumps({"sig": signature, "data": loaded_typed_data})
-            headers = {'content-type': 'application/json'}
-            response = requests.request("POST", url, data=payload, headers=headers)
-            json_response = response.json()
-            recovered_address = json_response.get('recoveredAddress')
+            auth_address = None
+            try:
+                auth_address = verify_signed_auth(signature, typed_data)
+            except BadSignatureException:
+                return jsonify(message="Invalid auth message signature"), 401
 
-            if not recovered_address:
-                return jsonify(message="No user exists with address: {}".format(recovered_address)), 401
-
-            user = User.get_by_email_or_account_address(account_address=recovered_address)
+            user = User.get_by_email_or_account_address(account_address=auth_address)
             if not user:
-                return jsonify(message="No user exists with address: {}".format(recovered_address)), 401
+                return jsonify(message="No user exists with address: {}".format(auth_address)), 401
 
             g.current_user = user
             return f(*args, **kwargs)

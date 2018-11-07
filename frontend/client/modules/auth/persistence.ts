@@ -5,5 +5,5 @@ export const authPersistConfig: PersistConfig = {
   key: 'auth',
   storage,
   version: 1,
-  whitelist: ['token', 'tokenAddress'],
+  whitelist: ['authSignature', 'authSignatureAddress'],
 };

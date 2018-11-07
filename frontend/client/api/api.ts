@@ -63,9 +63,21 @@ export function createUser(payload: {
   emailAddress: string;
   displayName: string;
   title: string;
-  token: string;
+  signedMessage: string;
+  rawTypedData: string;
 }): Promise<{ data: TeamMember }> {
-  return axios.post(`/api/v1/users/`, payload).then(res => {
+  return axios.post('/api/v1/users', payload).then(res => {
+    res.data = formatTeamMemberFromGet(res.data);
+    return res;
+  });
+}
+
+export function authUser(payload: {
+  accountAddress: string;
+  signedMessage: string;
+  rawTypedData: string;
+}): Promise<{ data: TeamMember }> {
+  return axios.post('/api/v1/users/auth', payload).then(res => {
     res.data = formatTeamMemberFromGet(res.data);
     return res;
   });

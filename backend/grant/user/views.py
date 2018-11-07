@@ -4,7 +4,7 @@ from flask_yoloapi import endpoint, parameter
 
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 from grant.proposal.models import Proposal, proposal_team
-from grant.utils.auth import requires_sm
+from grant.utils.auth import requires_sm, verify_signed_auth, BadSignatureException
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -50,11 +50,33 @@ def get_user(user_identity):
     parameter('emailAddress', type=str, required=True),
     parameter('displayName', type=str, required=True),
     parameter('title', type=str, required=True),
+    parameter('signedMessage', type=str, required=True),
+    parameter('rawTypedData', type=str, required=True)
 )
-def create_user(account_address, email_address, display_name, title):
+def create_user(
+    account_address,
+    email_address,
+    display_name,
+    title,
+    signed_message,
+    raw_typed_data
+):
     existing_user = User.get_by_email_or_account_address(email_address=email_address, account_address=account_address)
     if existing_user:
         return {"message": "User with that address or email already exists"}, 409
+
+    # Handle signature
+    try:
+        sig_address = verify_signed_auth(signed_message, raw_typed_data)
+        if sig_address.lower() != account_address.lower():
+            return {
+                "message": "Message signature address ({sig_address}) doesn't match account_address ({account_address})".format(
+                    sig_address=sig_address,
+                    account_address=account_address
+                )
+            }, 400
+    except BadSignatureException:
+        return {"message": "Invalid message signature"}, 400
 
     # TODO: Handle avatar & social stuff too
     user = User.create(
@@ -66,6 +88,30 @@ def create_user(account_address, email_address, display_name, title):
     result = user_schema.dump(user)
     return result
 
+@blueprint.route("/auth", methods=["POST"])
+@endpoint.api(
+    parameter('accountAddress', type=str, required=True),
+    parameter('signedMessage', type=str, required=True),
+    parameter('rawTypedData', type=str, required=True)
+)
+def auth_user(account_address, signed_message, raw_typed_data):
+    existing_user = User.get_by_email_or_account_address(account_address=account_address)
+    if not existing_user:
+        return {"message": "No user exists with that address"}, 400
+
+    try:
+        sig_address = verify_signed_auth(signed_message, raw_typed_data)
+        if sig_address.lower() != account_address.lower():
+            return {
+                "message": "Message signature address ({sig_address}) doesn't match account_address ({account_address})".format(
+                    sig_address=sig_address,
+                    account_address=account_address
+                )
+            }, 400
+    except BadSignatureException:
+        return {"message": "Invalid message signature"}, 400
+    
+    return user_schema.dump(existing_user)
 
 @blueprint.route("/<user_identity>", methods=["PUT"])
 @endpoint.api(

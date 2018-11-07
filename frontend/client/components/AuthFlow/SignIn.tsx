@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button } from 'antd';
+import { Button, Alert } from 'antd';
 import { authActions } from 'modules/auth';
 import { TeamMember } from 'types';
 import { AppState } from 'store/reducers';
@@ -29,7 +29,7 @@ type Props = StateProps & DispatchProps & OwnProps;
 
 class SignIn extends React.Component<Props> {
   render() {
-    const { user } = this.props;
+    const { user, authUserError } = this.props;
     return (
       <div className="SignIn">
         <div className="SignIn-container">
@@ -47,6 +47,16 @@ class SignIn extends React.Component<Props> {
             Prove identity
           </Button>
         </div>
+
+        {authUserError && (
+          <Alert
+            className="SignIn-error"
+            type="error"
+            message="Failed to sign in"
+            description={authUserError}
+            showIcon
+          />
+        )}
 
         {/*
           Temporarily only supporting web3, so there are no other identites

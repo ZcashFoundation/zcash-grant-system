@@ -40,15 +40,17 @@ export function generateAuthSignatureData(address: string) {
   return {
     data: { message, time },
     types: {
-      message: {
-        name: 'Message Proof',
-        type: 'string',
-      },
-      time: {
-        name: 'Time',
-        type: 'string',
-      },
+      authorization: [
+        {
+          name: 'Message Proof',
+          type: 'string',
+        },
+        {
+          name: 'Time',
+          type: 'string',
+        },
+      ],
     },
-    primaryType: 'message',
+    primaryType: 'authorization',
   };
 }
