@@ -92,7 +92,7 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
         self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
         proposal_db = Proposal.query.filter_by(
-            proposal_id=proposal["crowdFundContractAddress"]
+            proposal_address=proposal["crowdFundContractAddress"]
         ).first()
         self.assertEqual(proposal_db.team[0].id, user_db.id)
 
@@ -111,7 +111,7 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
         self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
         proposal_db = Proposal.query.filter_by(
-            proposal_id=proposal["crowdFundContractAddress"]
+            proposal_address=proposal["crowdFundContractAddress"]
         ).first()
         self.assertEqual(proposal_db.team[0].id, user_db.id)
 
@@ -129,7 +129,7 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(user_db.display_name, new_proposal_by_email["team"][0]["displayName"])
         self.assertEqual(user_db.title, new_proposal_by_email["team"][0]["title"])
         proposal_db = Proposal.query.filter_by(
-            proposal_id=proposal["crowdFundContractAddress"]
+            proposal_address=proposal["crowdFundContractAddress"]
         ).first()
         self.assertEqual(proposal_db.team[0].id, user_db.id)
 
@@ -144,6 +144,7 @@ class TestAPI(BaseTestConfig):
         )
 
         users_json = users_get_resp.json
+        print(users_json)
         self.assertEqual(users_json[0]["displayName"], team[0]["displayName"])
 
     def test_get_user_associated_with_proposal(self):

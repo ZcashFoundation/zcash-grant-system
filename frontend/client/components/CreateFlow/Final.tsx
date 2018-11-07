@@ -4,12 +4,15 @@ import { Spin, Icon } from 'antd';
 import { Link } from 'react-router-dom';
 import { createActions } from 'modules/create';
 import { AppState } from 'store/reducers';
+import { getProposalByAddress } from 'modules/proposals/selectors';
+import { ProposalWithCrowdFund } from 'types';
 import './Final.less';
 
 interface StateProps {
   form: AppState['create']['form'];
   crowdFundError: AppState['web3']['crowdFundError'];
   crowdFundCreatedAddress: AppState['web3']['crowdFundCreatedAddress'];
+  createdProposal: ProposalWithCrowdFund | null;
 }
 
 interface DispatchProps {
@@ -31,7 +34,7 @@ class CreateFinal extends React.Component<Props> {
   }
 
   render() {
-    const { crowdFundError, crowdFundCreatedAddress } = this.props;
+    const { crowdFundError, crowdFundCreatedAddress, createdProposal } = this.props;
     let content;
     if (crowdFundError) {
       content = (
@@ -43,14 +46,14 @@ class CreateFinal extends React.Component<Props> {
           </div>
         </div>
       );
-    } else if (crowdFundCreatedAddress) {
+    } else if (crowdFundCreatedAddress && createdProposal) {
       content = (
         <div className="CreateFinal-message is-success">
           <Icon type="check-circle" />
           <div className="CreateFinal-message-text">
             Your proposal is now live and on the blockchain!{' '}
-            <Link to={`/proposals/${crowdFundCreatedAddress}`}>Click here</Link> to check
-            it out.
+            <Link to={`/proposals/${createdProposal.proposalUrlId}`}>Click here</Link> to
+            check it out.
           </div>
         </div>
       );
@@ -76,6 +79,10 @@ export default connect<StateProps, DispatchProps, {}, AppState>(
     form: state.create.form,
     crowdFundError: state.web3.crowdFundError,
     crowdFundCreatedAddress: state.web3.crowdFundCreatedAddress,
+    createdProposal: getProposalByAddress(
+      state,
+      state.web3.crowdFundCreatedAddress || '',
+    ),
   }),
   {
     createProposal: createActions.createProposal,

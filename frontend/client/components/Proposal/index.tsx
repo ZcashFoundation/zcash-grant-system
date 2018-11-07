@@ -26,7 +26,7 @@ import { web3Actions } from 'modules/web3';
 import SocialShare from 'components/SocialShare';
 
 interface OwnProps {
-  proposalId: string;
+  proposalId: number;
   isPreview?: boolean;
 }
 
@@ -82,7 +82,13 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   render() {
     const { proposal, isPreview, account } = this.props;
-    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, isUpdateOpen, bodyId } = this.state;
+    const {
+      isBodyExpanded,
+      isBodyOverflowing,
+      isCancelOpen,
+      isUpdateOpen,
+      bodyId,
+    } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
 
     if (!proposal) {
@@ -97,9 +103,7 @@ export class ProposalDetail extends React.Component<Props, State> {
 
       const adminMenu = isTrustee && (
         <Menu>
-          <Menu.Item onClick={this.openUpdateModal}>
-            Post an Update
-          </Menu.Item>
+          <Menu.Item onClick={this.openUpdateModal}>Post an Update</Menu.Item>
           <Menu.Item
             onClick={() => alert('Sorry, not yet implemented!')}
             disabled={!isProposalActive}

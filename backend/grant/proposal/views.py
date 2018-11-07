@@ -15,7 +15,7 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 @blueprint.route("/<proposal_id>", methods=["GET"])
 @endpoint.api()
 def get_proposal(proposal_id):
-    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
         return dumped_proposal
@@ -26,7 +26,7 @@ def get_proposal(proposal_id):
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
 @endpoint.api()
 def get_proposal_comments(proposal_id):
-    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
         return {
@@ -44,7 +44,7 @@ def get_proposal_comments(proposal_id):
     parameter('content', type=str, required=True)
 )
 def post_proposal_comments(proposal_id, user_id, content):
-    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         user = User.query.filter_by(id=user_id).first()
 
@@ -93,13 +93,13 @@ def get_proposals(stage):
 )
 def make_proposal(crowd_fund_contract_address, content, title, milestones, category, team):
     from grant.user.models import User
-    existing_proposal = Proposal.query.filter_by(proposal_id=crowd_fund_contract_address).first()
+    existing_proposal = Proposal.query.filter_by(proposal_address=crowd_fund_contract_address).first()
     if existing_proposal:
         return {"message": "Oops! Something went wrong."}, 409
 
     proposal = Proposal.create(
         stage="FUNDING_REQUIRED",
-        proposal_id=crowd_fund_contract_address,
+        proposal_address=crowd_fund_contract_address,
         content=content,
         title=title,
         category=category
@@ -165,7 +165,7 @@ def make_proposal(crowd_fund_contract_address, content, title, milestones, categ
 @blueprint.route("/<proposal_id>/updates", methods=["GET"])
 @endpoint.api()
 def get_proposal_updates(proposal_id):
-    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
         return dumped_proposal["updates"]
@@ -176,7 +176,7 @@ def get_proposal_updates(proposal_id):
 @blueprint.route("/<proposal_id>/updates/<update_id>", methods=["GET"])
 @endpoint.api()
 def get_proposal_update(proposal_id, update_id):
-    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         update = ProposalUpdate.query.filter_by(proposal_id=proposal.id, id=update_id).first()
         if update:
@@ -194,7 +194,7 @@ def get_proposal_update(proposal_id, update_id):
     parameter('content', type=str, required=True)
 )
 def post_proposal_update(proposal_id, title, content):
-    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         update = ProposalUpdate(
             proposal_id=proposal.id,

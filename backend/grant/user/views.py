@@ -14,7 +14,7 @@ blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
     parameter('proposalId', type=str, required=False)
 )
 def get_users(proposal_id):
-    proposal = Proposal.query.filter_by(proposal_id=proposal_id).first()
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
         users = User.query.all()
     else:

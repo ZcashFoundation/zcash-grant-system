@@ -32,7 +32,9 @@ export interface CrowdFund {
 }
 
 export interface Proposal {
-  proposalId: string;
+  proposalId: number;
+  proposalAddress: string;
+  proposalUrlId: string;
   dateCreated: number;
   title: string;
   body: string;
@@ -59,7 +61,7 @@ export interface ProposalUpdates {
 }
 
 export interface UserProposal {
-  proposalId: string;
+  proposalId: number;
   title: string;
   brief: string;
   team: TeamMember[];

@@ -16,6 +16,17 @@ export function getProposal(
   );
 }
 
+export function getProposalByAddress(
+  state: AppState,
+  proposalAddress: ProposalWithCrowdFund['proposalAddress'],
+): ProposalWithCrowdFund | null {
+  return (
+    state.proposal.proposals.find(
+      (p: ProposalWithCrowdFund) => p.proposalAddress === proposalAddress,
+    ) || null
+  );
+}
+
 export function getProposalComments(
   state: AppState,
   proposalId: ProposalWithCrowdFund['proposalId'],

@@ -45,7 +45,7 @@ proposal = {
 class TestAPI(BaseTestConfig):
     def test_create_new_proposal(self):
         self.assertIsNone(Proposal.query.filter_by(
-            proposal_id=proposal["crowdFundContractAddress"]
+            proposal_address=proposal["crowdFundContractAddress"]
         ).first())
 
         resp = self.app.post(
@@ -55,7 +55,7 @@ class TestAPI(BaseTestConfig):
         )
 
         proposal_db = Proposal.query.filter_by(
-            proposal_id=proposal["crowdFundContractAddress"]
+            proposal_address=proposal["crowdFundContractAddress"]
         ).first()
         self.assertEqual(proposal_db.title, proposal["title"])
 

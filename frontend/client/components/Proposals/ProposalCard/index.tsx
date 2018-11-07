@@ -26,6 +26,7 @@ export class ProposalCard extends React.Component<Props> {
     const {
       title,
       proposalId,
+      proposalUrlId,
       category,
       dateCreated,
       web3,
@@ -39,7 +40,7 @@ export class ProposalCard extends React.Component<Props> {
       return (
         <div
           className="ProposalCard"
-          onClick={() => this.setState({ redirect: `/proposals/${proposalId}` })}
+          onClick={() => this.setState({ redirect: `/proposals/${proposalUrlId}` })}
         >
           <h3 className="ProposalCard-title">{title}</h3>
           <div className="ProposalCard-funding">

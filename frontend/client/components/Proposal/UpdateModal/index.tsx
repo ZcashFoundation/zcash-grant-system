@@ -3,16 +3,16 @@ import { connect } from 'react-redux';
 import { Modal, Alert, Input, Button } from 'antd';
 import Result from 'ant-design-pro/lib/Result';
 import { fetchProposalUpdates } from 'modules/proposals/actions';
-import { postProposalUpdate } from 'api/api'; 
+import { postProposalUpdate } from 'api/api';
 import MarkdownEditor from 'components/MarkdownEditor';
 import './style.less';
 
 interface DispatchProps {
-  fetchProposalUpdates: typeof fetchProposalUpdates
+  fetchProposalUpdates: typeof fetchProposalUpdates;
 }
 
 interface OwnProps {
-  proposalId: string;
+  proposalId: number;
   isVisible: boolean;
   handleClose(): void;
 }
@@ -33,7 +33,7 @@ const INITIAL_STATE = {
   isSubmitting: false,
   hasSubmitted: false,
   error: null,
-}
+};
 
 class UpdateModal extends React.Component<Props, State> {
   state: State = { ...INITIAL_STATE };
@@ -111,7 +111,11 @@ class UpdateModal extends React.Component<Props, State> {
     const { isSubmitting, hasSubmitted, title, content } = this.state;
     if (!isSubmitting) {
       const empty = !title && !content;
-      if (empty || hasSubmitted || confirm('Are you sure you want to close? You’ll lose this draft.')) {
+      if (
+        empty ||
+        hasSubmitted ||
+        confirm('Are you sure you want to close? You’ll lose this draft.')
+      ) {
         this.props.handleClose();
       }
     }
@@ -124,7 +128,7 @@ class UpdateModal extends React.Component<Props, State> {
     if (hasSubmitted || isSubmitting) {
       return;
     }
-    
+
     this.setState({ isSubmitting: true });
     postProposalUpdate(proposalId, title, content)
       .then(() => {
@@ -143,4 +147,7 @@ class UpdateModal extends React.Component<Props, State> {
   };
 }
 
-export default connect(undefined, { fetchProposalUpdates })(UpdateModal);
+export default connect(
+  undefined,
+  { fetchProposalUpdates },
+)(UpdateModal);

@@ -18,7 +18,7 @@ async function getMergedCrowdFundProposal(
   web3: Web3,
   account: string,
 ) {
-  const crowdFundContract = await getContract(web3, CrowdFund, proposal.proposalId);
+  const crowdFundContract = await getContract(web3, CrowdFund, proposal.proposalAddress);
   const crowdFundData = {
     crowdFundContract,
     crowdFund: await getCrowdFundState(crowdFundContract, account, web3),

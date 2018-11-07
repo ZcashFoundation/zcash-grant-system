@@ -211,7 +211,9 @@ export function makeProposalPreviewFromForm(
   const target = parseFloat(form.amountToRaise);
 
   return {
-    proposalId: 'preview',
+    proposalId: 0,
+    proposalUrlId: '0-title',
+    proposalAddress: '0x0',
     dateCreated: Date.now(),
     title: form.title,
     body: form.details,
