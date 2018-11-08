@@ -38,6 +38,9 @@ class BadSignatureException(Exception):
 
 def verify_signed_auth(signature, typed_data):
     loaded_typed_data = ast.literal_eval(typed_data)
+    if loaded_typed_data['domain']['name'] != 'Grant.io':
+        raise BadSignatureException("Signature is not for Grant.io")
+
     url = AUTH_URL + "/message/recover"
     payload = json.dumps({"sig": signature, "data": loaded_typed_data})
     headers = {'content-type': 'application/json'}

@@ -1,5 +1,6 @@
 from datetime import datetime
 from functools import wraps
+import ast
 
 from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
@@ -8,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
-from grant.utils.auth import requires_sm, requires_team_member_auth
+from grant.utils.auth import requires_sm, requires_team_member_auth, verify_signed_auth, BadSignatureException
 from .models import Proposal, proposals_schema, proposal_schema, ProposalUpdate, proposal_update_schema, db
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
@@ -43,22 +44,52 @@ def get_proposal_comments(proposal_id):
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
 @requires_sm
 @endpoint.api(
-    parameter('content', type=str, required=True)
+    parameter('comment', type=str, required=True),
+    parameter('parentCommentId', type=int, required=False),
+    parameter('signedMessage', type=str, required=True),
+    parameter('rawTypedData', type=str, required=True)
 )
-def post_proposal_comments(proposal_id, user_id, content):
+def post_proposal_comments(proposal_id, comment, parent_comment_id, signed_message, raw_typed_data):
+    # Make sure proposal exists
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        comment = Comment(
-            proposal_id=proposal_id,
-            user_id=g.current_user.id,
-            content=content
-        )
-        db.session.add(comment)
-        db.session.commit()
-        dumped_comment = comment_schema.dump(comment)
-        return dumped_comment, 201
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+
+    # Make sure the parent comment exists
+    if parent_comment_id:
+        parent = Comment.query.filter_by(id=parent_comment_id).first()
+        if not parent:
+            return {"message": "Parent comment doesn’t exist"}, 400
+
+    # Make sure comment content matches
+    typed_data = ast.literal_eval(raw_typed_data)
+    if comment != typed_data['message']['comment']:
+        return {"message": "Comment doesn’t match signature data"}, 404
+
+    # Verify the signature
+    try:
+        sig_address = verify_signed_auth(signed_message, raw_typed_data)
+        if sig_address.lower() != g.current_user.account_address.lower():
+            return {
+                "message": "Message signature address ({sig_address}) doesn't match current account address ({account_address})".format(
+                    sig_address=sig_address,
+                    account_address=g.current_user.account_address
+                )
+            }, 400
+    except BadSignatureException:
+        return {"message": "Invalid message signature"}, 400
+
+    # Make the comment
+    comment = Comment(
+        proposal_id=proposal_id,
+        user_id=g.current_user.id,
+        parent_comment_id=parent_comment_id,
+        content=comment
+    )
+    db.session.add(comment)
+    db.session.commit()
+    dumped_comment = comment_schema.dump(comment)
+    return dumped_comment, 201
 
 
 @blueprint.route("/", methods=["GET"])

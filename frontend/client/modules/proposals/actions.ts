@@ -4,10 +4,11 @@ import {
   getProposal,
   getProposalComments,
   getProposalUpdates,
+  postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
 import Web3 from 'web3';
-import { ProposalWithCrowdFund, Proposal, Comment } from 'types';
+import { ProposalWithCrowdFund, Proposal, Comment, AuthSignatureData } from 'types';
 import { signData } from 'modules/web3/actions';
 import getContract from 'lib/getContract';
 import CrowdFund from 'lib/contracts/CrowdFund.json';
@@ -117,40 +118,36 @@ export function postProposalComment(
     dispatch({ type: types.POST_PROPOSAL_COMMENT_PENDING });
 
     try {
-      const signedComment = await dispatch(
+      const sigData: AuthSignatureData = (await dispatch(
         signData(
           { comment },
           {
-            comment: {
-              name: 'Comment',
-              type: 'string',
-            },
+            comment: [
+              {
+                name: 'Comment',
+                type: 'string',
+              },
+            ],
           },
           'comment',
         ),
-      );
+      )) as any;
+
+      const res = await apiPostProposalComment({
+        proposalId,
+        comment,
+        signedMessage: sigData.signedMessage,
+        rawTypedData: JSON.stringify(sigData.rawTypedData),
+      });
 
       // TODO: API up the comment & signed comment, handle response / failures
       // TODO: Remove console log
-      console.log(signedComment);
       dispatch({
         type: types.POST_PROPOSAL_COMMENT_FULFILLED,
         payload: {
           proposalId,
           parentCommentId,
-          comment: {
-            commentId: Math.random(),
-            body: comment,
-            dateCreated: Date.now(),
-            replies: [],
-            author: {
-              accountAddress: '0x0',
-              userid: 'test',
-              username: 'test',
-              title: 'test',
-              avatar: { '120x120': 'test' },
-            },
-          },
+          comment: res.data,
         },
       });
     } catch (err) {

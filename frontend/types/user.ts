@@ -3,9 +3,9 @@ import { SocialAccountMap } from 'types';
 export interface User {
   accountAddress: string;
   userid: number | string;
-  username: string;
+  displayName: string;
   title: string;
-  avatar: {
+  avatar?: {
     '120x120': string;
   };
 }

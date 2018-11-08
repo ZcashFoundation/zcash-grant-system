@@ -55,8 +55,10 @@ class Comment extends React.Component<Props> {
             <Identicon address={comment.author.accountAddress} />
           </div>
           {/* <div className="Comment-info-thumb" src={comment.author.avatar['120x120']} /> */}
-          <div className="Comment-info-name">{comment.author.username}</div>
-          <div className="Comment-info-time">{moment(comment.dateCreated).fromNow()}</div>
+          <div className="Comment-info-name">{comment.author.displayName}</div>
+          <div className="Comment-info-time">
+            {moment.unix(comment.dateCreated).fromNow()}
+          </div>
         </div>
 
         <div className="Comment-body">

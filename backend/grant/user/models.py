@@ -102,7 +102,6 @@ class UserSchema(ma.Schema):
             "avatar",
             "display_name",
             "userid"
-
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
@@ -112,10 +111,8 @@ class UserSchema(ma.Schema):
     def get_userid(self, obj):
         return obj.id
 
-
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
-
 
 class SocialMediaSchema(ma.Schema):
     class Meta:
