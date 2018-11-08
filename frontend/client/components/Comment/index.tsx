@@ -7,7 +7,7 @@ import Markdown from 'components/Markdown';
 import UserAvatar from 'components/UserAvatar';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import { postProposalComment } from 'modules/proposals/actions';
-import { Comment as IComment, Proposal } from 'types';
+import { Comment as IComment } from 'types';
 import { AppState } from 'store/reducers';
 import './style.less';
 
