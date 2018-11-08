@@ -9,6 +9,7 @@ import {
   getIsFetchingComments,
   getCommentsError,
 } from 'modules/proposals/selectors';
+import { getIsSignedIn } from 'modules/auth/selectors';
 import Comments from 'components/Comments';
 import Placeholder from 'components/Placeholder';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
@@ -22,6 +23,7 @@ interface StateProps {
   comments: ReturnType<typeof getProposalComments>;
   isFetchingComments: ReturnType<typeof getIsFetchingComments>;
   commentsError: ReturnType<typeof getCommentsError>;
+  isSignedIn: ReturnType<typeof getIsSignedIn>;
 }
 
 interface DispatchProps {
@@ -53,7 +55,7 @@ class ProposalComments extends React.Component<Props, State> {
   }
 
   render() {
-    const { comments, isFetchingComments, commentsError } = this.props;
+    const { comments, isFetchingComments, commentsError, isSignedIn } = this.props;
     const { comment } = this.state;
     let content = null;
 
@@ -81,16 +83,18 @@ class ProposalComments extends React.Component<Props, State> {
 
     return (
       <>
-        <div className="ProposalComments-post">
-          <MarkdownEditor
-            onChange={this.handleCommentChange}
-            type={MARKDOWN_TYPE.REDUCED}
-          />
-          <div style={{ marginTop: '0.5rem' }} />
-          <Button onClick={this.postComment} disabled={!comment.length}>
-            Submit comment
-          </Button>
-        </div>
+        {isSignedIn && (
+          <div className="ProposalComments-post">
+            <MarkdownEditor
+              onChange={this.handleCommentChange}
+              type={MARKDOWN_TYPE.REDUCED}
+            />
+            <div style={{ marginTop: '0.5rem' }} />
+            <Button onClick={this.postComment} disabled={!comment.length}>
+              Submit comment
+            </Button>
+          </div>
+        )}
         {content}
       </>
     );
@@ -105,11 +109,12 @@ class ProposalComments extends React.Component<Props, State> {
   };
 }
 
-export default connect(
-  (state: AppState, ownProps: OwnProps) => ({
+export default connect<StateProps, DispatchProps, OwnProps, AppState>(
+  (state, ownProps) => ({
     comments: getProposalComments(state, ownProps.proposalId),
     isFetchingComments: getIsFetchingComments(state),
     commentsError: getCommentsError(state),
+    isSignedIn: getIsSignedIn(state),
   }),
   {
     fetchProposalComments,

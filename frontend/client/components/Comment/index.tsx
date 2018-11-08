@@ -7,6 +7,7 @@ import Markdown from 'components/Markdown';
 import UserAvatar from 'components/UserAvatar';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import { postProposalComment } from 'modules/proposals/actions';
+import { getIsSignedIn } from 'modules/auth/selectors';
 import { Comment as IComment } from 'types';
 import { AppState } from 'store/reducers';
 import './style.less';
@@ -18,6 +19,7 @@ interface OwnProps {
 interface StateProps {
   isPostCommentPending: AppState['proposal']['isPostCommentPending'];
   postCommentError: AppState['proposal']['postCommentError'];
+  isSignedIn: ReturnType<typeof getIsSignedIn>;
 }
 
 interface DispatchProps {
@@ -46,7 +48,7 @@ class Comment extends React.Component<Props> {
   }
 
   public render(): React.ReactNode {
-    const { comment } = this.props;
+    const { comment, isSignedIn } = this.props;
     const { isReplying, reply } = this.state;
     const authorPath = `/profile/${comment.author.accountAddress}`;
     return (
@@ -69,12 +71,14 @@ class Comment extends React.Component<Props> {
           <Markdown source={comment.body} type={MARKDOWN_TYPE.REDUCED} />
         </div>
 
-        <div className="Comment-controls">
-          <a className="Comment-controls-button" onClick={this.toggleReply}>
-            {isReplying ? 'Cancel' : 'Reply'}
-          </a>
-          {/*<a className="Comment-controls-button">Report</a>*/}
-        </div>
+        {isSignedIn && (
+          <div className="Comment-controls">
+            <a className="Comment-controls-button" onClick={this.toggleReply}>
+              {isReplying ? 'Cancel' : 'Reply'}
+            </a>
+            {/*<a className="Comment-controls-button">Report</a>*/}
+          </div>
+        )}
 
         {(comment.replies.length || isReplying) && (
           <div className="Comment-replies">
@@ -118,6 +122,7 @@ const ConnectedComment = connect<StateProps, DispatchProps, OwnProps, AppState>(
   (state: AppState) => ({
     isPostCommentPending: state.proposal.isPostCommentPending,
     postCommentError: state.proposal.postCommentError,
+    isSignedIn: getIsSignedIn(state),
   }),
   {
     postProposalComment,
