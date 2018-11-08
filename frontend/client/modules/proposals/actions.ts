@@ -112,7 +112,7 @@ export function fetchProposalUpdates(proposalId: ProposalWithCrowdFund['proposal
 export function postProposalComment(
   proposalId: ProposalWithCrowdFund['proposalId'],
   comment: string,
-  parentCommentId?: Comment['commentId'],
+  parentCommentId?: Comment['id'],
 ) {
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.POST_PROPOSAL_COMMENT_PENDING });

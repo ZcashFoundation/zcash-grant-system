@@ -53,7 +53,7 @@ class ProposalComments extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposalId, comments, isFetchingComments, commentsError } = this.props;
+    const { comments, isFetchingComments, commentsError } = this.props;
     const { comment } = this.state;
     let content = null;
 
@@ -68,7 +68,7 @@ class ProposalComments extends React.Component<Props, State> {
       );
     } else if (comments) {
       if (comments.length) {
-        content = <Comments comments={comments} proposalId={proposalId} />;
+        content = <Comments comments={comments} />;
       } else {
         content = (
           <Placeholder

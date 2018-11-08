@@ -13,7 +13,6 @@ import './style.less';
 
 interface OwnProps {
   comment: IComment;
-  proposalId: Proposal['proposalId'];
 }
 
 interface StateProps {
@@ -47,7 +46,7 @@ class Comment extends React.Component<Props> {
   }
 
   public render(): React.ReactNode {
-    const { comment, proposalId } = this.props;
+    const { comment } = this.props;
     const { isReplying, reply } = this.state;
     const authorPath = `/profile/${comment.author.accountAddress}`;
     return (
@@ -92,11 +91,7 @@ class Comment extends React.Component<Props> {
               </div>
             )}
             {comment.replies.map(subComment => (
-              <ConnectedComment
-                key={subComment.id}
-                comment={subComment}
-                proposalId={proposalId}
-              />
+              <ConnectedComment key={subComment.id} comment={subComment} />
             ))}
           </div>
         )}
@@ -113,9 +108,9 @@ class Comment extends React.Component<Props> {
   };
 
   private reply = () => {
-    const { comment, proposalId } = this.props;
+    const { comment } = this.props;
     const { reply } = this.state;
-    this.props.postProposalComment(proposalId, reply, comment.id);
+    this.props.postProposalComment(comment.proposalId, reply, comment.id);
   };
 }
 
