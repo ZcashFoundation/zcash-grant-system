@@ -2,8 +2,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import { Button } from 'antd';
+import { Link } from 'react-router-dom';
 import Markdown from 'components/Markdown';
-import Identicon from 'components/Identicon';
+import UserAvatar from 'components/UserAvatar';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import { postProposalComment } from 'modules/proposals/actions';
 import { Comment as IComment, Proposal } from 'types';
@@ -48,14 +49,18 @@ class Comment extends React.Component<Props> {
   public render(): React.ReactNode {
     const { comment, proposalId } = this.props;
     const { isReplying, reply } = this.state;
+    const authorPath = `/profile/${comment.author.accountAddress}`;
     return (
       <div className="Comment">
         <div className="Comment-info">
-          <div className="Comment-info-thumb">
-            <Identicon address={comment.author.accountAddress} />
-          </div>
-          {/* <div className="Comment-info-thumb" src={comment.author.avatar['120x120']} /> */}
-          <div className="Comment-info-name">{comment.author.displayName}</div>
+          <Link to={authorPath}>
+            <div className="Comment-info-thumb">
+              <UserAvatar user={comment.author} />
+            </div>
+          </Link>
+          <Link to={authorPath}>
+            <div className="Comment-info-name">{comment.author.displayName}</div>
+          </Link>
           <div className="Comment-info-time">
             {moment.unix(comment.dateCreated).fromNow()}
           </div>

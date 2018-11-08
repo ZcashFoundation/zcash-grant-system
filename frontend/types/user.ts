@@ -6,7 +6,7 @@ export interface User {
   displayName: string;
   title: string;
   avatar?: {
-    '120x120': string;
+    imageUrl: string;
   };
 }
 
