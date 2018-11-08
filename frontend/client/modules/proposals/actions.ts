@@ -135,6 +135,7 @@ export function postProposalComment(
 
       const res = await apiPostProposalComment({
         proposalId,
+        parentCommentId,
         comment,
         signedMessage: sigData.signedMessage,
         rawTypedData: JSON.stringify(sigData.rawTypedData),

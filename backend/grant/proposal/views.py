@@ -6,7 +6,7 @@ from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 from sqlalchemy.exc import IntegrityError
 
-from grant.comment.models import Comment, comment_schema
+from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.utils.auth import requires_sm, requires_team_member_auth, verify_signed_auth, BadSignatureException
@@ -30,15 +30,17 @@ def get_proposal(proposal_id):
 @endpoint.api()
 def get_proposal_comments(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        dumped_proposal = proposal_schema.dump(proposal)
-        return {
-            "proposalId": proposal_id,
-            "totalComments": len(dumped_proposal["comments"]),
-            "comments": dumped_proposal["comments"]
-        }
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+    
+    # Only pull top comments, replies will be attached to them
+    comments = Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None)
+    num_comments = Comment.query.filter_by(proposal_id=proposal_id).count()
+    return {
+        "proposalId": proposal_id,
+        "totalComments": num_comments,
+        "comments": comments_schema.dump(comments)
+    }
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])

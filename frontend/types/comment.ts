@@ -1,8 +1,8 @@
 import { UserProposal, User } from 'types';
 
 export interface Comment {
+  id: number;
   proposalId: number;
-  commentId: number;
   body: string;
   dateCreated: number;
   author: User;

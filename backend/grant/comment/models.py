@@ -31,14 +31,16 @@ class CommentSchema(ma.Schema):
         model = Comment
         # Fields to expose
         fields = (
+            "id",
+            "proposal_id",
             "author",
             "content",
-            "proposal_id",
             "parent_comment_id",
             "date_created",
             "body",
             "replies"
         )
+
 
     body = ma.Method("get_body")
     date_created = ma.Method("get_date_created")

@@ -88,7 +88,7 @@ class Comment extends React.Component<Props> {
             )}
             {comment.replies.map(subComment => (
               <ConnectedComment
-                key={subComment.commentId}
+                key={subComment.id}
                 comment={subComment}
                 proposalId={proposalId}
               />
@@ -110,7 +110,7 @@ class Comment extends React.Component<Props> {
   private reply = () => {
     const { comment, proposalId } = this.props;
     const { reply } = this.state;
-    this.props.postProposalComment(proposalId, reply, comment.commentId);
+    this.props.postProposalComment(proposalId, reply, comment.id);
   };
 }
 
