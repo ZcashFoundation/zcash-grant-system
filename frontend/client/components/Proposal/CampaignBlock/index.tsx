@@ -76,7 +76,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
   sendTransaction = () => {
     const { proposal, fundCrowdFund } = this.props;
-    fundCrowdFund(proposal.crowdFundContract, this.state.amountToRaise);
+    fundCrowdFund(proposal, this.state.amountToRaise);
 
     this.setState({ amountToRaise: '' });
   };

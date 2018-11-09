@@ -234,18 +234,15 @@ export class Milestones extends React.Component<Props> {
   }
 
   private requestPayout = (milestoneIndex: number) => {
-    const { crowdFundContract } = this.props.proposal;
-    this.props.requestMilestonePayout(crowdFundContract, milestoneIndex);
+    this.props.requestMilestonePayout(this.props.proposal, milestoneIndex);
   };
 
   private payPayout = (milestoneIndex: number) => {
-    const { crowdFundContract } = this.props.proposal;
-    this.props.payMilestonePayout(crowdFundContract, milestoneIndex);
+    this.props.payMilestonePayout(this.props.proposal, milestoneIndex);
   };
 
   private votePayout = (milestoneIndex: number, vote: boolean) => {
-    const { crowdFundContract } = this.props.proposal;
-    this.props.voteMilestonePayout(crowdFundContract, milestoneIndex, vote);
+    this.props.voteMilestonePayout(this.props.proposal, milestoneIndex, vote);
   };
 }
 

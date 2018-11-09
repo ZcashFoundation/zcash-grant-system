@@ -33,7 +33,7 @@ class ProposalsNaked extends React.Component<Props> {
   }
 
   render() {
-    const id = this.props.match.params.id;
+    const id = Number(this.props.match.params.id);
     const { proposals, proposalsFetched } = store;
 
     if (!proposalsFetched) {
@@ -118,7 +118,8 @@ class ProposalItemNaked extends React.Component<Proposal> {
               disabled={true}
             />
           </div>
-          <b>{p.title}</b> {p.proposalId} <Field title="category" value={p.category} />
+          <b>{p.title}</b> [{p.proposalId}]{p.proposalAddress}{' '}
+          <Field title="category" value={p.category} />
           <Field title="dateCreated" value={p.dateCreated * 1000} isTime={true} />
           <Field title="stage" value={p.stage} />
           <Field
@@ -230,7 +231,7 @@ const ProposalItem = view(ProposalItemNaked);
 
 // tslint:disable-next-line:max-classes-per-file
 class ContractMethodNaked extends React.Component<
-  TContractMethod & { proposalId: string; name: string }
+  TContractMethod & { proposalId: number; name: string }
 > {
   state = {};
   render() {
@@ -324,7 +325,7 @@ const ContractMethod = view(ContractMethodNaked);
 
 // tslint:disable-next-line:max-classes-per-file
 class ContractMethodSendNaked extends React.Component<
-  TContractMethod & { proposalId: string; name: string }
+  TContractMethod & { proposalId: number; name: string }
 > {
   state = {
     args: this.props.input.map(i => (i.type === 'boolean' ? false : '')) as any[],
