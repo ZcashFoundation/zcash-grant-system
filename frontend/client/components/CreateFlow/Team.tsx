@@ -1,13 +1,16 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Icon } from 'antd';
+import { Icon, Form, Input, Button, Popconfirm } from 'antd';
 import { CreateFormState, TeamMember } from 'types';
 import TeamMemberComponent from './TeamMember';
-import './Team.less';
+import { isValidEthAddress, isValidEmail } from 'utils/validators';
 import { AppState } from 'store/reducers';
+import './Team.less';
 
 interface State {
   team: TeamMember[];
+  teamInvites: string[];
+  invite: string;
 }
 
 interface StateProps {
@@ -33,6 +36,8 @@ const DEFAULT_STATE: State = {
       socialAccounts: {},
     },
   ],
+  teamInvites: [],
+  invite: '',
 };
 
 class CreateFlowTeam extends React.Component<Props, State> {
@@ -60,7 +65,13 @@ class CreateFlowTeam extends React.Component<Props, State> {
   }
 
   render() {
-    const { team } = this.state;
+    const { team, teamInvites, invite } = this.state;
+    const inviteError =
+      invite && !isValidEmail(invite) && !isValidEthAddress(invite)
+        ? 'That doesn’t look like an email address or ETH address'
+        : undefined;
+    const inviteDisabled = !!inviteError || !invite;
+
     return (
       <div className="TeamForm">
         {team.map((user, idx) => (
@@ -68,39 +79,76 @@ class CreateFlowTeam extends React.Component<Props, State> {
             key={idx}
             index={idx}
             user={user}
-            initialEditingState={!user.name}
-            onChange={this.handleChange}
             onRemove={this.removeMember}
           />
         ))}
-        {team.length < MAX_TEAM_SIZE && (
-          <button className="TeamForm-add" onClick={this.addMember}>
-            <div className="TeamForm-add-icon">
-              <Icon type="plus" />
-            </div>
-            <div className="TeamForm-add-text">
-              <div className="TeamForm-add-text-title">Add a team member</div>
-              <div className="TeamForm-add-text-subtitle">
-                Find an existing user, or fill out their info yourself
+        {!!teamInvites.length && (
+          <div className="TeamForm-pending">
+            <h3 className="TeamForm-pending-title">Pending invitations</h3>
+            {teamInvites.map((ti, idx) => (
+              <div key={ti} className="TeamForm-pending-invite">
+                <div className="TeamForm-pending-invite-name">{ti}</div>
+                <Popconfirm
+                  title="Are you sure?"
+                  onConfirm={() => this.removeInvitation(idx)}
+                >
+                  <button className="TeamForm-pending-invite-delete">
+                    <Icon type="delete" />
+                  </button>
+                </Popconfirm>
               </div>
-            </div>
-          </button>
+            ))}
+          </div>
+        )}
+        {team.length < MAX_TEAM_SIZE && (
+          <div className="TeamForm-add">
+            <h3 className="TeamForm-add-title">Add a team member</h3>
+            <Form className="TeamForm-add-form" onSubmit={this.handleAddSubmit}>
+              <Form.Item
+                className="TeamForm-add-form-field"
+                validateStatus={inviteError ? 'error' : undefined}
+                help={
+                  inviteError ||
+                  'They will be notified and will have to accept the invitation before being added'
+                }
+              >
+                <Input
+                  className="TeamForm-add-form-field-input"
+                  placeholder="Email address or ETH address"
+                  size="large"
+                  value={invite}
+                  onChange={this.handleChangeInvite}
+                />
+              </Form.Item>
+              <Button
+                className="TeamForm-add-form-submit"
+                type="primary"
+                disabled={inviteDisabled}
+                htmlType="submit"
+                icon="user-add"
+                size="large"
+              >
+                Add
+              </Button>
+            </Form>
+          </div>
         )}
       </div>
     );
   }
 
-  private handleChange = (user: TeamMember, idx: number) => {
-    const team = [...this.state.team];
-    team[idx] = user;
-    this.setState({ team });
-    this.props.updateForm({ team });
+  private handleChangeInvite = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ invite: ev.currentTarget.value });
   };
 
-  private addMember = () => {
-    const team = [...this.state.team, { ...DEFAULT_STATE.team[0] }];
-    this.setState({ team });
-    this.props.updateForm({ team });
+  private handleAddSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+    const teamInvites = [...this.state.teamInvites, this.state.invite];
+    this.setState({
+      teamInvites,
+      invite: '',
+    });
+    this.props.updateForm({ teamInvites });
   };
 
   private removeMember = (index: number) => {
@@ -110,6 +158,15 @@ class CreateFlowTeam extends React.Component<Props, State> {
     ];
     this.setState({ team });
     this.props.updateForm({ team });
+  };
+
+  private removeInvitation = (index: number) => {
+    const teamInvites = [
+      ...this.state.teamInvites.slice(0, index),
+      ...this.state.teamInvites.slice(index + 1),
+    ];
+    this.setState({ teamInvites });
+    this.props.updateForm({ teamInvites });
   };
 }
 
