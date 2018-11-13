@@ -11,6 +11,9 @@ export interface Web3State {
   isWrongNetwork: boolean;
   isWeb3Locked: boolean;
 
+  isEnablingWeb3: boolean;
+  web3EnableError: null | string;
+
   contracts: Contract[];
   contractsLoading: boolean;
   contractsError: null | string;
@@ -38,6 +41,9 @@ export const INITIAL_STATE: Web3State = {
   isMissingWeb3: false,
   isWrongNetwork: false,
   isWeb3Locked: false,
+
+  isEnablingWeb3: false,
+  web3EnableError: null,
 
   contracts: [],
   contractsLoading: false,
@@ -94,6 +100,23 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
         ...state,
         web3: null,
         isMissingWeb3: true,
+      };
+
+    case types.ENABLE_WEB3_PENDING:
+      return {
+        ...state,
+        isEnablingWeb3: true,
+      };
+    case types.ENABLE_WEB3_FULFILLED:
+      return {
+        ...state,
+        isEnablingWeb3: false,
+      };
+    case types.ENABLE_WEB3_REJECTED:
+      return {
+        ...state,
+        isEnablingWeb3: false,
+        web3EnableError: action.payload,
       };
 
     case types.CROWD_FUND_PENDING:

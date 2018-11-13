@@ -68,3 +68,5 @@ dump.rdb
 # jetbrains
 .idea/
 
+# vscode
+.vscode/

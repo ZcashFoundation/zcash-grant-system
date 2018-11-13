@@ -1,19 +1,21 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Alert } from 'antd';
-import { web3Actions } from 'modules/web3';
+import { Button, Alert, Spin } from 'antd';
+import { enableWeb3 } from 'modules/web3/actions';
 import { AppState } from 'store/reducers';
 import MetamaskIcon from 'static/images/metamask.png';
 import './Web3.less';
 
 interface StateProps {
   accounts: AppState['web3']['accounts'];
-  isWeb3Locked: AppState['web3']['isWeb3Locked'];
+  isEnablingWeb3: AppState['web3']['isEnablingWeb3'];
+  accountsLoading: AppState['web3']['accountsLoading'];
+  web3EnableError: AppState['web3']['web3EnableError'];
+  accountsError: AppState['web3']['accountsError'];
 }
 
 interface DispatchProps {
-  setWeb3: typeof web3Actions['setWeb3'];
-  setAccounts: typeof web3Actions['setAccounts'];
+  enableWeb3: typeof enableWeb3;
 }
 
 interface OwnProps {
@@ -23,6 +25,12 @@ interface OwnProps {
 type Props = StateProps & DispatchProps & OwnProps;
 
 class Web3Provider extends React.Component<Props> {
+  componentWillMount() {
+    if (!this.props.accounts || !this.props.accounts[0]) {
+      this.props.enableWeb3();
+    }
+  }
+
   componentDidUpdate() {
     const { accounts } = this.props;
     if (accounts && accounts[0]) {
@@ -31,42 +39,52 @@ class Web3Provider extends React.Component<Props> {
   }
 
   render() {
-    const { isWeb3Locked } = this.props;
+    const {
+      isEnablingWeb3,
+      accountsLoading,
+      web3EnableError,
+      accountsError,
+    } = this.props;
+    const isLoading = isEnablingWeb3 || accountsLoading;
+    const error = web3EnableError || accountsError;
     return (
       <div className="Web3Provider">
-        <img className="Web3Provider-logo" src={MetamaskIcon} />
-        <p className="Web3Provider-description">
-          Make sure you have MetaMask or another web3 provider installed and unlocked,
-          then click below.
-        </p>
-        {isWeb3Locked && (
-          <Alert
-            showIcon
-            type="error"
-            message="It looks like MetaMask is locked"
-            style={{ margin: '1rem auto' }}
-          />
+        {isLoading ? (
+          <Spin tip="Connecting..." />
+        ) : (
+          <>
+            <img className="Web3Provider-logo" src={MetamaskIcon} />
+            <p className="Web3Provider-description">
+              Make sure you have MetaMask or another web3 provider installed and unlocked,
+              then click below.
+            </p>
+            {error && (
+              <Alert
+                showIcon
+                type="error"
+                message={error}
+                style={{ margin: '1rem auto' }}
+              />
+            )}
+            <Button type="primary" size="large" onClick={this.props.enableWeb3}>
+              Connect to Web3
+            </Button>
+          </>
         )}
-        <Button type="primary" size="large" onClick={this.connect}>
-          Connect to Web3
-        </Button>
       </div>
     );
   }
-
-  private connect = () => {
-    this.props.setWeb3();
-    this.props.setAccounts();
-  };
 }
 
 export default connect<StateProps, DispatchProps, OwnProps, AppState>(
   state => ({
     accounts: state.web3.accounts,
-    isWeb3Locked: state.web3.isWeb3Locked,
+    isEnablingWeb3: state.web3.isEnablingWeb3,
+    accountsLoading: state.web3.accountsLoading,
+    web3EnableError: state.web3.web3EnableError,
+    accountsError: state.web3.accountsError,
   }),
   {
-    setWeb3: web3Actions.setWeb3,
-    setAccounts: web3Actions.setAccounts,
+    enableWeb3,
   },
 )(Web3Provider);

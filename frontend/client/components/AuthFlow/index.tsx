@@ -28,7 +28,8 @@ interface State {
 }
 
 const DEFAULT_STATE: State = {
-  provider: null,
+  // Temporarily hardcode to web3, change to null when others are supported
+  provider: AUTH_PROVIDER.WEB3,
   address: null,
 };
 

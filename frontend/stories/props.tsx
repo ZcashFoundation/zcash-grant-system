@@ -156,7 +156,9 @@ export function getProposalWithCrowdFund({
   });
 
   const proposal: ProposalWithCrowdFund = {
-    proposalId: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
+    proposalId: 12345,
+    proposalUrlId: '12345-crowdfund-title',
+    proposalAddress: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
     dateCreated: created / 1000,
     title: 'Crowdfund Title',
     body: 'body',

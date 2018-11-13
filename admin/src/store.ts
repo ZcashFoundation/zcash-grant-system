@@ -54,7 +54,7 @@ async function fetchProposals() {
   return data;
 }
 
-async function deleteProposal(id: string) {
+async function deleteProposal(id: number) {
   const { data } = await api.delete('/admin/proposals/' + id);
   return data;
 }
@@ -144,14 +144,15 @@ const app = store({
     }
   },
 
-  async populateProposalContract(proposalId: string) {
+  async populateProposalContract(proposalId: number) {
+    console.log(proposalId);
     if (web3) {
       await populateProposalContract(app, web3, proposalId);
     }
   },
 
   async proposalContractSend(
-    proposalId: string,
+    proposalId: number,
     methodName: keyof Contract,
     inputs: ContractMethodInput[],
     args: any[],
@@ -161,7 +162,7 @@ const app = store({
     }
   },
 
-  async deleteProposal(id: string) {
+  async deleteProposal(id: number) {
     try {
       await deleteProposal(id);
       app.proposals = app.proposals.filter(p => p.proposalId === id);

@@ -60,22 +60,13 @@ class ProposalUpdates extends React.Component<Props, State> {
     if (isFetchingUpdates) {
       content = <Spin />;
     } else if (updatesError) {
-      content = (
-        <Placeholder
-          title="Something went wrong"
-          subtitle={updatesError}
-        />
-      );
+      content = <Placeholder title="Something went wrong" subtitle={updatesError} />;
     } else if (updates) {
       if (activeUpdate) {
         content = (
-          <FullUpdate
-            update={activeUpdate}
-            goBack={() => this.setActiveUpdate(null)}
-          />
+          <FullUpdate update={activeUpdate} goBack={() => this.setActiveUpdate(null)} />
         );
-      }
-      else if (updates.length) {
+      } else if (updates.length) {
         content = updates.map(update => (
           <div
             key={update.updateId}
@@ -90,9 +81,7 @@ class ProposalUpdates extends React.Component<Props, State> {
               <Markdown source={this.truncate(update.content)} />
             </div>
             <div className="ProposalUpdates-update-controls">
-              <a className="ProposalUpdates-update-controls-button">
-                Read more
-              </a>
+              <a className="ProposalUpdates-update-controls-button">Read more</a>
               <a className="ProposalUpdates-update-controls-button">
                 {update.totalComments} comments
               </a>

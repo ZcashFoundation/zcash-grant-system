@@ -1,17 +1,17 @@
 import { SagaIterator } from 'redux-saga';
 import { select, put, all, takeEvery } from 'redux-saga/effects';
 import { REHYDRATE } from 'redux-persist';
-import { getAuthTokenAddress, getAuthToken } from './selectors';
+import { getAuthSignature, getAuthSignatureAddress } from './selectors';
 import { authUser } from './actions';
 
 export function* authFromToken(): SagaIterator {
-  const address: ReturnType<typeof getAuthTokenAddress> = yield select(
-    getAuthTokenAddress,
+  const address: ReturnType<typeof getAuthSignatureAddress> = yield select(
+    getAuthSignatureAddress,
   );
   if (!address) {
     return;
   }
-  const signature: ReturnType<typeof getAuthToken> = yield select(getAuthToken);
+  const signature: ReturnType<typeof getAuthSignature> = yield select(getAuthSignature);
 
   // TODO: Figure out how to type redux-saga with thunks
   yield put<any>(authUser(address, signature));

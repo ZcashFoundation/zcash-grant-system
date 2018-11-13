@@ -1,12 +1,17 @@
 import axios from './axios';
 import { Proposal, TeamMember, Update } from 'types';
-import { formatTeamMemberForPost, formatTeamMemberFromGet } from 'utils/api';
+import {
+  formatTeamMemberForPost,
+  formatTeamMemberFromGet,
+  generateProposalUrl,
+} from 'utils/api';
 import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
     res.data = res.data.map((proposal: any) => {
       proposal.team = proposal.team.map(formatTeamMemberFromGet);
+      proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
       return proposal;
     });
     return res;
@@ -16,6 +21,7 @@ export function getProposals(): Promise<{ data: Proposal[] }> {
 export function getProposal(proposalId: number | string): Promise<{ data: Proposal }> {
   return axios.get(`/api/v1/proposals/${proposalId}`).then(res => {
     res.data.team = res.data.team.map(formatTeamMemberFromGet);
+    res.data.proposalUrlId = generateProposalUrl(res.data.proposalId, res.data.title);
     return res;
   });
 }
@@ -57,9 +63,21 @@ export function createUser(payload: {
   emailAddress: string;
   displayName: string;
   title: string;
-  token: string;
+  signedMessage: string;
+  rawTypedData: string;
 }): Promise<{ data: TeamMember }> {
-  return axios.post(`/api/v1/users/`, payload).then(res => {
+  return axios.post('/api/v1/users', payload).then(res => {
+    res.data = formatTeamMemberFromGet(res.data);
+    return res;
+  });
+}
+
+export function authUser(payload: {
+  accountAddress: string;
+  signedMessage: string;
+  rawTypedData: string;
+}): Promise<{ data: TeamMember }> {
+  return axios.post('/api/v1/users/auth', payload).then(res => {
     res.data = formatTeamMemberFromGet(res.data);
     return res;
   });
@@ -79,13 +97,12 @@ export function verifyEmail(code: string): Promise<any> {
 }
 
 export function postProposalUpdate(
-  proposalId: string,
+  proposalId: number,
   title: string,
   content: string,
 ): Promise<{ data: Update }> {
-  return axios
-    .post(`/api/v1/proposals/${proposalId}/updates`, {
-      title,
-      content,
-    });
+  return axios.post(`/api/v1/proposals/${proposalId}/updates`, {
+    title,
+    content,
+  });
 }

@@ -1,4 +1,4 @@
 import { AppState as S } from 'store/reducers';
 
-export const getAuthToken = (s: S) => s.auth.token;
-export const getAuthTokenAddress = (s: S) => s.auth.tokenAddress;
+export const getAuthSignature = (s: S) => s.auth.authSignature;
+export const getAuthSignatureAddress = (s: S) => s.auth.authSignatureAddress;

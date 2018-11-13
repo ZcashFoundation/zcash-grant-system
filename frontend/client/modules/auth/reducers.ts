@@ -1,6 +1,6 @@
 import types from './types';
 // TODO: Use a common User type instead of this
-import { TeamMember } from 'types';
+import { TeamMember, AuthSignatureData } from 'types';
 
 export interface AuthState {
   user: TeamMember | null;
@@ -13,10 +13,10 @@ export interface AuthState {
   isCreatingUser: boolean;
   createUserError: string | null;
 
-  token: string | null;
-  tokenAddress: string | null;
-  isSigningToken: boolean;
-  signTokenError: string | null;
+  authSignature: AuthSignatureData | null;
+  authSignatureAddress: string | null;
+  isSigningAuth: boolean;
+  signAuthError: string | null;
 }
 
 export const INITIAL_STATE: AuthState = {
@@ -30,13 +30,16 @@ export const INITIAL_STATE: AuthState = {
   checkedUsers: {},
   isCheckingUser: false,
 
-  token: null,
-  tokenAddress: null,
-  isSigningToken: false,
-  signTokenError: null,
+  authSignature: null,
+  authSignatureAddress: null,
+  isSigningAuth: false,
+  signAuthError: null,
 };
 
-export default function createReducer(state: AuthState = INITIAL_STATE, action: any) {
+export default function createReducer(
+  state: AuthState = INITIAL_STATE,
+  action: any,
+): AuthState {
   switch (action.type) {
     case types.AUTH_USER_PENDING:
       return {
@@ -49,8 +52,8 @@ export default function createReducer(state: AuthState = INITIAL_STATE, action: 
       return {
         ...state,
         user: action.payload.user,
-        token: action.payload.token, // TODO: Make this the real token
-        tokenAddress: action.payload.user.ethAddress,
+        authSignature: action.payload.authSignature, // TODO: Make this the real token
+        authSignatureAddress: action.payload.user.ethAddress,
         isAuthingUser: false,
       };
     case types.AUTH_USER_REJECTED:
@@ -70,8 +73,8 @@ export default function createReducer(state: AuthState = INITIAL_STATE, action: 
       return {
         ...state,
         user: action.payload.user,
-        token: action.payload.token,
-        tokenAddress: action.payload.user.ethAddress,
+        authSignature: action.payload.authSignature,
+        authSignatureAddress: action.payload.user.ethAddress,
         isCreatingUser: false,
         checkedUsers: {
           ...state.checkedUsers,
@@ -113,30 +116,30 @@ export default function createReducer(state: AuthState = INITIAL_STATE, action: 
     case types.SIGN_TOKEN_PENDING:
       return {
         ...state,
-        token: null,
-        isSigningToken: true,
-        signTokenError: null,
+        authSignature: null,
+        isSigningAuth: true,
+        signAuthError: null,
       };
     case types.SIGN_TOKEN_FULFILLED:
       return {
         ...state,
-        token: action.payload.token,
-        tokenAddress: action.payload.address,
-        isSigningToken: false,
+        authSignature: action.payload.authSignature,
+        authSignatureAddress: action.payload.address,
+        isSigningAuth: false,
       };
     case types.SIGN_TOKEN_REJECTED:
       return {
         ...state,
-        isSigningToken: false,
-        signTokenError: action.payload,
+        isSigningAuth: false,
+        signAuthError: action.payload,
       };
 
     case types.LOGOUT:
       return {
         ...state,
         user: null,
-        token: null,
-        tokenAddress: null,
+        authSignature: null,
+        authSignatureAddress: null,
       };
   }
   return state;

@@ -27,6 +27,7 @@ proposal_team = db.Table(
     db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'))
 )
 
+
 class ProposalUpdate(db.Model):
     __tablename__ = "proposal_update"
 
@@ -51,7 +52,7 @@ class Proposal(db.Model):
     date_created = db.Column(db.DateTime)
 
     title = db.Column(db.String(255), nullable=False)
-    proposal_id = db.Column(db.String(255), unique=True, nullable=False)
+    proposal_address = db.Column(db.String(255), unique=True, nullable=False)
     stage = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(255), nullable=False)
@@ -64,13 +65,13 @@ class Proposal(db.Model):
     def __init__(
             self,
             stage: str,
-            proposal_id: str,
+            proposal_address: str,
             title: str,
             content: str,
             category: str
     ):
         self.stage = stage
-        self.proposal_id = proposal_id
+        self.proposal_address = proposal_address
         self.title = title
         self.content = content
         self.category = category
@@ -79,7 +80,7 @@ class Proposal(db.Model):
     @staticmethod
     def validate(
             stage: str,
-            proposal_id: str,
+            proposal_address: str,
             title: str,
             content: str,
             category: str):
@@ -105,6 +106,7 @@ class ProposalSchema(ma.Schema):
             "date_created",
             "title",
             "proposal_id",
+            "proposal_address",
             "body",
             "comments",
             "updates",
@@ -126,7 +128,7 @@ class ProposalSchema(ma.Schema):
         return obj.content
 
     def get_proposal_id(self, obj):
-        return obj.proposal_id
+        return obj.id
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
@@ -141,6 +143,7 @@ class ProposalUpdateSchema(ma.Schema):
         model = ProposalUpdate
         # Fields to expose
         fields = (
+            "update_id",
             "date_created",
             "proposal_id",
             "title",
@@ -149,6 +152,10 @@ class ProposalUpdateSchema(ma.Schema):
 
     date_created = ma.Method("get_date_created")
     proposal_id = ma.Method("get_proposal_id")
+    update_id = ma.Method("get_update_id")
+
+    def get_update_id(self, obj):
+        return obj.id
 
     def get_proposal_id(self, obj):
         return obj.proposal_id
