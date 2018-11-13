@@ -35,6 +35,7 @@ export interface ProposalDraft {
   proposalId: number;
   dateCreated: number;
   title: string;
+  brief: string;
   body: string;
   stage: string;
   category?: PROPOSAL_CATEGORY;

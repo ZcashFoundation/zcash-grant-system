@@ -12,6 +12,13 @@ type GetState = () => AppState;
 // TODO: Replace with server side storage
 const LS_DRAFT_KEY = 'CREATE_PROPOSAL_DRAFT';
 
+export function initializeForm(proposalId: number) {
+  return {
+    type: types.INITIALIZE_FORM_PENDING,
+    payload: proposalId,
+  };
+}
+
 export function updateForm(form: Partial<CreateFormState>) {
   return (dispatch: Dispatch<any>) => {
     dispatch({
@@ -35,12 +42,7 @@ export function saveDraft() {
 }
 
 export function fetchDrafts() {
-  return (dispatch: Dispatch<any>) => {
-    return dispatch({
-      type: types.FETCH_DRAFTS,
-      payload: getProposalDrafts(),
-    });
-  };
+  return { type: types.FETCH_DRAFTS_PENDING };
 }
 
 export function createDraft(opts: CreateDraftOptions = {}) {
