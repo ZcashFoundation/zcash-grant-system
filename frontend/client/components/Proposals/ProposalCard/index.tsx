@@ -25,7 +25,7 @@ export class ProposalCard extends React.Component<Props> {
     }
     const {
       title,
-      proposalId,
+      proposalAddress,
       proposalUrlId,
       category,
       dateCreated,
@@ -77,7 +77,7 @@ export class ProposalCard extends React.Component<Props> {
               ))}
             </div>
           </div>
-          <div className="ProposalCard-address">{proposalId}</div>
+          <div className="ProposalCard-address">{proposalAddress}</div>
 
           <div className="ProposalCard-info">
             <div

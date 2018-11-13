@@ -197,12 +197,12 @@ class GovernanceRefunds extends React.Component<Props> {
   }
 
   voteRefund = (vote: boolean) => {
-    this.props.voteRefund(this.props.proposal.crowdFundContract, vote);
+    this.props.voteRefund(this.props.proposal, vote);
   };
 
   withdrawRefund = () => {
     const { proposal, account } = this.props;
-    this.props.withdrawRefund(proposal.crowdFundContract, account);
+    this.props.withdrawRefund(proposal, account);
   };
 }
 
