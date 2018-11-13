@@ -1,20 +1,22 @@
 import types from './types';
-import { CreateFormState } from 'types';
+import { CreateFormState, ProposalDraft } from 'types';
 import { ONE_DAY } from 'utils/time';
 
 export interface CreateState {
+  drafts: ProposalDraft[] | null;
   form: CreateFormState;
 
   isSavingDraft: boolean;
   hasSavedDraft: boolean;
   saveDraftError: string | null;
 
-  isFetchingDraft: boolean;
-  hasFetchedDraft: boolean;
-  fetchDraftError: string | null;
+  isFetchingDrafts: boolean;
+  fetchDraftsError: string | null;
 }
 
 export const INITIAL_STATE: CreateState = {
+  drafts: null,
+
   form: {
     title: '',
     brief: '',
@@ -33,13 +35,18 @@ export const INITIAL_STATE: CreateState = {
   hasSavedDraft: true,
   saveDraftError: null,
 
-  isFetchingDraft: false,
-  hasFetchedDraft: false,
-  fetchDraftError: null,
+  isFetchingDrafts: false,
+  fetchDraftsError: null,
 };
 
-export default function createReducer(state: CreateState = INITIAL_STATE, action: any) {
+export default function createReducer(
+  state: CreateState = INITIAL_STATE,
+  action: any,
+): CreateState {
   switch (action.type) {
+    case types.CREATE_DRAFT_PENDING:
+      
+
     case types.UPDATE_FORM:
       return {
         ...state,
@@ -48,14 +55,6 @@ export default function createReducer(state: CreateState = INITIAL_STATE, action
           ...action.payload,
         },
         hasSavedDraft: false,
-      };
-
-    case types.RESET_FORM:
-      return {
-        ...state,
-        form: { ...INITIAL_STATE.form },
-        hasSavedDraft: true,
-        hasFetchedDraft: false,
       };
 
     case types.SAVE_DRAFT_PENDING:
@@ -79,29 +78,23 @@ export default function createReducer(state: CreateState = INITIAL_STATE, action
         saveDraftError: action.payload,
       };
 
-    case types.FETCH_DRAFT_PENDING:
+    case types.FETCH_DRAFTS_PENDING:
       return {
         ...state,
-        isFetchingDraft: true,
-        fetchDraftError: null,
+        isFetchingDrafts: true,
+        fetchDraftsError: null,
       };
-    case types.FETCH_DRAFT_FULFILLED:
+    case types.FETCH_DRAFTS_FULFILLED:
       return {
         ...state,
-        isFetchingDraft: false,
-        hasFetchedDraft: !!action.payload,
-        form: action.payload
-          ? {
-              ...state.form,
-              ...action.payload,
-            }
-          : state.form,
+        isFetchingDrafts: false,
+        drafts: action.payload.data,
       };
-    case types.FETCH_DRAFT_REJECTED:
+    case types.FETCH_DRAFTS_REJECTED:
       return {
         ...state,
-        isFetchingDraft: false,
-        fetchDraftError: action.payload,
+        isFetchingDrafts: false,
+        fetchDraftsError: action.payload,
       };
   }
   return state;

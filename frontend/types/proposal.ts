@@ -31,6 +31,17 @@ export interface CrowdFund {
   isRaiseGoalReached: boolean;
 }
 
+export interface ProposalDraft {
+  proposalId: number;
+  dateCreated: number;
+  title: string;
+  body: string;
+  stage: string;
+  category?: PROPOSAL_CATEGORY;
+  milestones: ProposalMilestone[];
+  team: TeamMember[];
+}
+
 export interface Proposal {
   proposalId: number;
   proposalAddress: string;

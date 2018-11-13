@@ -1,10 +1,11 @@
 import { Dispatch } from 'redux';
 import { CreateFormState } from 'types';
-import types from './types';
+import { getProposalDrafts } from 'api/api';
 import { sleep } from 'utils/helpers';
 import { AppState } from 'store/reducers';
 import { createCrowdFund } from 'modules/web3/actions';
 import { formToBackendData, formToContractData } from './utils';
+import types, { CreateDraftOptions } from './types';
 
 type GetState = () => AppState;
 
@@ -21,23 +22,11 @@ export function updateForm(form: Partial<CreateFormState>) {
   };
 }
 
-export function resetForm() {
-  return async (dispatch: Dispatch<any>) => {
-    // TODO: Replace with server side reset
-    localStorage.removeItem(LS_DRAFT_KEY);
-    await sleep(100);
-
-    // Re-run fetch draft to ensure we've reset state
-    dispatch({ type: types.RESET_FORM });
-    dispatch(fetchDraft());
-  };
-}
-
 export function saveDraft() {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     const { form } = getState().create;
     dispatch({ type: types.SAVE_DRAFT_PENDING });
-    await sleep(100);
+    await sleep(1000);
 
     // TODO: Replace with server side save
     localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(form));
@@ -45,27 +34,21 @@ export function saveDraft() {
   };
 }
 
-export function fetchDraft() {
-  return async (dispatch: Dispatch<any>) => {
-    dispatch({ type: types.FETCH_DRAFT_PENDING });
-    await sleep(200);
+export function fetchDrafts() {
+  return (dispatch: Dispatch<any>) => {
+    return dispatch({
+      type: types.FETCH_DRAFTS,
+      payload: getProposalDrafts(),
+    });
+  };
+}
 
-    // TODO: Replace with server side fetch
-    const formJson = localStorage.getItem(LS_DRAFT_KEY);
-    try {
-      const form = formJson ? JSON.parse(formJson) : null;
-      dispatch({
-        type: types.FETCH_DRAFT_FULFILLED,
-        payload: form,
-      });
-    } catch (err) {
-      localStorage.removeItem(LS_DRAFT_KEY);
-      dispatch({
-        type: types.FETCH_DRAFT_REJECTED,
-        payload: 'Malformed form JSON',
-        error: true,
-      });
-    }
+
+
+export function createDraft(opts: CreateDraftOptions = {}) {
+  return {
+    type: types.CREATE_DRAFT_PENDING,
+    payload: opts,
   };
 }
 

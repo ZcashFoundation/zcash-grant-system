@@ -1,17 +1,55 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { Spin } from 'antd';
-import Web3Container from 'lib/Web3Container';
-import CreateFlow from 'components/CreateFlow';
+import { fetchDrafts, createDraft } from 'modules/create/actions';
+import { AppState } from 'store/reducers';
 
-const Create = () => (
-  <Web3Container
-    renderLoading={() => <Spin />}
-    render={({ accounts }) => (
-      <div style={{ paddingTop: '3rem', paddingBottom: '8rem' }}>
-        <CreateFlow accounts={accounts} />
-      </div>
-    )}
-  />
-);
+interface StateProps {
+  drafts: AppState['create']['drafts'];
+  isFetchingDrafts: AppState['create']['isFetchingDrafts'];
+  fetchDraftsError: AppState['create']['fetchDraftsError'];
+}
 
-export default Create;
+interface DispatchProps {
+  fetchDrafts: typeof fetchDrafts;
+  createDraft: typeof createDraft;
+}
+
+type Props = StateProps & DispatchProps;
+
+class Create extends React.Component<Props> {
+  componentWillMount() {
+    this.props.fetchDrafts();
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    const { drafts } = this.props;
+    if (drafts && !prevProps.drafts && !drafts.length) {
+      this.props.createDraft({ redirect: true });
+    }
+  }
+
+  render() {
+    const { drafts, fetchDraftsError } = this.props;
+
+    if (drafts && drafts.length) {
+      return <pre>{JSON.stringify(drafts, null, 2)}</pre>
+    } else if (fetchDraftsError) {
+      return <h1>{fetchDraftsError}</h1>;
+    } else {
+      return <Spin />;
+    }
+  }
+}
+
+export default connect<StateProps, DispatchProps, {}, AppState>(
+  state => ({
+    drafts: state.create.drafts,
+    isFetchingDrafts: state.create.isFetchingDrafts,
+    fetchDraftsError: state.create.fetchDraftsError,
+  }),
+  {
+    fetchDrafts,
+    createDraft,
+  },
+)(Create);

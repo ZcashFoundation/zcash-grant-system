@@ -1,8 +1,16 @@
 import datetime
+from typing import List
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix
+from grant.utils.exceptions import ValidationException
+
+DRAFT = 'DRAFT'
+PENDING = 'PENDING'
+LIVE = 'LIVE'
+DELETED = 'DELETED'
+STATUSES = [DRAFT, PENDING, LIVE, DELETED]
 
 FUNDING_REQUIRED = 'FUNDING_REQUIRED'
 COMPLETED = 'COMPLETED'
@@ -15,10 +23,6 @@ COMMUNITY = "COMMUNITY"
 DOCUMENTATION = "DOCUMENTATION"
 ACCESSIBILITY = "ACCESSIBILITY"
 CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
-
-
-class ValidationException(Exception):
-    pass
 
 
 proposal_team = db.Table(
@@ -51,12 +55,23 @@ class Proposal(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
 
+    # Database info
+    status = db.Column(db.String(255), nullable=False)
     title = db.Column(db.String(255), nullable=False)
-    proposal_address = db.Column(db.String(255), unique=True, nullable=False)
+    brief = db.Column(db.String(255), nullable=False)
     stage = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(255), nullable=False)
 
+    # Contract info
+    target = db.Column(db.BigInteger, nullable=False)
+    payout_address = db.Column(db.String(255), nullable=False)
+    trustees = db.Column(db.String(1024), nullable=False)
+    deadline_duration = db.Column(db.Integer(), nullable=False)
+    vote_duration = db.Column(db.Integer(), nullable=False)
+    proposal_address = db.Column(db.String(255), unique=True, nullable=True)
+
+    # Relations
     team = db.relationship("User", secondary=proposal_team)
     comments = db.relationship(Comment, backref="proposal", lazy=True)
     updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True)
@@ -64,37 +79,66 @@ class Proposal(db.Model):
 
     def __init__(
             self,
-            stage: str,
-            proposal_address: str,
-            title: str,
-            content: str,
-            category: str
+            status: str = 'DRAFT',
+            title: str = '',
+            brief: str = '',
+            content: str = '',
+            stage: str = '',
+            target: str = '0',
+            payout_address: str = '',
+            trustees: List[str] = [],
+            deadline_duration: int = 5184000, # 60 days
+            vote_duration: int = 604800, # 7 days
+            proposal_address: str = None,
+            category: str = ''
     ):
-        self.stage = stage
-        self.proposal_address = proposal_address
+        self.date_created = datetime.datetime.now()
+        self.status = status
         self.title = title
+        self.brief = brief
         self.content = content
         self.category = category
-        self.date_created = datetime.datetime.now()
+        self.target = target
+        self.payout_address = payout_address
+        self.trustees = ','.join(trustees)
+        self.proposal_address = proposal_address
+        self.deadline_duration = deadline_duration
+        self.vote_duration = vote_duration
+        self.stage = stage
 
     @staticmethod
-    def validate(
-            stage: str,
-            proposal_address: str,
-            title: str,
-            content: str,
-            category: str):
-        if stage not in PROPOSAL_STAGES:
-            raise ValidationException("{} not in {}".format(stage, PROPOSAL_STAGES))
-        if category not in CATEGORIES:
-            raise ValidationException("{} not in {}".format(category, CATEGORIES))
+    def validate(proposal):
+        title = proposal.get('title')
+        stage = proposal.get('stage')
+        category = proposal.get('category')
+        if title and len(title) > 60:
+            raise ValidationException("Proposal title cannot be longer than 60 characters")
+        if stage and stage not in PROPOSAL_STAGES:
+            raise ValidationException("Proposal stage {} not in {}".format(stage, PROPOSAL_STAGES))
+        if category and category not in CATEGORIES:
+            raise ValidationException("Category {} not in {}".format(category, CATEGORIES))
 
     @staticmethod
     def create(**kwargs):
-        Proposal.validate(**kwargs)
+        Proposal.validate(kwargs)
         return Proposal(
             **kwargs
         )
+
+    def publish(self):
+        # Require certain fields
+        if not self.title:
+            raise ValidationException("Proposal must have a title")
+        if not self.content:
+            raise ValidationException("Proposal must have content")
+        if not self.proposal_address:
+            raise ValidationException("Proposal must a contract address")
+
+        # Then run through regular validation
+        Proposal.validate(vars(self))
+        self.status = 'LIVE'
+
+        
 
 
 class ProposalSchema(ma.Schema):

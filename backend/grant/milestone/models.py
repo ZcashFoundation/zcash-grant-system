@@ -1,6 +1,7 @@
 import datetime
 
 from grant.extensions import ma, db
+from grant.utils.exceptions import ValidationException
 
 NOT_REQUESTED = 'NOT_REQUESTED'
 ONGOING_VOTE = 'ONGOING_VOTE'
@@ -42,6 +43,11 @@ class Milestone(db.Model):
         self.immediate_payout = immediate_payout
         self.proposal_id = proposal_id
         self.date_created = datetime.datetime.now()
+    
+    @staticmethod
+    def validate(milestone):
+        if len(milestone.title) > 60:
+            raise ValidationException("Milestone title must be no more than 60 chars")
 
 
 class MilestoneSchema(ma.Schema):

@@ -1,5 +1,5 @@
 import axios from './axios';
-import { Proposal, TeamMember, Update } from 'types';
+import { Proposal, ProposalDraft, TeamMember, Update } from 'types';
 import {
   formatTeamMemberForPost,
   formatTeamMemberFromGet,
@@ -105,4 +105,12 @@ export function postProposalUpdate(
     title,
     content,
   });
+}
+
+export function getProposalDrafts(): Promise<{ data: ProposalDraft[] }> {
+  return axios.get('/api/v1/proposals/drafts');
+}
+
+export function postProposalDraft(): Promise<{ data: ProposalDraft }> {
+  return axios.post('/api/v1/proposals/drafts');
 }
