@@ -8,12 +8,10 @@ class ProposalEdit extends React.Component<{}> {
     return (
       <Web3Container
         renderLoading={() => <Spin />}
-        render={({ accounts }) => (
-          <h1>Sup</h1>
-        )}
+        render={({ accounts }) => <h1>Sup</h1>}
       />
     );
   }
-};
+}
 
 export default ProposalEdit;

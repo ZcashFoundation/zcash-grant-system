@@ -33,7 +33,7 @@ class Create extends React.Component<Props> {
     const { drafts, fetchDraftsError } = this.props;
 
     if (drafts && drafts.length) {
-      return <pre>{JSON.stringify(drafts, null, 2)}</pre>
+      return <pre>{JSON.stringify(drafts, null, 2)}</pre>;
     } else if (fetchDraftsError) {
       return <h1>{fetchDraftsError}</h1>;
     } else {

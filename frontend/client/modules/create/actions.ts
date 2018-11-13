@@ -43,8 +43,6 @@ export function fetchDrafts() {
   };
 }
 
-
-
 export function createDraft(opts: CreateDraftOptions = {}) {
   return {
     type: types.CREATE_DRAFT_PENDING,

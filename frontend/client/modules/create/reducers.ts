@@ -45,7 +45,6 @@ export default function createReducer(
 ): CreateState {
   switch (action.type) {
     case types.CREATE_DRAFT_PENDING:
-      
 
     case types.UPDATE_FORM:
       return {

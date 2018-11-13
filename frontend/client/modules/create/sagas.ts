@@ -16,7 +16,7 @@ export function* handleCreateDraft(action: ReturnType<typeof createDraft>): Saga
     if (action.payload.redirect) {
       yield put(push(`/proposals/${res.data.proposalId}/edit`));
     }
-  } catch(err) {
+  } catch (err) {
     yield put({
       type: types.CREATE_DRAFT_REJECTED,
       payload: err.message || err.toString(),
