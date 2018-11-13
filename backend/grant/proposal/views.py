@@ -102,8 +102,8 @@ def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(stage=stage)
-            .order_by(Proposal.date_created.desc())
-            .all()
+                .order_by(Proposal.date_created.desc())
+                .all()
         )
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
@@ -122,7 +122,6 @@ def get_proposals(stage):
     parameter('team', type=list, required=True)
 )
 def make_proposal(crowd_fund_contract_address, content, title, milestones, category, team):
-    from grant.user.models import User
     existing_proposal = Proposal.query.filter_by(proposal_address=crowd_fund_contract_address).first()
     if existing_proposal:
         return {"message": "Oops! Something went wrong."}, 409
@@ -219,6 +218,7 @@ def get_proposal_update(proposal_id, update_id):
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
 @requires_team_member_auth
+@requires_sm
 @endpoint.api(
     parameter('title', type=str, required=True),
     parameter('content', type=str, required=True)

@@ -58,7 +58,7 @@ class User(db.Model):
         self.title = title
 
     @staticmethod
-    def create(email_address=None, account_address=None, display_name=None, title=None):
+    def create(email_address=None, account_address=None, display_name=None, title=None, _send_email=True):
         user = User(
             account_address=account_address,
             email_address=email_address,
@@ -73,10 +73,11 @@ class User(db.Model):
         db.session.add(ev)
         db.session.commit()
 
-        send_email(user.email_address, 'signup', {
-            'display_name': user.display_name,
-            'confirm_url': make_url(f'/email/verify?code={ev.code}')
-        })
+        if send_email:
+            send_email(user.email_address, 'signup', {
+                'display_name': user.display_name,
+                'confirm_url': make_url(f'/email/verify?code={ev.code}')
+            })
 
         return user
 

@@ -9,7 +9,7 @@ import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { AppState } from 'store/reducers';
 import { Wei } from 'utils/units';
-import { TeamMember, AuthSignatureData } from 'types';
+import { TeamMember, AuthSignatureData, ProposalWithCrowdFund } from 'types';
 
 type GetState = () => AppState;
 
@@ -194,20 +194,21 @@ export function resetCreateCrowdFund() {
 }
 
 export type TRequestMilestonePayout = typeof requestMilestonePayout;
-export function requestMilestonePayout(crowdFundContract: any, index: number) {
+export function requestMilestonePayout(proposal: ProposalWithCrowdFund, index: number) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.REQUEST_MILESTONE_PAYOUT_PENDING,
     });
     const state = getState();
     const account = state.web3.accounts[0];
+    const { crowdFundContract, proposalId } = proposal;
     try {
       await crowdFundContract.methods
         .requestMilestonePayout(index)
         .send({ from: account })
         .once('confirmation', async () => {
           await sleep(5000);
-          await dispatch(fetchProposal(crowdFundContract._address));
+          await dispatch(fetchProposal(proposalId));
           dispatch({
             type: types.REQUEST_MILESTONE_PAYOUT_FULFILLED,
           });
@@ -223,20 +224,22 @@ export function requestMilestonePayout(crowdFundContract: any, index: number) {
 }
 
 export type TPayMilestonePayout = typeof payMilestonePayout;
-export function payMilestonePayout(crowdFundContract: any, index: number) {
+export function payMilestonePayout(proposal: ProposalWithCrowdFund, index: number) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.PAY_MILESTONE_PAYOUT_PENDING,
     });
     const state = getState();
     const account = state.web3.accounts[0];
+    const { crowdFundContract, proposalId } = proposal;
+
     try {
       await crowdFundContract.methods
         .payMilestonePayout(index)
         .send({ from: account })
         .once('confirmation', async () => {
           await sleep(5000);
-          await dispatch(fetchProposal(crowdFundContract._address));
+          await dispatch(fetchProposal(proposalId));
           dispatch({
             type: types.PAY_MILESTONE_PAYOUT_FULFILLED,
           });
@@ -254,7 +257,7 @@ export function payMilestonePayout(crowdFundContract: any, index: number) {
 
 // TODO: BigNumber me
 export type TSendTransaction = typeof fundCrowdFund;
-export function fundCrowdFund(crowdFundContract: any, value: number | string) {
+export function fundCrowdFund(proposal: ProposalWithCrowdFund, value: number | string) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.SEND_PENDING,
@@ -262,6 +265,7 @@ export function fundCrowdFund(crowdFundContract: any, value: number | string) {
     const state = getState();
     const web3 = state.web3.web3;
     const account = state.web3.accounts[0];
+    const { crowdFundContract, proposalId } = proposal;
 
     try {
       if (!web3) {
@@ -272,7 +276,7 @@ export function fundCrowdFund(crowdFundContract: any, value: number | string) {
         .send({ from: account, value: web3.utils.toWei(String(value), 'ether') })
         .once('confirmation', async () => {
           await sleep(5000);
-          await dispatch(fetchProposal(crowdFundContract._address));
+          await dispatch(fetchProposal(proposalId));
           dispatch({
             type: types.SEND_FULFILLED,
           });
@@ -289,7 +293,7 @@ export function fundCrowdFund(crowdFundContract: any, value: number | string) {
 }
 
 export function voteMilestonePayout(
-  crowdFundContract: any,
+  proposal: ProposalWithCrowdFund,
   index: number,
   vote: boolean,
 ) {
@@ -297,6 +301,7 @@ export function voteMilestonePayout(
     dispatch({ type: types.VOTE_AGAINST_MILESTONE_PAYOUT_PENDING });
     const state = getState();
     const account = state.web3.accounts[0];
+    const { crowdFundContract, proposalId } = proposal;
 
     try {
       await crowdFundContract.methods
@@ -304,7 +309,7 @@ export function voteMilestonePayout(
         .send({ from: account })
         .once('confirmation', async () => {
           await sleep(5000);
-          await dispatch(fetchProposal(crowdFundContract._address));
+          await dispatch(fetchProposal(proposalId));
           dispatch({ type: types.VOTE_AGAINST_MILESTONE_PAYOUT_FULFILLED });
         });
     } catch (err) {
@@ -318,11 +323,12 @@ export function voteMilestonePayout(
   };
 }
 
-export function voteRefund(crowdFundContract: any, vote: boolean) {
+export function voteRefund(proposal: ProposalWithCrowdFund, vote: boolean) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({ type: types.VOTE_REFUND_PENDING });
     const state = getState();
     const account = state.web3.accounts[0];
+    const { crowdFundContract, proposalId } = proposal;
 
     try {
       await crowdFundContract.methods
@@ -330,7 +336,7 @@ export function voteRefund(crowdFundContract: any, vote: boolean) {
         .send({ from: account })
         .once('confirmation', async () => {
           await sleep(5000);
-          await dispatch(fetchProposal(crowdFundContract._address));
+          await dispatch(fetchProposal(proposalId));
           dispatch({ type: types.VOTE_REFUND_FULFILLED });
         });
     } catch (err) {
@@ -366,15 +372,16 @@ async function freezeContract(crowdFundContract: any, account: string) {
   }
 }
 
-export function triggerRefund(crowdFundContract: any) {
+export function triggerRefund(proposal: ProposalWithCrowdFund) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({ type: types.WITHDRAW_REFUND_PENDING });
     const state = getState();
     const account = state.web3.accounts[0];
+    const { crowdFundContract, proposalId } = proposal;
 
     try {
       await freezeContract(crowdFundContract, account);
-      await dispatch(fetchProposal(crowdFundContract._address));
+      await dispatch(fetchProposal(proposalId));
       dispatch({ type: types.TRIGGER_REFUND_FULFILLED });
     } catch (err) {
       dispatch({
@@ -386,11 +393,12 @@ export function triggerRefund(crowdFundContract: any) {
   };
 }
 
-export function withdrawRefund(crowdFundContract: any, address: string) {
+export function withdrawRefund(proposal: ProposalWithCrowdFund, address: string) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({ type: types.WITHDRAW_REFUND_PENDING });
     const state = getState();
     const account = state.web3.accounts[0];
+    const { crowdFundContract, proposalId } = proposal;
 
     try {
       await freezeContract(crowdFundContract, account);
@@ -399,7 +407,7 @@ export function withdrawRefund(crowdFundContract: any, address: string) {
         .send({ from: account })
         .once('confirmation', async () => {
           await sleep(5000);
-          await dispatch(fetchProposal(crowdFundContract._address));
+          await dispatch(fetchProposal(proposalId));
           dispatch({ type: types.WITHDRAW_REFUND_FULFILLED });
         });
     } catch (err) {

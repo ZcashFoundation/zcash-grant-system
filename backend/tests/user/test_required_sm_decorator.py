@@ -1,14 +1,14 @@
 import json
 
 from ..config import BaseTestConfig
-from ..test_data import user, message
+from ..test_data import test_user, message
 
 
 class TestRequiredSignedMessageDecorator(BaseTestConfig):
     def test_required_sm_aborts_without_data_and_sig_headers(self):
         self.app.post(
             "/api/v1/users/",
-            data=json.dumps(user),
+            data=json.dumps(test_user),
             content_type='application/json'
         )
 
@@ -53,7 +53,7 @@ class TestRequiredSignedMessageDecorator(BaseTestConfig):
     def test_required_sm_decorator_authorizes_when_recovered_address_matches_existing_user(self):
         self.app.post(
             "/api/v1/users/",
-            data=json.dumps(user),
+            data=json.dumps(test_user),
             content_type='application/json'
         )
 
@@ -68,4 +68,4 @@ class TestRequiredSignedMessageDecorator(BaseTestConfig):
         response_json = response.json
 
         self.assert200(response)
-        self.assertEqual(response_json["displayName"], user["displayName"])
+        self.assertEqual(response_json["displayName"], test_user["displayName"])
