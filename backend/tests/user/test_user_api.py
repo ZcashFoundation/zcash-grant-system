@@ -1,84 +1,101 @@
 import copy
 import json
 
-from grant.proposal.models import Proposal
-from grant.user.models import User
-from ..config import BaseTestConfig
-from ..test_data import team, proposal
+from animal_case import animalify
 from mock import patch
 
+from grant.proposal.models import Proposal
+from grant.user.models import User, user_schema
+from ..config import BaseUserConfig
+from ..test_data import test_team, test_proposal, test_user
 
-class TestAPI(BaseTestConfig):
-    def test_create_new_user_via_proposal_by_account_address(self):
-        proposal_by_account = copy.deepcopy(proposal)
-        del proposal_by_account["team"][0]["emailAddress"]
 
-        self.app.post(
-            "/api/v1/proposals/",
-            data=json.dumps(proposal_by_account),
-            content_type='application/json'
-        )
+class TestAPI(BaseUserConfig):
+    # TODO create second signed message default user 
+    # @patch('grant.email.send.send_email')
+    # def test_create_new_user_via_proposal_by_account_address(self, mock_send_email):
+    #     mock_send_email.return_value.ok = True
+    #     self.remove_default_user()
+    #     proposal_by_account = copy.deepcopy(test_proposal)
+    #     del proposal_by_account["team"][0]["emailAddress"]
+    # 
+    #     resp = self.app.post(
+    #         "/api/v1/proposals/",
+    #         data=json.dumps(proposal_by_account),
+    #         headers=self.headers,
+    #         content_type='application/json'
+    #     )
+    # 
+    #     self.assertEqual(resp, 201)
+    # 
+    #     # User
+    #     user_db = User.query.filter_by(account_address=proposal_by_account["team"][0]["accountAddress"]).first()
+    #     self.assertEqual(user_db.display_name, proposal_by_account["team"][0]["displayName"])
+    #     self.assertEqual(user_db.title, proposal_by_account["team"][0]["title"])
+    #     self.assertEqual(user_db.account_address, proposal_by_account["team"][0]["accountAddress"])
 
-        # User
-        user_db = User.query.filter_by(account_address=proposal_by_account["team"][0]["accountAddress"]).first()
-        self.assertEqual(user_db.display_name, proposal_by_account["team"][0]["displayName"])
-        self.assertEqual(user_db.title, proposal_by_account["team"][0]["title"])
-        self.assertEqual(user_db.account_address, proposal_by_account["team"][0]["accountAddress"])
-
-    def test_create_new_user_via_proposal_by_email(self):
-        proposal_by_email = copy.deepcopy(proposal)
-        del proposal_by_email["team"][0]["accountAddress"]
-
-        self.app.post(
-            "/api/v1/proposals/",
-            data=json.dumps(proposal_by_email),
-            content_type='application/json'
-        )
-
-        # User
-        user_db = User.query.filter_by(email_address=proposal_by_email["team"][0]["emailAddress"]).first()
-        self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
-        self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
+    # TODO create second signed message default user
+    # def test_create_new_user_via_proposal_by_email(self):
+    #     self.remove_default_user()
+    #     proposal_by_email = copy.deepcopy(test_proposal)
+    #     del proposal_by_email["team"][0]["accountAddress"]
+    # 
+    #     resp = self.app.post(
+    #         "/api/v1/proposals/",
+    #         data=json.dumps(proposal_by_email),
+    #         headers=self.headers,
+    #         content_type='application/json'
+    #     )
+    # 
+    #     self.assertEqual(resp, 201)
+    # 
+    #     # User
+    #     user_db = User.query.filter_by(email_address=proposal_by_email["team"][0]["emailAddress"]).first()
+    #     self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
+    #     self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
 
     def test_associate_user_via_proposal_by_email(self):
-        proposal_by_email = copy.deepcopy(proposal)
+        proposal_by_email = copy.deepcopy(test_proposal)
         del proposal_by_email["team"][0]["accountAddress"]
 
-        self.app.post(
+        resp = self.app.post(
             "/api/v1/proposals/",
             data=json.dumps(proposal_by_email),
+            headers=self.headers,
             content_type='application/json'
         )
+        self.assertEqual(resp.status_code, 201)
 
         # User
         user_db = User.query.filter_by(email_address=proposal_by_email["team"][0]["emailAddress"]).first()
         self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
         self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
         proposal_db = Proposal.query.filter_by(
-            proposal_address=proposal["crowdFundContractAddress"]
+            proposal_address=test_proposal["crowdFundContractAddress"]
         ).first()
         self.assertEqual(proposal_db.team[0].id, user_db.id)
 
     def test_associate_user_via_proposal_by_email_when_user_already_exists(self):
-        proposal_by_email = copy.deepcopy(proposal)
-        del proposal_by_email["team"][0]["accountAddress"]
+        proposal_by_user_email = copy.deepcopy(test_proposal)
+        del proposal_by_user_email["team"][0]["accountAddress"]
 
-        self.app.post(
+        resp = self.app.post(
             "/api/v1/proposals/",
-            data=json.dumps(proposal_by_email),
+            data=json.dumps(proposal_by_user_email),
+            headers=self.headers,
             content_type='application/json'
         )
+        self.assertEqual(resp.status_code, 201)
 
         # User
-        user_db = User.query.filter_by(email_address=proposal_by_email["team"][0]["emailAddress"]).first()
-        self.assertEqual(user_db.display_name, proposal_by_email["team"][0]["displayName"])
-        self.assertEqual(user_db.title, proposal_by_email["team"][0]["title"])
+        self.assertEqual(self.user.display_name, proposal_by_user_email["team"][0]["displayName"])
+        self.assertEqual(self.user.title, proposal_by_user_email["team"][0]["title"])
         proposal_db = Proposal.query.filter_by(
-            proposal_address=proposal["crowdFundContractAddress"]
+            proposal_address=test_proposal["crowdFundContractAddress"]
         ).first()
-        self.assertEqual(proposal_db.team[0].id, user_db.id)
+        self.assertEqual(proposal_db.team[0].id, self.user.id)
 
-        new_proposal_by_email = copy.deepcopy(proposal)
+        new_proposal_by_email = copy.deepcopy(test_proposal)
         new_proposal_by_email["crowdFundContractAddress"] = "0x2222"
         del new_proposal_by_email["team"][0]["accountAddress"]
 
@@ -92,14 +109,14 @@ class TestAPI(BaseTestConfig):
         self.assertEqual(user_db.display_name, new_proposal_by_email["team"][0]["displayName"])
         self.assertEqual(user_db.title, new_proposal_by_email["team"][0]["title"])
         proposal_db = Proposal.query.filter_by(
-            proposal_address=proposal["crowdFundContractAddress"]
+            proposal_address=test_proposal["crowdFundContractAddress"]
         ).first()
         self.assertEqual(proposal_db.team[0].id, user_db.id)
 
     def test_get_all_users(self):
         self.app.post(
             "/api/v1/proposals/",
-            data=json.dumps(proposal),
+            data=json.dumps(test_proposal),
             content_type='application/json'
         )
         users_get_resp = self.app.get(
@@ -107,18 +124,17 @@ class TestAPI(BaseTestConfig):
         )
 
         users_json = users_get_resp.json
-        print(users_json)
-        self.assertEqual(users_json[0]["displayName"], team[0]["displayName"])
+        self.assertEqual(users_json[0]["displayName"], test_team[0]["displayName"])
 
     def test_get_user_associated_with_proposal(self):
         self.app.post(
             "/api/v1/proposals/",
-            data=json.dumps(proposal),
+            data=json.dumps(test_proposal),
             content_type='application/json'
         )
 
         data = {
-            'proposalId': proposal["crowdFundContractAddress"]
+            'proposalId': test_proposal["crowdFundContractAddress"]
         }
 
         users_get_resp = self.app.get(
@@ -127,25 +143,25 @@ class TestAPI(BaseTestConfig):
         )
 
         users_json = users_get_resp.json
-        self.assertEqual(users_json[0]["avatar"]["imageUrl"], team[0]["avatar"]["link"])
-        self.assertEqual(users_json[0]["socialMedias"][0]["socialMediaLink"], team[0]["socialMedias"][0]["link"])
-        self.assertEqual(users_json[0]["displayName"], team[0]["displayName"])
+        self.assertEqual(users_json[0]["avatar"]["imageUrl"], test_team[0]["avatar"]["link"])
+        self.assertEqual(users_json[0]["socialMedias"][0]["socialMediaLink"], test_team[0]["socialMedias"][0]["link"])
+        self.assertEqual(users_json[0]["displayName"], test_user["displayName"])
 
     def test_get_single_user(self):
         self.app.post(
             "/api/v1/proposals/",
-            data=json.dumps(proposal),
+            data=json.dumps(test_proposal),
             content_type='application/json'
         )
 
         users_get_resp = self.app.get(
-            "/api/v1/users/{}".format(proposal["team"][0]["emailAddress"])
+            "/api/v1/users/{}".format(test_proposal["team"][0]["emailAddress"])
         )
 
         users_json = users_get_resp.json
-        self.assertEqual(users_json["avatar"]["imageUrl"], team[0]["avatar"]["link"])
-        self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], team[0]["socialMedias"][0]["link"])
-        self.assertEqual(users_json["displayName"], team[0]["displayName"])
+        self.assertEqual(users_json["avatar"]["imageUrl"], test_team[0]["avatar"]["link"])
+        self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], test_team[0]["socialMedias"][0]["link"])
+        self.assertEqual(users_json["displayName"], test_team[0]["displayName"])
 
     @patch('grant.email.send.send_email')
     def test_create_user(self, mock_send_email):
@@ -153,15 +169,15 @@ class TestAPI(BaseTestConfig):
 
         self.app.post(
             "/api/v1/users/",
-            data=json.dumps(team[0]),
+            data=json.dumps(test_team[0]),
             content_type='application/json'
         )
 
         # User
-        user_db = User.get_by_email_or_account_address(account_address=team[0]["accountAddress"])
-        self.assertEqual(user_db.display_name, team[0]["displayName"])
-        self.assertEqual(user_db.title, team[0]["title"])
-        self.assertEqual(user_db.account_address, team[0]["accountAddress"])
+        user_db = User.get_by_identifier(account_address=test_team[0]["accountAddress"])
+        self.assertEqual(user_db.display_name, test_team[0]["displayName"])
+        self.assertEqual(user_db.title, test_team[0]["title"])
+        self.assertEqual(user_db.account_address, test_team[0]["accountAddress"])
 
     @patch('grant.email.send.send_email')
     def test_create_user_duplicate_400(self, mock_send_email):
@@ -170,64 +186,28 @@ class TestAPI(BaseTestConfig):
 
         response = self.app.post(
             "/api/v1/users/",
-            data=json.dumps(team[0]),
+            data=json.dumps(test_team[0]),
             content_type='application/json'
         )
 
         self.assertEqual(response.status_code, 409)
 
     def test_update_user_remove_social_and_avatar(self):
-        self.app.post(
-            "/api/v1/proposals/",
-            data=json.dumps(proposal),
-            content_type='application/json'
-        )
-
-        updated_user = copy.deepcopy(team[0])
-        updated_user['displayName'] = 'Billy'
-        updated_user['title'] = 'Commander'
-        updated_user['socialMedias'] = []
-        updated_user['avatar'] = {}
+        updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
+        updated_user["displayName"] = 'new display name'
+        updated_user["avatar"] = None
+        updated_user["socialMedias"] = None
 
         user_update_resp = self.app.put(
-            "/api/v1/users/{}".format(proposal["team"][0]["accountAddress"]),
+            "/api/v1/users/{}".format(self.user.account_address),
             data=json.dumps(updated_user),
+            headers=self.headers,
             content_type='application/json'
         )
+        self.assert200(user_update_resp)
 
-        users_json = user_update_resp.json
-        self.assertFalse(users_json["avatar"])
-        self.assertFalse(len(users_json["socialMedias"]))
-        self.assertEqual(users_json["displayName"], updated_user["displayName"])
-        self.assertEqual(users_json["title"], updated_user["title"])
-
-    def test_update_user(self):
-        self.app.post(
-            "/api/v1/proposals/",
-            data=json.dumps(proposal),
-            content_type='application/json'
-        )
-
-        updated_user = copy.deepcopy(team[0])
-        updated_user['displayName'] = 'Billy'
-        updated_user['title'] = 'Commander'
-        updated_user['socialMedias'] = [
-            {
-                "link": "https://github.com/billyman"
-            }
-        ]
-        updated_user['avatar'] = {
-            "link": "https://x.io/avatar.png"
-        }
-
-        user_update_resp = self.app.put(
-            "/api/v1/users/{}".format(proposal["team"][0]["accountAddress"]),
-            data=json.dumps(updated_user),
-            content_type='application/json'
-        )
-
-        users_json = user_update_resp.json
-        self.assertEqual(users_json["avatar"]["imageUrl"], updated_user["avatar"]["link"])
-        self.assertEqual(users_json["socialMedias"][0]["socialMediaLink"], updated_user["socialMedias"][0]["link"])
-        self.assertEqual(users_json["displayName"], updated_user["displayName"])
-        self.assertEqual(users_json["title"], updated_user["title"])
+        user_json = user_update_resp.json
+        self.assertFalse(user_json["avatar"])
+        self.assertFalse(len(user_json["socialMedias"]))
+        self.assertEqual(user_json["displayName"], updated_user["displayName"])
+        self.assertEqual(user_json["title"], updated_user["title"])

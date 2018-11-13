@@ -6,6 +6,7 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 import { persistStore, Persistor } from 'redux-persist';
 import rootReducer, { AppState, combineInitialState } from './reducers';
 import rootSaga from './sagas';
+import axios from 'api/axios';
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -42,6 +43,25 @@ export function configureStore(initialState: Partial<AppState> = combineInitialS
       );
     }
   }
+
+  // Any global listeners to the store go here
+  let prevState = store.getState();
+  store.subscribe(() => {
+    const state = store.getState();
+
+    // Setup the API with auth credentials whenever they change
+    const { authSignature } = state.auth;
+    if (authSignature !== prevState.auth.authSignature) {
+      axios.defaults.headers.common.MsgSignature = authSignature
+        ? authSignature.signedMessage
+        : undefined;
+      axios.defaults.headers.common.RawTypedData = authSignature
+        ? JSON.stringify(authSignature.rawTypedData)
+        : undefined;
+    }
+
+    prevState = state;
+  });
 
   return { store, persistor };
 }

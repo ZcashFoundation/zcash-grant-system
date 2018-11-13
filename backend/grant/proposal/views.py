@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from flask import Blueprint
+from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 from sqlalchemy.exc import IntegrityError
 
 from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
+from grant.utils.auth import requires_sm, requires_team_member_auth
 from .models import Proposal, proposals_schema, proposal_schema, ProposalUpdate, proposal_update_schema, db
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
@@ -39,28 +40,22 @@ def get_proposal_comments(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
+@requires_sm
 @endpoint.api(
-    parameter('userId', type=int, required=True),
     parameter('content', type=str, required=True)
 )
 def post_proposal_comments(proposal_id, user_id, content):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
-        user = User.query.filter_by(id=user_id).first()
-
-        if user:
-            comment = Comment(
-                proposal_id=proposal_id,
-                user_id=user_id,
-                content=content
-            )
-            db.session.add(comment)
-            db.session.commit()
-            dumped_comment = comment_schema.dump(comment)
-            return dumped_comment, 201
-
-        else:
-            return {"message": "No user matching id"}, 404
+        comment = Comment(
+            proposal_id=proposal_id,
+            user_id=g.current_user.id,
+            content=content
+        )
+        db.session.add(comment)
+        db.session.commit()
+        dumped_comment = comment_schema.dump(comment)
+        return dumped_comment, 201
     else:
         return {"message": "No proposal matching id"}, 404
 
@@ -73,8 +68,8 @@ def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(stage=stage)
-            .order_by(Proposal.date_created.desc())
-            .all()
+                .order_by(Proposal.date_created.desc())
+                .all()
         )
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
@@ -83,6 +78,7 @@ def get_proposals(stage):
 
 
 @blueprint.route("/", methods=["POST"])
+@requires_sm
 @endpoint.api(
     parameter('crowdFundContractAddress', type=str, required=True),
     parameter('content', type=str, required=True),
@@ -92,7 +88,6 @@ def get_proposals(stage):
     parameter('team', type=list, required=True)
 )
 def make_proposal(crowd_fund_contract_address, content, title, milestones, category, team):
-    from grant.user.models import User
     existing_proposal = Proposal.query.filter_by(proposal_address=crowd_fund_contract_address).first()
     if existing_proposal:
         return {"message": "Oops! Something went wrong."}, 409
@@ -187,24 +182,21 @@ def get_proposal_update(proposal_id, update_id):
         return {"message": "No proposal matching id"}, 404
 
 
-# TODO: Add authentication to endpoint
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
+@requires_team_member_auth
+@requires_sm
 @endpoint.api(
     parameter('title', type=str, required=True),
     parameter('content', type=str, required=True)
 )
 def post_proposal_update(proposal_id, title, content):
-    proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        update = ProposalUpdate(
-            proposal_id=proposal.id,
-            title=title,
-            content=content
-        )
-        db.session.add(update)
-        db.session.commit()
+    update = ProposalUpdate(
+        proposal_id=g.current_proposal.id,
+        title=title,
+        content=content
+    )
+    db.session.add(update)
+    db.session.commit()
 
-        dumped_update = proposal_update_schema.dump(update)
-        return dumped_update, 201
-    else:
-        return {"message": "No proposal matching id"}, 404
+    dumped_update = proposal_update_schema.dump(update)
+    return dumped_update, 201
