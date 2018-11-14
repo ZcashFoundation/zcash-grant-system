@@ -176,6 +176,7 @@ class ProposalSchema(ma.Schema):
             "brief",
             "proposal_id",
             "proposal_address",
+            "target",
             "content",
             "comments",
             "updates",

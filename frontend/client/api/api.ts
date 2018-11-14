@@ -98,7 +98,13 @@ export function postProposalUpdate(
 }
 
 export function getProposalDrafts(): Promise<{ data: ProposalDraft[] }> {
-  return axios.get('/api/v1/proposals/drafts');
+  return axios.get('/api/v1/proposals/drafts').then(res => {
+    res.data = res.data.map((draft: any) => ({
+      ...draft,
+      team: draft.team.map(formatTeamMemberFromGet),
+    }));
+    return res;
+  });
 }
 
 export function postProposalDraft(): Promise<{ data: ProposalDraft }> {
@@ -107,6 +113,6 @@ export function postProposalDraft(): Promise<{ data: ProposalDraft }> {
 
 export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDraft }> {
   // Exclude some keys
-  const { proposalId, stage, dateCreated, ...rest } = proposal;
+  const { proposalId, stage, dateCreated, team, ...rest } = proposal;
   return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }

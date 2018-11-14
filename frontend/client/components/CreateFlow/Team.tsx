@@ -73,19 +73,6 @@ class CreateFlowTeam extends React.Component<Props, State> {
             onRemove={this.removeMember}
           />
         ))}
-        {team.length < MAX_TEAM_SIZE && (
-          <button className="TeamForm-add" onClick={this.addMember}>
-            <div className="TeamForm-add-icon">
-              <Icon type="plus" />
-            </div>
-            <div className="TeamForm-add-text">
-              <div className="TeamForm-add-text-title">Add a team member</div>
-              <div className="TeamForm-add-text-subtitle">
-                Find an existing user, or fill out their info yourself
-              </div>
-            </div>
-          </button>
-        )}
       </div>
     );
   }
@@ -93,12 +80,6 @@ class CreateFlowTeam extends React.Component<Props, State> {
   private handleChange = (user: TeamMember, idx: number) => {
     const team = [...this.state.team];
     team[idx] = user;
-    this.setState({ team });
-    this.props.updateForm({ team });
-  };
-
-  private addMember = () => {
-    const team = [...this.state.team, { ...DEFAULT_STATE.team[0] }];
     this.setState({ team });
     this.props.updateForm({ team });
   };
