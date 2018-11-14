@@ -116,3 +116,12 @@ export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDr
   const { proposalId, stage, dateCreated, team, ...rest } = proposal;
   return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }
+
+export function putProposalPublish(
+  proposal: ProposalDraft,
+  contractAddress: string,
+): Promise<{ data: ProposalDraft }> {
+  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`, {
+    contractAddress,
+  });
+}

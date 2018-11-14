@@ -4,6 +4,7 @@ import getWeb3 from 'lib/getWeb3';
 import getContract, { WrongNetworkError } from 'lib/getContract';
 import { sleep } from 'utils/helpers';
 import { web3ErrorToString } from 'utils/web3';
+import { putProposalPublish } from 'api/api';
 import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
 import { proposalToContractData } from 'modules/create/utils';
 import { AppState } from 'store/reducers';
@@ -139,8 +140,7 @@ export function createCrowdFund(CrowdFundFactoryContract: any, proposal: Proposa
         .once('confirmation', async (_: any, receipt: any) => {
           const crowdFundContractAddress =
             receipt.events.ContractCreated.returnValues.newAddress;
-          // TODO: Publish proposal
-          // await postProposal(proposal);
+          await putProposalPublish(proposal, crowdFundContractAddress);
           dispatch({
             type: types.CROWD_FUND_CREATED,
             payload: crowdFundContractAddress,

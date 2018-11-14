@@ -160,7 +160,7 @@ def delete_proposal_draft():
 @endpoint.api(
     parameter('contractAddress', type=str, required=True)
 )
-def publish_proposal(contract_address):
+def publish_proposal(proposal_id, contract_address):
     try:
         g.current_proposal.proposal_address = contract_address
         g.current_proposal.publish()
