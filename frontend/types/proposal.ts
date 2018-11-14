@@ -1,8 +1,13 @@
-import { TeamMember } from 'types';
 import { Wei } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import { Comment } from 'types';
-import { Milestone, ProposalMilestone, Update } from 'types';
+import {
+  CreateMilestone,
+  ProposalMilestone,
+  Update,
+  TeamMember,
+  Milestone,
+  Comment,
+} from 'types';
 
 export interface Contributor {
   address: string;
@@ -36,10 +41,15 @@ export interface ProposalDraft {
   dateCreated: number;
   title: string;
   brief: string;
-  body: string;
+  category: PROPOSAL_CATEGORY;
+  details: string;
   stage: string;
-  category?: PROPOSAL_CATEGORY;
-  milestones: ProposalMilestone[];
+  target: string;
+  payoutAddress: string;
+  trustees: string[];
+  deadlineDuration: number;
+  voteDuration: number;
+  milestones: CreateMilestone[];
   team: TeamMember[];
 }
 

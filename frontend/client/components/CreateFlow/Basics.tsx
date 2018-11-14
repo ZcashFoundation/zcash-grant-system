@@ -2,20 +2,20 @@ import React from 'react';
 import { Input, Form, Icon, Select } from 'antd';
 import { SelectValue } from 'antd/lib/select';
 import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
-import { CreateFormState } from 'types';
+import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { typedKeys } from 'utils/ts';
 
-interface State {
+interface State extends Partial<ProposalDraft> {
   title: string;
   brief: string;
-  category: PROPOSAL_CATEGORY | null;
-  amountToRaise: string;
+  category?: PROPOSAL_CATEGORY;
+  target: string;
 }
 
 interface Props {
   initialState?: Partial<State>;
-  updateForm(form: Partial<CreateFormState>): void;
+  updateForm(form: Partial<ProposalDraft>): void;
 }
 
 export default class CreateFlowBasics extends React.Component<Props, State> {
@@ -24,8 +24,8 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
     this.state = {
       title: '',
       brief: '',
-      category: null,
-      amountToRaise: '',
+      category: undefined,
+      target: '',
       ...(props.initialState || {}),
     };
   }
@@ -46,7 +46,7 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
   };
 
   render() {
-    const { title, brief, category, amountToRaise } = this.state;
+    const { title, brief, category, target } = this.state;
     const errors = getCreateErrors(this.state, true);
 
     return (
@@ -101,17 +101,15 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
 
         <Form.Item
           label="Target amount"
-          validateStatus={errors.amountToRaise ? 'error' : undefined}
-          help={
-            errors.amountToRaise || 'This cannot be changed once your proposal starts'
-          }
+          validateStatus={errors.target ? 'error' : undefined}
+          help={errors.target || 'This cannot be changed once your proposal starts'}
         >
           <Input
             size="large"
-            name="amountToRaise"
+            name="target"
             placeholder="1.5"
             type="number"
-            value={amountToRaise}
+            value={target}
             onChange={this.handleInputChange}
             addonAfter="ETH"
           />

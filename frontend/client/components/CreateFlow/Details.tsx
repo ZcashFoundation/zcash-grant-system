@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form } from 'antd';
 import MarkdownEditor from 'components/MarkdownEditor';
-import { CreateFormState } from 'types';
+import { ProposalDraft } from 'types';
 
 interface State {
   details: string;
@@ -9,7 +9,7 @@ interface State {
 
 interface Props {
   initialState?: Partial<State>;
-  updateForm(form: Partial<CreateFormState>): void;
+  updateForm(form: Partial<ProposalDraft>): void;
 }
 
 export default class CreateFlowTeam extends React.Component<Props, State> {

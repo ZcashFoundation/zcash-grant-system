@@ -1,15 +1,14 @@
 import types from './types';
 import { Dispatch } from 'redux';
 import getWeb3 from 'lib/getWeb3';
-import { postProposal } from 'api/api';
 import getContract, { WrongNetworkError } from 'lib/getContract';
 import { sleep } from 'utils/helpers';
 import { web3ErrorToString } from 'utils/web3';
 import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { proposalToContractData } from 'modules/create/utils';
 import { AppState } from 'store/reducers';
 import { Wei } from 'utils/units';
-import { TeamMember, AuthSignatureData } from 'types';
+import { AuthSignatureData, ProposalDraft } from 'types';
 
 type GetState = () => AppState;
 
@@ -95,38 +94,18 @@ export function setAccounts() {
 }
 
 // TODO: Move these to a better place?
-interface MilestoneData {
-  title: string;
-  description: string;
-  date: string;
-  payoutPercent: number;
-  immediatePayout: boolean;
-}
-
 export interface ProposalContractData {
   ethAmount: Wei;
-  payOutAddress: string;
+  payoutAddress: string;
   trusteesAddresses: string[];
   milestoneAmounts: Wei[];
-  milestones: MilestoneData[];
   durationInMinutes: number;
   milestoneVotingPeriodInMinutes: number;
   immediateFirstMilestonePayout: boolean;
 }
 
-export interface ProposalBackendData {
-  title: string;
-  content: string;
-  category: PROPOSAL_CATEGORY;
-  team: TeamMember[];
-}
-
 export type TCreateCrowdFund = typeof createCrowdFund;
-export function createCrowdFund(
-  CrowdFundFactoryContract: any,
-  contractData: ProposalContractData,
-  backendData: ProposalBackendData,
-) {
+export function createCrowdFund(CrowdFundFactoryContract: any, proposal: ProposalDraft) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.CROWD_FUND_PENDING,
@@ -134,16 +113,13 @@ export function createCrowdFund(
 
     const {
       ethAmount,
-      payOutAddress,
+      payoutAddress,
       trusteesAddresses,
       milestoneAmounts,
-      milestones,
       durationInMinutes,
       milestoneVotingPeriodInMinutes,
       immediateFirstMilestonePayout,
-    } = contractData;
-
-    const { content, title, category, team } = backendData;
+    } = proposalToContractData(proposal);
 
     const state = getState();
     const accounts = state.web3.accounts;
@@ -152,8 +128,8 @@ export function createCrowdFund(
       await CrowdFundFactoryContract.methods
         .createCrowdFund(
           ethAmount,
-          payOutAddress,
-          [payOutAddress, ...trusteesAddresses],
+          payoutAddress,
+          [payoutAddress, ...trusteesAddresses],
           milestoneAmounts,
           durationInMinutes,
           milestoneVotingPeriodInMinutes,
@@ -163,15 +139,8 @@ export function createCrowdFund(
         .once('confirmation', async (_: any, receipt: any) => {
           const crowdFundContractAddress =
             receipt.events.ContractCreated.returnValues.newAddress;
-          await postProposal({
-            accountAddress: accounts[0],
-            crowdFundContractAddress,
-            content,
-            title,
-            milestones,
-            category,
-            team,
-          });
+          // TODO: Publish proposal
+          // await postProposal(proposal);
           dispatch({
             type: types.CROWD_FUND_CREATED,
             payload: crowdFundContractAddress,

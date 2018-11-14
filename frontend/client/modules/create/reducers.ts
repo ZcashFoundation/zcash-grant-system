@@ -1,9 +1,9 @@
 import types from './types';
-import { CreateFormState, ProposalDraft } from 'types';
+import { ProposalDraft } from 'types';
 
 export interface CreateState {
   drafts: ProposalDraft[] | null;
-  form: CreateFormState | null;
+  form: ProposalDraft | null;
 
   isInitializingForm: boolean;
   initializeFormError: string | null;

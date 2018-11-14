@@ -109,7 +109,7 @@ def get_proposal_drafts():
     parameter('title', type=str),
     parameter('brief', type=str),
     parameter('category', type=str),
-    parameter('content', type=str),
+    parameter('details', type=str),
     parameter('target', type=str),
     parameter('payoutAddress', type=str),
     parameter('trustees', type=list),
@@ -117,14 +117,10 @@ def get_proposal_drafts():
     parameter('voteDuration', type=int),
     parameter('milestones', type=list)
 )
-def update_proposal(milestones, trustees, **kwargs):
+def update_proposal(milestones, proposal_id, **kwargs):
     # Update the base proposal fields
-    for key, value in kwargs.items():
-        g.current_proposal[key] = value
-    if trustees:
-        g.current_proposal.trustees = ','.join(trustees)
     try:
-        Proposal.validate(g.current_proposal)
+        g.current_proposal.update(**kwargs)
     except ValidationException as e:
         return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
     db.session.add(g.current_proposal)
@@ -147,7 +143,8 @@ def update_proposal(milestones, trustees, **kwargs):
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
 
-@blueprint.route("/<proposal_id>", methods=["PUT"])
+
+@blueprint.route("/<proposal_id>", methods=["DELETE"])
 @requires_team_member_auth
 @endpoint.api()
 def delete_proposal_draft():
@@ -156,6 +153,7 @@ def delete_proposal_draft():
     db.session.delete(g.current_proposal)
     db.session.commit()
     return None, 202
+
 
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
 @requires_team_member_auth

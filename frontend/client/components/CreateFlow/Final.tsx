@@ -17,7 +17,6 @@ interface StateProps {
 
 interface DispatchProps {
   createProposal: typeof createActions['createProposal'];
-  resetForm: typeof createActions['resetForm'];
 }
 
 type Props = StateProps & DispatchProps;
@@ -25,12 +24,6 @@ type Props = StateProps & DispatchProps;
 class CreateFinal extends React.Component<Props> {
   componentDidMount() {
     this.create();
-  }
-
-  componentDidUpdate(prevProps: Props) {
-    if (!prevProps.crowdFundCreatedAddress && this.props.crowdFundCreatedAddress) {
-      this.props.resetForm();
-    }
   }
 
   render() {
@@ -70,7 +63,9 @@ class CreateFinal extends React.Component<Props> {
   }
 
   private create = () => {
-    this.props.createProposal(this.props.form);
+    if (this.props.form) {
+      this.props.createProposal(this.props.form);
+    }
   };
 }
 
@@ -86,6 +81,5 @@ export default connect<StateProps, DispatchProps, {}, AppState>(
   }),
   {
     createProposal: createActions.createProposal,
-    resetForm: createActions.resetForm,
   },
 )(CreateFinal);

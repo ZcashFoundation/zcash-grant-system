@@ -1,16 +1,10 @@
 import { Dispatch } from 'redux';
-import { CreateFormState } from 'types';
-import { getProposalDrafts } from 'api/api';
-import { sleep } from 'utils/helpers';
+import { ProposalDraft } from 'types';
 import { AppState } from 'store/reducers';
 import { createCrowdFund } from 'modules/web3/actions';
-import { formToBackendData, formToContractData } from './utils';
 import types, { CreateDraftOptions } from './types';
 
 type GetState = () => AppState;
-
-// TODO: Replace with server side storage
-const LS_DRAFT_KEY = 'CREATE_PROPOSAL_DRAFT';
 
 export function initializeForm(proposalId: number) {
   return {
@@ -19,7 +13,7 @@ export function initializeForm(proposalId: number) {
   };
 }
 
-export function updateForm(form: Partial<CreateFormState>) {
+export function updateForm(form: Partial<ProposalDraft>) {
   return (dispatch: Dispatch<any>) => {
     dispatch({
       type: types.UPDATE_FORM,
@@ -30,15 +24,7 @@ export function updateForm(form: Partial<CreateFormState>) {
 }
 
 export function saveDraft() {
-  return async (dispatch: Dispatch<any>, getState: GetState) => {
-    const { form } = getState().create;
-    dispatch({ type: types.SAVE_DRAFT_PENDING });
-    await sleep(1000);
-
-    // TODO: Replace with server side save
-    localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(form));
-    dispatch({ type: types.SAVE_DRAFT_FULFILLED });
-  };
+  return { type: types.SAVE_DRAFT_PENDING };
 }
 
 export function fetchDrafts() {
@@ -52,15 +38,13 @@ export function createDraft(opts: CreateDraftOptions = {}) {
   };
 }
 
-export function createProposal(form: CreateFormState) {
+export function createProposal(form: ProposalDraft) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     const state = getState();
     // TODO: Handle if contract is unavailable
     const contract = state.web3.contracts[0];
     // TODO: Move more of the backend handling into this action.
-    dispatch(
-      createCrowdFund(contract, formToContractData(form), formToBackendData(form)),
-    );
+    dispatch(createCrowdFund(contract, form));
     // TODO: dispatch reset conditionally, if crowd fund is success
   };
 }

@@ -6,3 +6,5 @@ export const getDraftById = (s: S, id: number) => {
   }
   return s.create.drafts.find(d => d.proposalId === id);
 };
+
+export const getFormState = (s: S) => s.create.form;

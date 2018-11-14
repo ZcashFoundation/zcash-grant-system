@@ -32,7 +32,11 @@ class ProposalEdit extends React.Component<Props> {
       return (
         <Web3Container
           renderLoading={() => <Spin />}
-          render={({ accounts }) => <CreateFlow accounts={accounts} />}
+          render={({ accounts }) => (
+            <div style={{ paddingTop: '3rem', paddingBottom: '8rem' }}>
+              <CreateFlow accounts={accounts} />
+            </div>
+          )}
         />
       );
     } else if (initializeFormError) {

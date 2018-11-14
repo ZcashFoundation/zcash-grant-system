@@ -124,6 +124,30 @@ class Proposal(db.Model):
         return Proposal(
             **kwargs
         )
+    
+    def update(
+        self,
+        title: str = '',
+        brief: str = '',
+        category: str = '',
+        details: str = '',
+        target: str = '0',
+        payout_address: str = '',
+        trustees: List[str] = [],
+        deadline_duration: int = 5184000, # 60 days
+        vote_duration: int = 604800 # 7 days
+    ):
+        self.title = title
+        self.brief = brief
+        self.category = category
+        self.content = details
+        self.target = target
+        self.payout_address = payout_address
+        self.trustees = ','.join(trustees)
+        self.deadline_duration = deadline_duration
+        self.vote_duration = vote_duration
+        Proposal.validate(vars(self))
+
 
     def publish(self):
         # Require certain fields
@@ -149,19 +173,24 @@ class ProposalSchema(ma.Schema):
             "stage",
             "date_created",
             "title",
+            "brief",
             "proposal_id",
             "proposal_address",
-            "body",
+            "content",
             "comments",
             "updates",
             "milestones",
             "category",
-            "team"
+            "team",
+            "trustees",
+            "payout_address",
+            "deadline_duration",
+            "vote_duration"
         )
 
     date_created = ma.Method("get_date_created")
     proposal_id = ma.Method("get_proposal_id")
-    body = ma.Method("get_body")
+    trustees = ma.Method("get_trustees")
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
@@ -176,6 +205,10 @@ class ProposalSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
+
+    def get_trustees(self, obj):
+        print(obj.trustees)
+        return obj.trustees.split(',')
 
 
 proposal_schema = ProposalSchema()

@@ -5,7 +5,6 @@ import {
   formatTeamMemberFromGet,
   generateProposalUrl,
 } from 'utils/api';
-import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
@@ -34,16 +33,7 @@ export function getProposalUpdates(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/updates`);
 }
 
-export function postProposal(payload: {
-  // TODO type Milestone
-  accountAddress: string;
-  crowdFundContractAddress: string;
-  content: string;
-  title: string;
-  category: PROPOSAL_CATEGORY;
-  milestones: object[];
-  team: TeamMember[];
-}) {
+export function postProposal(payload: ProposalDraft) {
   return axios.post(`/api/v1/proposals/`, {
     ...payload,
     // Team has a different shape for POST
@@ -113,4 +103,10 @@ export function getProposalDrafts(): Promise<{ data: ProposalDraft[] }> {
 
 export function postProposalDraft(): Promise<{ data: ProposalDraft }> {
   return axios.post('/api/v1/proposals/drafts');
+}
+
+export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDraft }> {
+  // Exclude some keys
+  const { proposalId, stage, dateCreated, ...rest } = proposal;
+  return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }

@@ -16,7 +16,7 @@ import Preview from './Preview';
 import Final from './Final';
 import createExampleProposal from './example';
 import { createActions } from 'modules/create';
-import { CreateFormState } from 'types';
+import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
@@ -126,7 +126,7 @@ interface State {
 
 class CreateFlow extends React.Component<Props, State> {
   private historyUnlisten: () => void;
-  private debouncedUpdateForm: (form: Partial<CreateFormState>) => void;
+  private debouncedUpdateForm: (form: Partial<ProposalDraft>) => void;
 
   constructor(props: Props) {
     super(props);
@@ -247,7 +247,7 @@ class CreateFlow extends React.Component<Props, State> {
     );
   }
 
-  private updateForm = (form: Partial<CreateFormState>) => {
+  private updateForm = (form: Partial<ProposalDraft>) => {
     this.props.updateForm(form);
   };
 
@@ -275,6 +275,9 @@ class CreateFlow extends React.Component<Props, State> {
   };
 
   private checkFormErrors = () => {
+    if (!this.props.form) {
+      return true;
+    }
     const errors = getCreateErrors(this.props.form);
     return !!Object.keys(errors).length;
   };

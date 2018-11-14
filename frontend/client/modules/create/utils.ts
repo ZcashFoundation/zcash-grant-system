@@ -1,8 +1,8 @@
-import { CreateFormState, CreateMilestone } from 'types';
+import { ProposalDraft, CreateMilestone } from 'types';
 import { TeamMember } from 'types';
 import { isValidEthAddress, getAmountError } from 'utils/validators';
 import { MILESTONE_STATE, ProposalWithCrowdFund } from 'types';
-import { ProposalContractData, ProposalBackendData } from 'modules/web3/actions';
+import { ProposalContractData } from 'modules/web3/actions';
 import { Wei, toWei } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY } from 'api/constants';
@@ -14,43 +14,49 @@ interface CreateFormErrors {
   title?: string;
   brief?: string;
   category?: string;
-  amountToRaise?: string;
+  target?: string;
   team?: string[];
   details?: string;
-  payOutAddress?: string;
+  payoutAddress?: string;
   trustees?: string[];
   milestones?: string[];
-  deadline?: string;
-  milestoneDeadline?: string;
+  deadlineDuration?: string;
+  voteDuration?: string;
 }
 
-export type KeyOfForm = keyof CreateFormState;
+export type KeyOfForm = keyof Partial<ProposalDraft>;
 export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
   title: 'Title',
   brief: 'Brief',
   category: 'Category',
-  amountToRaise: 'Target amount',
+  target: 'Target amount',
   team: 'Team',
   details: 'Details',
-  payOutAddress: 'Payout address',
+  payoutAddress: 'Payout address',
   trustees: 'Trustees',
   milestones: 'Milestones',
-  deadline: 'Funding deadline',
-  milestoneDeadline: 'Milestone deadline',
+  deadlineDuration: 'Funding deadline',
+  voteDuration: 'Milestone deadline',
+  // Unused, but required by the type definition
+  proposalId: '',
+  dateCreated: '',
+  stage: '',
 };
 
 export function getCreateErrors(
-  form: Partial<CreateFormState>,
+  form: Partial<ProposalDraft>,
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, amountToRaise, payOutAddress, trustees } = form;
+  const { title, team, milestones, target, payoutAddress, trustees } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
     for (const key in form) {
       if (!form[key as KeyOfForm]) {
-        errors[key as KeyOfForm] = `${FIELD_NAME_MAP[key as KeyOfForm]} is required`;
+        (errors as any)[key as KeyOfForm] = `${
+          FIELD_NAME_MAP[key as KeyOfForm]
+        } is required`;
       }
     }
 
@@ -68,17 +74,17 @@ export function getCreateErrors(
   }
 
   // Amount to raise
-  const amountFloat = amountToRaise ? parseFloat(amountToRaise) : 0;
-  if (amountToRaise && !Number.isNaN(amountFloat)) {
-    const amountError = getAmountError(amountFloat, TARGET_ETH_LIMIT);
-    if (amountError) {
-      errors.amountToRaise = amountError;
+  const targetFloat = target ? parseFloat(target) : 0;
+  if (target && !Number.isNaN(targetFloat)) {
+    const targetErr = getAmountError(targetFloat, TARGET_ETH_LIMIT);
+    if (targetErr) {
+      errors.target = targetErr;
     }
   }
 
   // Payout address
-  if (payOutAddress && !isValidEthAddress(payOutAddress)) {
-    errors.payOutAddress = 'That doesn’t look like a valid address';
+  if (payoutAddress && !isValidEthAddress(payoutAddress)) {
+    errors.payoutAddress = 'That doesn’t look like a valid address';
   }
 
   // Trustees
@@ -94,7 +100,7 @@ export function getCreateErrors(
         err = 'That doesn’t look like a valid address';
       } else if (trustees.indexOf(address) !== idx) {
         err = 'That address is already a trustee';
-      } else if (payOutAddress === address) {
+      } else if (payoutAddress === address) {
         err = 'That address is already a trustee';
       }
 
@@ -111,7 +117,7 @@ export function getCreateErrors(
     let didMilestoneError = false;
     let cumulativeMilestonePct = 0;
     const milestoneErrors = milestones.map((ms, idx) => {
-      if (!ms.title || !ms.description || !ms.date || !ms.payoutPercent) {
+      if (!ms.title || !ms.content || !ms.dateEstimated || !ms.payoutPercent) {
         didMilestoneError = true;
         return '';
       }
@@ -119,12 +125,12 @@ export function getCreateErrors(
       let err = '';
       if (ms.title.length > 40) {
         err = 'Title length can only be 40 characters maximum';
-      } else if (ms.description.length > 200) {
+      } else if (ms.content.length > 200) {
         err = 'Description can only be 200 characters maximum';
       }
 
       // Last one shows percentage errors
-      cumulativeMilestonePct += ms.payoutPercent;
+      cumulativeMilestonePct += parseInt(ms.payoutPercent, 10);
       if (idx === milestones.length - 1 && cumulativeMilestonePct !== 100) {
         err = `Payout percentages doesn’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
       }
@@ -173,11 +179,11 @@ export function getCreateTeamMemberError(user: TeamMember) {
 }
 
 function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Wei) {
-  return raiseGoal.divn(100).mul(Wei(milestone.payoutPercent.toString()));
+  return raiseGoal.divn(100).mul(Wei(milestone.payoutPercent));
 }
 
-export function formToContractData(form: CreateFormState): ProposalContractData {
-  const targetInWei = toWei(form.amountToRaise, 'ether');
+export function proposalToContractData(form: ProposalDraft): ProposalContractData {
+  const targetInWei = toWei(form.target, 'ether');
   const milestoneAmounts = form.milestones.map(m =>
     milestoneToMilestoneAmount(m, targetInWei),
   );
@@ -185,51 +191,41 @@ export function formToContractData(form: CreateFormState): ProposalContractData 
 
   return {
     ethAmount: targetInWei,
-    payOutAddress: form.payOutAddress,
+    payoutAddress: form.payoutAddress,
     trusteesAddresses: form.trustees,
     milestoneAmounts,
-    milestones: form.milestones,
-    durationInMinutes: form.deadline || ONE_DAY * 60,
-    milestoneVotingPeriodInMinutes: form.milestoneDeadline || ONE_DAY * 7,
+    durationInMinutes: form.deadlineDuration || ONE_DAY * 60,
+    milestoneVotingPeriodInMinutes: form.voteDuration || ONE_DAY * 7,
     immediateFirstMilestonePayout,
   };
 }
 
-export function formToBackendData(form: CreateFormState): ProposalBackendData {
-  return {
-    title: form.title,
-    category: form.category as PROPOSAL_CATEGORY,
-    content: form.details,
-    team: form.team,
-  };
-}
-
 // This is kind of a disgusting function, sorry.
-export function makeProposalPreviewFromForm(
-  form: CreateFormState,
+export function makeProposalPreviewFromDraft(
+  draft: ProposalDraft,
 ): ProposalWithCrowdFund {
-  const target = parseFloat(form.amountToRaise);
+  const target = parseFloat(draft.target);
 
   return {
     proposalId: 0,
     proposalUrlId: '0-title',
     proposalAddress: '0x0',
     dateCreated: Date.now(),
-    title: form.title,
-    body: form.details,
+    title: draft.title,
+    body: draft.details,
     stage: 'preview',
-    category: form.category || PROPOSAL_CATEGORY.DAPP,
-    team: form.team,
-    milestones: form.milestones.map((m, idx) => ({
+    category: draft.category || PROPOSAL_CATEGORY.DAPP,
+    team: draft.team,
+    milestones: draft.milestones.map((m, idx) => ({
       index: idx,
       title: m.title,
-      body: m.description,
-      content: m.description,
-      amount: toWei(target * (m.payoutPercent / 100), 'ether'),
+      body: m.content,
+      content: m.content,
+      amount: toWei(target * (parseInt(m.payoutPercent, 10) / 100), 'ether'),
       amountAgainstPayout: Wei('0'),
       percentAgainstPayout: 0,
       payoutRequestVoteDeadline: Date.now(),
-      dateEstimated: m.date,
+      dateEstimated: m.dateEstimated,
       immediatePayout: m.immediatePayout,
       isImmediatePayout: m.immediatePayout,
       isPaid: false,
@@ -238,15 +234,15 @@ export function makeProposalPreviewFromForm(
       stage: MILESTONE_STATE.WAITING,
     })),
     crowdFund: {
-      immediateFirstMilestonePayout: form.milestones[0].immediatePayout,
+      immediateFirstMilestonePayout: draft.milestones[0].immediatePayout,
       balance: Wei('0'),
       funded: Wei('0'),
       percentFunded: 0,
       target: toWei(target, 'ether'),
       amountVotingForRefund: Wei('0'),
       percentVotingForRefund: 0,
-      beneficiary: form.payOutAddress,
-      trustees: form.trustees,
+      beneficiary: draft.payoutAddress,
+      trustees: draft.trustees,
       deadline: Date.now() + 100000,
       contributors: [],
       milestones: [],
