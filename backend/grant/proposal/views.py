@@ -109,7 +109,7 @@ def get_proposal_drafts():
     parameter('title', type=str),
     parameter('brief', type=str),
     parameter('category', type=str),
-    parameter('details', type=str),
+    parameter('content', type=str),
     parameter('target', type=str),
     parameter('payoutAddress', type=str),
     parameter('trustees', type=list),
@@ -126,7 +126,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
     db.session.add(g.current_proposal)
 
     # Delete & re-add milestones
-    db.session.delete(g.current_proposal.milestones)
+    [session.delete(x) for x in g.current_proposal.milestones]
     if milestones:
         for mdata in milestones:
             m = Milestone(

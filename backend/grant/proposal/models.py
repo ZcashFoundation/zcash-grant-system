@@ -64,7 +64,7 @@ class Proposal(db.Model):
     category = db.Column(db.String(255), nullable=False)
 
     # Contract info
-    target = db.Column(db.BigInteger, nullable=False)
+    target = db.Column(db.String(255), nullable=False)
     payout_address = db.Column(db.String(255), nullable=False)
     trustees = db.Column(db.String(1024), nullable=False)
     deadline_duration = db.Column(db.Integer(), nullable=False)
@@ -130,7 +130,7 @@ class Proposal(db.Model):
         title: str = '',
         brief: str = '',
         category: str = '',
-        details: str = '',
+        content: str = '',
         target: str = '0',
         payout_address: str = '',
         trustees: List[str] = [],
@@ -140,7 +140,7 @@ class Proposal(db.Model):
         self.title = title
         self.brief = brief
         self.category = category
-        self.content = details
+        self.content = content
         self.target = target
         self.payout_address = payout_address
         self.trustees = ','.join(trustees)
@@ -207,8 +207,7 @@ class ProposalSchema(ma.Schema):
         return dt_to_unix(obj.date_created)
 
     def get_trustees(self, obj):
-        print(obj.trustees)
-        return obj.trustees.split(',')
+        return [i for i in obj.trustees.split(',') if i != '']
 
 
 proposal_schema = ProposalSchema()
