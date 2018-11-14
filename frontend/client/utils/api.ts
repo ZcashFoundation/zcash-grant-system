@@ -1,4 +1,5 @@
-import { TeamMember } from 'types';
+import BN from 'bn.js';
+import { TeamMember, CrowdFund, ProposalWithCrowdFund } from 'types';
 import { socialAccountsToUrls, socialUrlsToAccounts } from 'utils/social';
 
 export function formatTeamMemberForPost(user: TeamMember) {
@@ -25,6 +26,38 @@ export function formatTeamMemberFromGet(user: any): TeamMember {
       user.socialMedias.map((sm: any) => sm.socialMediaLink),
     ),
   };
+}
+
+export function formatCrowdFundFromGet(crowdFund: CrowdFund): CrowdFund {
+  const bnKeys = ['amountVotingForRefund', 'balance', 'funded', 'target'] as Array<
+    keyof CrowdFund
+  >;
+  bnKeys.forEach(k => {
+    crowdFund[k] = new BN(crowdFund[k] as string);
+  });
+  crowdFund.milestones = crowdFund.milestones.map(ms => {
+    ms.amount = new BN(ms.amount);
+    ms.amountAgainstPayout = new BN(ms.amountAgainstPayout);
+    return ms;
+  });
+  crowdFund.contributors = crowdFund.contributors.map(c => {
+    c.contributionAmount = new BN(c.contributionAmount);
+    return c;
+  });
+  return crowdFund;
+}
+
+export function formatProposalFromGet(proposal: ProposalWithCrowdFund) {
+  for (let i = 0; i < proposal.crowdFund.milestones.length; i++) {
+    proposal.milestones[i] = {
+      ...proposal.milestones[i],
+      ...proposal.crowdFund.milestones[i],
+    };
+  }
+  proposal.team = proposal.team.map(formatTeamMemberFromGet);
+  proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
+  proposal.crowdFund = formatCrowdFundFromGet(proposal.crowdFund);
+  return proposal;
 }
 
 // TODO: i18n on case-by-case basis

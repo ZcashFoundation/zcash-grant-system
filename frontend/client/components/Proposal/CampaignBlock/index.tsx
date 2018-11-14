@@ -4,17 +4,17 @@ import { Spin, Form, Input, Button, Icon } from 'antd';
 import { ProposalWithCrowdFund } from 'types';
 import './style.less';
 import classnames from 'classnames';
-
+import { fromWei } from 'utils/units';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { web3Actions } from 'modules/web3';
 import { withRouter } from 'react-router';
-import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
 import ShortAddress from 'components/ShortAddress';
 import UnitDisplay from 'components/UnitDisplay';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
+import MetaMaskRequiredButton from 'components/MetaMaskRequiredButton';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
@@ -29,11 +29,7 @@ interface ActionProps {
   fundCrowdFund: typeof web3Actions['fundCrowdFund'];
 }
 
-interface Web3Props {
-  web3: Web3RenderProps['web3'];
-}
-
-type Props = OwnProps & StateProps & ActionProps & Web3Props;
+type Props = OwnProps & StateProps & ActionProps;
 
 interface State {
   amountToRaise: string;
@@ -58,7 +54,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       return;
     }
 
-    const { proposal, web3 } = this.props;
+    const { proposal } = this.props;
     const { crowdFund } = proposal;
     const remainingTarget = crowdFund.target.sub(crowdFund.funded);
     const amount = parseFloat(value);
@@ -67,7 +63,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     if (Number.isNaN(amount)) {
       // They're entering some garbage, they’ll work it out
     } else {
-      const remainingEthNum = parseFloat(web3.utils.fromWei(remainingTarget, 'ether'));
+      const remainingEthNum = parseFloat(fromWei(remainingTarget, 'ether'));
       amountError = getAmountError(amount, remainingEthNum);
     }
 
@@ -82,7 +78,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
   };
 
   render() {
-    const { proposal, sendLoading, web3, isPreview } = this.props;
+    const { proposal, sendLoading, isPreview } = this.props;
     const { amountToRaise, amountError } = this.state;
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
@@ -94,7 +90,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
         crowdFund.isFrozen;
       const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
       const remainingEthNum = parseFloat(
-        web3.utils.fromWei(crowdFund.target.sub(crowdFund.funded), 'ether'),
+        fromWei(crowdFund.target.sub(crowdFund.funded), 'ether'),
       );
 
       content = (
@@ -166,37 +162,51 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                   }}
                 />
               </div>
-              <Form layout="vertical">
-                <Form.Item
-                  validateStatus={amountError ? 'error' : undefined}
-                  help={amountError}
-                  style={{ marginBottom: '0.5rem', paddingBottom: 0 }}
-                >
-                  <Input
-                    size="large"
-                    name="amountToRaise"
-                    type="number"
-                    value={amountToRaise}
-                    placeholder="0.5"
-                    min={0}
-                    max={remainingEthNum}
-                    step={0.1}
-                    onChange={this.handleAmountChange}
-                    addonAfter="ETH"
-                    disabled={isPreview}
-                  />
-                </Form.Item>
 
-                <Button
-                  onClick={this.sendTransaction}
-                  size="large"
-                  type="primary"
-                  disabled={isDisabled}
-                  loading={sendLoading}
-                  block
+              <Form layout="vertical">
+                <MetaMaskRequiredButton
+                  message={
+                    <Form.Item style={{ marginBottom: '0.5rem', paddingBottom: 0 }}>
+                      <Input
+                        size="large"
+                        type="number"
+                        placeholder="0.5"
+                        addonAfter="ETH"
+                        disabled={true}
+                      />
+                    </Form.Item>
+                  }
                 >
-                  Fund this project
-                </Button>
+                  <Form.Item
+                    validateStatus={amountError ? 'error' : undefined}
+                    help={amountError}
+                    style={{ marginBottom: '0.5rem', paddingBottom: 0 }}
+                  >
+                    <Input
+                      size="large"
+                      name="amountToRaise"
+                      type="number"
+                      value={amountToRaise}
+                      placeholder="0.5"
+                      min={0}
+                      max={remainingEthNum}
+                      step={0.1}
+                      onChange={this.handleAmountChange}
+                      addonAfter="ETH"
+                      disabled={isPreview}
+                    />
+                  </Form.Item>
+                  <Button
+                    onClick={this.sendTransaction}
+                    size="large"
+                    type="primary"
+                    disabled={isDisabled}
+                    loading={sendLoading}
+                    block
+                  >
+                    Fund this project
+                  </Button>
+                </MetaMaskRequiredButton>
               </Form>
             </>
           )}
@@ -226,21 +236,9 @@ const withConnect = connect(
   { fundCrowdFund: web3Actions.fundCrowdFund },
 );
 
-const ConnectedProposalCampaignBlock = compose<Props, OwnProps & Web3Props>(
+const ConnectedProposalCampaignBlock = compose<Props, OwnProps>(
   withRouter,
   withConnect,
 )(ProposalCampaignBlock);
 
-export default (props: OwnProps) => (
-  <Web3Container
-    renderLoading={() => (
-      <div className="ProposalCampaignBlock Proposal-top-side-block">
-        <h1 className="Proposal-top-main-block-title">Campaign</h1>
-        <div className="Proposal-top-main-block">
-          <Spin />
-        </div>
-      </div>
-    )}
-    render={({ web3 }) => <ConnectedProposalCampaignBlock {...props} web3={web3} />}
-  />
-);
+export default ConnectedProposalCampaignBlock;

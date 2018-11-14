@@ -5,11 +5,10 @@ import { getProposals } from 'modules/proposals/selectors';
 import { ProposalWithCrowdFund } from 'types';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
-import { Input, Divider, Spin, Drawer, Icon, Button } from 'antd';
+import { Input, Divider, Drawer, Icon, Button } from 'antd';
 import ProposalResults from './Results';
 import ProposalFilters, { Filters } from './Filters';
 import { PROPOSAL_SORT } from 'api/constants';
-import Web3Container from 'lib/Web3Container';
 import './style.less';
 
 type ProposalSortFn = (p1: ProposalWithCrowdFund, p2: ProposalWithCrowdFund) => number;
@@ -246,6 +245,4 @@ const ConnectedProposals = connect(
   mapDispatchToProps,
 )(Proposals);
 
-export default () => (
-  <Web3Container renderLoading={() => <Spin />} render={() => <ConnectedProposals />} />
-);
+export default ConnectedProposals;

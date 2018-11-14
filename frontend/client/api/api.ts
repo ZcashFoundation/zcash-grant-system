@@ -3,25 +3,20 @@ import { Proposal, TeamMember, Update } from 'types';
 import {
   formatTeamMemberForPost,
   formatTeamMemberFromGet,
-  generateProposalUrl,
+  formatProposalFromGet,
 } from 'utils/api';
 import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
-    res.data = res.data.map((proposal: any) => {
-      proposal.team = proposal.team.map(formatTeamMemberFromGet);
-      proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
-      return proposal;
-    });
+    res.data = res.data.map(formatProposalFromGet);
     return res;
   });
 }
 
 export function getProposal(proposalId: number | string): Promise<{ data: Proposal }> {
   return axios.get(`/api/v1/proposals/${proposalId}`).then(res => {
-    res.data.team = res.data.team.map(formatTeamMemberFromGet);
-    res.data.proposalUrlId = generateProposalUrl(res.data.proposalId, res.data.title);
+    res.data = formatProposalFromGet(res.data);
     return res;
   });
 }

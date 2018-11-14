@@ -58,9 +58,7 @@ class TestWeb3ProposalRead(BaseTestConfig):
                     "isImmediatePayout": True
                 }
             ],
-            "trustees": [
-                current_web3.eth.accounts[0]
-            ],
+            "trustees": [current_web3.eth.accounts[0]],
             "contributors": [],
             "target": "5000000000000000000",
             "isFrozen": False,
@@ -74,9 +72,7 @@ class TestWeb3ProposalRead(BaseTestConfig):
                 "contributionAmount": str(c[1] * 1000000000000000000),
                 "refundVote": False,
                 "refunded": False,
-                "milestoneNoVotes": [
-                    False
-                ]
+                "milestoneNoVotes": [False]
             })
         return mock_proposal_read
 
@@ -111,7 +107,7 @@ class TestWeb3ProposalRead(BaseTestConfig):
         deadline = proposal_read.pop('deadline')
         deadline_diff = deadline - time.time() * 1000
         self.assertGreater(60000, deadline_diff)
-        self.assertGreater(deadline_diff, 58000)
+        self.assertGreater(deadline_diff, 50000)
         self.maxDiff = None
         self.assertEqual(proposal_read, self.get_mock_proposal_read())
 
