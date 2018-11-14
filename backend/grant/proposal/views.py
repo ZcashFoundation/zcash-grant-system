@@ -70,8 +70,8 @@ def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(status="LIVE", stage=stage)
-            .order_by(Proposal.date_created.desc())
-            .all()
+                .order_by(Proposal.date_created.desc())
+                .all()
         )
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
@@ -279,6 +279,7 @@ def get_proposal_update(proposal_id, update_id):
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
 @requires_team_member_auth
+@requires_sm
 @endpoint.api(
     parameter('title', type=str, required=True),
     parameter('content', type=str, required=True)

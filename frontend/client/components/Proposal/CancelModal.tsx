@@ -90,7 +90,7 @@ class CancelModal extends React.Component<Props> {
   };
 
   private cancelProposal = () => {
-    this.props.triggerRefund(this.props.proposal.crowdFundContract);
+    this.props.triggerRefund(this.props.proposal);
   };
 }
 

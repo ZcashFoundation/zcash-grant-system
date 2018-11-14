@@ -8,6 +8,7 @@ from itsdangerous import SignatureExpired, BadSignature
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from grant.settings import SECRET_KEY, AUTH_URL
+from ..proposal.models import Proposal
 from ..user.models import User
 from ..proposal.models import Proposal
 
@@ -36,6 +37,7 @@ def verify_token(token):
 class BadSignatureException(Exception):
     pass
 
+
 def verify_signed_auth(signature, typed_data):
     loaded_typed_data = ast.literal_eval(typed_data)
     url = AUTH_URL + "/message/recover"
@@ -44,27 +46,10 @@ def verify_signed_auth(signature, typed_data):
     response = requests.request("POST", url, data=payload, headers=headers)
     json_response = response.json()
     recovered_address = json_response.get('recoveredAddress')
-
     if not recovered_address:
         raise BadSignatureException("Authorization signature is invalid")
 
     return recovered_address
-    
-
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization', None)
-        if token:
-            string_token = token.encode('ascii', 'ignore')
-            user = verify_token(string_token)
-            if user:
-                g.current_user = user
-                return f(*args, **kwargs)
-
-        return jsonify(message="Authentication is required to access this resource"), 401
-
-    return decorated
 
 
 # Decorator that requires you to have EIP-712 message signature headers for auth
@@ -75,7 +60,6 @@ def requires_sm(f):
         typed_data = request.headers.get('RawTypedData', None)
 
         if typed_data and signature:
-            auth_address = None
             try:
                 auth_address = verify_signed_auth(signature, typed_data)
             except BadSignatureException:
@@ -101,12 +85,13 @@ def requires_same_user_auth(f):
             return jsonify(message="Decorator requires_same_user_auth requires path variable <user_identity>"), 500
 
         user = User.get_by_identifier(account_address=user_identity, email_address=user_identity)
-        if user != g.current_user:
+        if user.id != g.current_user.id:
             return jsonify(message="You are not authorized to modify this user"), 403
-        
+
         return f(*args, **kwargs)
-    
+
     return requires_sm(decorated)
+
 
 # Decorator that requires you to be a team member of a proposal to access
 def requires_team_member_auth(f):
@@ -125,5 +110,5 @@ def requires_team_member_auth(f):
 
         g.current_proposal = proposal
         return f(*args, **kwargs)
-    
+
     return requires_sm(decorated)

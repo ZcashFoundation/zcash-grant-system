@@ -13,7 +13,8 @@ export interface Milestone {
   title: string;
 }
 export interface Proposal {
-  proposalId: string;
+  proposalId: number;
+  proposalAddress: string;
   dateCreated: number;
   title: string;
   body: string;

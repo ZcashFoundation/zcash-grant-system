@@ -71,16 +71,17 @@ function checkCrowdFundFactory(app: TApp, web3: Web3) {
 export async function proposalContractSend(
   app: TApp,
   web3: Web3,
-  proposalId: string,
+  proposalId: number,
   methodName: keyof Contract,
   inputs: ContractMethodInput[],
   args: any[],
 ) {
   const storeProposal = app.proposals.find(p => p.proposalId === proposalId);
   if (storeProposal) {
+    const { proposalAddress } = storeProposal;
     await getAccount(app, web3);
     const storeMethod = storeProposal.contract[methodName];
-    const contract = new web3.eth.Contract(CrowdFund.abi, proposalId);
+    const contract = new web3.eth.Contract(CrowdFund.abi, proposalAddress);
     app.crowdFundGeneralStatus = `calling (${storeProposal.title}).${methodName}...`;
     try {
       console.log(args);
@@ -120,12 +121,13 @@ export async function proposalContractSend(
 export async function populateProposalContract(
   app: TApp,
   web3: Web3,
-  proposalId: string,
+  proposalId: number,
 ) {
   const storeProposal = app.proposals.find(p => p.proposalId === proposalId);
-  const contract = new web3.eth.Contract(CrowdFund.abi, proposalId);
 
   if (storeProposal) {
+    const { proposalAddress } = storeProposal;
+    const contract = new web3.eth.Contract(CrowdFund.abi, proposalAddress);
     storeProposal.contractStatus = 'loading...';
     const methods = Object.keys(INITIAL_CONTRACT).map(k => k as keyof Contract);
     for (const method of methods) {
@@ -137,7 +139,7 @@ export async function populateProposalContract(
         try {
           storeMethod.status = 'loading';
           if (methodType === 'eth' && method === 'getBalance') {
-            storeMethod.value = (await web3.eth.getBalance(proposalId)) + '';
+            storeMethod.value = (await web3.eth.getBalance(proposalAddress)) + '';
           } else if (methodType === 'array') {
             const result = await collectArrayElements(contractMethod, app.ethAccount);
             if (method === 'milestones') {
