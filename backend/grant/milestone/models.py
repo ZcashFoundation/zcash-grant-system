@@ -56,7 +56,6 @@ class MilestoneSchema(ma.Schema):
         # Fields to expose
         fields = (
             "title",
-            "body",
             "content",
             "stage",
             "date_estimated",
@@ -64,11 +63,6 @@ class MilestoneSchema(ma.Schema):
             "immediate_payout",
             "date_created",
         )
-
-    body = ma.Method("get_body")
-
-    def get_body(self, obj):
-        return obj.content
 
 
 milestone_schema = MilestoneSchema()

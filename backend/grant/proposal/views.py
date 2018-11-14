@@ -1,4 +1,4 @@
-from datetime import datetime
+from dateutil.parser import parse
 from functools import wraps
 
 from flask import Blueprint, g
@@ -126,13 +126,13 @@ def update_proposal(milestones, proposal_id, **kwargs):
     db.session.add(g.current_proposal)
 
     # Delete & re-add milestones
-    [session.delete(x) for x in g.current_proposal.milestones]
+    [db.session.delete(x) for x in g.current_proposal.milestones]
     if milestones:
         for mdata in milestones:
             m = Milestone(
                 title=mdata["title"],
-                content=mdata["description"],
-                date_estimated=datetime.strptime(mdata["date"], '%B %Y'),
+                content=mdata["content"],
+                date_estimated=parse(mdata["dateEstimated"]),
                 payout_percent=str(mdata["payoutPercent"]),
                 immediate_payout=mdata["immediatePayout"],
                 proposal_id=g.current_proposal.id

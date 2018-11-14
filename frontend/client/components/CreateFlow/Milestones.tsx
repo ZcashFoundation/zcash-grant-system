@@ -146,7 +146,7 @@ const MilestoneFields = ({
     <div style={{ marginBottom: '0.5rem' }}>
       <Input.TextArea
         rows={3}
-        name="body"
+        name="content"
         placeholder="Description of the deliverable"
         value={milestone.content}
         onChange={ev =>
@@ -159,11 +159,7 @@ const MilestoneFields = ({
       <DatePicker.MonthPicker
         style={{ flex: 1, marginRight: '0.5rem' }}
         placeholder="Expected completion date"
-        value={
-          milestone.dateEstimated
-            ? moment(milestone.dateEstimated, 'MMMM YYYY')
-            : undefined
-        }
+        value={milestone.dateEstimated ? moment(milestone.dateEstimated) : undefined}
         format="MMMM YYYY"
         allowClear={false}
         onChange={(_, dateEstimated) => onChange(index, { ...milestone, dateEstimated })}

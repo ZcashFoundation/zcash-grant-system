@@ -22,8 +22,8 @@ describe("create proposal", () => {
       title: "e2e - smoke - create " + time,
       brief: "e2e brief",
       category: "Community", // .anticon-team
-      targetAmount: 5,
-      body: `#### e2e Proposal ${id} {enter} **created** ${time} `,
+      target: 5,
+      content: `#### e2e Proposal ${id} {enter} **created** ${time} `,
       team: [
         {
           name: "Alisha Endtoend",
@@ -41,7 +41,7 @@ describe("create proposal", () => {
       milestones: [
         {
           title: `e2e Milestone ${id} 0`,
-          body: `e2e Milestone ${id} {enter} body 0`,
+          content: `e2e Milestone ${id} {enter} body 0`,
           date: {
             y: nextYear,
             m: "Jan",
@@ -50,7 +50,7 @@ describe("create proposal", () => {
         },
         {
           title: `e2e Milestone ${id} 1`,
-          body: `e2e Milestone ${id} {enter} body 1`,
+          content: `e2e Milestone ${id} {enter} body 1`,
           date: {
             y: nextYear,
             m: "Feb",
@@ -67,8 +67,8 @@ describe("create proposal", () => {
     cy.get('.CreateFlow textarea[name="brief"]').type(proposal.brief);
     cy.contains("Select a category").click();
     cy.get(".ant-select-dropdown li .anticon-team").click();
-    cy.get('.CreateFlow input[name="amountToRaise"]').type(
-      "" + proposal.targetAmount
+    cy.get('.CreateFlow input[name="target"]').type(
+      "" + proposal.target
     );
     cy.get(".CreateFlow-footer-button")
       .contains("Continue")
@@ -109,7 +109,7 @@ describe("create proposal", () => {
     cy.get("@Continue").click();
 
     // step 3
-    cy.get(".DraftEditor-editorContainer > div").type(proposal.body);
+    cy.get(".DraftEditor-editorContainer > div").type(proposal.content);
     cy.get(".mde-tabs > :nth-child(2)").click();
 
     cy.wait(1000);
@@ -117,7 +117,7 @@ describe("create proposal", () => {
 
     // step 4
     cy.get('input[name="title"]').type(proposal.milestones[0].title);
-    cy.get('textarea[name="body"]').type(proposal.milestones[0].body);
+    cy.get('textarea[name="content"]').type(proposal.milestones[0].content);
     cy.get('input[placeholder="Expected completion date"]').click();
     cy.get(".ant-calendar-month-panel-next-year-btn").click();
     cy.get(".ant-calendar-month-panel-month")
@@ -135,9 +135,9 @@ describe("create proposal", () => {
     cy.get('input[name="title"]')
       .eq(1)
       .type(proposal.milestones[1].title);
-    cy.get('textarea[name="body"]')
+    cy.get('textarea[name="content"]')
       .eq(1)
-      .type(proposal.milestones[1].body);
+      .type(proposal.milestones[1].content);
     cy.get('input[placeholder="Expected completion date"]')
       .eq(1)
       .click();

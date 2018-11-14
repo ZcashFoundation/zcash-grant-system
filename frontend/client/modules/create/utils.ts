@@ -8,7 +8,7 @@ import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 
 // TODO: Raise this limit
-export const TARGET_ETH_LIMIT = 10;
+export const TARGET_ETH_LIMIT = 1000;
 
 interface CreateFormErrors {
   title?: string;
@@ -16,7 +16,7 @@ interface CreateFormErrors {
   category?: string;
   target?: string;
   team?: string[];
-  details?: string;
+  content?: string;
   payoutAddress?: string;
   trustees?: string[];
   milestones?: string[];
@@ -24,24 +24,32 @@ interface CreateFormErrors {
   voteDuration?: string;
 }
 
-export type KeyOfForm = keyof Partial<ProposalDraft>;
+export type KeyOfForm = keyof CreateFormErrors;
 export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
   title: 'Title',
   brief: 'Brief',
   category: 'Category',
   target: 'Target amount',
   team: 'Team',
-  details: 'Details',
+  content: 'Details',
   payoutAddress: 'Payout address',
   trustees: 'Trustees',
   milestones: 'Milestones',
   deadlineDuration: 'Funding deadline',
   voteDuration: 'Milestone deadline',
-  // Unused, but required by the type definition
-  proposalId: '',
-  dateCreated: '',
-  stage: '',
 };
+
+const requiredFields = [
+  'title',
+  'brief',
+  'category',
+  'target',
+  'content',
+  'payoutAddress',
+  'trustees',
+  'deadlineDuration',
+  'voteDuration',
+];
 
 export function getCreateErrors(
   form: Partial<ProposalDraft>,
@@ -52,11 +60,9 @@ export function getCreateErrors(
 
   // Required fields with no extra validation
   if (!skipRequired) {
-    for (const key in form) {
+    for (const key of requiredFields) {
       if (!form[key as KeyOfForm]) {
-        (errors as any)[key as KeyOfForm] = `${
-          FIELD_NAME_MAP[key as KeyOfForm]
-        } is required`;
+        errors[key as KeyOfForm] = `${FIELD_NAME_MAP[key as KeyOfForm]} is required`;
       }
     }
 
@@ -212,14 +218,13 @@ export function makeProposalPreviewFromDraft(
     proposalAddress: '0x0',
     dateCreated: Date.now(),
     title: draft.title,
-    body: draft.details,
+    content: draft.content,
     stage: 'preview',
     category: draft.category || PROPOSAL_CATEGORY.DAPP,
     team: draft.team,
     milestones: draft.milestones.map((m, idx) => ({
       index: idx,
       title: m.title,
-      body: m.content,
       content: m.content,
       amount: toWei(target * (parseInt(m.payoutPercent, 10) / 100), 'ether'),
       amountAgainstPayout: Wei('0'),

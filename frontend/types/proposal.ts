@@ -42,7 +42,7 @@ export interface ProposalDraft {
   title: string;
   brief: string;
   category: PROPOSAL_CATEGORY;
-  details: string;
+  content: string;
   stage: string;
   target: string;
   payoutAddress: string;
@@ -59,7 +59,7 @@ export interface Proposal {
   proposalUrlId: string;
   dateCreated: number;
   title: string;
-  body: string;
+  content: string;
   stage: string;
   category: PROPOSAL_CATEGORY;
   milestones: ProposalMilestone[];

@@ -85,7 +85,7 @@ class ProposalItemNaked extends React.Component<Proposal> {
   };
   render() {
     const p = this.props;
-    const body = showdownConverter.makeHtml(p.body);
+    const body = showdownConverter.makeHtml(p.content);
     return (
       <div key={p.proposalId} className="Proposals-proposal">
         <div>
@@ -181,7 +181,7 @@ class ProposalItemNaked extends React.Component<Proposal> {
                       <span>(payoutPercent)</span>
                     </div>
                     <div>
-                      {ms.body}
+                      {ms.content}
                       <span>(body)</span>
                     </div>
                     {/* <small>content</small>

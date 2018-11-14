@@ -85,8 +85,8 @@ class CreateReview extends React.Component<Props> {
         name: 'Details',
         fields: [
           {
-            key: 'details',
-            content: <Markdown source={form.details} />,
+            key: 'content',
+            content: <Markdown source={form.content} />,
             error: errors.details,
           },
         ],

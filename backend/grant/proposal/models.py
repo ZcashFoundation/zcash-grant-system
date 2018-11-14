@@ -197,9 +197,6 @@ class ProposalSchema(ma.Schema):
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
 
-    def get_body(self, obj):
-        return obj.content
-
     def get_proposal_id(self, obj):
         return obj.id
 

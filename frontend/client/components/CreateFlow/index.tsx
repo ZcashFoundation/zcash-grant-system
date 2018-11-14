@@ -279,6 +279,7 @@ class CreateFlow extends React.Component<Props, State> {
       return true;
     }
     const errors = getCreateErrors(this.props.form);
+    console.log(errors);
     return !!Object.keys(errors).length;
   };
 
