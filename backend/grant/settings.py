@@ -25,3 +25,5 @@ CACHE_TYPE = "simple"  # Can be "memcached", "redis", etc.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
 SENDGRID_DEFAULT_FROM = "noreply@grant.io"
+ETHEREUM_PROVIDER = "http"
+ETHEREUM_ENDPOINT_URI = env.str("ETHEREUM_ENDPOINT_URI")

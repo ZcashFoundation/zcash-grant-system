@@ -5,6 +5,7 @@
 pytest==3.7.1
 WebTest==2.0.30
 factory-boy==2.11.1
+eth-tester[py-evm]==0.1.0b33
 
 # Lint and code style
 flake8==3.5.0
