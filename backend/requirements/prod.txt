@@ -55,4 +55,4 @@ flask-sendgrid==0.6
 sendgrid==5.3.0
 
 # input validation
-flask-yolo2API==0.2.4
+flask-yolo2API==0.2.6

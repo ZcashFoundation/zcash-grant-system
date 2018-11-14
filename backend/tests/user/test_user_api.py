@@ -2,10 +2,10 @@ import copy
 import json
 
 from animal_case import animalify
-from mock import patch
-
 from grant.proposal.models import Proposal
 from grant.user.models import User, user_schema
+from mock import patch
+
 from ..config import BaseUserConfig
 from ..test_data import test_team, test_proposal, test_user
 
@@ -195,8 +195,8 @@ class TestAPI(BaseUserConfig):
     def test_update_user_remove_social_and_avatar(self):
         updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
         updated_user["displayName"] = 'new display name'
-        updated_user["avatar"] = None
-        updated_user["socialMedias"] = None
+        updated_user["avatar"] = {}
+        updated_user["socialMedias"] = []
 
         user_update_resp = self.app.put(
             "/api/v1/users/{}".format(self.user.account_address),
@@ -211,3 +211,15 @@ class TestAPI(BaseUserConfig):
         self.assertFalse(len(user_json["socialMedias"]))
         self.assertEqual(user_json["displayName"], updated_user["displayName"])
         self.assertEqual(user_json["title"], updated_user["title"])
+
+    def test_update_user_400_when_required_param_not_passed(self):
+        updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
+        updated_user["displayName"] = 'new display name'
+        del updated_user["avatar"]
+        user_update_resp = self.app.put(
+            "/api/v1/users/{}".format(self.user.account_address),
+            data=json.dumps(updated_user),
+            headers=self.headers,
+            content_type='application/json'
+        )
+        self.assert400(user_update_resp)
