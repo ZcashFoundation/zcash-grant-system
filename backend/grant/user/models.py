@@ -41,10 +41,10 @@ class User(db.Model):
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
 
-    social_medias = db.relationship(SocialMedia, backref="user", lazy=True)
+    social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
-    avatar = db.relationship(Avatar, uselist=False, back_populates="user")
-    email_verification = db.relationship(EmailVerification, uselist=False, back_populates="user", lazy=True)
+    avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
+    email_verification = db.relationship(EmailVerification, uselist=False, back_populates="user", lazy=True, cascade="all, delete-orphan")
 
     # TODO - add create and validate methods
 
