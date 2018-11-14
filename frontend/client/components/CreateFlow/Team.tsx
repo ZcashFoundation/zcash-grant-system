@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Icon } from 'antd';
 import { TeamMember, ProposalDraft } from 'types';
 import TeamMemberComponent from './TeamMember';
 import './Team.less';
@@ -21,7 +20,7 @@ interface OwnProps {
 
 type Props = OwnProps & StateProps;
 
-const MAX_TEAM_SIZE = 6;
+// const MAX_TEAM_SIZE = 6;
 const DEFAULT_STATE: State = {
   team: [
     {
