@@ -131,9 +131,6 @@ def auth_user(account_address, signed_message, raw_typed_data):
 def update_user(user_identity, display_name, title, social_medias, avatar):
     user = g.current_user
 
-    if user.id != g.current_user.id:
-        return {"message": "You are not authorized to edit this user"}, 403
-
     if display_name is not None:
         user.display_name = display_name
 
