@@ -147,7 +147,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
 @blueprint.route("/<proposal_id>", methods=["DELETE"])
 @requires_team_member_auth
 @endpoint.api()
-def delete_proposal_draft():
+def delete_proposal_draft(proposal_id):
     if g.current_proposal.status != 'DRAFT':
         return {"message": "Cannot delete non-draft proposals"}, 400
     db.session.delete(g.current_proposal)
@@ -169,87 +169,6 @@ def publish_proposal(proposal_id, contract_address):
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
-
-
-# @blueprint.route("/", methods=["POST"])
-# @requires_sm
-# @endpoint.api(
-#     parameter('crowdFundContractAddress', type=str, required=True),
-#     parameter('content', type=str, required=True),
-#     parameter('title', type=str, required=True),
-#     parameter('milestones', type=list, required=True),
-#     parameter('category', type=str, required=True),
-#     parameter('team', type=list, required=True)
-# )
-# def make_proposal(crowd_fund_contract_address, content, title, milestones, category, team):
-#     from grant.user.models import User
-#     existing_proposal = Proposal.query.filter_by(proposal_address=crowd_fund_contract_address).first()
-#     if existing_proposal:
-#         return {"message": "Oops! Something went wrong."}, 409
-
-#     proposal = Proposal.create(
-#         stage="FUNDING_REQUIRED",
-#         proposal_address=crowd_fund_contract_address,
-#         content=content,
-#         title=title,
-#         category=category
-#     )
-
-#     db.session.add(proposal)
-
-#     if not len(team) > 0:
-#         return {"message": "Team must be at least 1"}, 400
-
-#     for team_member in team:
-#         account_address = team_member.get("accountAddress")
-#         display_name = team_member.get("displayName")
-#         email_address = team_member.get("emailAddress")
-#         title = team_member.get("title")
-#         user = User.query.filter(
-#             (User.account_address == account_address) | (User.email_address == email_address)).first()
-#         if not user:
-#             user = User(
-#                 account_address=account_address,
-#                 email_address=email_address,
-#                 display_name=display_name,
-#                 title=title
-#             )
-#             db.session.add(user)
-#             db.session.flush()
-
-#             avatar_data = team_member.get("avatar")
-#             if avatar_data:
-#                 avatar = Avatar(image_url=avatar_data.get('link'), user_id=user.id)
-#                 db.session.add(avatar)
-
-#             social_medias = team_member.get("socialMedias")
-#             if social_medias:
-#                 for social_media in social_medias:
-#                     sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
-#                     db.session.add(sm)
-
-#         proposal.team.append(user)
-
-#     for each_milestone in milestones:
-#         m = Milestone(
-#             title=each_milestone["title"],
-#             content=each_milestone["description"],
-#             date_estimated=datetime.strptime(each_milestone["date"], '%B %Y'),
-#             payout_percent=str(each_milestone["payoutPercent"]),
-#             immediate_payout=each_milestone["immediatePayout"],
-#             proposal_id=proposal.id
-#         )
-
-#         db.session.add(m)
-
-#     try:
-#         db.session.commit()
-#     except IntegrityError as e:
-#         print(e)
-#         return {"message": "Oops! Something went wrong."}, 409
-
-#     results = proposal_schema.dump(proposal)
-#     return results, 201
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["GET"])

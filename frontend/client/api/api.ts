@@ -111,6 +111,10 @@ export function postProposalDraft(): Promise<{ data: ProposalDraft }> {
   return axios.post('/api/v1/proposals/drafts');
 }
 
+export function deleteProposalDraft(proposalId: number): Promise<any> {
+  return axios.delete(`/api/v1/proposals/${proposalId}`);
+}
+
 export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDraft }> {
   // Exclude some keys
   const { proposalId, stage, dateCreated, team, ...rest } = proposal;

@@ -1,9 +1,14 @@
 import { SagaIterator } from 'redux-saga';
 import { takeEvery, takeLatest, put, call, select } from 'redux-saga/effects';
 import { push } from 'connected-react-router';
-import { postProposalDraft, getProposalDrafts, putProposal } from 'api/api';
+import {
+  postProposalDraft,
+  getProposalDrafts,
+  putProposal,
+  deleteProposalDraft,
+} from 'api/api';
 import { getDraftById, getFormState } from './selectors';
-import { createDraft, initializeForm } from './actions';
+import { createDraft, initializeForm, deleteDraft } from './actions';
 import types from './types';
 
 export function* handleCreateDraft(action: ReturnType<typeof createDraft>): SagaIterator {
@@ -59,6 +64,21 @@ export function* handleSaveDraft(): SagaIterator {
   }
 }
 
+export function* handleDeleteDraft(action: ReturnType<typeof deleteDraft>): SagaIterator {
+  try {
+    yield call(deleteProposalDraft, action.payload);
+    put({ type: types.DELETE_DRAFT_FULFILLED });
+  } catch (err) {
+    yield put({
+      type: types.DELETE_DRAFT_REJECTED,
+      payload: err.message || err.toString(),
+      error: true,
+    });
+    return;
+  }
+  yield call(handleFetchDrafts);
+}
+
 export function* handleInitializeForm(
   action: ReturnType<typeof initializeForm>,
 ): SagaIterator {
@@ -88,5 +108,6 @@ export default function* createSagas(): SagaIterator {
   yield takeEvery(types.CREATE_DRAFT_PENDING, handleCreateDraft);
   yield takeLatest(types.FETCH_DRAFTS_PENDING, handleFetchDrafts);
   yield takeLatest(types.SAVE_DRAFT_PENDING, handleSaveDraft);
+  yield takeEvery(types.DELETE_DRAFT_PENDING, handleDeleteDraft);
   yield takeEvery(types.INITIALIZE_FORM_PENDING, handleInitializeForm);
 }

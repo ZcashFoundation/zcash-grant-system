@@ -17,6 +17,9 @@ export interface CreateState {
 
   isCreatingDraft: boolean;
   createDraftError: string | null;
+
+  isDeletingDraft: boolean;
+  deleteDraftError: string | null;
 }
 
 export const INITIAL_STATE: CreateState = {
@@ -35,6 +38,9 @@ export const INITIAL_STATE: CreateState = {
 
   isCreatingDraft: false,
   createDraftError: null,
+
+  isDeletingDraft: false,
+  deleteDraftError: null,
 };
 
 export default function createReducer(
@@ -131,6 +137,24 @@ export default function createReducer(
         ...state,
         createDraftError: action.payload,
         isCreatingDraft: false,
+      };
+
+    case types.DELETE_DRAFT_PENDING:
+      return {
+        ...state,
+        isDeletingDraft: true,
+        deleteDraftError: null,
+      };
+    case types.DELETE_DRAFT_FULFILLED:
+      return {
+        ...state,
+        isDeletingDraft: false,
+      };
+    case types.DELETE_DRAFT_REJECTED:
+      return {
+        ...state,
+        isDeletingDraft: false,
+        deleteDraftError: action.payload,
       };
   }
   return state;

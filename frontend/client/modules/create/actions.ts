@@ -38,6 +38,13 @@ export function createDraft(opts: CreateDraftOptions = {}) {
   };
 }
 
+export function deleteDraft(proposalId: number) {
+  return {
+    type: types.DELETE_DRAFT_PENDING,
+    payload: proposalId,
+  };
+}
+
 export function createProposal(form: ProposalDraft) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     const state = getState();

@@ -73,9 +73,9 @@ class Proposal(db.Model):
 
     # Relations
     team = db.relationship("User", secondary=proposal_team)
-    comments = db.relationship(Comment, backref="proposal", lazy=True)
-    updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True)
-    milestones = db.relationship("Milestone", backref="proposal", lazy=True)
+    comments = db.relationship(Comment, backref="proposal", lazy=True, cascade="all, delete-orphan")
+    updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True, cascade="all, delete-orphan")
+    milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
 
     def __init__(
             self,
