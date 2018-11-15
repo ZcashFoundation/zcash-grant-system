@@ -140,7 +140,7 @@ export function postProposalComment(
           parentCommentId,
           comment: {
             commentId: Math.random(),
-            body: comment,
+            content: comment,
             dateCreated: Date.now(),
             replies: [],
             author: {

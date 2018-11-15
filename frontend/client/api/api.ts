@@ -1,11 +1,10 @@
 import axios from './axios';
-import { Proposal, TeamMember, Update } from 'types';
+import { Proposal, ProposalDraft, TeamMember, Update } from 'types';
 import {
   formatTeamMemberForPost,
   formatTeamMemberFromGet,
   generateProposalUrl,
 } from 'utils/api';
-import { PROPOSAL_CATEGORY } from './constants';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
@@ -34,16 +33,7 @@ export function getProposalUpdates(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/updates`);
 }
 
-export function postProposal(payload: {
-  // TODO type Milestone
-  accountAddress: string;
-  crowdFundContractAddress: string;
-  content: string;
-  title: string;
-  category: PROPOSAL_CATEGORY;
-  milestones: object[];
-  team: TeamMember[];
-}) {
+export function postProposal(payload: ProposalDraft) {
   return axios.post(`/api/v1/proposals/`, {
     ...payload,
     // Team has a different shape for POST
@@ -104,5 +94,38 @@ export function postProposalUpdate(
   return axios.post(`/api/v1/proposals/${proposalId}/updates`, {
     title,
     content,
+  });
+}
+
+export function getProposalDrafts(): Promise<{ data: ProposalDraft[] }> {
+  return axios.get('/api/v1/proposals/drafts').then(res => {
+    res.data = res.data.map((draft: any) => ({
+      ...draft,
+      team: draft.team.map(formatTeamMemberFromGet),
+    }));
+    return res;
+  });
+}
+
+export function postProposalDraft(): Promise<{ data: ProposalDraft }> {
+  return axios.post('/api/v1/proposals/drafts');
+}
+
+export function deleteProposalDraft(proposalId: number): Promise<any> {
+  return axios.delete(`/api/v1/proposals/${proposalId}`);
+}
+
+export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDraft }> {
+  // Exclude some keys
+  const { proposalId, stage, dateCreated, team, ...rest } = proposal;
+  return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
+}
+
+export function putProposalPublish(
+  proposal: ProposalDraft,
+  contractAddress: string,
+): Promise<{ data: ProposalDraft }> {
+  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`, {
+    contractAddress,
   });
 }

@@ -127,13 +127,13 @@ const mockComment = (p: UserProposal): UserComment[] => {
     ? [
         {
           commentId: Math.random(),
-          body: "I can't WAIT to get my t-shirt!",
+          content: "I can't WAIT to get my t-shirt!",
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body: 'I love the new design. Will they still be available next month?',
+          content: 'I love the new design. Will they still be available next month?',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
@@ -141,27 +141,27 @@ const mockComment = (p: UserProposal): UserComment[] => {
     : [
         {
           commentId: Math.random(),
-          body: 'Ut labore et dolore magna aliqua.',
+          content: 'Ut labore et dolore magna aliqua.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body:
+          content:
             'Adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body:
+          content:
             'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body:
+          content:
             'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,

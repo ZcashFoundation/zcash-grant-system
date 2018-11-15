@@ -4,8 +4,11 @@ import thunkMiddleware, { ThunkMiddleware } from 'redux-thunk';
 import promiseMiddleware from 'redux-promise-middleware';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import { persistStore, Persistor } from 'redux-persist';
+import { routerMiddleware } from 'connected-react-router';
 import rootReducer, { AppState, combineInitialState } from './reducers';
 import rootSaga from './sagas';
+import history from './history';
+import axios from 'api/axios';
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -26,7 +29,12 @@ export function configureStore(initialState: Partial<AppState> = combineInitialS
   const store: Store<AppState> = createStore(
     rootReducer,
     initialState,
-    bindMiddleware([sagaMiddleware, thunkMiddleware, promiseMiddleware()]),
+    bindMiddleware([
+      sagaMiddleware,
+      thunkMiddleware,
+      promiseMiddleware(),
+      routerMiddleware(history),
+    ]),
   );
   // Don't persist server side, but don't mess up types for client side
   const persistor: Persistor = process.env.SERVER_SIDE_RENDER
@@ -42,6 +50,25 @@ export function configureStore(initialState: Partial<AppState> = combineInitialS
       );
     }
   }
+
+  // Any global listeners to the store go here
+  let prevState = store.getState();
+  store.subscribe(() => {
+    const state = store.getState();
+
+    // Setup the API with auth credentials whenever they change
+    const { authSignature } = state.auth;
+    if (authSignature !== prevState.auth.authSignature) {
+      axios.defaults.headers.common.MsgSignature = authSignature
+        ? authSignature.signedMessage
+        : undefined;
+      axios.defaults.headers.common.RawTypedData = authSignature
+        ? JSON.stringify(authSignature.rawTypedData)
+        : undefined;
+    }
+
+    prevState = state;
+  });
 
   return { store, persistor };
 }

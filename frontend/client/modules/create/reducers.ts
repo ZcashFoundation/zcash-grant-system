@@ -1,45 +1,55 @@
 import types from './types';
-import { CreateFormState } from 'types';
-import { ONE_DAY } from 'utils/time';
+import { ProposalDraft } from 'types';
 
 export interface CreateState {
-  form: CreateFormState;
+  drafts: ProposalDraft[] | null;
+  form: ProposalDraft | null;
+
+  isInitializingForm: boolean;
+  initializeFormError: string | null;
 
   isSavingDraft: boolean;
   hasSavedDraft: boolean;
   saveDraftError: string | null;
 
-  isFetchingDraft: boolean;
-  hasFetchedDraft: boolean;
-  fetchDraftError: string | null;
+  isFetchingDrafts: boolean;
+  fetchDraftsError: string | null;
+
+  isCreatingDraft: boolean;
+  createDraftError: string | null;
+
+  isDeletingDraft: boolean;
+  deleteDraftError: string | null;
 }
 
 export const INITIAL_STATE: CreateState = {
-  form: {
-    title: '',
-    brief: '',
-    details: '',
-    category: null,
-    amountToRaise: '',
-    payOutAddress: '',
-    trustees: [],
-    milestones: [],
-    team: [],
-    deadline: ONE_DAY * 60,
-    milestoneDeadline: ONE_DAY * 7,
-  },
+  drafts: null,
+  form: null,
+
+  isInitializingForm: false,
+  initializeFormError: null,
 
   isSavingDraft: false,
   hasSavedDraft: true,
   saveDraftError: null,
 
-  isFetchingDraft: false,
-  hasFetchedDraft: false,
-  fetchDraftError: null,
+  isFetchingDrafts: false,
+  fetchDraftsError: null,
+
+  isCreatingDraft: false,
+  createDraftError: null,
+
+  isDeletingDraft: false,
+  deleteDraftError: null,
 };
 
-export default function createReducer(state: CreateState = INITIAL_STATE, action: any) {
+export default function createReducer(
+  state: CreateState = INITIAL_STATE,
+  action: any,
+): CreateState {
   switch (action.type) {
+    case types.CREATE_DRAFT_PENDING:
+
     case types.UPDATE_FORM:
       return {
         ...state,
@@ -50,12 +60,24 @@ export default function createReducer(state: CreateState = INITIAL_STATE, action
         hasSavedDraft: false,
       };
 
-    case types.RESET_FORM:
+    case types.INITIALIZE_FORM_PENDING:
       return {
         ...state,
-        form: { ...INITIAL_STATE.form },
-        hasSavedDraft: true,
-        hasFetchedDraft: false,
+        form: null,
+        isInitializingForm: true,
+        initializeFormError: null,
+      };
+    case types.INITIALIZE_FORM_FULFILLED:
+      return {
+        ...state,
+        form: { ...action.payload },
+        isInitializingForm: false,
+      };
+    case types.INITIALIZE_FORM_REJECTED:
+      return {
+        ...state,
+        isInitializingForm: false,
+        initializeFormError: action.payload,
       };
 
     case types.SAVE_DRAFT_PENDING:
@@ -79,29 +101,60 @@ export default function createReducer(state: CreateState = INITIAL_STATE, action
         saveDraftError: action.payload,
       };
 
-    case types.FETCH_DRAFT_PENDING:
+    case types.FETCH_DRAFTS_PENDING:
       return {
         ...state,
-        isFetchingDraft: true,
-        fetchDraftError: null,
+        isFetchingDrafts: true,
+        fetchDraftsError: null,
       };
-    case types.FETCH_DRAFT_FULFILLED:
+    case types.FETCH_DRAFTS_FULFILLED:
       return {
         ...state,
-        isFetchingDraft: false,
-        hasFetchedDraft: !!action.payload,
-        form: action.payload
-          ? {
-              ...state.form,
-              ...action.payload,
-            }
-          : state.form,
+        isFetchingDrafts: false,
+        drafts: action.payload,
       };
-    case types.FETCH_DRAFT_REJECTED:
+    case types.FETCH_DRAFTS_REJECTED:
       return {
         ...state,
-        isFetchingDraft: false,
-        fetchDraftError: action.payload,
+        isFetchingDrafts: false,
+        fetchDraftsError: action.payload,
+      };
+
+    case types.CREATE_DRAFT_PENDING:
+      return {
+        ...state,
+        isCreatingDraft: true,
+        createDraftError: null,
+      };
+    case types.CREATE_DRAFT_FULFILLED:
+      return {
+        ...state,
+        drafts: [...(state.drafts || []), action.payload],
+        isCreatingDraft: false,
+      };
+    case types.CREATE_DRAFT_REJECTED:
+      return {
+        ...state,
+        createDraftError: action.payload,
+        isCreatingDraft: false,
+      };
+
+    case types.DELETE_DRAFT_PENDING:
+      return {
+        ...state,
+        isDeletingDraft: true,
+        deleteDraftError: null,
+      };
+    case types.DELETE_DRAFT_FULFILLED:
+      return {
+        ...state,
+        isDeletingDraft: false,
+      };
+    case types.DELETE_DRAFT_REJECTED:
+      return {
+        ...state,
+        isDeletingDraft: false,
+        deleteDraftError: action.payload,
       };
   }
   return state;

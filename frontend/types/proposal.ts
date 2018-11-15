@@ -1,8 +1,13 @@
-import { TeamMember } from 'types';
 import { Wei } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import { Comment } from 'types';
-import { Milestone, ProposalMilestone, Update } from 'types';
+import {
+  CreateMilestone,
+  ProposalMilestone,
+  Update,
+  TeamMember,
+  Milestone,
+  Comment,
+} from 'types';
 
 export interface Contributor {
   address: string;
@@ -31,13 +36,31 @@ export interface CrowdFund {
   isRaiseGoalReached: boolean;
 }
 
+export interface ProposalDraft {
+  proposalId: number;
+  dateCreated: number;
+  title: string;
+  brief: string;
+  category: PROPOSAL_CATEGORY;
+  content: string;
+  stage: string;
+  target: string;
+  payoutAddress: string;
+  trustees: string[];
+  deadlineDuration: number;
+  voteDuration: number;
+  milestones: CreateMilestone[];
+  team: TeamMember[];
+  teamInvites: string[];
+}
+
 export interface Proposal {
   proposalId: number;
   proposalAddress: string;
   proposalUrlId: string;
   dateCreated: number;
   title: string;
-  body: string;
+  content: string;
   stage: string;
   category: PROPOSAL_CATEGORY;
   milestones: ProposalMilestone[];

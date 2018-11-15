@@ -1,5 +1,6 @@
 import json
 import random
+
 from grant.proposal.models import CATEGORIES
 
 message = {
@@ -43,7 +44,7 @@ message = {
     }
 }
 
-user = {
+test_user = {
     "accountAddress": '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826',
     "displayName": 'Groot',
     "emailAddress": 'iam@groot.com',
@@ -60,7 +61,7 @@ user = {
     "rawTypedData": json.dumps(message["data"])
 }
 
-team = [user]
+test_team = [test_user]
 
 milestones = [
     {
@@ -72,11 +73,21 @@ milestones = [
     }
 ]
 
-proposal = {
-    "team": team,
+test_proposal = {
+    "team": test_team,
     "crowdFundContractAddress": "0x20000",
     "content": "## My Proposal",
     "title": "Give Me Money",
     "milestones": milestones,
     "category": random.choice(CATEGORIES)
 }
+
+milestones = [
+    {
+        "title": "All the money straightaway",
+        "description": "cool stuff with it",
+        "date": "June 2019",
+        "payoutPercent": "100",
+        "immediatePayout": False
+    }
+]

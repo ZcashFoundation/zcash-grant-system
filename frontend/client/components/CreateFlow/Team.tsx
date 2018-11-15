@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Icon, Form, Input, Button, Popconfirm } from 'antd';
-import { CreateFormState, TeamMember } from 'types';
+import { TeamMember, ProposalDraft } from 'types';
 import TeamMemberComponent from './TeamMember';
 import { isValidEthAddress, isValidEmail } from 'utils/validators';
 import { AppState } from 'store/reducers';
@@ -19,7 +19,7 @@ interface StateProps {
 
 interface OwnProps {
   initialState?: Partial<State>;
-  updateForm(form: Partial<CreateFormState>): void;
+  updateForm(form: Partial<ProposalDraft>): void;
 }
 
 type Props = OwnProps & StateProps;

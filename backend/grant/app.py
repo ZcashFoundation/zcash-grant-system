@@ -4,7 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from grant import commands, proposal, user, comment, milestone, admin, email
-from grant.extensions import bcrypt, migrate, db, ma, mail
+from grant.extensions import bcrypt, migrate, db, ma, mail, web3
 
 
 def create_app(config_object="grant.settings"):
@@ -25,6 +25,7 @@ def register_extensions(app):
     migrate.init_app(app, db)
     ma.init_app(app)
     mail.init_app(app)
+    web3.init_app(app)
     CORS(app)
     return None
 

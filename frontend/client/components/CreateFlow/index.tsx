@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
-import { Steps, Icon, Spin, Alert } from 'antd';
+import { Steps, Icon } from 'antd';
 import qs from 'query-string';
 import { withRouter, RouteComponentProps } from 'react-router';
 import { History } from 'history';
@@ -16,7 +16,7 @@ import Preview from './Preview';
 import Final from './Final';
 import createExampleProposal from './example';
 import { createActions } from 'modules/create';
-import { CreateFormState } from 'types';
+import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
@@ -108,14 +108,10 @@ interface StateProps {
   form: AppState['create']['form'];
   isSavingDraft: AppState['create']['isSavingDraft'];
   hasSavedDraft: AppState['create']['hasSavedDraft'];
-  isFetchingDraft: AppState['create']['isFetchingDraft'];
-  hasFetchedDraft: AppState['create']['hasFetchedDraft'];
 }
 
 interface DispatchProps {
   updateForm: typeof createActions['updateForm'];
-  resetForm: typeof createActions['resetForm'];
-  fetchDraft: typeof createActions['fetchDraft'];
   resetCreateCrowdFund: typeof web3Actions['resetCreateCrowdFund'];
 }
 
@@ -130,7 +126,7 @@ interface State {
 
 class CreateFlow extends React.Component<Props, State> {
   private historyUnlisten: () => void;
-  private debouncedUpdateForm: (form: Partial<CreateFormState>) => void;
+  private debouncedUpdateForm: (form: Partial<ProposalDraft>) => void;
 
   constructor(props: Props) {
     super(props);
@@ -151,7 +147,6 @@ class CreateFlow extends React.Component<Props, State> {
 
   componentDidMount() {
     this.props.resetCreateCrowdFund();
-    this.props.fetchDraft();
   }
 
   componentWillUnmount() {
@@ -161,16 +156,8 @@ class CreateFlow extends React.Component<Props, State> {
   }
 
   render() {
-    const { isFetchingDraft, isSavingDraft, hasFetchedDraft } = this.props;
+    const { isSavingDraft } = this.props;
     const { step, isPreviewing, isPublishing } = this.state;
-
-    if (isFetchingDraft && !isPublishing) {
-      return (
-        <div className="CreateFlow-loading">
-          <Spin size="large" />
-        </div>
-      );
-    }
 
     const info = STEP_INFO[step];
     const currentIndex = STEP_ORDER.indexOf(step);
@@ -198,20 +185,6 @@ class CreateFlow extends React.Component<Props, State> {
                 />
               ))}
             </Steps>
-            {hasFetchedDraft && (
-              <Alert
-                style={{ margin: '2rem auto -2rem', maxWidth: '520px' }}
-                type="success"
-                closable
-                message="Welcome back"
-                description={
-                  <span>
-                    We've restored your state from before. If you want to start over,{' '}
-                    <a onClick={this.props.resetForm}>click here</a>.
-                  </span>
-                }
-              />
-            )}
             <h1 className="CreateFlow-header-title">{info.title}</h1>
             <div className="CreateFlow-header-subtitle">{info.subtitle}</div>
           </div>
@@ -274,7 +247,7 @@ class CreateFlow extends React.Component<Props, State> {
     );
   }
 
-  private updateForm = (form: Partial<CreateFormState>) => {
+  private updateForm = (form: Partial<ProposalDraft>) => {
     this.props.updateForm(form);
   };
 
@@ -302,7 +275,11 @@ class CreateFlow extends React.Component<Props, State> {
   };
 
   private checkFormErrors = () => {
+    if (!this.props.form) {
+      return true;
+    }
     const errors = getCreateErrors(this.props.form);
+    console.log(errors);
     return !!Object.keys(errors).length;
   };
 
@@ -337,16 +314,12 @@ const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
     form: state.create.form,
     isSavingDraft: state.create.isSavingDraft,
     hasSavedDraft: state.create.hasSavedDraft,
-    isFetchingDraft: state.create.isFetchingDraft,
-    hasFetchedDraft: state.create.hasFetchedDraft,
     crowdFundLoading: state.web3.crowdFundLoading,
     crowdFundError: state.web3.crowdFundError,
     crowdFundCreatedAddress: state.web3.crowdFundCreatedAddress,
   }),
   {
     updateForm: createActions.updateForm,
-    resetForm: createActions.resetForm,
-    fetchDraft: createActions.fetchDraft,
     resetCreateCrowdFund: web3Actions.resetCreateCrowdFund,
   },
 );

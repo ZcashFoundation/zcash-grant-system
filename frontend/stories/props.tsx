@@ -161,7 +161,7 @@ export function getProposalWithCrowdFund({
     proposalAddress: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
     dateCreated: created / 1000,
     title: 'Crowdfund Title',
-    body: 'body',
+    content: 'body',
     stage: 'FUNDING_REQUIRED',
     category: PROPOSAL_CATEGORY.COMMUNITY,
     team: [

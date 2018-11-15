@@ -4,18 +4,19 @@ import { Icon, Timeline } from 'antd';
 import moment from 'moment';
 import { getCreateErrors, KeyOfForm, FIELD_NAME_MAP } from 'modules/create/utils';
 import Markdown from 'components/Markdown';
+import UserAvatar from 'components/UserAvatar';
 import { AppState } from 'store/reducers';
 import { CREATE_STEP } from './index';
 import { CATEGORY_UI, PROPOSAL_CATEGORY } from 'api/constants';
+import { ProposalDraft } from 'types';
 import './Review.less';
-import UserAvatar from 'components/UserAvatar';
 
 interface OwnProps {
   setStep(step: CREATE_STEP): void;
 }
 
 interface StateProps {
-  form: AppState['create']['form'];
+  form: ProposalDraft;
 }
 
 type Props = OwnProps & StateProps;
@@ -62,9 +63,9 @@ class CreateReview extends React.Component<Props> {
             error: errors.category,
           },
           {
-            key: 'amountToRaise',
-            content: <div style={{ fontSize: '1.2rem' }}>{form.amountToRaise} ETH</div>,
-            error: errors.amountToRaise,
+            key: 'target',
+            content: <div style={{ fontSize: '1.2rem' }}>{form.target} ETH</div>,
+            error: errors.target,
           },
         ],
       },
@@ -84,9 +85,9 @@ class CreateReview extends React.Component<Props> {
         name: 'Details',
         fields: [
           {
-            key: 'details',
-            content: <Markdown source={form.details} />,
-            error: errors.details,
+            key: 'content',
+            content: <Markdown source={form.content} />,
+            error: errors.content,
           },
         ],
       },
@@ -106,9 +107,9 @@ class CreateReview extends React.Component<Props> {
         name: 'Governance',
         fields: [
           {
-            key: 'payOutAddress',
-            content: <code>{form.payOutAddress}</code>,
-            error: errors.payOutAddress,
+            key: 'payoutAddress',
+            content: <code>{form.payoutAddress}</code>,
+            error: errors.payoutAddress,
           },
           {
             key: 'trustees',
@@ -120,18 +121,18 @@ class CreateReview extends React.Component<Props> {
             error: errors.trustees && errors.trustees.join(' '),
           },
           {
-            key: 'deadline',
+            key: 'deadlineDuration',
             content: `${Math.floor(
-              moment.duration((form.deadline || 0) * 1000).asDays(),
+              moment.duration((form.deadlineDuration || 0) * 1000).asDays(),
             )} days`,
-            error: errors.deadline,
+            error: errors.deadlineDuration,
           },
           {
-            key: 'milestoneDeadline',
+            key: 'voteDuration',
             content: `${Math.floor(
-              moment.duration((form.milestoneDeadline || 0) * 1000).asDays(),
+              moment.duration((form.voteDuration || 0) * 1000).asDays(),
             )} days`,
-            error: errors.milestoneDeadline,
+            error: errors.voteDuration,
           },
         ],
       },
@@ -183,13 +184,13 @@ class CreateReview extends React.Component<Props> {
 }
 
 export default connect<StateProps, {}, OwnProps, AppState>(state => ({
-  form: state.create.form,
+  form: state.create.form as ProposalDraft,
 }))(CreateReview);
 
 const ReviewMilestones = ({
   milestones,
 }: {
-  milestones: AppState['create']['form']['milestones'];
+  milestones: ProposalDraft['milestones'];
 }) => (
   <Timeline>
     {milestones.map(m => (
@@ -197,18 +198,18 @@ const ReviewMilestones = ({
         <div className="ReviewMilestone">
           <div className="ReviewMilestone-title">{m.title}</div>
           <div className="ReviewMilestone-info">
-            {moment(m.date, 'MMMM YYYY').format('MMMM YYYY')}
+            {moment(m.dateEstimated, 'MMMM YYYY').format('MMMM YYYY')}
             {' – '}
             {m.payoutPercent}% of funds
           </div>
-          <div className="ReviewMilestone-description">{m.description}</div>
+          <div className="ReviewMilestone-description">{m.content}</div>
         </div>
       </Timeline.Item>
     ))}
   </Timeline>
 );
 
-const ReviewTeam = ({ team }: { team: AppState['create']['form']['team'] }) => (
+const ReviewTeam = ({ team }: { team: ProposalDraft['team'] }) => (
   <div className="ReviewTeam">
     {team.map((u, idx) => (
       <div className="ReviewTeam-member" key={idx}>
