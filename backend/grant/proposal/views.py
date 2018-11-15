@@ -92,7 +92,6 @@ def make_proposal_draft():
 @requires_sm
 @endpoint.api()
 def get_proposal_drafts():
-    print(g.current_user.id)
     proposals = (
         Proposal.query
         .filter_by(status="DRAFT")
