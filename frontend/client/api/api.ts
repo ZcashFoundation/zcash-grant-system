@@ -1,5 +1,5 @@
 import axios from './axios';
-import { Proposal, ProposalDraft, TeamMember, Update } from 'types';
+import { Proposal, ProposalDraft, TeamMember, Update, TeamInvite } from 'types';
 import {
   formatTeamMemberForPost,
   formatTeamMemberFromGet,
@@ -128,4 +128,18 @@ export function putProposalPublish(
   return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`, {
     contractAddress,
   });
+}
+
+export function postProposalInvite(
+  proposalId: number,
+  address: string,
+): Promise<{ data: TeamInvite }> {
+  return axios.post(`/api/v1/proposals/${proposalId}/invite`, { address });
+}
+
+export function deleteProposalInvite(
+  proposalId: number,
+  inviteIdOrAddress: number | string,
+): Promise<{ data: TeamInvite }> {
+  return axios.delete(`/api/v1/proposals/${proposalId}/invite/${inviteIdOrAddress}`);
 }

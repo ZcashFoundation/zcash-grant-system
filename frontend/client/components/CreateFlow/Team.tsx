@@ -1,16 +1,17 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Icon, Form, Input, Button, Popconfirm } from 'antd';
-import { TeamMember, ProposalDraft } from 'types';
+import { Icon, Form, Input, Button, Popconfirm, message } from 'antd';
+import { TeamMember, TeamInvite, ProposalDraft } from 'types';
 import TeamMemberComponent from './TeamMember';
+import { postProposalInvite, deleteProposalInvite } from 'api/api';
 import { isValidEthAddress, isValidEmail } from 'utils/validators';
 import { AppState } from 'store/reducers';
 import './Team.less';
 
 interface State {
   team: TeamMember[];
-  teamInvites: string[];
-  invite: string;
+  invites: TeamInvite[];
+  address: string;
 }
 
 interface StateProps {
@@ -18,6 +19,7 @@ interface StateProps {
 }
 
 interface OwnProps {
+  proposalId: number;
   initialState?: Partial<State>;
   updateForm(form: Partial<ProposalDraft>): void;
 }
@@ -36,8 +38,8 @@ const DEFAULT_STATE: State = {
       socialAccounts: {},
     },
   ],
-  teamInvites: [],
-  invite: '',
+  invites: [],
+  address: '',
 };
 
 class CreateFlowTeam extends React.Component<Props, State> {
@@ -65,32 +67,27 @@ class CreateFlowTeam extends React.Component<Props, State> {
   }
 
   render() {
-    const { team, teamInvites, invite } = this.state;
+    const { team, invites, address } = this.state;
     const inviteError =
-      invite && !isValidEmail(invite) && !isValidEthAddress(invite)
+      address && !isValidEmail(address) && !isValidEthAddress(address)
         ? 'That doesn’t look like an email address or ETH address'
         : undefined;
-    const inviteDisabled = !!inviteError || !invite;
+    const inviteDisabled = !!inviteError || !address;
 
     return (
       <div className="TeamForm">
         {team.map((user, idx) => (
-          <TeamMemberComponent
-            key={idx}
-            index={idx}
-            user={user}
-            onRemove={this.removeMember}
-          />
+          <TeamMemberComponent key={idx} index={idx} user={user} />
         ))}
-        {!!teamInvites.length && (
+        {!!invites.length && (
           <div className="TeamForm-pending">
             <h3 className="TeamForm-pending-title">Pending invitations</h3>
-            {teamInvites.map((ti, idx) => (
-              <div key={ti} className="TeamForm-pending-invite">
-                <div className="TeamForm-pending-invite-name">{ti}</div>
+            {invites.map(inv => (
+              <div key={inv.id} className="TeamForm-pending-invite">
+                <div className="TeamForm-pending-invite-name">{inv.address}</div>
                 <Popconfirm
                   title="Are you sure?"
-                  onConfirm={() => this.removeInvitation(idx)}
+                  onConfirm={() => this.removeInvitation(inv.id)}
                 >
                   <button className="TeamForm-pending-invite-delete">
                     <Icon type="delete" />
@@ -116,8 +113,8 @@ class CreateFlowTeam extends React.Component<Props, State> {
                   className="TeamForm-add-form-field-input"
                   placeholder="Email address or ETH address"
                   size="large"
-                  value={invite}
-                  onChange={this.handleChangeInvite}
+                  value={address}
+                  onChange={this.handleChangeInviteAddress}
                 />
               </Form.Item>
               <Button
@@ -137,36 +134,38 @@ class CreateFlowTeam extends React.Component<Props, State> {
     );
   }
 
-  private handleChangeInvite = (ev: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ invite: ev.currentTarget.value });
+  private handleChangeInviteAddress = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ address: ev.currentTarget.value });
   };
 
   private handleAddSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    const teamInvites = [...this.state.teamInvites, this.state.invite];
-    this.setState({
-      teamInvites,
-      invite: '',
-    });
-    this.props.updateForm({ teamInvites });
+    postProposalInvite(this.props.proposalId, this.state.address)
+      .then(res => {
+        const invites = [...this.state.invites, res.data];
+        this.setState({
+          invites,
+          address: '',
+        });
+        this.props.updateForm({ invites });
+      })
+      .catch((err: Error) => {
+        console.error('Failed to send invite', err);
+        message.error('Failed to send invite', 3);
+      });
   };
 
-  private removeMember = (index: number) => {
-    const team = [
-      ...this.state.team.slice(0, index),
-      ...this.state.team.slice(index + 1),
-    ];
-    this.setState({ team });
-    this.props.updateForm({ team });
-  };
-
-  private removeInvitation = (index: number) => {
-    const teamInvites = [
-      ...this.state.teamInvites.slice(0, index),
-      ...this.state.teamInvites.slice(index + 1),
-    ];
-    this.setState({ teamInvites });
-    this.props.updateForm({ teamInvites });
+  private removeInvitation = (invId: number) => {
+    deleteProposalInvite(this.props.proposalId, invId)
+      .then(() => {
+        const invites = this.state.invites.filter(inv => inv.id !== invId);
+        this.setState({ invites });
+        this.props.updateForm({ invites });
+      })
+      .catch((err: Error) => {
+        console.error('Failed to remove invite', err);
+        message.error('Failed to remove invite', 3);
+      });
   };
 }
 

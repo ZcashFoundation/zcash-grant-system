@@ -190,6 +190,7 @@ class CreateFlow extends React.Component<Props, State> {
           </div>
           <div className="CreateFlow-content">
             <StepComponent
+              proposalId={this.props.form!.proposalId}
               initialState={this.props.form}
               updateForm={this.debouncedUpdateForm}
               setStep={this.setStep}

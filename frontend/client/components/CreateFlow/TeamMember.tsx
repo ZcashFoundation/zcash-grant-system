@@ -9,7 +9,6 @@ import './TeamMember.less';
 interface Props {
   index: number;
   user: TeamMember;
-  onRemove(index: number): void;
 }
 
 export default class CreateFlowTeamMember extends React.PureComponent<Props> {
@@ -45,17 +44,8 @@ export default class CreateFlowTeamMember extends React.PureComponent<Props> {
               );
             })}
           </div>
-          {index !== 0 && (
-            <button className="TeamMember-info-remove" onClick={this.removeMember}>
-              <Icon type="close-circle" theme="filled" />
-            </button>
-          )}
         </div>
       </div>
     );
   }
-
-  private removeMember = () => {
-    this.props.onRemove(this.props.index);
-  };
 }

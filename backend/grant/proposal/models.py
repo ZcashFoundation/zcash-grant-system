@@ -203,7 +203,8 @@ class ProposalSchema(ma.Schema):
             "trustees",
             "payout_address",
             "deadline_duration",
-            "vote_duration"
+            "vote_duration",
+            "invites"
         )
 
     date_created = ma.Method("get_date_created")

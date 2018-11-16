@@ -9,6 +9,13 @@ import {
   Comment,
 } from 'types';
 
+export interface TeamInvite {
+  id: number;
+  dateCreated: number;
+  address: string;
+  accepted: boolean | null;
+}
+
 export interface Contributor {
   address: string;
   contributionAmount: Wei;
@@ -51,7 +58,7 @@ export interface ProposalDraft {
   voteDuration: number;
   milestones: CreateMilestone[];
   team: TeamMember[];
-  teamInvites: string[];
+  invites: TeamInvite[];
 }
 
 export interface Proposal {
