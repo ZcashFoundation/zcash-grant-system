@@ -223,7 +223,7 @@ const ReviewTeam: React.SFC<{
         </div>
       </div>
     ))}
-    {!!invites.length && (
+    {!!invites.filter(inv => inv.accepted === null).length && (
       <div className="ReviewTeam-invites">+ {invites.length} invite(s) pending</div>
     )}
   </div>
