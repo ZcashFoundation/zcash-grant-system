@@ -184,6 +184,21 @@ export function getCreateTeamMemberError(user: TeamMember) {
   return '';
 }
 
+export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
+  const warnings = [];
+
+  // Warn about pending invites
+  if (form.invites!.length) {
+    warnings.push(`
+      You still have pending team invitations. If you publish before they
+      are accepted, your team will be locked in and they won’t be able to
+      accept join.
+    `);
+  }
+
+  return warnings;
+}
+
 function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Wei) {
   return raiseGoal.divn(100).mul(Wei(milestone.payoutPercent));
 }

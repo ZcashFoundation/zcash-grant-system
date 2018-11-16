@@ -14,6 +14,7 @@ import Governance from './Governance';
 import Review from './Review';
 import Preview from './Preview';
 import Final from './Final';
+import PublishWarningModal from './PubishWarningModal';
 import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
@@ -120,6 +121,7 @@ type Props = OwnProps & StateProps & DispatchProps & RouteComponentProps<any>;
 interface State {
   step: CREATE_STEP;
   isPreviewing: boolean;
+  isShowingPublishWarning: boolean;
   isPublishing: boolean;
   isExample: boolean;
 }
@@ -157,7 +159,7 @@ class CreateFlow extends React.Component<Props, State> {
 
   render() {
     const { isSavingDraft } = this.props;
-    const { step, isPreviewing, isPublishing } = this.state;
+    const { step, isPreviewing, isPublishing, isShowingPublishWarning } = this.state;
 
     const info = STEP_INFO[step];
     const currentIndex = STEP_ORDER.indexOf(step);
@@ -190,7 +192,7 @@ class CreateFlow extends React.Component<Props, State> {
           </div>
           <div className="CreateFlow-content">
             <StepComponent
-              proposalId={this.props.form!.proposalId}
+              proposalId={this.props.form && this.props.form.proposalId}
               initialState={this.props.form}
               updateForm={this.debouncedUpdateForm}
               setStep={this.setStep}
@@ -217,7 +219,7 @@ class CreateFlow extends React.Component<Props, State> {
                 <button
                   className="CreateFlow-footer-button is-primary"
                   key="publish"
-                  onClick={this.startPublish}
+                  onClick={this.openPublishWarning}
                   disabled={this.checkFormErrors()}
                 >
                   Publish
@@ -244,6 +246,12 @@ class CreateFlow extends React.Component<Props, State> {
         {isSavingDraft && (
           <div className="CreateFlow-draftNotification">Saving draft...</div>
         )}
+        <PublishWarningModal
+          proposal={this.props.form}
+          isVisible={isShowingPublishWarning}
+          handleClose={this.closePublishWarning}
+          handlePublish={this.startPublish}
+        />
       </div>
     );
   }
@@ -272,7 +280,10 @@ class CreateFlow extends React.Component<Props, State> {
   };
 
   private startPublish = () => {
-    this.setState({ isPublishing: true });
+    this.setState({
+      isPublishing: true,
+      isShowingPublishWarning: false,
+    });
   };
 
   private checkFormErrors = () => {
@@ -280,7 +291,6 @@ class CreateFlow extends React.Component<Props, State> {
       return true;
     }
     const errors = getCreateErrors(this.props.form);
-    console.log(errors);
     return !!Object.keys(errors).length;
   };
 
@@ -294,6 +304,14 @@ class CreateFlow extends React.Component<Props, State> {
         this.setStep(CREATE_STEP.BASICS, true);
       }
     }
+  };
+
+  private openPublishWarning = () => {
+    this.setState({ isShowingPublishWarning: true });
+  };
+
+  private closePublishWarning = () => {
+    this.setState({ isShowingPublishWarning: false });
   };
 
   private fillInExample = () => {
