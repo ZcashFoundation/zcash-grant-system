@@ -1,6 +1,12 @@
 import { UserProposal, UserComment, TeamMember } from 'types';
 import types from './types';
-import { getUser, updateUser as apiUpdateUser, getProposals } from 'api/api';
+import {
+  getUser,
+  updateUser as apiUpdateUser,
+  getProposals,
+  fetchUserInvites as apiFetchUserInvites,
+  putInviteResponse,
+} from 'api/api';
 import { Dispatch } from 'redux';
 import { Proposal } from 'types';
 import BN from 'bn.js';
@@ -95,6 +101,55 @@ export function fetchUserComments(userFetchId: string) {
       dispatch({
         type: types.FETCH_USER_COMMENTS_REJECTED,
         payload: { userFetchId, error },
+      });
+    }
+  };
+}
+
+export function fetchUserInvites(userFetchId: string) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({
+      type: types.FETCH_USER_INVITES_PENDING,
+      payload: { userFetchId },
+    });
+
+    try {
+      const res = await apiFetchUserInvites(userFetchId);
+      const invites = res.data.sort((a, b) => (a.dateCreated > b.dateCreated ? -1 : 1));
+      dispatch({
+        type: types.FETCH_USER_INVITES_FULFILLED,
+        payload: { userFetchId, invites },
+      });
+    } catch (error) {
+      dispatch({
+        type: types.FETCH_USER_INVITES_REJECTED,
+        payload: { userFetchId, error },
+      });
+    }
+  };
+}
+
+export function respondToInvite(
+  userId: string | number,
+  inviteId: string | number,
+  response: boolean,
+) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({
+      type: types.RESPOND_TO_INVITE_PENDING,
+      payload: { userId, inviteId, response },
+    });
+
+    try {
+      await putInviteResponse(userId, inviteId, response);
+      dispatch({
+        type: types.RESPOND_TO_INVITE_FULFILLED,
+        payload: { userId, inviteId, response },
+      });
+    } catch (error) {
+      dispatch({
+        type: types.RESPOND_TO_INVITE_REJECTED,
+        payload: { userId, inviteId, error },
       });
     }
   };

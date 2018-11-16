@@ -5,12 +5,13 @@ import { usersActions } from 'modules/users';
 import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
-import { Spin, Tabs, Badge } from 'antd';
+import { Spin, Tabs, Badge, message } from 'antd';
 import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
 import ProfileProposal from './ProfileProposal';
 import ProfileComment from './ProfileComment';
-import PlaceHolder from 'components/Placeholder';
+import ProfileInvite from './ProfileInvite';
+import Placeholder from 'components/Placeholder';
 import Exception from 'pages/exception';
 import './style.less';
 
@@ -24,6 +25,7 @@ interface DispatchProps {
   fetchUserCreated: typeof usersActions['fetchUserCreated'];
   fetchUserFunded: typeof usersActions['fetchUserFunded'];
   fetchUserComments: typeof usersActions['fetchUserComments'];
+  fetchUserInvites: typeof usersActions['fetchUserInvites'];
 }
 
 type Props = RouteComponentProps<any> & StateProps & DispatchProps;
@@ -53,6 +55,8 @@ class Profile extends React.Component<Props> {
 
     const user = this.props.usersMap[userLookupParam];
     const waiting = !user || !user.hasFetched;
+    // TODO: Replace with userid checks
+    const isAuthedUser = user && authUser && user.ethAddress === authUser.ethAddress;
 
     if (waiting) {
       return <Spin />;
@@ -62,10 +66,11 @@ class Profile extends React.Component<Props> {
       return <Exception code="404" />;
     }
 
-    const { createdProposals, fundedProposals, comments } = user;
+    const { createdProposals, fundedProposals, comments, invites } = user;
     const noneCreated = user.hasFetchedCreated && createdProposals.length === 0;
     const noneFunded = user.hasFetchedFunded && fundedProposals.length === 0;
     const noneCommented = user.hasFetchedComments && comments.length === 0;
+    const noneInvites = user.hasFetchedInvites && invites.length === 0;
 
     return (
       <div className="Profile">
@@ -85,7 +90,7 @@ class Profile extends React.Component<Props> {
           >
             <div>
               {noneCreated && (
-                <PlaceHolder subtitle="Has not created any proposals yet" />
+                <Placeholder subtitle="Has not created any proposals yet" />
               )}
               {createdProposals.map(p => (
                 <ProfileProposal key={p.proposalId} proposal={p} />
@@ -98,7 +103,7 @@ class Profile extends React.Component<Props> {
             disabled={!user.hasFetchedFunded}
           >
             <div>
-              {noneFunded && <PlaceHolder subtitle="Has not funded any proposals yet" />}
+              {noneFunded && <Placeholder subtitle="Has not funded any proposals yet" />}
               {createdProposals.map(p => (
                 <ProfileProposal key={p.proposalId} proposal={p} />
               ))}
@@ -110,23 +115,48 @@ class Profile extends React.Component<Props> {
             disabled={!user.hasFetchedComments}
           >
             <div>
-              {noneCommented && <PlaceHolder subtitle="Has not made any comments yet" />}
+              {noneCommented && <Placeholder subtitle="Has not made any comments yet" />}
               {comments.map(c => (
                 <ProfileComment key={c.commentId} userName={user.name} comment={c} />
               ))}
             </div>
           </Tabs.TabPane>
+          {isAuthedUser && (
+            <Tabs.TabPane
+              tab={TabTitle('Invites', invites.length)}
+              key="invites"
+              disabled={!user.hasFetchedInvites}
+            >
+              <div>
+                {noneInvites && (
+                  <Placeholder
+                    title="No invites here!"
+                    subtitle="You’ll be notified when you’ve been invited to join a proposal"
+                  />
+                )}
+                {invites.map(invite => (
+                  <ProfileInvite
+                    key={invite.id}
+                    userId={user.ethAddress}
+                    invite={invite}
+                  />
+                ))}
+              </div>
+            </Tabs.TabPane>
+          )}
         </Tabs>
       </div>
     );
   }
   private fetchData() {
-    const userLookupId = this.props.match.params.id;
+    const { match } = this.props;
+    const userLookupId = match.params.id;
     if (userLookupId) {
       this.props.fetchUser(userLookupId);
       this.props.fetchUserCreated(userLookupId);
       this.props.fetchUserFunded(userLookupId);
       this.props.fetchUserComments(userLookupId);
+      this.props.fetchUserInvites(userLookupId);
     }
   }
 }
@@ -152,6 +182,7 @@ const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
     fetchUserCreated: usersActions.fetchUserCreated,
     fetchUserFunded: usersActions.fetchUserFunded,
     fetchUserComments: usersActions.fetchUserComments,
+    fetchUserInvites: usersActions.fetchUserInvites,
   },
 );
 

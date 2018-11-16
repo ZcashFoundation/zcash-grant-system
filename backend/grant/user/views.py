@@ -1,7 +1,7 @@
 from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 
-from grant.proposal.models import Proposal, proposal_team
+from grant.proposal.models import Proposal, proposal_team, ProposalTeamInvite, invites_with_proposal_schema
 from grant.utils.auth import requires_sm, requires_same_user_auth, verify_signed_auth, BadSignatureException
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 
@@ -157,3 +157,30 @@ def update_user(user_identity, display_name, title, social_medias, avatar):
     db.session.commit()
     result = user_schema.dump(user)
     return result
+
+@blueprint.route("/<user_identity>/invites", methods=["GET"])
+@requires_same_user_auth
+@endpoint.api()
+def get_user_invites(user_identity):
+    invites = ProposalTeamInvite.get_pending_for_user(g.current_user)
+    return invites_with_proposal_schema.dump(invites)
+
+@blueprint.route("/<user_identity>/invites/<invite_id>/respond", methods=["PUT"])
+@requires_same_user_auth
+@endpoint.api(
+    parameter('response', type=bool, required=True)
+)
+def respond_to_invite(user_identity, invite_id, response):
+    invite = ProposalTeamInvite.query.filter_by(id=invite_id).first()
+    if not invite:
+        return {"message": "No invite found with id {}".format(invite_id)}, 404
+    
+    invite.accepted = response
+    db.session.add(invite)
+
+    if invite.accepted:
+        invite.proposal.team.append(g.current_user)
+        db.session.add(invite)
+    
+    db.session.commit()
+    return None, 200

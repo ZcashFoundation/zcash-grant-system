@@ -1,5 +1,12 @@
 import axios from './axios';
-import { Proposal, ProposalDraft, TeamMember, Update, TeamInvite } from 'types';
+import {
+  Proposal,
+  ProposalDraft,
+  TeamMember,
+  Update,
+  TeamInvite,
+  TeamInviteWithProposal,
+} from 'types';
 import {
   formatTeamMemberForPost,
   formatTeamMemberFromGet,
@@ -142,4 +149,20 @@ export function deleteProposalInvite(
   inviteIdOrAddress: number | string,
 ): Promise<{ data: TeamInvite }> {
   return axios.delete(`/api/v1/proposals/${proposalId}/invite/${inviteIdOrAddress}`);
+}
+
+export function fetchUserInvites(
+  userid: string | number,
+): Promise<{ data: TeamInviteWithProposal[] }> {
+  return axios.get(`/api/v1/users/${userid}/invites`);
+}
+
+export function putInviteResponse(
+  userid: string | number,
+  inviteid: string | number,
+  response: boolean,
+): Promise<{ data: void }> {
+  return axios.put(`/api/v1/users/${userid}/invites/${inviteid}/respond`, {
+    response,
+  });
 }

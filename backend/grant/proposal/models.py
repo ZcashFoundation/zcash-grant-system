@@ -1,7 +1,9 @@
 import datetime
 from typing import List
+from sqlalchemy import func
 
 from grant.comment.models import Comment
+from grant.user.models import User
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix
 from grant.utils.exceptions import ValidationException
@@ -46,6 +48,21 @@ class ProposalTeamInvite(db.Model):
         self.address = address
         self.accepted = accepted
         self.date_created = datetime.datetime.now()
+
+    @staticmethod
+    def get_pending_for_user(user):
+        print('Hello')
+        print(str(
+            ProposalTeamInvite.query.filter(
+                (func.lower(User.account_address) == func.lower(ProposalTeamInvite.address)) |
+                (func.lower(User.email_address) == func.lower(ProposalTeamInvite.address))
+            )
+        ))
+        return ProposalTeamInvite.query.filter(
+            ProposalTeamInvite.accepted == None,
+            (func.lower(User.account_address) == func.lower(ProposalTeamInvite.address)) |
+            (func.lower(User.email_address) == func.lower(ProposalTeamInvite.address))
+        ).all()
 
 
 class ProposalUpdate(db.Model):
@@ -278,3 +295,24 @@ class ProposalTeamInviteSchema(ma.Schema):
 
 proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
+
+# TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
+class InviteWithProposalSchema(ma.Schema):
+    class Meta:
+        model = ProposalTeamInvite
+        fields = (
+            "id",
+            "date_created",
+            "address",
+            "accepted",
+            "proposal"
+        )
+
+    date_created = ma.Method("get_date_created")
+    proposal = ma.Nested("ProposalSchema")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+invite_with_proposal_schema = InviteWithProposalSchema()
+invites_with_proposal_schema = InviteWithProposalSchema(many=True)
