@@ -1,29 +1,11 @@
-import { TeamMember } from 'types';
-import { socialAccountsToUrls, socialUrlsToAccounts } from 'utils/social';
+import { User } from 'types';
+import { socialMediaToUrl } from 'utils/social';
 
-export function formatTeamMemberForPost(user: TeamMember) {
+export function formatUserForPost(user: User) {
   return {
-    displayName: user.name,
-    title: user.title,
-    accountAddress: user.ethAddress,
-    emailAddress: user.emailAddress,
-    avatar: user.avatarUrl ? { link: user.avatarUrl } : {},
-    socialMedias: socialAccountsToUrls(user.socialAccounts).map(url => ({
-      link: url,
-    })),
-  };
-}
-
-export function formatTeamMemberFromGet(user: any): TeamMember {
-  return {
-    name: user.displayName,
-    title: user.title,
-    ethAddress: user.accountAddress,
-    emailAddress: user.emailAddress,
-    avatarUrl: user.avatar && user.avatar.imageUrl,
-    socialAccounts: socialUrlsToAccounts(
-      user.socialMedias.map((sm: any) => sm.socialMediaLink),
-    ),
+    ...user,
+    avatar: user.avatar ? user.avatar.image_url : null,
+    socialMedias: user.socialMedias.map(socialMediaToUrl),
   };
 }
 

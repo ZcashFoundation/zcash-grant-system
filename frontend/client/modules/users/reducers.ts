@@ -1,14 +1,14 @@
 import lodash from 'lodash';
 import { UserProposal, UserComment, TeamInviteWithProposal } from 'types';
 import types from './types';
-import { TeamMember } from 'types';
+import { User } from 'types';
 
 export interface TeamInviteWithResponse extends TeamInviteWithProposal {
   isResponding: boolean;
   respondError: number | null;
 }
 
-export interface UserState extends TeamMember {
+export interface UserState extends User {
   isFetching: boolean;
   hasFetched: boolean;
   fetchError: number | null;
@@ -36,12 +36,13 @@ export interface UsersState {
   map: { [index: string]: UserState };
 }
 
-export const INITIAL_TEAM_MEMBER_STATE: TeamMember = {
-  ethAddress: '',
-  avatarUrl: '',
-  name: '',
+export const INITIAL_TEAM_MEMBER_STATE: User = {
+  userid: 0,
+  accountAddress: '',
+  avatar: null,
+  displayName: '',
   emailAddress: '',
-  socialAccounts: {},
+  socialMedias: [],
   title: '',
 };
 
@@ -105,19 +106,19 @@ export default (state = INITIAL_STATE, action: any) => {
       });
     // update
     case types.UPDATE_USER_PENDING:
-      return updateUserState(state, payload.user.ethAddress, {
+      return updateUserState(state, payload.user.accountAddress, {
         isUpdating: true,
         updateError: null,
       });
     case types.UPDATE_USER_FULFILLED:
       return updateUserState(
         state,
-        payload.user.ethAddress,
+        payload.user.accountAddress,
         { isUpdating: false },
         payload.user,
       );
     case types.UPDATE_USER_REJECTED:
-      return updateUserState(state, payload.user.ethAddress, {
+      return updateUserState(state, payload.user.accountAddress, {
         isUpdating: false,
         updateError: errorStatus,
       });

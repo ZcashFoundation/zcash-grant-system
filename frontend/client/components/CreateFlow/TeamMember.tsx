@@ -2,18 +2,17 @@ import React from 'react';
 import classnames from 'classnames';
 import { Icon } from 'antd';
 import { SOCIAL_INFO } from 'utils/social';
-import { TeamMember } from 'types';
+import { User } from 'types';
 import UserAvatar from 'components/UserAvatar';
 import './TeamMember.less';
 
 interface Props {
-  index: number;
-  user: TeamMember;
+  user: User;
 }
 
 export default class CreateFlowTeamMember extends React.PureComponent<Props> {
   render() {
-    const { user, index } = this.props;
+    const { user } = this.props;
 
     return (
       <div className="TeamMember">
@@ -21,11 +20,13 @@ export default class CreateFlowTeamMember extends React.PureComponent<Props> {
           <UserAvatar className="TeamMember-avatar-img" user={user} />
         </div>
         <div className="TeamMember-info">
-          <div className="TeamMember-info-name">{user.name || <em>No name</em>}</div>
+          <div className="TeamMember-info-name">
+            {user.displayName || <em>No name</em>}
+          </div>
           <div className="TeamMember-info-title">{user.title || <em>No title</em>}</div>
           <div className="TeamMember-info-social">
             {Object.values(SOCIAL_INFO).map(s => {
-              const account = user.socialAccounts[s.type];
+              const account = user.socialMedias.find(sm => s.service === sm.service);
               const cn = classnames(
                 'TeamMember-info-social-icon',
                 account && 'is-active',

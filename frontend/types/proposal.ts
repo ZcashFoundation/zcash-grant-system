@@ -4,7 +4,7 @@ import {
   CreateMilestone,
   ProposalMilestone,
   Update,
-  TeamMember,
+  User,
   Milestone,
   Comment,
 } from 'types';
@@ -57,7 +57,7 @@ export interface ProposalDraft {
   deadlineDuration: number;
   voteDuration: number;
   milestones: CreateMilestone[];
-  team: TeamMember[];
+  team: User[];
   invites: TeamInvite[];
 }
 
@@ -72,7 +72,7 @@ export interface Proposal {
   stage: string;
   category: PROPOSAL_CATEGORY;
   milestones: ProposalMilestone[];
-  team: TeamMember[];
+  team: User[];
 }
 
 export interface ProposalWithCrowdFund extends Proposal {
@@ -99,7 +99,7 @@ export interface UserProposal {
   proposalId: number;
   title: string;
   brief: string;
-  team: TeamMember[];
+  team: User[];
   funded: Wei;
   target: Wei;
 }

@@ -5,7 +5,7 @@ import { usersActions } from 'modules/users';
 import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
-import { Spin, Tabs, Badge, message } from 'antd';
+import { Spin, Tabs, Badge } from 'antd';
 import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
 import ProfileProposal from './ProfileProposal';
@@ -46,8 +46,8 @@ class Profile extends React.Component<Props> {
     const userLookupParam = this.props.match.params.id;
     const { authUser } = this.props;
     if (!userLookupParam) {
-      if (authUser && authUser.ethAddress) {
-        return <Redirect to={`/profile/${authUser.ethAddress}`} />;
+      if (authUser && authUser.accountAddress) {
+        return <Redirect to={`/profile/${authUser.accountAddress}`} />;
       } else {
         return <Redirect to="auth" />;
       }
@@ -56,7 +56,8 @@ class Profile extends React.Component<Props> {
     const user = this.props.usersMap[userLookupParam];
     const waiting = !user || !user.hasFetched;
     // TODO: Replace with userid checks
-    const isAuthedUser = user && authUser && user.ethAddress === authUser.ethAddress;
+    const isAuthedUser =
+      user && authUser && user.accountAddress === authUser.accountAddress;
 
     if (waiting) {
       return <Spin />;
@@ -77,9 +78,9 @@ class Profile extends React.Component<Props> {
         {/* TODO: SSR fetch user details */}
         {/* TODO: customize details for funders/creators */}
         <HeaderDetails
-          title={`${user.name} is funding projects on Grant.io`}
-          description={`Join ${user.name} in funding the future!`}
-          image={user.avatarUrl}
+          title={`${user.displayName} is funding projects on Grant.io`}
+          description={`Join ${user.displayName} in funding the future!`}
+          image={user.avatar ? user.avatar.image_url : undefined}
         />
         <ProfileUser user={user} />
         <Tabs>
@@ -117,7 +118,11 @@ class Profile extends React.Component<Props> {
             <div>
               {noneCommented && <Placeholder subtitle="Has not made any comments yet" />}
               {comments.map(c => (
-                <ProfileComment key={c.commentId} userName={user.name} comment={c} />
+                <ProfileComment
+                  key={c.commentId}
+                  userName={user.displayName}
+                  comment={c}
+                />
               ))}
             </div>
           </Tabs.TabPane>
@@ -137,7 +142,7 @@ class Profile extends React.Component<Props> {
                 {invites.map(invite => (
                   <ProfileInvite
                     key={invite.id}
-                    userId={user.ethAddress}
+                    userId={user.accountAddress}
                     invite={invite}
                   />
                 ))}

@@ -65,7 +65,8 @@ export class ProposalCard extends React.Component<Props> {
 
           <div className="ProposalCard-team">
             <div className="ProposalCard-team-name">
-              {team[0].name} {team.length > 1 && <small>+{team.length - 1} other</small>}
+              {team[0].displayName}{' '}
+              {team.length > 1 && <small>+{team.length - 1} other</small>}
             </div>
             <div className="ProposalCard-team-avatars">
               {[...team].reverse().map((u, idx) => (

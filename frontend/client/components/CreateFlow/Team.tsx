@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Icon, Form, Input, Button, Popconfirm, message } from 'antd';
-import { TeamMember, TeamInvite, ProposalDraft } from 'types';
+import { User, TeamInvite, ProposalDraft } from 'types';
 import TeamMemberComponent from './TeamMember';
 import { postProposalInvite, deleteProposalInvite } from 'api/api';
 import { isValidEthAddress, isValidEmail } from 'utils/validators';
@@ -9,7 +9,7 @@ import { AppState } from 'store/reducers';
 import './Team.less';
 
 interface State {
-  team: TeamMember[];
+  team: User[];
   invites: TeamInvite[];
   address: string;
 }
@@ -28,16 +28,7 @@ type Props = OwnProps & StateProps;
 
 const MAX_TEAM_SIZE = 6;
 const DEFAULT_STATE: State = {
-  team: [
-    {
-      name: '',
-      title: '',
-      avatarUrl: '',
-      ethAddress: '',
-      emailAddress: '',
-      socialAccounts: {},
-    },
-  ],
+  team: [],
   invites: [],
   address: '',
 };
@@ -50,16 +41,8 @@ class CreateFlowTeam extends React.Component<Props, State> {
       ...(props.initialState || {}),
     };
 
-    // Don't allow for empty team array
-    if (!this.state.team.length) {
-      this.state = {
-        ...this.state,
-        team: [...DEFAULT_STATE.team],
-      };
-    }
-
     // Auth'd user is always first member of a team
-    if (props.authUser) {
+    if (props.authUser && !this.state.team.length) {
       this.state.team[0] = {
         ...props.authUser,
       };
@@ -77,8 +60,8 @@ class CreateFlowTeam extends React.Component<Props, State> {
 
     return (
       <div className="TeamForm">
-        {team.map((user, idx) => (
-          <TeamMemberComponent key={idx} index={idx} user={user} />
+        {team.map(user => (
+          <TeamMemberComponent key={user.userid} user={user} />
         ))}
         {!!pendingInvites.length && (
           <div className="TeamForm-pending">

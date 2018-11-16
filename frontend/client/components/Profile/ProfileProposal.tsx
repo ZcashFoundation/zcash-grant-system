@@ -30,7 +30,7 @@ export default class Profile extends React.Component<OwnProps> {
           <h3>Team</h3>
           <div className="ProfileProposal-block-team">
             {team.map(user => (
-              <UserRow key={user.ethAddress || user.emailAddress} user={user} />
+              <UserRow key={user.accountAddress || user.emailAddress} user={user} />
             ))}
           </div>
         </div>

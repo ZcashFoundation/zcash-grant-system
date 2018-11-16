@@ -1,4 +1,4 @@
-import { UserProposal, UserComment, TeamMember } from 'types';
+import { UserProposal, UserComment, User } from 'types';
 import types from './types';
 import {
   getUser,
@@ -28,7 +28,7 @@ export function fetchUser(userFetchId: string) {
   };
 }
 
-export function updateUser(user: TeamMember) {
+export function updateUser(user: User) {
   const userClone = cleanClone(INITIAL_TEAM_MEMBER_STATE, user);
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.UPDATE_USER_PENDING, payload: { user } });

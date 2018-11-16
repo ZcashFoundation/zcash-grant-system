@@ -42,7 +42,7 @@ class ProfileInvite extends React.Component<Props, State> {
     const { invite } = this.props;
     const { isAccepting, isRejecting } = this.state;
     const { proposal } = invite;
-    const inviter = proposal.team[0] || { name: 'Unknown user' };
+    const inviter = proposal.team[0] || { displayName: 'Unknown user' };
     return (
       <div className="ProfileInvite">
         <div className="ProfileInvite-info">
@@ -52,7 +52,9 @@ class ProfileInvite extends React.Component<Props, State> {
           <div className="ProfileInvite-info-brief">
             {proposal.brief || <em>No description</em>}
           </div>
-          <div className="ProfileInvite-info-inviter">created by {inviter.name}</div>
+          <div className="ProfileInvite-info-inviter">
+            created by {inviter.displayName}
+          </div>
         </div>
         <div className="ProfileInvite-actions">
           <Button

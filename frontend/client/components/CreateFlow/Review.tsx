@@ -218,7 +218,7 @@ const ReviewTeam: React.SFC<{
       <div className="ReviewTeam-member" key={idx}>
         <UserAvatar className="ReviewTeam-member-avatar" user={u} />
         <div className="ReviewTeam-member-info">
-          <div className="ReviewTeam-member-info-name">{u.name}</div>
+          <div className="ReviewTeam-member-info-name">{u.displayName}</div>
           <div className="ReviewTeam-member-info-title">{u.title}</div>
         </div>
       </div>

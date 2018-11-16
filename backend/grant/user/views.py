@@ -39,9 +39,13 @@ def get_me():
 @blueprint.route("/<user_identity>", methods=["GET"])
 @endpoint.api()
 def get_user(user_identity):
+    print('get by ident')
     user = User.get_by_identifier(email_address=user_identity, account_address=user_identity)
+    print(user)
     if user:
+        print('dumping')
         result = user_schema.dump(user)
+        print(result)
         return result
     else:
         message = "User with account_address or user_identity matching {} not found".format(user_identity)
@@ -126,7 +130,7 @@ def auth_user(account_address, signed_message, raw_typed_data):
     parameter('displayName', type=str, required=True),
     parameter('title', type=str, required=True),
     parameter('socialMedias', type=list, required=True),
-    parameter('avatar', type=dict, required=True)
+    parameter('avatar', type=str, required=True)
 )
 def update_user(user_identity, display_name, title, social_medias, avatar):
     user = g.current_user
@@ -137,22 +141,20 @@ def update_user(user_identity, display_name, title, social_medias, avatar):
     if title is not None:
         user.title = title
 
+    db_socials = SocialMedia.query.filter_by(user_id=user.id).all()
+    for db_social in db_socials:
+        db.session.delete(db_social)
     if social_medias is not None:
-        SocialMedia.query.filter_by(user_id=user.id).delete()
         for social_media in social_medias:
-            sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
+            sm = SocialMedia(social_media_link=social_media, user_id=user.id)
             db.session.add(sm)
-    else:
-        SocialMedia.query.filter_by(user_id=user.id).delete()
 
-    if avatar is not None:
-        Avatar.query.filter_by(user_id=user.id).delete()
-        avatar_link = avatar.get('link')
-        if avatar_link:
-            avatar_obj = Avatar(image_url=avatar_link, user_id=user.id)
-            db.session.add(avatar_obj)
-    else:
-        Avatar.query.filter_by(user_id=user.id).delete()
+    db_avatar = Avatar.query.filter_by(user_id=user.id).first()
+    if db_avatar:
+        db.session.delete(db_avatar)
+    if avatar:
+        new_avatar = Avatar(image_url=avatar, user_id=user.id)
+        db.session.add(new_avatar)
 
     db.session.commit()
     result = user_schema.dump(user)

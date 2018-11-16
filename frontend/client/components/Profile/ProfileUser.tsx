@@ -1,13 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Button } from 'antd';
-import { SocialInfo } from 'types';
+import { SocialMedia } from 'types';
 import { usersActions } from 'modules/users';
 import { UserState } from 'modules/users/reducers';
-import { typedKeys } from 'utils/ts';
 import ProfileEdit from './ProfileEdit';
 import UserAvatar from 'components/UserAvatar';
-import { SOCIAL_INFO, socialAccountToUrl } from 'utils/social';
+import { SOCIAL_INFO, socialMediaToUrl } from 'utils/social';
 import ShortAddress from 'components/ShortAddress';
 import './ProfileUser.less';
 import { AppState } from 'store/reducers';
@@ -39,10 +38,10 @@ class ProfileUser extends React.Component<Props> {
     const {
       authUser,
       user,
-      user: { socialAccounts },
+      user: { socialMedias },
     } = this.props;
 
-    const isSelf = !!authUser && authUser.ethAddress === user.ethAddress;
+    const isSelf = !!authUser && authUser.accountAddress === user.accountAddress;
 
     if (this.state.isEditing) {
       return (
@@ -60,7 +59,7 @@ class ProfileUser extends React.Component<Props> {
           <UserAvatar className="ProfileUser-avatar-img" user={user} />
         </div>
         <div className="ProfileUser-info">
-          <div className="ProfileUser-info-name">{user.name}</div>
+          <div className="ProfileUser-info-name">{user.displayName}</div>
           <div className="ProfileUser-info-title">{user.title}</div>
           <div>
             {user.emailAddress && (
@@ -69,26 +68,18 @@ class ProfileUser extends React.Component<Props> {
                 {user.emailAddress}
               </div>
             )}
-            {user.ethAddress && (
+            {user.accountAddress && (
               <div className="ProfileUser-info-address">
                 <span>ethereum address</span>
-                <ShortAddress address={user.ethAddress} />
+                <ShortAddress address={user.accountAddress} />
               </div>
             )}
           </div>
-          {Object.keys(socialAccounts).length > 0 && (
+          {socialMedias.length > 0 && (
             <div className="ProfileUser-info-social">
-              {typedKeys(SOCIAL_INFO).map(
-                s =>
-                  (socialAccounts[s] && (
-                    <Social
-                      key={s}
-                      account={socialAccounts[s] as string}
-                      info={SOCIAL_INFO[s]}
-                    />
-                  )) ||
-                  null,
-              )}
+              {socialMedias.map(sm => (
+                <Social key={sm.service} socialMedia={sm} />
+              ))}
             </div>
           )}
           {isSelf && (
@@ -104,10 +95,12 @@ class ProfileUser extends React.Component<Props> {
   }
 }
 
-const Social = ({ account, info }: { account: string; info: SocialInfo }) => {
+const Social = ({ socialMedia }: { socialMedia: SocialMedia }) => {
   return (
-    <a href={socialAccountToUrl(account, info.type)}>
-      <div className="ProfileUser-info-social-icon">{info.icon}</div>
+    <a href={socialMediaToUrl(socialMedia)} target="_blank" rel="noopener nofollow">
+      <div className="ProfileUser-info-social-icon">
+        {SOCIAL_INFO[socialMedia.service].icon}
+      </div>
     </a>
   );
 };
