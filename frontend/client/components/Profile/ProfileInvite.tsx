@@ -46,8 +46,12 @@ class ProfileInvite extends React.Component<Props, State> {
     return (
       <div className="ProfileInvite">
         <div className="ProfileInvite-info">
-          <div className="ProfileInvite-info-title">{proposal.title}</div>
-          <div className="ProfileInvite-info-brief">{proposal.brief}</div>
+          <div className="ProfileInvite-info-title">
+            {proposal.title || <em>No title</em>}
+          </div>
+          <div className="ProfileInvite-info-brief">
+            {proposal.brief || <em>No description</em>}
+          </div>
           <div className="ProfileInvite-info-inviter">created by {inviter.name}</div>
         </div>
         <div className="ProfileInvite-actions">

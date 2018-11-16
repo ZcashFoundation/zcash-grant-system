@@ -26,7 +26,7 @@ export default class PublishWarningModal extends React.Component<Props> {
         onCancel={handleClose}
       >
         <div className="PublishWarningModal">
-          {warnings.length && (
+          {!!warnings.length && (
             <Alert
               type="warning"
               showIcon

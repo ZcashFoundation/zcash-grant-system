@@ -188,7 +188,9 @@ export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
   const warnings = [];
 
   // Warn about pending invites
-  if (form.invites!.length) {
+  const hasPending =
+    (form.invites || []).filter(inv => inv.accepted === null).length !== 0;
+  if (hasPending) {
     warnings.push(`
       You still have pending team invitations. If you publish before they
       are accepted, your team will be locked in and they won’t be able to
