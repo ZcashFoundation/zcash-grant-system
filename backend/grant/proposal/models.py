@@ -3,7 +3,6 @@ from typing import List
 from sqlalchemy import func
 
 from grant.comment.models import Comment
-from grant.user.models import User
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix
 from grant.utils.exceptions import ValidationException
@@ -51,17 +50,10 @@ class ProposalTeamInvite(db.Model):
 
     @staticmethod
     def get_pending_for_user(user):
-        print('Hello')
-        print(str(
-            ProposalTeamInvite.query.filter(
-                (func.lower(User.account_address) == func.lower(ProposalTeamInvite.address)) |
-                (func.lower(User.email_address) == func.lower(ProposalTeamInvite.address))
-            )
-        ))
         return ProposalTeamInvite.query.filter(
             ProposalTeamInvite.accepted == None,
-            (func.lower(User.account_address) == func.lower(ProposalTeamInvite.address)) |
-            (func.lower(User.email_address) == func.lower(ProposalTeamInvite.address))
+            (func.lower(user.account_address) == func.lower(ProposalTeamInvite.address)) |
+            (func.lower(user.email_address) == func.lower(ProposalTeamInvite.address))
         ).all()
 
 

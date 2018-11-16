@@ -67,6 +67,7 @@ export interface Proposal {
   proposalUrlId: string;
   dateCreated: number;
   title: string;
+  brief: string;
   content: string;
   stage: string;
   category: PROPOSAL_CATEGORY;
@@ -77,6 +78,10 @@ export interface Proposal {
 export interface ProposalWithCrowdFund extends Proposal {
   crowdFund: CrowdFund;
   crowdFundContract: any;
+}
+
+export interface TeamInviteWithProposal extends TeamInvite {
+  proposal: Proposal;
 }
 
 export interface ProposalComments {
