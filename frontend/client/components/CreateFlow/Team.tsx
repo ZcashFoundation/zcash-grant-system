@@ -73,16 +73,17 @@ class CreateFlowTeam extends React.Component<Props, State> {
         ? 'That doesn’t look like an email address or ETH address'
         : undefined;
     const inviteDisabled = !!inviteError || !address;
+    const pendingInvites = invites.filter(inv => inv.accepted === null);
 
     return (
       <div className="TeamForm">
         {team.map((user, idx) => (
           <TeamMemberComponent key={idx} index={idx} user={user} />
         ))}
-        {!!invites.length && (
+        {!!pendingInvites.length && (
           <div className="TeamForm-pending">
             <h3 className="TeamForm-pending-title">Pending invitations</h3>
-            {invites.map(inv => (
+            {pendingInvites.map(inv => (
               <div key={inv.id} className="TeamForm-pending-invite">
                 <div className="TeamForm-pending-invite-name">{inv.address}</div>
                 <Popconfirm
