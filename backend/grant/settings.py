@@ -27,3 +27,6 @@ SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
 SENDGRID_DEFAULT_FROM = "noreply@grant.io"
 ETHEREUM_PROVIDER = "http"
 ETHEREUM_ENDPOINT_URI = env.str("ETHEREUM_ENDPOINT_URI")
+UPLOAD_DIRECTORY = env.str("UPLOAD_DIRECTORY")
+UPLOAD_URL = env.str("UPLOAD_URL")
+MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB (limits file uploads, raises RequestEntityTooLarge)
