@@ -63,7 +63,7 @@ export default function createReducer(
         user:
           state.user && state.user.ethAddress === action.payload.user.ethAddress
             ? action.payload.user
-            : action.payload.user,
+            : state.user,
       };
     case types.AUTH_USER_REJECTED:
       return {
