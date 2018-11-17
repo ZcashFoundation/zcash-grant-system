@@ -71,7 +71,9 @@ export default class AvatarEdit extends React.PureComponent<Props, State> {
               onClick={this.props.onDelete}
             />
           )}
-          {loadError && <Alert message={loadError} type="error" />}
+          {loadError && (
+            <Alert message={loadError} type="error" style={{ margin: '0.5rem 0 0 0' }} />
+          )}
         </div>
         <Modal
           title="Prepare your avatar"
