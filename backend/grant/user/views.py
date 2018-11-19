@@ -39,13 +39,9 @@ def get_me():
 @blueprint.route("/<user_identity>", methods=["GET"])
 @endpoint.api()
 def get_user(user_identity):
-    print('get by ident')
     user = User.get_by_identifier(email_address=user_identity, account_address=user_identity)
-    print(user)
     if user:
-        print('dumping')
         result = user_schema.dump(user)
-        print(result)
         return result
     else:
         message = "User with account_address or user_identity matching {} not found".format(user_identity)

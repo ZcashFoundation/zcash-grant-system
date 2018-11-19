@@ -6,7 +6,7 @@ import { usersActions } from 'modules/users';
 import { UserState } from 'modules/users/reducers';
 import ProfileEdit from './ProfileEdit';
 import UserAvatar from 'components/UserAvatar';
-import { SOCIAL_INFO, socialMediaToUrl } from 'utils/social';
+import { SOCIAL_INFO } from 'utils/social';
 import ShortAddress from 'components/ShortAddress';
 import './ProfileUser.less';
 import { AppState } from 'store/reducers';
@@ -97,7 +97,7 @@ class ProfileUser extends React.Component<Props> {
 
 const Social = ({ socialMedia }: { socialMedia: SocialMedia }) => {
   return (
-    <a href={socialMediaToUrl(socialMedia)} target="_blank" rel="noopener nofollow">
+    <a href={socialMedia.url} target="_blank" rel="noopener nofollow">
       <div className="ProfileUser-info-social-icon">
         {SOCIAL_INFO[socialMedia.service].icon}
       </div>

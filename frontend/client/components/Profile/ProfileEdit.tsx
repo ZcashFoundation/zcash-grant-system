@@ -1,7 +1,7 @@
 import React from 'react';
 import lodash from 'lodash';
 import { Input, Form, Col, Row, Button, Icon, Alert } from 'antd';
-import { SOCIAL_INFO } from 'utils/social';
+import { SOCIAL_INFO, socialMediaToUrl } from 'utils/social';
 import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { getCreateTeamMemberError } from 'modules/create/utils';
@@ -224,6 +224,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
       socialMedias.push({
         service,
         username: value,
+        url: socialMediaToUrl(service, value),
       });
     }
 
@@ -245,7 +246,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     const fields = {
       ...this.state.fields,
       avatar: {
-        image_url: `https://randomuser.me/api/portraits/${gender}/${num}.jpg`,
+        imageUrl: `https://randomuser.me/api/portraits/${gender}/${num}.jpg`,
       },
     };
     const isChanged = this.isChangedCheck(fields);

@@ -28,13 +28,13 @@ describe("create proposal", () => {
         {
           name: "Alisha Endtoend",
           title: "QA Robot0",
-          ethAddress: `0x0000${randomEthHex}0000`,
+          accountAddress: `0x0000${randomEthHex}0000`,
           emailAddress: `qa.alisha.${id}@grant.io`
         },
         {
           name: "Billy Endtoend",
           title: "QA Robot1",
-          ethAddress: `0x1111${randomEthHex}1111`,
+          accountAddress: `0x1111${randomEthHex}1111`,
           emailAddress: `qa.billy.${id}@grant.io`
         }
       ],
@@ -79,7 +79,7 @@ describe("create proposal", () => {
     cy.get('.TeamMember-info input[name="name"]').type(proposal.team[0].name);
     cy.get('.TeamMember-info input[name="title"]').type(proposal.team[0].title);
     cy.get("@EthAccounts").then(accts => {
-      cy.get('.TeamMember-info input[name="ethAddress"]').type(
+      cy.get('.TeamMember-info input[name="accountAddress"]').type(
         accts[0].toString()
       );
     });
@@ -94,7 +94,7 @@ describe("create proposal", () => {
     cy.get('.TeamMember-info input[name="name"]').type(proposal.team[1].name);
     cy.get('.TeamMember-info input[name="title"]').type(proposal.team[1].title);
     cy.get("@EthAccounts").then(accts => {
-      cy.get('.TeamMember-info input[name="ethAddress"]').type(
+      cy.get('.TeamMember-info input[name="accountAddress"]').type(
         accts[1].toString()
       );
     });

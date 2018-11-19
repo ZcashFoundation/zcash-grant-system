@@ -80,7 +80,7 @@ class Profile extends React.Component<Props> {
         <HeaderDetails
           title={`${user.displayName} is funding projects on Grant.io`}
           description={`Join ${user.displayName} in funding the future!`}
-          image={user.avatar ? user.avatar.image_url : undefined}
+          image={user.avatar ? user.avatar.imageUrl : undefined}
         />
         <ProfileUser user={user} />
         <Tabs>

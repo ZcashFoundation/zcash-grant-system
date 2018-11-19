@@ -4,8 +4,8 @@ import { socialMediaToUrl } from 'utils/social';
 export function formatUserForPost(user: User) {
   return {
     ...user,
-    avatar: user.avatar ? user.avatar.image_url : null,
-    socialMedias: user.socialMedias.map(socialMediaToUrl),
+    avatar: user.avatar ? user.avatar.imageUrl : null,
+    socialMedias: user.socialMedias.map(sm => socialMediaToUrl(sm.service, sm.username)),
   };
 }
 
