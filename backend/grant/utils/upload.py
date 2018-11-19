@@ -20,7 +20,9 @@ def allowed_avatar_file(file):
     size = file.tell()
     file.seek(0)
     if size > AVATAR_MAX_SIZE:
-        raise FileValidationException("File size is too large ({0}KB), max size is 2000KB".format(size / 1024))
+        raise FileValidationException(
+            "File size is too large ({0}KB), max size is {1}KB".format(size / 1024, AVATAR_MAX_SIZE / 1024)
+        )
     return True
 
 
