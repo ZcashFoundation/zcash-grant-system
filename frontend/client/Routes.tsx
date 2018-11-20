@@ -64,6 +64,7 @@ const routeConfigs: RouteConfig[] = [
       hideFooter: true,
       requiresWeb3: true,
     },
+    onlyLoggedIn: true,
   },
   {
     // Browse proposals
