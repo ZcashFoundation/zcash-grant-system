@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin, Button } from 'antd';
+import { Spin, Button, message } from 'antd';
 import { AppState } from 'store/reducers';
 import { ProposalWithCrowdFund } from 'types';
 import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
@@ -23,6 +23,8 @@ interface StateProps {
   comments: ReturnType<typeof getProposalComments>;
   isFetchingComments: ReturnType<typeof getIsFetchingComments>;
   commentsError: ReturnType<typeof getCommentsError>;
+  isPostCommentPending: AppState['proposal']['isPostCommentPending'];
+  postCommentError: AppState['proposal']['postCommentError'];
   isSignedIn: ReturnType<typeof getIsSignedIn>;
 }
 
@@ -42,6 +44,8 @@ class ProposalComments extends React.Component<Props, State> {
     comment: '',
   };
 
+  private editor: MarkdownEditor | null = null;
+
   componentDidMount() {
     if (this.props.proposalId) {
       this.props.fetchProposalComments(this.props.proposalId);
@@ -54,8 +58,27 @@ class ProposalComments extends React.Component<Props, State> {
     }
   }
 
+  componentDidUpdate(prevProps: Props) {
+    // TODO: Come up with better check on if our comment post was a success
+    const { isPostCommentPending, postCommentError } = this.props;
+    if (!isPostCommentPending && !postCommentError && prevProps.isPostCommentPending) {
+      this.setState({ comment: '' });
+      this.editor!.reset();
+    }
+
+    if (postCommentError && postCommentError !== prevProps.postCommentError) {
+      message.error('Failed to submit comment');
+    }
+  }
+
   render() {
-    const { comments, isFetchingComments, commentsError, isSignedIn } = this.props;
+    const {
+      comments,
+      isFetchingComments,
+      commentsError,
+      isPostCommentPending,
+      isSignedIn,
+    } = this.props;
     const { comment } = this.state;
     let content = null;
 
@@ -86,11 +109,16 @@ class ProposalComments extends React.Component<Props, State> {
         {isSignedIn && (
           <div className="ProposalComments-post">
             <MarkdownEditor
+              ref={el => (this.editor = el)}
               onChange={this.handleCommentChange}
               type={MARKDOWN_TYPE.REDUCED}
             />
             <div style={{ marginTop: '0.5rem' }} />
-            <Button onClick={this.postComment} disabled={!comment.length}>
+            <Button
+              onClick={this.postComment}
+              disabled={!comment.length}
+              loading={isPostCommentPending}
+            >
               Submit comment
             </Button>
           </div>
@@ -114,6 +142,8 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
     comments: getProposalComments(state, ownProps.proposalId),
     isFetchingComments: getIsFetchingComments(state),
     commentsError: getCommentsError(state),
+    isPostCommentPending: state.proposal.isPostCommentPending,
+    postCommentError: state.proposal.postCommentError,
     isSignedIn: getIsSignedIn(state),
   }),
   {

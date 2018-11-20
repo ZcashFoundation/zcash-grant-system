@@ -141,8 +141,6 @@ export function postProposalComment(
         rawTypedData: JSON.stringify(sigData.rawTypedData),
       });
 
-      // TODO: API up the comment & signed comment, handle response / failures
-      // TODO: Remove console log
       dispatch({
         type: types.POST_PROPOSAL_COMMENT_FULFILLED,
         payload: {

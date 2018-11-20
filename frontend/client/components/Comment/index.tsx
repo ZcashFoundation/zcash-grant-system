@@ -48,7 +48,7 @@ class Comment extends React.Component<Props> {
   }
 
   public render(): React.ReactNode {
-    const { comment, isSignedIn } = this.props;
+    const { comment, isSignedIn, isPostCommentPending } = this.props;
     const { isReplying, reply } = this.state;
     const authorPath = `/profile/${comment.author.accountAddress}`;
     return (
@@ -89,7 +89,11 @@ class Comment extends React.Component<Props> {
                   type={MARKDOWN_TYPE.REDUCED}
                 />
                 <div style={{ marginTop: '0.5rem' }} />
-                <Button onClick={this.reply} disabled={!reply.length}>
+                <Button
+                  onClick={this.reply}
+                  disabled={!reply.length}
+                  loading={isPostCommentPending}
+                >
                   Submit reply
                 </Button>
               </div>
