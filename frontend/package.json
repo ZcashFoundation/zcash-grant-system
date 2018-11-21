@@ -1,6 +1,6 @@
 {
   "name": "grant",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
@@ -10,11 +10,15 @@
     "lint": "tslint --project ./tsconfig.json --config ./tslint.json -e \"**/build/**\"",
     "start": "NODE_ENV=production node ./build/server/server.js",
     "now": "npm run build && now -e BACKEND_URL=https://grant-stage.herokuapp.com",
+    "heroku-postbuild": "yarn build",
     "tsc": "tsc",
     "link-contracts": "cd client/lib && ln -s ../../build/contracts contracts",
     "ganache": "ganache-cli -b 5",
     "truffle": "truffle exec ./bin/init-truffle.js && cd client/lib/contracts && truffle console",
     "storybook": "start-storybook -p 9001 -c .storybook"
+  },
+  "engines": {
+    "node": "8.13.0"
   },
   "husky": {
     "hooks": {

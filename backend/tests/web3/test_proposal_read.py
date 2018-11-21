@@ -1,13 +1,14 @@
-import copy
 import json
 import time
 
-from grant.extensions import web3
-from ..config import BaseTestConfig
-from grant.web3.proposal import read_proposal
-from flask_web3 import current_web3
 import eth_tester.backends.pyevm.main as py_evm_main
+from flask_web3 import current_web3
+from grant.extensions import web3
+from grant.settings import CROWD_FUND_URL, CROWD_FUND_FACTORY_URL
+from grant.web3.proposal import read_proposal
 
+from ..config import BaseTestConfig
+import requests
 # increase gas limit on eth-tester
 # https://github.com/ethereum/web3.py/issues/1013
 # https://gitter.im/ethereum/py-evm?at=5b7eb68c4be56c5918854337
@@ -23,10 +24,17 @@ class TestWeb3ProposalRead(BaseTestConfig):
         BaseTestConfig.setUp(self)
         # the following will properly configure web3 with test config
         web3.init_app(self.real_app)
-        with open("../contract/build/contracts/CrowdFundFactory.json", "r") as read_file:
-            crowd_fund_factory_json = json.load(read_file)
-        with open("../contract/build/contracts/CrowdFund.json", "r") as read_file:
-            self.crowd_fund_json = json.load(read_file)
+        if CROWD_FUND_FACTORY_URL:
+            crowd_fund_factory_json = requests.get(CROWD_FUND_FACTORY_URL).json()
+        else:
+            with open("../frontend/client/lib/contracts/CrowdFundFactory.json", "r") as read_file:
+                crowd_fund_factory_json = json.load(read_file)
+
+        if CROWD_FUND_URL:
+            self.crowd_fund_json = requests.get(CROWD_FUND_URL).json()
+        else:
+            with open("../frontend/client/lib/contracts/CrowdFund.json", "r") as read_file:
+                self.crowd_fund_json = json.load(read_file)
         current_web3.eth.defaultAccount = current_web3.eth.accounts[0]
         CrowdFundFactory = current_web3.eth.contract(
             abi=crowd_fund_factory_json['abi'], bytecode=crowd_fund_factory_json['bytecode'])
@@ -78,13 +86,13 @@ class TestWeb3ProposalRead(BaseTestConfig):
 
     def create_crowd_fund(self):
         tx_hash = self.crowd_fund_factory.functions.createCrowdFund(
-            5000000000000000000,             # ethAmount
-            current_web3.eth.accounts[0],    # payout
+            5000000000000000000,  # ethAmount
+            current_web3.eth.accounts[0],  # payout
             [current_web3.eth.accounts[0]],  # trustees
-            [5000000000000000000],           # milestone amounts
-            60,                              # duration (minutes)
-            60,                              # voting period (minutes)
-            True                             # immediate first milestone payout
+            [5000000000000000000],  # milestone amounts
+            60,  # duration (minutes)
+            60,  # voting period (minutes)
+            True  # immediate first milestone payout
         ).transact()
         tx_receipt = current_web3.eth.waitForTransactionReceipt(tx_hash)
         tx_events = self.crowd_fund_factory.events.ContractCreated().processReceipt(tx_receipt)

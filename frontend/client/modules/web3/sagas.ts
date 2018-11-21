@@ -1,17 +1,21 @@
 import { SagaIterator } from 'redux-saga';
-import { put, all, fork, take, takeLatest, select, call } from 'redux-saga/effects';
-import { setWeb3, setAccounts, setContract } from './actions';
+import { all, call, fork, put, select, take, takeLatest } from 'redux-saga/effects';
+import { setAccounts, setContract, setWeb3 } from './actions';
 import { selectWeb3 } from './selectors';
 import { safeEnable } from 'utils/web3';
 import types from './types';
+import { fetchCrowdFundFactoryJSON } from 'api/api';
 
 /* tslint:disable no-var-requires --- TODO: find a better way to import contract */
-const CrowdFundFactory = require('lib/contracts/CrowdFundFactory.json');
+let CrowdFundFactory = require('lib/contracts/CrowdFundFactory.json');
 
 export function* bootstrapWeb3(): SagaIterator {
   // Don't attempt to bootstrap web3 on SSR
   if (process.env.SERVER_SIDE_RENDER) {
     return;
+  }
+  if (process.env.CROWD_FUND_FACTORY_URL) {
+    CrowdFundFactory = yield call(fetchCrowdFundFactoryJSON);
   }
 
   yield put<any>(setWeb3());

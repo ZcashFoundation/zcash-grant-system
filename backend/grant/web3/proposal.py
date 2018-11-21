@@ -2,6 +2,8 @@ import json
 import time
 from flask_web3 import current_web3
 from .util import batch_call, call_array, RpcError
+import requests
+from grant.settings import CROWD_FUND_URL
 
 
 crowd_fund_abi = None
@@ -11,9 +13,16 @@ def get_crowd_fund_abi():
     global crowd_fund_abi
     if crowd_fund_abi:
         return crowd_fund_abi
+
+    if CROWD_FUND_URL:
+        crowd_fund_json = requests.get(CROWD_FUND_URL).json()
+        crowd_fund_abi = crowd_fund_json['abi']
+        return crowd_fund_abi
+
     with open("../contract/build/contracts/CrowdFund.json", "r") as read_file:
         crowd_fund_abi = json.load(read_file)['abi']
         return crowd_fund_abi
+
 
 
 def read_proposal(address):

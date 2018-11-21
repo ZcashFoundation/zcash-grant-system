@@ -1,9 +1,9 @@
 import axios from './axios';
 import { Proposal, TeamMember, Update } from 'types';
 import {
+  formatProposalFromGet,
   formatTeamMemberForPost,
   formatTeamMemberFromGet,
-  formatProposalFromGet,
 } from 'utils/api';
 import { PROPOSAL_CATEGORY } from './constants';
 
@@ -89,6 +89,16 @@ export function updateUser(user: TeamMember): Promise<{ data: TeamMember }> {
 
 export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
+}
+
+export async function fetchCrowdFundFactoryJSON(): Promise<any> {
+  const res = await axios.get(process.env.CROWD_FUND_FACTORY_URL as string);
+  return res.data;
+}
+
+export async function fetchCrowdFundJSON(): Promise<any> {
+  const res = await axios.get(process.env.CROWD_FUND_URL as string);
+  return res.data;
 }
 
 export function postProposalUpdate(
