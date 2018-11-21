@@ -26,14 +26,29 @@ dotenvFiles.forEach(dotenvFile => {
   }
 });
 
-if (!process.env.PUBLIC_HOST_URL) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'The process.env.PUBLIC_HOST_URL environment variable is required but was not specified.',
-    );
+const envProductionRequiredHandler = (envVariable, fallbackValue) => {
+  if (!process.env[envVariable]) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        `The process.env.${envVariable} environment variable is required but was not specified.`,
+      );
+    }
+    process.env[envVariable] = fallbackValue;
   }
-  process.env.PUBLIC_HOST_URL = 'http://localhost:' + (process.env.PORT || 3000);
-}
+};
+
+envProductionRequiredHandler(
+  'PUBLIC_HOST_URL',
+  'http://localhost:' + (process.env.PORT || 3000),
+);
+envProductionRequiredHandler(
+  'CROWD_FUND_URL',
+  'https://eip-712.herokuapp.com/contract/crowd-fund',
+);
+envProductionRequiredHandler(
+  'CROWD_FUND_FACTORY_URL',
+  'https://eip-712.herokuapp.com/contract/factory',
+);
 
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')

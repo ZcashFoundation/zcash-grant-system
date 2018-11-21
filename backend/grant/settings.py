@@ -15,6 +15,8 @@ ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
 SITE_URL = env.str('SITE_URL', default='https://grant.io')
 AUTH_URL = env.str('AUTH_URL', default='https://eip-712.herokuapp.com')
+CROWD_FUND_FACTORY_URL = env.str('CROWD_FUND_FACTORY_URL', default=None)
+CROWD_FUND_URL = env.str('CROWD_FUND_URL', default=None)
 SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL")
 QUEUES = ["default"]
 SECRET_KEY = env.str("SECRET_KEY")
@@ -27,3 +29,6 @@ SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
 SENDGRID_DEFAULT_FROM = "noreply@grant.io"
 ETHEREUM_PROVIDER = "http"
 ETHEREUM_ENDPOINT_URI = env.str("ETHEREUM_ENDPOINT_URI")
+UPLOAD_DIRECTORY = env.str("UPLOAD_DIRECTORY")
+UPLOAD_URL = env.str("UPLOAD_URL")
+MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB (limits file uploads, raises RequestEntityTooLarge)

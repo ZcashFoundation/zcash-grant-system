@@ -18,12 +18,11 @@ import ContributorsTab from './Contributors';
 // import CommunityTab from './Community';
 import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
-import './style.less';
 import classnames from 'classnames';
 import { withRouter } from 'react-router';
-import Web3Container from 'lib/Web3Container';
 import { web3Actions } from 'modules/web3';
 import SocialShare from 'components/SocialShare';
+import './style.less';
 
 interface OwnProps {
   proposalId: number;
@@ -32,17 +31,14 @@ interface OwnProps {
 
 interface StateProps {
   proposal: ProposalWithCrowdFund | null;
+  account: string | null;
 }
 
 interface DispatchProps {
   fetchProposal: proposalActions.TFetchProposal;
 }
 
-interface Web3Props {
-  account: string;
-}
-
-type Props = StateProps & DispatchProps & Web3Props & OwnProps;
+type Props = StateProps & DispatchProps & OwnProps;
 
 interface State {
   isBodyExpanded: boolean;
@@ -95,7 +91,7 @@ export class ProposalDetail extends React.Component<Props, State> {
       return <Spin />;
     } else {
       const { crowdFund } = proposal;
-      const isTrustee = crowdFund.trustees.includes(account);
+      const isTrustee = !!account && crowdFund.trustees.includes(account);
       const isContributor = !!crowdFund.contributors.find(c => c.address === account);
       const hasBeenFunded = crowdFund.isRaiseGoalReached;
       const isProposalActive = !hasBeenFunded && crowdFund.deadline > Date.now();
@@ -255,6 +251,7 @@ export class ProposalDetail extends React.Component<Props, State> {
 function mapStateToProps(state: AppState, ownProps: OwnProps) {
   return {
     proposal: getProposal(state, ownProps.proposalId),
+    account: (state.web3.accounts.length && state.web3.accounts[0]) || null,
   };
 }
 
@@ -267,22 +264,9 @@ const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
   mapDispatchToProps,
 );
 
-const ConnectedProposal = compose<Props, OwnProps & Web3Props>(
+const ConnectedProposal = compose<Props, OwnProps>(
   withRouter,
   withConnect,
 )(ProposalDetail);
 
-export default (props: OwnProps) => (
-  <Web3Container
-    renderLoading={() => (
-      <div className="Proposal">
-        <div className="Proposal-top">
-          <div className="Proposal-top-main">
-            <Spin />
-          </div>
-        </div>
-      </div>
-    )}
-    render={({ accounts }) => <ConnectedProposal account={accounts[0]} {...props} />}
-  />
-);
+export default ConnectedProposal;

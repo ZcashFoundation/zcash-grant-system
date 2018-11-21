@@ -1,7 +1,9 @@
 import json
 import time
 from flask_web3 import current_web3
-from .util import batch_call, call_array
+from .util import batch_call, call_array, RpcError
+import requests
+from grant.settings import CROWD_FUND_URL
 
 
 crowd_fund_abi = None
@@ -11,12 +13,20 @@ def get_crowd_fund_abi():
     global crowd_fund_abi
     if crowd_fund_abi:
         return crowd_fund_abi
+
+    if CROWD_FUND_URL:
+        crowd_fund_json = requests.get(CROWD_FUND_URL).json()
+        crowd_fund_abi = crowd_fund_json['abi']
+        return crowd_fund_abi
+
     with open("../contract/build/contracts/CrowdFund.json", "r") as read_file:
         crowd_fund_abi = json.load(read_file)['abi']
         return crowd_fund_abi
 
 
+
 def read_proposal(address):
+    current_web3.eth.defaultAccount = current_web3.eth.accounts[0]
     crowd_fund_abi = get_crowd_fund_abi()
     contract = current_web3.eth.contract(address=address, abi=crowd_fund_abi)
 
@@ -34,7 +44,11 @@ def read_proposal(address):
 
     # batched
     calls = list(map(lambda x: [x, None], methods))
-    crowd_fund = batch_call(current_web3, address, crowd_fund_abi, calls, contract)
+    try:
+        crowd_fund = batch_call(current_web3, address, crowd_fund_abi, calls, contract)
+    # catch dead contracts here
+    except RpcError:
+        return None
 
     # balance (sync)
     crowd_fund['balance'] = current_web3.eth.getBalance(address)
