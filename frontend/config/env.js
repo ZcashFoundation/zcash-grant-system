@@ -5,11 +5,6 @@ const childProcess = require('child_process');
 
 delete require.cache[require.resolve('./paths')];
 
-const gitRevisionShortHash = childProcess
-  .execSync('git rev-parse --short HEAD')
-  .toString()
-  .trim();
-
 if (!process.env.NODE_ENV) {
   throw new Error(
     'The process.env.NODE_ENV environment variable is required but was not specified.',
@@ -61,7 +56,10 @@ if (!process.env.BACKEND_URL) {
 }
 
 if (!process.env.SENTRY_RELEASE) {
-  process.env.SENTRY_RELEASE = gitRevisionShortHash;
+  process.env.SENTRY_RELEASE = childProcess
+    .execSync('git rev-parse --short HEAD')
+    .toString()
+    .trim();
 }
 
 const appDirectory = fs.realpathSync(process.cwd());
