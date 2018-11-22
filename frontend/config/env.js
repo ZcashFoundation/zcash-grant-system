@@ -50,6 +50,10 @@ envProductionRequiredHandler(
   'https://eip-712.herokuapp.com/contract/factory',
 );
 
+if (!process.env.BACKEND_URL) {
+  process.env.BACKEND_URL = 'http://localhost:5000';
+}
+
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .split(path.delimiter)
@@ -59,9 +63,9 @@ process.env.NODE_PATH = (process.env.NODE_PATH || '')
 
 module.exports = () => {
   const raw = {
-    PORT: process.env.PORT || 3000,
+    BACKEND_URL: process.env.BACKEND_URL,
     NODE_ENV: process.env.NODE_ENV || 'development',
-    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:5000',
+    PORT: process.env.PORT || 3000,
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,
   };
 

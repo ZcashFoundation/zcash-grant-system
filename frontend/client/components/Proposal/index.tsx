@@ -63,11 +63,15 @@ export class ProposalDetail extends React.Component<Props, State> {
     } else {
       this.checkBodyOverflow();
     }
-    window.addEventListener('resize', this.checkBodyOverflow);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this.checkBodyOverflow);
+    }
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.checkBodyOverflow);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.checkBodyOverflow);
+    }
   }
 
   componentDidUpdate() {
@@ -121,7 +125,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           <div className="Proposal-top">
             <div className="Proposal-top-social">
               <SocialShare
-                url={window.location.href}
+                url={(typeof window !== 'undefined' && window.location.href) || ''}
                 title={`${proposal.title} needs funding on Grant-io!`}
                 text={`${
                   proposal.title

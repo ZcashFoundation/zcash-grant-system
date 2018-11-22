@@ -4,10 +4,10 @@ import * as path from 'path';
 import chalk from 'chalk';
 import manifestHelpers from 'express-manifest-helpers';
 import * as bodyParser from 'body-parser';
-import dotenv from 'dotenv';
 import expressWinston from 'express-winston';
 import i18nMiddleware from 'i18next-express-middleware';
 
+import '../config/env';
 // @ts-ignore
 import * as paths from '../config/paths';
 import log from './log';
@@ -16,8 +16,6 @@ import i18n from './i18n';
 
 process.env.SERVER_SIDE_RENDER = 'true';
 const isDev = process.env.NODE_ENV === 'development';
-
-dotenv.config();
 
 const app = express();
 

@@ -8,10 +8,12 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { PersistGate } from 'redux-persist/integration/react';
 import { I18nextProvider } from 'react-i18next';
 import { configureStore } from 'store/configure';
+import { massageSerializedState } from 'utils/api';
 import Routes from './Routes';
 import i18n from './i18n';
 
-const initialState = window && (window as any).__PRELOADED_STATE__;
+const initialState =
+  window && massageSerializedState((window as any).__PRELOADED_STATE__);
 const { store, persistor } = configureStore(initialState);
 const i18nLanguage = window && (window as any).__PRELOADED_I18N__;
 i18n.changeLanguage(i18nLanguage.locale);

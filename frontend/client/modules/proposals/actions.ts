@@ -23,8 +23,8 @@ export function fetchProposals() {
 
 export type TFetchProposal = typeof fetchProposal;
 export function fetchProposal(proposalId: ProposalWithCrowdFund['proposalId']) {
-  return (dispatch: Dispatch<any>) => {
-    dispatch({
+  return async (dispatch: Dispatch<any>) => {
+    return dispatch({
       type: types.PROPOSAL_DATA,
       payload: async () => {
         return (await getProposal(proposalId)).data;
