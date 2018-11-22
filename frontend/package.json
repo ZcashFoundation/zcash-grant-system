@@ -13,7 +13,7 @@
     "heroku-postbuild": "yarn build",
     "tsc": "tsc",
     "link-contracts": "cd client/lib && ln -s ../../build/contracts contracts",
-    "ganache": "ganache-cli -b 5",
+    "ganache": "ganache-cli -b 5 -s testGrantIo -e 1000",
     "truffle": "truffle exec ./bin/init-truffle.js && cd client/lib/contracts && truffle console",
     "storybook": "start-storybook -p 9001 -c .storybook"
   },

@@ -508,7 +508,7 @@ export function signData(data: object, dataTypes: object, primaryType: string) {
           primaryType,
         };
 
-        (web3.currentProvider as any).sendAsync(
+        (web3.currentProvider as any).send(
           {
             method: 'eth_signTypedData_v3',
             params: [accounts[0], JSON.stringify(rawTypedData)],
