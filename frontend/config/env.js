@@ -1,8 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 const paths = require('./paths');
+const childProcess = require('child_process');
 
 delete require.cache[require.resolve('./paths')];
+
+const gitRevisionShortHash = childProcess
+  .execSync('git rev-parse --short HEAD')
+  .toString()
+  .trim();
 
 if (!process.env.NODE_ENV) {
   throw new Error(
@@ -54,6 +60,10 @@ if (!process.env.BACKEND_URL) {
   process.env.BACKEND_URL = 'http://localhost:5000';
 }
 
+if (!process.env.SENTRY_RELEASE) {
+  process.env.SENTRY_RELEASE = gitRevisionShortHash;
+}
+
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .split(path.delimiter)
@@ -67,6 +77,8 @@ module.exports = () => {
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: process.env.PORT || 3000,
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,
+    SENTRY_DSN: process.env.SENTRY_DSN || null,
+    SENTRY_RELEASE: process.env.SENTRY_RELEASE,
   };
 
   // Stringify all values so we can feed into Webpack DefinePlugin

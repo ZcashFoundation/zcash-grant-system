@@ -60,3 +60,6 @@ flask-yolo2API==0.2.6
 #web3
 flask-web3==0.1.1
 web3==4.8.1
+
+#sentry
+sentry-sdk[flask]==0.5.5

@@ -6,7 +6,10 @@ Most configuration is set via environment variables.
 For local development, use a .env file to set
 environment variables.
 """
+import subprocess
 from environs import Env
+
+git_revision_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
 
 env = Env()
 env.read_env()
@@ -29,6 +32,8 @@ SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
 SENDGRID_DEFAULT_FROM = "noreply@grant.io"
 ETHEREUM_PROVIDER = "http"
 ETHEREUM_ENDPOINT_URI = env.str("ETHEREUM_ENDPOINT_URI")
+SENTRY_DSN = env.str("SENTRY_DSN", default=None)
+SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=git_revision_short_hash)
 UPLOAD_DIRECTORY = env.str("UPLOAD_DIRECTORY")
 UPLOAD_URL = env.str("UPLOAD_URL")
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB (limits file uploads, raises RequestEntityTooLarge)

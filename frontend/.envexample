@@ -7,5 +7,11 @@ NO_DEV_TS_CHECK=true
 # Set the public host url (no trailing slash)
 PUBLIC_HOST_URL=https://demo.grant.io
 
+
+# sentry 
+SENTRY_DSN="https://PUBLICKEY@sentry.io/PROJECTID"
+SENTRY_RELEASE="optional, overrides git hash"
+
 CROWD_FUND_URL = "https://eip-712.herokuapp.com/contract/crowd-fund"
 CROWD_FUND_FACTORY_URL = "https://eip-712.herokuapp.com/contract/factory"
+

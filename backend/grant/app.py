@@ -2,9 +2,12 @@
 """The app module, containing the app factory function."""
 from flask import Flask
 from flask_cors import CORS
+from sentry_sdk.integrations.flask import FlaskIntegration
+import sentry_sdk
 
 from grant import commands, proposal, user, comment, milestone, admin, email
 from grant.extensions import bcrypt, migrate, db, ma, mail, web3
+from grant.settings import SENTRY_RELEASE, ENV
 
 
 def create_app(config_object="grant.settings"):
@@ -15,6 +18,11 @@ def create_app(config_object="grant.settings"):
     register_blueprints(app)
     register_shellcontext(app)
     register_commands(app)
+    sentry_sdk.init(
+        environment=ENV,
+        release=SENTRY_RELEASE,
+        integrations=[FlaskIntegration()]
+    )
     return app
 
 
