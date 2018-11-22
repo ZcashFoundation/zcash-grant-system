@@ -1,5 +1,5 @@
 import axios from './axios';
-import { Proposal, TeamMember, Update } from 'types';
+import { Proposal, TeamMember, Update, Contribution } from 'types';
 import {
   formatProposalFromGet,
   formatTeamMemberForPost,
@@ -109,5 +109,18 @@ export function postProposalUpdate(
   return axios.post(`/api/v1/proposals/${proposalId}/updates`, {
     title,
     content,
+  });
+}
+
+export function postProposalContribution(
+  proposalId: number,
+  txId: string,
+  fromAddress: string,
+  amount: string,
+): Promise<{ data: Contribution }> {
+  return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
+    txId,
+    fromAddress,
+    amount,
   });
 }

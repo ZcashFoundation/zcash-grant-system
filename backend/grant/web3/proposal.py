@@ -136,3 +136,14 @@ def read_proposal(address):
         crowd_fund[k] = str(crowd_fund[k])
 
     return crowd_fund
+
+
+def validate_contribution_tx(tx_id, from_address, to_address, amount):
+    amount_wei = current_web3.toWei(amount, 'ether')
+    tx = current_web3.eth.getTransaction(tx_id)
+    if tx:
+        if from_address.lower() == tx.get("from").lower() and \
+                to_address == tx.get("to") and \
+                amount_wei == tx.get("value"):
+            return True
+    return False

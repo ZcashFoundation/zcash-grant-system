@@ -8,8 +8,17 @@ from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.utils.auth import requires_sm, requires_team_member_auth
-from grant.web3.proposal import read_proposal
-from .models import Proposal, proposals_schema, proposal_schema, ProposalUpdate, proposal_update_schema, db
+from grant.web3.proposal import read_proposal, validate_contribution_tx
+from .models import(
+    Proposal,
+    proposals_schema,
+    proposal_schema,
+    ProposalUpdate,
+    proposal_update_schema,
+    ProposalContribution,
+    proposal_contribution_schema,
+    db
+)
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 
@@ -209,3 +218,52 @@ def post_proposal_update(proposal_id, title, content):
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
+
+
+@blueprint.route("/<proposal_id>/contributions", methods=["GET"])
+@endpoint.api()
+def get_proposal_contributions(proposal_id):
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if proposal:
+        dumped_proposal = proposal_schema.dump(proposal)
+        return dumped_proposal["contributions"]
+    else:
+        return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/contributions/<contribution_id>", methods=["GET"])
+@endpoint.api()
+def get_proposal_contribution(proposal_id, contribution_id):
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if proposal:
+        contribution = ProposalContribution.query.filter_by(tx_id=contribution_id).first()
+        if contribution:
+            return proposal_contribution_schema.dump(contribution)
+        else:
+            return {"message": "No contribution matching id"}
+    else:
+        return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/contributions", methods=["POST"])
+@requires_sm
+@endpoint.api(
+    parameter('txId', type=str, required=True),
+    parameter('fromAddress', type=str, required=True),
+    parameter('amount', type=str, required=True)
+)
+def post_proposal_contribution(proposal_id, tx_id, from_address, amount):
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if proposal:
+        contribution = ProposalContribution(
+            tx_id=tx_id,
+            proposal_id=proposal_id,
+            user_id=g.current_user.id,
+            from_address=from_address,
+            amount=amount
+        )
+        db.session.add(contribution)
+        db.session.commit()
+        dumped_contribution = proposal_contribution_schema.dump(contribution)
+        return dumped_contribution, 201
+    return {"message": "No proposal matching id"}, 404

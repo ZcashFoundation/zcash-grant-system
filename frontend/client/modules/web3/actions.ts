@@ -5,7 +5,11 @@ import { postProposal } from 'api/api';
 import getContract, { WrongNetworkError } from 'lib/getContract';
 import { sleep } from 'utils/helpers';
 import { web3ErrorToString } from 'utils/web3';
-import { fetchProposal, fetchProposals } from 'modules/proposals/actions';
+import {
+  fetchProposal,
+  fetchProposals,
+  postProposalContribution,
+} from 'modules/proposals/actions';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { AppState } from 'store/reducers';
 import { Wei } from 'utils/units';
@@ -278,6 +282,14 @@ export function fundCrowdFund(proposal: ProposalWithCrowdFund, value: number | s
     const { proposalAddress, proposalId } = proposal;
     const crowdFundContract = await getCrowdFundContract(web3, proposalAddress);
 
+    const handleErr = (err: Error) => {
+      dispatch({
+        type: types.SEND_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    };
+
     try {
       if (!web3) {
         throw new Error('No web3 instance available');
@@ -285,20 +297,27 @@ export function fundCrowdFund(proposal: ProposalWithCrowdFund, value: number | s
       await crowdFundContract.methods
         .contribute()
         .send({ from: account, value: web3.utils.toWei(String(value), 'ether') })
-        .once('confirmation', async () => {
-          await sleep(5000);
-          await dispatch(fetchProposal(proposalId));
-          dispatch({
-            type: types.SEND_FULFILLED,
-          });
+        .once('confirmation', async (_: number, receipt: any) => {
+          try {
+            await sleep(5000);
+            await dispatch(
+              postProposalContribution(
+                proposalId,
+                receipt.transactionHash,
+                account,
+                String(value),
+              ),
+            );
+            await dispatch(fetchProposal(proposalId));
+            dispatch({
+              type: types.SEND_FULFILLED,
+            });
+          } catch (err) {
+            handleErr(err);
+          }
         });
     } catch (err) {
-      console.log(err);
-      dispatch({
-        type: types.SEND_REJECTED,
-        payload: err.message || err.toString(),
-        error: true,
-      });
+      handleErr(err);
     }
   };
 }
