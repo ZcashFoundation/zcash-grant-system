@@ -10,7 +10,7 @@ from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.utils.auth import requires_sm, requires_team_member_auth
 from grant.utils.exceptions import ValidationException
-from grant.web3.proposal import read_proposal, validate_contribution_tx
+from grant.web3.proposal import read_proposal
 from .models import(
     Proposal,
     proposals_schema,
