@@ -212,13 +212,13 @@ export function getProposalWithCrowdFund({
       amountVotingForRefund: new BN(0),
       percentVotingForRefund: 0,
     },
-    crowdFundContract: {},
   };
 
   const props = {
     sendLoading: false,
     fundCrowdFund,
     web3: new Web3(),
+    isMissingWeb3: false,
     proposal,
     ...proposal, // yeah...
   };

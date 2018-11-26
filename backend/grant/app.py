@@ -2,9 +2,12 @@
 """The app module, containing the app factory function."""
 from flask import Flask
 from flask_cors import CORS
+from sentry_sdk.integrations.flask import FlaskIntegration
+import sentry_sdk
 
-from grant import commands, proposal, user, comment, milestone, admin, email
-from grant.extensions import bcrypt, migrate, db, ma, mail
+from grant import commands, proposal, user, comment, milestone, admin, email, web3 as web3module
+from grant.extensions import bcrypt, migrate, db, ma, mail, web3
+from grant.settings import SENTRY_RELEASE, ENV
 
 
 def create_app(config_object="grant.settings"):
@@ -15,6 +18,11 @@ def create_app(config_object="grant.settings"):
     register_blueprints(app)
     register_shellcontext(app)
     register_commands(app)
+    sentry_sdk.init(
+        environment=ENV,
+        release=SENTRY_RELEASE,
+        integrations=[FlaskIntegration()]
+    )
     return app
 
 
@@ -25,6 +33,7 @@ def register_extensions(app):
     migrate.init_app(app, db)
     ma.init_app(app)
     mail.init_app(app)
+    web3.init_app(app)
     CORS(app)
     return None
 
@@ -37,6 +46,9 @@ def register_blueprints(app):
     app.register_blueprint(milestone.views.blueprint)
     app.register_blueprint(admin.views.blueprint)
     app.register_blueprint(email.views.blueprint)
+    # Only add these routes locally
+    if ENV == 'development':
+        app.register_blueprint(web3module.dev_contracts.blueprint)
 
 
 def register_shellcontext(app):

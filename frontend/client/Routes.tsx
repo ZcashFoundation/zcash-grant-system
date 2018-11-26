@@ -75,7 +75,7 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Browse proposals',
-      requiresWeb3: true,
+      requiresWeb3: false,
     },
   },
   {
@@ -86,7 +86,7 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Proposal',
-      requiresWeb3: true,
+      requiresWeb3: false,
     },
   },
   {

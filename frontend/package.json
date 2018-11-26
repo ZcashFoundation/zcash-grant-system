@@ -1,19 +1,23 @@
 {
   "name": "grant",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "analyze": "NODE_ENV=production ANALYZE=true next build ./client",
-    "build": "cross-env NODE_ENV=production node bin/build.js",
-    "dev": "rm -rf ./node_modules/.cache && cross-env NODE_ENV=development BACKEND_URL=http://localhost:5000 node bin/dev.js",
-    "lint": "tslint --project ./tsconfig.json --config ./tslint.json -e \"**/build/**\"",
+    "build": "node bin/build.js",
+    "dev": "rm -rf ./node_modules/.cache && node bin/dev.js",
+    "lint": "tslint --project ./tsconfig.json --config ./tslint.json -e \"**/build/**\" -e \"**/bin/**\"",
     "start": "NODE_ENV=production node ./build/server/server.js",
+    "now": "npm run build && now -e BACKEND_URL=https://grant-stage.herokuapp.com",
+    "heroku-postbuild": "yarn build",
     "tsc": "tsc",
     "link-contracts": "cd client/lib && ln -s ../../build/contracts contracts",
-    "ganache": "ganache-cli -b 5",
+    "ganache": "ganache-cli -b 5 -s testGrantIo -e 1000",
     "truffle": "truffle exec ./bin/init-truffle.js && cd client/lib/contracts && truffle console",
     "storybook": "start-storybook -p 9001 -c .storybook"
+  },
+  "engines": {
+    "node": "8.13.0"
   },
   "husky": {
     "hooks": {
@@ -40,6 +44,8 @@
     "@babel/register": "^7.0.0",
     "@ledgerhq/hw-app-eth": "4.23.0",
     "@ledgerhq/hw-transport-u2f": "4.21.0",
+    "@sentry/browser": "^4.3.2",
+    "@sentry/node": "^4.3.2",
     "@svgr/webpack": "^2.4.0",
     "@types/classnames": "^2.2.6",
     "@types/cors": "^2.8.4",
@@ -54,6 +60,7 @@
     "@types/node": "^10.3.1",
     "@types/numeral": "^0.0.25",
     "@types/react": "16.4.18",
+    "@types/react-cropper": "^0.10.3",
     "@types/react-dom": "16.0.9",
     "@types/react-helmet": "^5.0.7",
     "@types/react-redux": "^6.0.2",
@@ -82,7 +89,6 @@
     "copy-webpack-plugin": "^4.6.0",
     "core-js": "^2.5.7",
     "cors": "^2.8.4",
-    "cross-env": "^5.2.0",
     "css-loader": "^1.0.0",
     "dotenv": "^6.0.0",
     "ethereum-blockies-base64": "1.0.2",
@@ -117,6 +123,7 @@
     "prettier-package-json": "^1.6.0",
     "query-string": "6.1.0",
     "react": "16.5.2",
+    "react-cropper": "^1.0.1",
     "react-dev-utils": "^5.0.2",
     "react-dom": "16.5.2",
     "react-helmet": "^5.2.0",

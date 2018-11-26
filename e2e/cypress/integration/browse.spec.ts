@@ -3,13 +3,13 @@ import { loadWeb3, randomString, randomHex } from "../helpers";
 
 describe("browse", () => {
   it("should load and be able to browse pages", () => {
-    cy.visit("http://localhost:3000", { onBeforeLoad: loadWeb3 });
+    cy.visit("http://localhost:3000", { onBeforeLoad: loadWeb3(0) });
     cy.title().should("include", "Grant.io - Home");
 
     // test hero create link
     cy.get('.Home-hero-buttons a[href="/create"]')
       // {force: true} here overcomes a strange issue where the button moves up under the header
-      // this is likely a cypress-related problem
+      // this is likely a cypress scroll related problem
       .click({ force: true });
     cy.title().should("include", "Grant.io - Create a Proposal");
 
