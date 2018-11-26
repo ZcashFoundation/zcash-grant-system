@@ -9,7 +9,11 @@ environment variables.
 import subprocess
 from environs import Env
 
-git_revision_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+def git_revision_short_hash():
+    try:
+        return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+    except subprocess.CalledProcessError:
+        return 0
 
 env = Env()
 env.read_env()
@@ -33,7 +37,7 @@ SENDGRID_DEFAULT_FROM = "noreply@grant.io"
 ETHEREUM_PROVIDER = "http"
 ETHEREUM_ENDPOINT_URI = env.str("ETHEREUM_ENDPOINT_URI")
 SENTRY_DSN = env.str("SENTRY_DSN", default=None)
-SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=git_revision_short_hash)
+SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=git_revision_short_hash())
 UPLOAD_DIRECTORY = env.str("UPLOAD_DIRECTORY")
 UPLOAD_URL = env.str("UPLOAD_URL")
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB (limits file uploads, raises RequestEntityTooLarge)

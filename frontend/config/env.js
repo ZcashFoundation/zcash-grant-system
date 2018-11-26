@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const paths = require('./paths');
 const childProcess = require('child_process');
+const dotenv = require('dotenv');
+const { logMessage } = require('../bin/utils');
 
 delete require.cache[require.resolve('./paths')];
 
@@ -11,21 +13,17 @@ if (!process.env.NODE_ENV) {
   );
 }
 
-// https://github.com/bkeepers/dotenv#what-other-env-files-can-i-use
-const dotenvFiles = [
-  `${paths.dotenv}.${process.env.NODE_ENV}.local`,
-  `${paths.dotenv}.${process.env.NODE_ENV}`,
-  process.env.NODE_ENV !== 'test' && `${paths.dotenv}.local`,
-  paths.dotenv,
-].filter(Boolean);
-
-dotenvFiles.forEach(dotenvFile => {
-  if (fs.existsSync(dotenvFile)) {
-    require('dotenv').config({
-      path: dotenvFile,
-    });
+// Override local ENV variables with .env
+if (fs.existsSync(paths.dotenv)) {
+  const envConfig = dotenv.parse(fs.readFileSync(paths.dotenv));
+  // tslint:disable-next-line
+  for (const k in envConfig) {
+    if (process.env[k]) {
+      logMessage(`Warning! Over-writing existing ENV Variable ${k}`);
+    }
+    process.env[k] = envConfig[k];
   }
-});
+}
 
 const envProductionRequiredHandler = (envVariable, fallbackValue) => {
   if (!process.env[envVariable]) {
@@ -72,6 +70,8 @@ process.env.NODE_PATH = (process.env.NODE_PATH || '')
 module.exports = () => {
   const raw = {
     BACKEND_URL: process.env.BACKEND_URL,
+    CROWD_FUND_FACTORY_URL: process.env.CROWD_FUND_FACTORY_URL,
+    CROWD_FUND_URL: process.env.CROWD_FUND_URL,
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: process.env.PORT || 3000,
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,

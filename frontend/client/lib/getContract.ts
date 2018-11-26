@@ -10,7 +10,11 @@ const getContractInstance = async (
   // get network ID and the deployed address
   const networkId = await web3.eth.net.getId();
   if (!deployedAddress && !contractDefinition.networks[networkId]) {
-    throw new WrongNetworkError('Wrong web3 network configured');
+    throw new WrongNetworkError(
+      `Wrong web3 network configured. Deployed address: ${deployedAddress}; networkId: ${networkId}, contractDefinitionNetworks: ${JSON.stringify(
+        contractDefinition.networks,
+      )}`,
+    );
   }
 
   deployedAddress = deployedAddress || contractDefinition.networks[networkId].address;

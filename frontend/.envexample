@@ -4,14 +4,19 @@ FUND_ETH_ADDRESSES=0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520,0xDECAF9CD2367cdbb
 # Disable typescript checking for dev building (reduce build time & resource usage)
 NO_DEV_TS_CHECK=true
 
+NODE_ENV=development
+
 # Set the public host url (no trailing slash)
 PUBLIC_HOST_URL=https://demo.grant.io
 
+BACKEND_URL=http://localhost:5000
 
 # sentry 
-SENTRY_DSN="https://PUBLICKEY@sentry.io/PROJECTID"
+SENTRY_DSN=https://PUBLICKEY@sentry.io/PROJECTID
 SENTRY_RELEASE="optional, overrides git hash"
 
-CROWD_FUND_URL = "https://eip-712.herokuapp.com/contract/crowd-fund"
-CROWD_FUND_FACTORY_URL = "https://eip-712.herokuapp.com/contract/factory"
+# CROWD_FUND_URL=https://eip-712.herokuapp.com/contract/crowd-fund
+# CROWD_FUND_FACTORY_URL=https://eip-712.herokuapp.com/contract/factory
 
+CROWD_FUND_URL=http://localhost:5000/dev-contracts/CrowdFund.json
+CROWD_FUND_FACTORY_URL=http://localhost:5000/dev-contracts/CrowdFundFactory.json

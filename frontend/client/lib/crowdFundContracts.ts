@@ -10,11 +10,7 @@ export async function getCrowdFundContract(web3: Web3 | null, deployedAddress: s
   }
   if (!contractCache[deployedAddress]) {
     let CrowdFund;
-    if (process.env.CROWD_FUND_FACTORY_URL) {
-      CrowdFund = await fetchCrowdFundJSON();
-    } else {
-      CrowdFund = await import('./contracts/CrowdFund.json');
-    }
+    CrowdFund = await fetchCrowdFundJSON();
     try {
       contractCache[deployedAddress] = await getContractInstance(
         web3,

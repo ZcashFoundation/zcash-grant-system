@@ -5,7 +5,7 @@ from flask_cors import CORS
 from sentry_sdk.integrations.flask import FlaskIntegration
 import sentry_sdk
 
-from grant import commands, proposal, user, comment, milestone, admin, email
+from grant import commands, proposal, user, comment, milestone, admin, email, web3 as web3module
 from grant.extensions import bcrypt, migrate, db, ma, mail, web3
 from grant.settings import SENTRY_RELEASE, ENV
 
@@ -46,6 +46,9 @@ def register_blueprints(app):
     app.register_blueprint(milestone.views.blueprint)
     app.register_blueprint(admin.views.blueprint)
     app.register_blueprint(email.views.blueprint)
+    # Only add these routes locally
+    if ENV == 'development':
+        app.register_blueprint(web3module.dev_contracts.blueprint)
 
 
 def register_shellcontext(app):

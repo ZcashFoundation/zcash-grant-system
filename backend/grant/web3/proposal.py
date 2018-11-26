@@ -1,10 +1,10 @@
-import json
 import time
-from flask_web3 import current_web3
-from .util import batch_call, call_array, RpcError
-import requests
-from grant.settings import CROWD_FUND_URL
 
+import requests
+from flask_web3 import current_web3
+
+from grant.settings import CROWD_FUND_URL
+from .util import batch_call, call_array, RpcError
 
 crowd_fund_abi = None
 
@@ -14,19 +14,14 @@ def get_crowd_fund_abi():
     if crowd_fund_abi:
         return crowd_fund_abi
 
-    if CROWD_FUND_URL:
-        crowd_fund_json = requests.get(CROWD_FUND_URL).json()
-        crowd_fund_abi = crowd_fund_json['abi']
-        return crowd_fund_abi
-
-    with open("../contract/build/contracts/CrowdFund.json", "r") as read_file:
-        crowd_fund_abi = json.load(read_file)['abi']
-        return crowd_fund_abi
-
+    crowd_fund_json = requests.get(CROWD_FUND_URL).json()
+    crowd_fund_abi = crowd_fund_json['abi']
+    return crowd_fund_abi
 
 
 def read_proposal(address):
-    current_web3.eth.defaultAccount = current_web3.eth.accounts[0]
+    current_web3.eth.defaultAccount = '0x537680D921C000fC52Af9962ceEb4e359C50F424' if not current_web3.eth.accounts else \
+    current_web3.eth.accounts[0]
     crowd_fund_abi = get_crowd_fund_abi()
     contract = current_web3.eth.contract(address=address, abi=crowd_fund_abi)
 
@@ -106,6 +101,7 @@ def read_proposal(address):
 
         def get_no_vote(i):
             return derived_results['getContributorMilestoneVote' + contrib_address + str(i)]
+
         no_votes = list(map(get_no_vote, range(len(crowd_fund['milestones']))))
 
         contrib = {

@@ -19,6 +19,7 @@ from .models import(
     proposal_contribution_schema,
     db
 )
+import traceback
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 
@@ -88,12 +89,16 @@ def get_proposals(stage):
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
     dumped_proposals = proposals_schema.dump(proposals)
-    for p in dumped_proposals:
-        proposal_contract = read_proposal(p['proposal_address'])
-        p['crowd_fund'] = proposal_contract
-    filtered_proposals = list(filter(lambda p: p['crowd_fund'] is not None, dumped_proposals))
-    return filtered_proposals
-
+    try:
+        for p in dumped_proposals:
+            proposal_contract = read_proposal(p['proposal_address'])
+            p['crowd_fund'] = proposal_contract
+        filtered_proposals = list(filter(lambda p: p['crowd_fund'] is not None, dumped_proposals))
+        return filtered_proposals
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        return {"message": "Oops! Something went wrong."}, 500
 
 @blueprint.route("/", methods=["POST"])
 @requires_sm

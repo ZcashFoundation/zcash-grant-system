@@ -6,18 +6,12 @@ import { safeEnable } from 'utils/web3';
 import types from './types';
 import { fetchCrowdFundFactoryJSON } from 'api/api';
 
-/* tslint:disable no-var-requires --- TODO: find a better way to import contract */
-let CrowdFundFactory = require('lib/contracts/CrowdFundFactory.json');
-
 export function* bootstrapWeb3(): SagaIterator {
   // Don't attempt to bootstrap web3 on SSR
   if (process.env.SERVER_SIDE_RENDER) {
     return;
   }
-  if (process.env.CROWD_FUND_FACTORY_URL) {
-    CrowdFundFactory = yield call(fetchCrowdFundFactoryJSON);
-  }
-
+  const CrowdFundFactory = yield call(fetchCrowdFundFactoryJSON);
   yield put<any>(setWeb3());
   yield take(types.WEB3_FULFILLED);
 
