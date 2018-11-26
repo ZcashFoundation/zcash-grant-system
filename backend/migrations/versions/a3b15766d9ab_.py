@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: de51d161b485
+Revision ID: a3b15766d9ab
 Revises: 
-Create Date: 2018-11-14 13:55:35.750043
+Create Date: 2018-11-26 18:32:35.322687
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'de51d161b485'
+revision = 'a3b15766d9ab'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -84,6 +84,17 @@ def upgrade():
     sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('proposal_contribution',
+    sa.Column('tx_id', sa.String(length=255), nullable=False),
+    sa.Column('date_created', sa.DateTime(), nullable=False),
+    sa.Column('proposal_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('from_address', sa.String(length=255), nullable=False),
+    sa.Column('amount', sa.String(length=255), nullable=False),
+    sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('tx_id')
+    )
     op.create_table('proposal_team',
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('proposal_id', sa.Integer(), nullable=True),
@@ -114,6 +125,7 @@ def downgrade():
     op.drop_table('social_media')
     op.drop_table('proposal_update')
     op.drop_table('proposal_team')
+    op.drop_table('proposal_contribution')
     op.drop_table('milestone')
     op.drop_table('email_verification')
     op.drop_table('comment')

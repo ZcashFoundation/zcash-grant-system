@@ -15,7 +15,7 @@ const sagaMiddleware = createSagaMiddleware();
 type MiddleWare = ThunkMiddleware | SagaMiddleware<any> | any;
 
 const bindMiddleware = (middleware: MiddleWare[]) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
     const { createLogger } = require('redux-logger');
     const logger = createLogger({
       collapsed: true,

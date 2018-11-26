@@ -2,9 +2,9 @@ matrix:
   include:
     # Frontend
     - language: node_js
-      node_js: 8.11.4
+      node_js: 8.13.0
       before_install:
-        - cd frontend/
+        - cd frontend
       install: yarn
       script:
         - yarn run lint
@@ -15,17 +15,22 @@ matrix:
       before_install:
         - cd backend/
         - cp .env.example .env
+      env:
+        - CROWD_FUND_URL=https://eip-712.herokuapp.com/contract/crowd-fund CROWD_FUND_FACTORY_URL=https://eip-712.herokuapp.com/contract/factory
       install: pip install -r requirements/dev.txt
       script:
         - flask test
     # Contracts
     - language: node_js
-      node_js: 8.11.4
+      node_js: 8.13.0
       before_install:
         - cd contract/
-      install: yarn && yarn add global truffle ganache-cli
+      install: yarn && yarn add global truffle ganache-cli@6.1.8
       before_script:
         - ganache-cli > /dev/null &
         - sleep 10
       script:
         - yarn run test
+      env:
+        - CROWD_FUND_URL=https://eip-712.herokuapp.com/contract/crowd-fund
+          CROWD_FUND_FACTORY_URL=https://eip-712.herokuapp.com/contract/factory

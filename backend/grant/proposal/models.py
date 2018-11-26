@@ -49,6 +49,33 @@ class ProposalUpdate(db.Model):
         self.date_created = datetime.datetime.now()
 
 
+class ProposalContribution(db.Model):
+    __tablename__ = "proposal_contribution"
+
+    tx_id = db.Column(db.String(255), primary_key=True)
+    date_created = db.Column(db.DateTime, nullable=False)
+
+    proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    from_address = db.Column(db.String(255), nullable=False)
+    amount = db.Column(db.String(255), nullable=False)  # in eth
+
+    def __init__(
+        self,
+        tx_id: str,
+        proposal_id: int,
+        user_id: int,
+        from_address: str,
+        amount: str
+    ):
+        self.tx_id = tx_id
+        self.proposal_id = proposal_id
+        self.user_id = user_id
+        self.from_address = from_address
+        self.amount = amount
+        self.date_created = datetime.datetime.now()
+
+
 class Proposal(db.Model):
     __tablename__ = "proposal"
 
@@ -75,6 +102,7 @@ class Proposal(db.Model):
     team = db.relationship("User", secondary=proposal_team)
     comments = db.relationship(Comment, backref="proposal", lazy=True, cascade="all, delete-orphan")
     updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True, cascade="all, delete-orphan")
+    contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
     milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
 
     def __init__(
@@ -180,6 +208,7 @@ class ProposalSchema(ma.Schema):
             "content",
             "comments",
             "updates",
+            "contributions",
             "milestones",
             "category",
             "team",
@@ -195,6 +224,7 @@ class ProposalSchema(ma.Schema):
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
+    contributions = ma.Nested("ProposalContributionSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
 
@@ -240,3 +270,30 @@ class ProposalUpdateSchema(ma.Schema):
 
 proposal_update_schema = ProposalUpdateSchema()
 proposals_update_schema = ProposalUpdateSchema(many=True)
+
+
+class ProposalContributionSchema(ma.Schema):
+    class Meta:
+        model = ProposalContribution
+        # Fields to expose
+        fields = (
+            "id",
+            "tx_id",
+            "proposal_id",
+            "user_id",
+            "from_address",
+            "amount",
+            "date_created",
+        )
+    id = ma.Method("get_id")
+    date_created = ma.Method("get_date_created")
+
+    def get_id(self, obj):
+        return obj.tx_id
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+
+proposal_contribution_schema = ProposalContributionSchema()
+proposals_contribution_schema = ProposalContributionSchema(many=True)

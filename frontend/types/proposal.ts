@@ -68,7 +68,6 @@ export interface Proposal {
 
 export interface ProposalWithCrowdFund extends Proposal {
   crowdFund: CrowdFund;
-  crowdFundContract: any;
 }
 
 export interface ProposalComments {

@@ -6,6 +6,7 @@ import requests
 from flask import request, g, jsonify
 from itsdangerous import SignatureExpired, BadSignature
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+import sentry_sdk
 
 from grant.settings import SECRET_KEY, AUTH_URL
 from ..proposal.models import Proposal
@@ -70,6 +71,10 @@ def requires_sm(f):
                 return jsonify(message="No user exists with address: {}".format(auth_address)), 401
 
             g.current_user = user
+            with sentry_sdk.configure_scope() as scope:
+                scope.user = {
+                    "id": user.id,
+                }
             return f(*args, **kwargs)
 
         return jsonify(message="Authentication is required to access this resource"), 401

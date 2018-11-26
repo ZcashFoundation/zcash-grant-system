@@ -255,6 +255,5 @@ export function makeProposalPreviewFromDraft(
       isFrozen: false,
       isRaiseGoalReached: false,
     },
-    crowdFundContract: null,
   };
 }
