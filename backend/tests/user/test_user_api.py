@@ -46,7 +46,7 @@ class TestAPI(BaseUserConfig):
         self.assertEqual(users_json["avatar"]["imageUrl"], self.user.avatar.image_url)
         self.assertEqual(users_json["socialMedias"][0]["service"], 'GITHUB')
         self.assertEqual(users_json["socialMedias"][0]["username"], 'groot')
-        self.assertEqual(users_json["socialMedias"][0]["link"], self.user.social_medias[0].social_media_link)
+        self.assertEqual(users_json["socialMedias"][0]["url"], self.user.social_medias[0].social_media_link)
         self.assertEqual(users_json["displayName"], self.user.display_name)
     
     def test_get_single_user_by_account_address(self):
@@ -58,7 +58,7 @@ class TestAPI(BaseUserConfig):
         self.assertEqual(users_json["avatar"]["imageUrl"], self.user.avatar.image_url)
         self.assertEqual(users_json["socialMedias"][0]["service"], 'GITHUB')
         self.assertEqual(users_json["socialMedias"][0]["username"], 'groot')
-        self.assertEqual(users_json["socialMedias"][0]["link"], self.user.social_medias[0].social_media_link)
+        self.assertEqual(users_json["socialMedias"][0]["url"], self.user.social_medias[0].social_media_link)
         self.assertEqual(users_json["displayName"], self.user.display_name)
 
     def test_create_user_duplicate_400(self):
