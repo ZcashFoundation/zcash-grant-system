@@ -265,12 +265,6 @@ def post_proposal_team_invite(proposal_id, address):
     if user:
         email = user.email_address
     if is_email(email):
-        print('team_invite_args')
-        print({
-            'user': user,
-            'inviter': g.current_user,
-            'proposal': g.current_proposal
-        })
         send_email(email, 'team_invite', {
             'user': user,
             'inviter': g.current_user,
