@@ -45,7 +45,6 @@ class BaseUserConfig(BaseTestConfig):
             email_address=test_user["emailAddress"],
             display_name=test_user["displayName"],
             title=test_user["title"],
-            _send_email=False
         )
         sm = SocialMedia(social_media_link=test_user['socialMedias'][0]['link'], user_id=self.user.id)
         db.session.add(sm)

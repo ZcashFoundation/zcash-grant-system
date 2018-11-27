@@ -1,4 +1,4 @@
-from flask import render_template, Markup
+from flask import render_template, Markup, current_app
 
 from grant.extensions import mail
 
@@ -30,6 +30,9 @@ get_info_lookup = {
 
 
 def send_email(to, type, email_args):
+    if current_app and current_app.config["TESTING"]:
+        return
+
     try:
         info = get_info_lookup[type](email_args)
         body_text = render_template('emails/%s.txt' % (type), args=email_args)
