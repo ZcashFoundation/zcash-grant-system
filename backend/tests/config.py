@@ -20,7 +20,17 @@ class BaseTestConfig(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+    
+    def assertStatus(self, response, status_code, message=None):
+        """
+        Overrides TestCase's default to print out response JSON.
+        """
 
+        message = message or 'HTTP Status %s expected but got %s. Response json: %s' \
+                             % (status_code, response.status_code, response.json)
+        self.assertEqual(response.status_code, status_code, message)
+
+    assert_status = assertStatus
 
 class BaseUserConfig(BaseTestConfig):
     headers = {

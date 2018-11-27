@@ -74,7 +74,7 @@ class User(db.Model):
         db.session.add(ev)
         db.session.commit()
 
-        if send_email:
+        if _send_email:
             send_email(user.email_address, 'signup', {
                 'display_name': user.display_name,
                 'confirm_url': make_url(f'/email/verify?code={ev.code}')

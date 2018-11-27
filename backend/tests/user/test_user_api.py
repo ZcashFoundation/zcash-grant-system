@@ -18,11 +18,12 @@ class TestAPI(BaseUserConfig):
         db.session.delete(self.user)
         db.session.commit()
 
-        self.app.post(
+        response = self.app.post(
             "/api/v1/users/",
             data=json.dumps(test_user),
             content_type='application/json'
         )
+        self.assertStatus(response, 201)
 
         # User
         user_db = User.get_by_identifier(account_address=test_user["accountAddress"])
@@ -34,6 +35,7 @@ class TestAPI(BaseUserConfig):
         users_get_resp = self.app.get(
             "/api/v1/users/"
         )
+        self.assert200(users_get_resp)
         users_json = users_get_resp.json
         self.assertEqual(users_json[0]["displayName"], self.user.display_name)
 
@@ -83,7 +85,7 @@ class TestAPI(BaseUserConfig):
             headers=self.headers,
             content_type='application/json'
         )
-        self.assert200(user_update_resp)
+        self.assert200(user_update_resp, user_update_resp.json)
 
         user_json = user_update_resp.json
         self.assertFalse(user_json["avatar"])
