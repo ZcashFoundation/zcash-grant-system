@@ -1,11 +1,12 @@
 import React from 'react';
 import lodash from 'lodash';
-import { Input, Form, Col, Row, Button, Icon, Alert } from 'antd';
+import axios from 'api/axios';
+import { Input, Form, Col, Row, Button, Alert } from 'antd';
 import { SOCIAL_INFO } from 'utils/social';
 import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { getCreateTeamMemberError } from 'modules/create/utils';
-import UserAvatar from 'components/UserAvatar';
+import AvatarEdit from './AvatarEdit';
 import './ProfileEdit.less';
 
 interface Props {
@@ -57,27 +58,12 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     return (
       <>
         <div className="ProfileEdit">
-          <div className="ProfileEdit-avatar">
-            <UserAvatar className="ProfileEdit-avatar-img" user={fields} />
-            <Button
-              className="ProfileEdit-avatar-change"
-              onClick={this.handleChangePhoto}
-            >
-              <Icon
-                className="ProfileEdit-avatar-change-icon"
-                type={fields.avatar ? 'picture' : 'plus-circle'}
-              />
-              <div>{fields.avatar ? 'Change photo' : 'Add photo'}</div>
-            </Button>
-            {fields.avatar && (
-              <Button
-                className="ProfileEdit-avatar-delete"
-                icon="delete"
-                shape="circle"
-                onClick={this.handleDeletePhoto}
-              />
-            )}
-          </div>
+          <AvatarEdit
+            user={fields}
+            onDone={this.handleChangePhoto}
+            onDelete={this.handleDeletePhoto}
+          />
+
           <div className="ProfileEdit-info">
             <Form
               className="ProfileEdit-info-form"
@@ -193,6 +179,14 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
   };
 
   private handleCancel = () => {
+    const propsAvatar = this.props.user.avatar;
+    const stateAvatar = this.state.fields.avatar;
+    // cleanup uploaded file if we cancel
+    if (propsAvatar && stateAvatar && propsAvatar.imageUrl !== stateAvatar.imageUrl) {
+      axios.delete('/api/v1/users/avatar', {
+        params: { url: stateAvatar.imageUrl },
+      });
+    }
     this.props.onDone();
   };
 
@@ -238,14 +232,11 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     });
   };
 
-  private handleChangePhoto = () => {
-    // TODO: Actual file uploading
-    const gender = ['men', 'women'][Math.floor(Math.random() * 2)];
-    const num = Math.floor(Math.random() * 80);
+  private handleChangePhoto = (url: string) => {
     const fields = {
       ...this.state.fields,
       avatar: {
-        image_url: `https://randomuser.me/api/portraits/${gender}/${num}.jpg`,
+        imageUrl: url,
       },
     };
     const isChanged = this.isChangedCheck(fields);

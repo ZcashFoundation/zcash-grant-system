@@ -1,4 +1,5 @@
 import types from './types';
+import usersTypes from 'modules/users/types';
 // TODO: Use a common User type instead of this
 import { User, AuthSignatureData } from 'types';
 
@@ -55,6 +56,14 @@ export default function createReducer(
         authSignature: action.payload.authSignature, // TODO: Make this the real token
         authSignatureAddress: action.payload.user.accountAddress,
         isAuthingUser: false,
+      };
+    case usersTypes.UPDATE_USER_FULFILLED:
+      return {
+        ...state,
+        user:
+          state.user && state.user.accountAddress === action.payload.user.accountAddress
+            ? action.payload.user
+            : state.user,
       };
     case types.AUTH_USER_REJECTED:
       return {

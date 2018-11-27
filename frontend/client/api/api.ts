@@ -6,22 +6,20 @@ import {
   Update,
   TeamInvite,
   TeamInviteWithProposal,
+  Contribution,
 } from 'types';
-import { formatUserForPost, generateProposalUrl } from 'utils/api';
+import { formatUserForPost, formatProposalFromGet } from 'utils/api';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
-    res.data = res.data.map((proposal: any) => {
-      proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
-      return proposal;
-    });
+    res.data = res.data.map(formatProposalFromGet);
     return res;
   });
 }
 
 export function getProposal(proposalId: number | string): Promise<{ data: Proposal }> {
   return axios.get(`/api/v1/proposals/${proposalId}`).then(res => {
-    res.data.proposalUrlId = generateProposalUrl(res.data.proposalId, res.data.title);
+    res.data = formatProposalFromGet(res.data);
     return res;
   });
 }
@@ -71,6 +69,16 @@ export function updateUser(user: User): Promise<{ data: User }> {
 
 export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
+}
+
+export async function fetchCrowdFundFactoryJSON(): Promise<any> {
+  const res = await axios.get(process.env.CROWD_FUND_FACTORY_URL as string);
+  return res.data;
+}
+
+export async function fetchCrowdFundJSON(): Promise<any> {
+  const res = await axios.get(process.env.CROWD_FUND_URL as string);
+  return res.data;
 }
 
 export function postProposalUpdate(
@@ -138,5 +146,18 @@ export function putInviteResponse(
 ): Promise<{ data: void }> {
   return axios.put(`/api/v1/users/${userid}/invites/${inviteid}/respond`, {
     response,
+  });
+}
+
+export function postProposalContribution(
+  proposalId: number,
+  txId: string,
+  fromAddress: string,
+  amount: string,
+): Promise<{ data: Contribution }> {
+  return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
+    txId,
+    fromAddress,
+    amount,
   });
 }

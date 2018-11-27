@@ -9,8 +9,8 @@ interface Props {
 }
 
 const UserAvatar: React.SFC<Props> = ({ user, className }) => {
-  if (user.avatar && user.avatar.image_url) {
-    return <img className={className} src={user.avatar.image_url} />;
+  if (user.avatar && user.avatar.imageUrl) {
+    return <img className={className} src={user.avatar.imageUrl} />;
   } else if (user.accountAddress) {
     return <Identicon className={className} address={user.accountAddress} />;
   } else {

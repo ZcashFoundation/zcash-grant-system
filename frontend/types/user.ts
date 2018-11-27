@@ -7,5 +7,5 @@ export interface User {
   displayName: string;
   title: string;
   socialMedias: SocialMedia[];
-  avatar: { image_url: string } | null;
+  avatar: { imageUrl: string } | null;
 }

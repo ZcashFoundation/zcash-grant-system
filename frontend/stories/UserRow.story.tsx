@@ -12,7 +12,7 @@ const user: User = {
   displayName: 'Dana Hayes',
   title: 'QA Engineer',
   avatar: {
-    image_url: 'https://randomuser.me/api/portraits/women/19.jpg',
+    imageUrl: 'https://randomuser.me/api/portraits/women/19.jpg',
   },
   accountAddress: DONATION.ETH,
   emailAddress: 'test@test.test',

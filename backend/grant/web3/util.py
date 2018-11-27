@@ -9,6 +9,10 @@ from web3.utils.abi import get_abi_output_types, map_abi_data
 from web3.utils.normalizers import BASE_RETURN_NORMALIZERS
 
 
+class RpcError(Exception):
+    pass
+
+
 def call_array(fn):
     results = []
     no_error = True
@@ -51,6 +55,8 @@ def batch_call(w3, address, abi, calls, contract):
     # this implements batched rpc calls using web3py helper methods
     # web3py doesn't support this out-of-box yet
     # issue: https://github.com/ethereum/web3.py/issues/832
+    if not calls:
+        return []
     if type(w3.providers[0]) is EthereumTesterProvider:
         return tester_batch(calls, contract)
     inputs = []
@@ -60,6 +66,9 @@ def batch_call(w3, address, abi, calls, contract):
         prepared = prepare_transaction(address, w3, name, abi, None, tx, args)
         inputs.append([prepared, 'latest'])
     responses = batch(ETHEREUM_ENDPOINT_URI, inputs)
+    if 'error' in responses[0]:
+        message = responses[0]['error']['message'] if 'message' in responses[0]['error'] else 'No error message found.'
+        raise RpcError("rpc error: {0}".format(message))
     results = {}
     for r in zip(calls, responses):
         result = HexBytes(r[1]['result'])

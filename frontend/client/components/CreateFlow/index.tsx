@@ -142,6 +142,7 @@ class CreateFlow extends React.Component<Props, State> {
       isPreviewing: false,
       isPublishing: false,
       isExample: false,
+      isShowingPublishWarning: false,
     };
     this.debouncedUpdateForm = debounce(this.updateForm, 800);
     this.historyUnlisten = this.props.history.listen(this.handlePop);

@@ -1,5 +1,6 @@
 import types from './types';
 import { Dispatch } from 'redux';
+import * as Sentry from '@sentry/browser';
 import { sleep } from 'utils/helpers';
 import { generateAuthSignatureData } from 'utils/auth';
 import { AppState } from 'store/reducers';
@@ -37,7 +38,13 @@ export function authUser(address: string, authSignature?: Falsy | AuthSignatureD
         signedMessage: authSignature.signedMessage,
         rawTypedData: JSON.stringify(authSignature.rawTypedData),
       });
-
+      // sentry user scope
+      Sentry.configureScope(scope => {
+        scope.setUser({
+          email: res.data.emailAddress,
+          accountAddress: res.data.accountAddress,
+        });
+      });
       dispatch({
         type: types.AUTH_USER_FULFILLED,
         payload: {
