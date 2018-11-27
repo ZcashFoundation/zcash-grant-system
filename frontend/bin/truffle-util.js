@@ -109,7 +109,7 @@ const checkContractsNetworkIds = (id) =>
         res(allHaveId);
       }
     });
-  }));
+  });
 module.exports.checkContractsNetworkIds = checkContractsNetworkIds;
 
 const fundWeb3v1 = (module.exports.fundWeb3v1 = () => {
