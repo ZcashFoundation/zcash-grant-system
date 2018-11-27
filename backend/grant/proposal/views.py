@@ -8,8 +8,10 @@ from sqlalchemy.exc import IntegrityError
 from grant.comment.models import Comment, comment_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
+from grant.email.send import send_email
 from grant.utils.auth import requires_sm, requires_team_member_auth
 from grant.utils.exceptions import ValidationException
+from grant.utils.misc import is_email
 from grant.web3.proposal import read_proposal
 from .models import(
     Proposal,
@@ -20,6 +22,8 @@ from .models import(
     ProposalContribution,
     proposal_contribution_schema,
     proposal_team,
+    ProposalTeamInvite,
+    proposal_team_invite_schema,
     db
 )
 import traceback
@@ -225,7 +229,6 @@ def get_proposal_update(proposal_id, update_id):
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
 @requires_team_member_auth
-@requires_sm
 @endpoint.api(
     parameter('title', type=str, required=True),
     parameter('content', type=str, required=True)
@@ -241,6 +244,52 @@ def post_proposal_update(proposal_id, title, content):
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
+
+@blueprint.route("/<proposal_id>/invite", methods=["POST"])
+@requires_team_member_auth
+@endpoint.api(
+    parameter('address', type=str, required=True)
+)
+def post_proposal_team_invite(proposal_id, address):
+    invite = ProposalTeamInvite(
+        proposal_id=proposal_id,
+        address=address
+    )
+    db.session.add(invite)
+    db.session.commit()
+
+    # Send email
+    # TODO: Move this to some background task / after request action
+    email = address
+    user = User.get_by_identifier(email_address=address, account_address=address)
+    if user:
+        email = user.email_address
+    if is_email(email):
+        send_email(email, 'team_invite', {
+            'user': user,
+            'inviter': g.current_user,
+            'proposal': g.current_proposal
+        })
+
+    return proposal_team_invite_schema.dump(invite), 201
+
+
+@blueprint.route("/<proposal_id>/invite/<id_or_address>", methods=["DELETE"])
+@requires_team_member_auth
+@endpoint.api()
+def delete_proposal_team_invite(proposal_id, id_or_address):
+    invite = ProposalTeamInvite.query.filter(
+        (ProposalTeamInvite.id == id_or_address) |
+        (ProposalTeamInvite.address == id_or_address)
+    ).first()
+    if not invite:
+        return {"message": "No invite found given {}".format(id_or_address)}, 404
+    if invite.accepted:
+        return {"message": "Cannot delete an invite that has been accepted"}, 403
+
+    db.session.delete(invite)
+    db.session.commit()
+    return None, 202
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["GET"])

@@ -33,8 +33,10 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
   }
 
   private handleChange = (markdown: string) => {
-    this.setState({ content: markdown }, () => {
-      this.props.updateForm(this.state);
-    });
+    if (markdown !== this.state.content) {
+      this.setState({ content: markdown }, () => {
+        this.props.updateForm(this.state);
+      });
+    }
   };
 }

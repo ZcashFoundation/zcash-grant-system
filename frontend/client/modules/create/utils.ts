@@ -1,5 +1,5 @@
 import { ProposalDraft, CreateMilestone } from 'types';
-import { TeamMember } from 'types';
+import { User } from 'types';
 import { isValidEthAddress, getAmountError } from 'utils/validators';
 import { MILESTONE_STATE, ProposalWithCrowdFund } from 'types';
 import { ProposalContractData } from 'modules/web3/actions';
@@ -153,7 +153,7 @@ export function getCreateErrors(
   if (team) {
     let didTeamError = false;
     const teamErrors = team.map(u => {
-      if (!u.name || !u.title || !u.emailAddress || !u.ethAddress) {
+      if (!u.displayName || !u.title || !u.emailAddress || !u.accountAddress) {
         didTeamError = true;
         return '';
       }
@@ -170,18 +170,35 @@ export function getCreateErrors(
   return errors;
 }
 
-export function getCreateTeamMemberError(user: TeamMember) {
-  if (user.name.length > 30) {
+export function getCreateTeamMemberError(user: User) {
+  if (user.displayName.length > 30) {
     return 'Display name can only be 30 characters maximum';
   } else if (user.title.length > 30) {
     return 'Title can only be 30 characters maximum';
   } else if (!/.+\@.+\..+/.test(user.emailAddress)) {
     return 'That doesn’t look like a valid email address';
-  } else if (!isValidEthAddress(user.ethAddress)) {
+  } else if (!isValidEthAddress(user.accountAddress)) {
     return 'That doesn’t look like a valid ETH address';
   }
 
   return '';
+}
+
+export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
+  const warnings = [];
+
+  // Warn about pending invites
+  const hasPending =
+    (form.invites || []).filter(inv => inv.accepted === null).length !== 0;
+  if (hasPending) {
+    warnings.push(`
+      You still have pending team invitations. If you publish before they
+      are accepted, your team will be locked in and they won’t be able to
+      accept join.
+    `);
+  }
+
+  return warnings;
 }
 
 function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Wei) {
@@ -218,6 +235,7 @@ export function makeProposalPreviewFromDraft(
     proposalAddress: '0x0',
     dateCreated: Date.now(),
     title: draft.title,
+    brief: draft.brief,
     content: draft.content,
     stage: 'preview',
     category: draft.category || PROPOSAL_CATEGORY.DAPP,

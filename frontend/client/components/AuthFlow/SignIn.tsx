@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Button, Alert } from 'antd';
 import { authActions } from 'modules/auth';
-import { TeamMember } from 'types';
+import { User } from 'types';
 import { AppState } from 'store/reducers';
 import { AUTH_PROVIDER } from 'utils/auth';
 import Identicon from 'components/Identicon';
@@ -20,7 +20,7 @@ interface DispatchProps {
 
 interface OwnProps {
   // TODO: Use common use User type instead
-  user: TeamMember;
+  user: User;
   provider: AUTH_PROVIDER;
   reset(): void;
 }
@@ -34,11 +34,14 @@ class SignIn extends React.Component<Props> {
       <div className="SignIn">
         <div className="SignIn-container">
           <div className="SignIn-identity">
-            <Identicon address={user.ethAddress} className="SignIn-identity-identicon" />
+            <Identicon
+              address={user.accountAddress}
+              className="SignIn-identity-identicon"
+            />
             <div className="SignIn-identity-info">
-              <div className="SignIn-identity-info-name">{user.name}</div>
+              <div className="SignIn-identity-info-name">{user.displayName}</div>
               <code className="SignIn-identity-info-address">
-                <ShortAddress address={user.ethAddress} />
+                <ShortAddress address={user.accountAddress} />
               </code>
             </div>
           </div>
@@ -69,7 +72,7 @@ class SignIn extends React.Component<Props> {
   }
 
   private authUser = () => {
-    this.props.authUser(this.props.user.ethAddress);
+    this.props.authUser(this.props.user.accountAddress);
   };
 }
 

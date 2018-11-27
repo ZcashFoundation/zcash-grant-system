@@ -9,7 +9,7 @@ interface Props {
 class ProfilePage extends React.Component<Props> {
   render() {
     const { user } = this.props;
-    return <h1>Settings for {user && user.name}</h1>;
+    return <h1>Settings for {user && user.displayName}</h1>;
   }
 }
 

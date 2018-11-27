@@ -1,5 +1,6 @@
 import datetime
 from typing import List
+from sqlalchemy import func
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
@@ -30,6 +31,30 @@ proposal_team = db.Table(
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'))
 )
+
+class ProposalTeamInvite(db.Model):
+    __tablename__ = "proposal_team_invite"
+
+    id = db.Column(db.Integer(), primary_key=True)
+    date_created = db.Column(db.DateTime)
+
+    proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+    accepted = db.Column(db.Boolean)
+
+    def __init__(self, proposal_id: int, address: str, accepted: bool = None):
+        self.proposal_id = proposal_id
+        self.address = address
+        self.accepted = accepted
+        self.date_created = datetime.datetime.now()
+
+    @staticmethod
+    def get_pending_for_user(user):
+        return ProposalTeamInvite.query.filter(
+            ProposalTeamInvite.accepted == None,
+            (func.lower(user.account_address) == func.lower(ProposalTeamInvite.address)) |
+            (func.lower(user.email_address) == func.lower(ProposalTeamInvite.address))
+        ).all()
 
 
 class ProposalUpdate(db.Model):
@@ -104,6 +129,7 @@ class Proposal(db.Model):
     updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True, cascade="all, delete-orphan")
     contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
     milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
+    invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
 
     def __init__(
             self,
@@ -215,7 +241,8 @@ class ProposalSchema(ma.Schema):
             "trustees",
             "payout_address",
             "deadline_duration",
-            "vote_duration"
+            "vote_duration",
+            "invites"
         )
 
     date_created = ma.Method("get_date_created")
@@ -227,6 +254,7 @@ class ProposalSchema(ma.Schema):
     contributions = ma.Nested("ProposalContributionSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
+    invites = ma.Nested("ProposalTeamInviteSchema", many=True)
 
     def get_proposal_id(self, obj):
         return obj.id
@@ -272,6 +300,46 @@ proposal_update_schema = ProposalUpdateSchema()
 proposals_update_schema = ProposalUpdateSchema(many=True)
 
 
+class ProposalTeamInviteSchema(ma.Schema):
+    class Meta:
+        model = ProposalTeamInvite
+        fields = (
+            "id",
+            "date_created",
+            "address",
+            "accepted"
+        )
+
+    date_created = ma.Method("get_date_created")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+proposal_team_invite_schema = ProposalTeamInviteSchema()
+proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
+
+# TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
+class InviteWithProposalSchema(ma.Schema):
+    class Meta:
+        model = ProposalTeamInvite
+        fields = (
+            "id",
+            "date_created",
+            "address",
+            "accepted",
+            "proposal"
+        )
+
+    date_created = ma.Method("get_date_created")
+    proposal = ma.Nested("ProposalSchema")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+invite_with_proposal_schema = InviteWithProposalSchema()
+invites_with_proposal_schema = InviteWithProposalSchema(many=True)
+
+
 class ProposalContributionSchema(ma.Schema):
     class Meta:
         model = ProposalContribution
@@ -293,7 +361,6 @@ class ProposalContributionSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
-
 
 proposal_contribution_schema = ProposalContributionSchema()
 proposals_contribution_schema = ProposalContributionSchema(many=True)

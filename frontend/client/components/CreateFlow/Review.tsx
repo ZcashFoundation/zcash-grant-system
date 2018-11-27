@@ -75,7 +75,7 @@ class CreateReview extends React.Component<Props> {
         fields: [
           {
             key: 'team',
-            content: <ReviewTeam team={form.team} />,
+            content: <ReviewTeam team={form.team} invites={form.invites} />,
             error: errors.team && errors.team.join(' '),
           },
         ],
@@ -209,16 +209,22 @@ const ReviewMilestones = ({
   </Timeline>
 );
 
-const ReviewTeam = ({ team }: { team: ProposalDraft['team'] }) => (
+const ReviewTeam: React.SFC<{
+  team: ProposalDraft['team'];
+  invites: ProposalDraft['invites'];
+}> = ({ team, invites }) => (
   <div className="ReviewTeam">
     {team.map((u, idx) => (
       <div className="ReviewTeam-member" key={idx}>
         <UserAvatar className="ReviewTeam-member-avatar" user={u} />
         <div className="ReviewTeam-member-info">
-          <div className="ReviewTeam-member-info-name">{u.name}</div>
+          <div className="ReviewTeam-member-info-name">{u.displayName}</div>
           <div className="ReviewTeam-member-info-title">{u.title}</div>
         </div>
       </div>
     ))}
+    {!!invites.filter(inv => inv.accepted === null).length && (
+      <div className="ReviewTeam-invites">+ {invites.length} invite(s) pending</div>
+    )}
   </div>
 );
