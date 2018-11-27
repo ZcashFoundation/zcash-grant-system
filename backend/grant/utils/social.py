@@ -15,5 +15,5 @@ def get_social_info_from_url(url: str):
     if match:
       return {
         'service': service,
-        'username': match.group(1),
+        'username': match.group(1)
       }

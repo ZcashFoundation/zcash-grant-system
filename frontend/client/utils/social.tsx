@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from 'antd';
 import keybaseIcon from 'static/images/keybase.svg';
-import { SOCIAL_SERVICE, SocialMedia, SocialInfo } from 'types';
+import { SOCIAL_SERVICE, SocialInfo } from 'types';
 
 const accountNameRegex = '([a-zA-Z0-9-_]*)';
 export const SOCIAL_INFO: { [key in SOCIAL_SERVICE]: SocialInfo } = {
@@ -31,6 +31,6 @@ export const SOCIAL_INFO: { [key in SOCIAL_SERVICE]: SocialInfo } = {
   },
 };
 
-export function socialMediaToUrl(sm: SocialMedia): string {
-  return SOCIAL_INFO[sm.service].format.replace(accountNameRegex, sm.username);
+export function socialMediaToUrl(service: SOCIAL_SERVICE, username: string): string {
+  return SOCIAL_INFO[service].format.replace(accountNameRegex, username);
 }

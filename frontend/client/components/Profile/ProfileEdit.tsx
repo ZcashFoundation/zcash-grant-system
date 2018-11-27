@@ -2,7 +2,7 @@ import React from 'react';
 import lodash from 'lodash';
 import axios from 'api/axios';
 import { Input, Form, Col, Row, Button, Alert } from 'antd';
-import { SOCIAL_INFO } from 'utils/social';
+import { SOCIAL_INFO, socialMediaToUrl } from 'utils/social';
 import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { getCreateTeamMemberError } from 'modules/create/utils';
@@ -218,6 +218,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
       socialMedias.push({
         service,
         username: value,
+        url: socialMediaToUrl(service, value),
       });
     }
 

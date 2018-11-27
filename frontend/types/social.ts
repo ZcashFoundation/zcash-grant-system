@@ -3,6 +3,7 @@ import React from 'react';
 export type SocialAccountMap = Partial<{ [key in SOCIAL_SERVICE]: string }>;
 
 export interface SocialMedia {
+  url: string;
   service: SOCIAL_SERVICE;
   username: string;
 }

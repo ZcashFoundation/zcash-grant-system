@@ -124,17 +124,22 @@ class SocialMediaSchema(ma.Schema):
         model = SocialMedia
         # Fields to expose
         fields = (
+            "url",
             "service",
             "username",
         )
     
+    url = ma.Method("get_url")
     service = ma.Method("get_service")
     username = ma.Method("get_username")
+
+    def get_url(self, obj):
+        return obj.social_media_link
 
     def get_service(self, obj):
         info = get_social_info_from_url(obj.social_media_link)
         return info['service']
-    
+
     def get_username(self, obj):
         info = get_social_info_from_url(obj.social_media_link)
         return info['username']
