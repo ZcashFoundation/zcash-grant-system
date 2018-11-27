@@ -76,10 +76,7 @@ const getGanacheNetworkId = (module.exports.getGanacheNetworkId = () => {
     .catch(() => -1);
 });
 
-const checkContractsNetworkIds = (module.exports.checkContractsNetworkIds = (
-  id,
-  retry = false,
-) =>
+const checkContractsNetworkIds = (id) =>
   new Promise((res, rej) => {
     const buildDir = paths.contractsBuild;
     fs.readdir(buildDir, (err) => {
@@ -88,20 +85,15 @@ const checkContractsNetworkIds = (module.exports.checkContractsNetworkIds = (
         res(false);
       } else {
         const allHaveId = CHECK_CONTRACT_IDS.reduce((ok, name) => {
-          const contract = require(path.join(buildDir, name));
+          const contractPath = path.join(buildDir, name);
+          if (!fs.existsSync(contractPath)) {
+            return false;
+          }
+          const contract = require(contractPath);
           const contractHasKeys = Object.keys(contract.networks).length > 0;
           if (!contractHasKeys) {
-            if (retry) {
-              logMessage(
-                'Contract does not contain network keys after retry. Exiting. Please manually debug Contract JSON.',
-                'error',
-              );
-              process.exit(1);
-            } else {
-              logMessage('Contract does not contain any keys. Will migrate.');
-              migrate();
-              return checkContractsNetworkIds(id, true);
-            }
+            logMessage('Contract does not contain network keys.', 'error');
+            return false;
           } else {
             if (contractHasKeys && !contract.networks[id]) {
               const actual = Object.keys(contract.networks).join(', ');
@@ -118,6 +110,7 @@ const checkContractsNetworkIds = (module.exports.checkContractsNetworkIds = (
       }
     });
   }));
+module.exports.checkContractsNetworkIds = checkContractsNetworkIds;
 
 const fundWeb3v1 = (module.exports.fundWeb3v1 = () => {
   // Fund ETH accounts
