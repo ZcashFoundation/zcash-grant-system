@@ -83,7 +83,6 @@ def requires_sm(f):
 
     return decorated
 
-
 # Decorator that requires you to be the user you're interacting with
 def requires_same_user_auth(f):
     @wraps(f)

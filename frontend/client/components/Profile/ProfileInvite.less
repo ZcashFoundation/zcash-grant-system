@@ -1,0 +1,38 @@
+.ProfileInvite {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+  
+  &-info {
+    &-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    &-brief {
+      font-size: 0.9rem;
+      margin-bottom: 0.6rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &-inviter {
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+  }
+
+  &-actions {
+    display: flex;
+
+    .ant-btn {
+      padding: 0 0.8rem !important;
+      margin-right: 0.5rem;
+    }
+  }
+}

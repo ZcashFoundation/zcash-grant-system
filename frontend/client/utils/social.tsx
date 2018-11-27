@@ -1,60 +1,36 @@
 import React from 'react';
 import { Icon } from 'antd';
 import keybaseIcon from 'static/images/keybase.svg';
-import { SOCIAL_TYPE, SocialAccountMap, SocialInfo } from 'types';
+import { SOCIAL_SERVICE, SocialInfo } from 'types';
 
 const accountNameRegex = '([a-zA-Z0-9-_]*)';
-export const SOCIAL_INFO: { [key in SOCIAL_TYPE]: SocialInfo } = {
-  [SOCIAL_TYPE.GITHUB]: {
-    type: SOCIAL_TYPE.GITHUB,
+export const SOCIAL_INFO: { [key in SOCIAL_SERVICE]: SocialInfo } = {
+  [SOCIAL_SERVICE.GITHUB]: {
+    service: SOCIAL_SERVICE.GITHUB,
     name: 'Github',
     format: `https://github.com/${accountNameRegex}`,
     icon: <Icon type="github" />,
   },
-  [SOCIAL_TYPE.TWITTER]: {
-    type: SOCIAL_TYPE.TWITTER,
+  [SOCIAL_SERVICE.TWITTER]: {
+    service: SOCIAL_SERVICE.TWITTER,
     name: 'Twitter',
     format: `https://twitter.com/${accountNameRegex}`,
     icon: <Icon type="twitter" />,
   },
-  [SOCIAL_TYPE.LINKEDIN]: {
-    type: SOCIAL_TYPE.LINKEDIN,
+  [SOCIAL_SERVICE.LINKEDIN]: {
+    service: SOCIAL_SERVICE.LINKEDIN,
     name: 'LinkedIn',
     format: `https://linkedin.com/in/${accountNameRegex}`,
     icon: <Icon type="linkedin" />,
   },
-  [SOCIAL_TYPE.KEYBASE]: {
-    type: SOCIAL_TYPE.KEYBASE,
+  [SOCIAL_SERVICE.KEYBASE]: {
+    service: SOCIAL_SERVICE.KEYBASE,
     name: 'KeyBase',
     format: `https://keybase.io/${accountNameRegex}`,
     icon: <Icon component={keybaseIcon} />,
   },
 };
 
-function urlToAccount(format: string, url: string): string | false {
-  const matches = url.match(new RegExp(format));
-  return matches && matches[1] ? matches[1] : false;
-}
-
-export function socialAccountToUrl(account: string, type: SOCIAL_TYPE): string {
-  return SOCIAL_INFO[type].format.replace(accountNameRegex, account);
-}
-
-export function socialUrlsToAccounts(urls: string[]): SocialAccountMap {
-  const accounts: SocialAccountMap = {};
-  urls.forEach(url => {
-    Object.values(SOCIAL_INFO).forEach(s => {
-      const account = urlToAccount(s.format, url);
-      if (account) {
-        accounts[s.type] = account;
-      }
-    });
-  });
-  return accounts;
-}
-
-export function socialAccountsToUrls(accounts: SocialAccountMap): string[] {
-  return Object.entries(accounts).map(([key, value]) => {
-    return socialAccountToUrl(value as string, key as SOCIAL_TYPE);
-  });
+export function socialMediaToUrl(service: SOCIAL_SERVICE, username: string): string {
+  return SOCIAL_INFO[service].format.replace(accountNameRegex, username);
 }

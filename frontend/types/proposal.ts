@@ -1,8 +1,20 @@
-import { TeamMember } from 'types';
 import { Wei } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import { Comment } from 'types';
-import { Milestone, ProposalMilestone, Update } from 'types';
+import {
+  CreateMilestone,
+  ProposalMilestone,
+  Update,
+  User,
+  Milestone,
+  Comment,
+} from 'types';
+
+export interface TeamInvite {
+  id: number;
+  dateCreated: number;
+  address: string;
+  accepted: boolean | null;
+}
 
 export interface Contributor {
   address: string;
@@ -31,21 +43,44 @@ export interface CrowdFund {
   isRaiseGoalReached: boolean;
 }
 
+export interface ProposalDraft {
+  proposalId: number;
+  dateCreated: number;
+  title: string;
+  brief: string;
+  category: PROPOSAL_CATEGORY;
+  content: string;
+  stage: string;
+  target: string;
+  payoutAddress: string;
+  trustees: string[];
+  deadlineDuration: number;
+  voteDuration: number;
+  milestones: CreateMilestone[];
+  team: User[];
+  invites: TeamInvite[];
+}
+
 export interface Proposal {
   proposalId: number;
   proposalAddress: string;
   proposalUrlId: string;
   dateCreated: number;
   title: string;
-  body: string;
+  brief: string;
+  content: string;
   stage: string;
   category: PROPOSAL_CATEGORY;
   milestones: ProposalMilestone[];
-  team: TeamMember[];
+  team: User[];
 }
 
 export interface ProposalWithCrowdFund extends Proposal {
   crowdFund: CrowdFund;
+}
+
+export interface TeamInviteWithProposal extends TeamInvite {
+  proposal: Proposal;
 }
 
 export interface ProposalComments {
@@ -63,7 +98,7 @@ export interface UserProposal {
   proposalId: number;
   title: string;
   brief: string;
-  team: TeamMember[];
+  team: User[];
   funded: Wei;
   target: Wei;
 }

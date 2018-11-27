@@ -37,18 +37,12 @@ class CommentSchema(ma.Schema):
             "content",
             "parent_comment_id",
             "date_created",
-            "body",
             "replies"
         )
 
-
-    body = ma.Method("get_body")
     date_created = ma.Method("get_date_created")
     author = ma.Nested("UserSchema", exclude=["email_address"])
     replies = ma.Nested("CommentSchema", many=True)
-
-    def get_body(self, obj):
-        return obj.content
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)

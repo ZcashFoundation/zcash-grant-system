@@ -68,7 +68,7 @@ class Comment extends React.Component<Props> {
         </div>
 
         <div className="Comment-body">
-          <Markdown source={comment.body} type={MARKDOWN_TYPE.REDUCED} />
+          <Markdown source={comment.content} type={MARKDOWN_TYPE.REDUCED} />
         </div>
 
         {isSignedIn && (

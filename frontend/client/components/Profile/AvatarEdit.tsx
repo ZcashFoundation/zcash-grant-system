@@ -4,7 +4,7 @@ import { Upload, Icon, Modal, Button, Alert } from 'antd';
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 import { UploadFile } from 'antd/lib/upload/interface';
-import { TeamMember } from 'types';
+import { User } from 'types';
 import { getBase64 } from 'utils/blob';
 import UserAvatar from 'components/UserAvatar';
 import './AvatarEdit.less';
@@ -13,7 +13,7 @@ const FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 const FILE_MAX_LOAD_MB = 10;
 
 interface OwnProps {
-  user: TeamMember;
+  user: User;
   onDelete(): void;
   onDone(url: string): void;
 }
@@ -41,7 +41,7 @@ export default class AvatarEdit extends React.PureComponent<Props, State> {
     const { newAvatarUrl, showModal, loadError, uploadError, isUploading } = this.state;
     const {
       user,
-      user: { avatarUrl },
+      user: { avatar },
     } = this.props;
     return (
       <>
@@ -58,12 +58,12 @@ export default class AvatarEdit extends React.PureComponent<Props, State> {
             <Button className="AvatarEdit-avatar-change">
               <Icon
                 className="AvatarEdit-avatar-change-icon"
-                type={avatarUrl ? 'picture' : 'plus-circle'}
+                type={avatar ? 'picture' : 'plus-circle'}
               />
-              <div>{avatarUrl ? 'Change photo' : 'Add photo'}</div>
+              <div>{avatar ? 'Change photo' : 'Add photo'}</div>
             </Button>
           </Upload>
-          {avatarUrl && (
+          {avatar && (
             <Button
               className="AvatarEdit-avatar-delete"
               icon="delete"

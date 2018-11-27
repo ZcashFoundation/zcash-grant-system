@@ -4,11 +4,12 @@ import { hot } from 'react-hot-loader';
 import { hydrate } from 'react-dom';
 import { loadComponents } from 'loadable-components';
 import { Provider } from 'react-redux';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { Router } from 'react-router-dom';
 import { PersistGate } from 'redux-persist/integration/react';
 import * as Sentry from '@sentry/browser';
 import { I18nextProvider } from 'react-i18next';
 import { configureStore } from 'store/configure';
+import history from 'store/history';
 import { massageSerializedState } from 'utils/api';
 import Routes from './Routes';
 import i18n from './i18n';
@@ -29,7 +30,7 @@ const App = hot(module)(() => (
   <I18nextProvider i18n={i18n}>
     <Provider store={store}>
       <PersistGate persistor={persistor}>
-        <Router>
+        <Router history={history}>
           <Routes />
         </Router>
       </PersistGate>

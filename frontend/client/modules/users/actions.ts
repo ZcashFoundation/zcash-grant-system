@@ -1,6 +1,12 @@
-import { UserProposal, UserComment, TeamMember } from 'types';
+import { UserProposal, UserComment, User } from 'types';
 import types from './types';
-import { getUser, updateUser as apiUpdateUser, getProposals } from 'api/api';
+import {
+  getUser,
+  updateUser as apiUpdateUser,
+  getProposals,
+  fetchUserInvites as apiFetchUserInvites,
+  putInviteResponse,
+} from 'api/api';
 import { Dispatch } from 'redux';
 import { Proposal } from 'types';
 import BN from 'bn.js';
@@ -22,7 +28,7 @@ export function fetchUser(userFetchId: string) {
   };
 }
 
-export function updateUser(user: TeamMember) {
+export function updateUser(user: User) {
   const userClone = cleanClone(INITIAL_TEAM_MEMBER_STATE, user);
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.UPDATE_USER_PENDING, payload: { user } });
@@ -100,6 +106,55 @@ export function fetchUserComments(userFetchId: string) {
   };
 }
 
+export function fetchUserInvites(userFetchId: string) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({
+      type: types.FETCH_USER_INVITES_PENDING,
+      payload: { userFetchId },
+    });
+
+    try {
+      const res = await apiFetchUserInvites(userFetchId);
+      const invites = res.data.sort((a, b) => (a.dateCreated > b.dateCreated ? -1 : 1));
+      dispatch({
+        type: types.FETCH_USER_INVITES_FULFILLED,
+        payload: { userFetchId, invites },
+      });
+    } catch (error) {
+      dispatch({
+        type: types.FETCH_USER_INVITES_REJECTED,
+        payload: { userFetchId, error },
+      });
+    }
+  };
+}
+
+export function respondToInvite(
+  userId: string | number,
+  inviteId: string | number,
+  response: boolean,
+) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({
+      type: types.RESPOND_TO_INVITE_PENDING,
+      payload: { userId, inviteId, response },
+    });
+
+    try {
+      await putInviteResponse(userId, inviteId, response);
+      dispatch({
+        type: types.RESPOND_TO_INVITE_FULFILLED,
+        payload: { userId, inviteId, response },
+      });
+    } catch (error) {
+      dispatch({
+        type: types.RESPOND_TO_INVITE_REJECTED,
+        payload: { userId, inviteId, error },
+      });
+    }
+  };
+}
+
 const mockModifyProposals = (p: Proposal): UserProposal => {
   const { proposalId, title, team } = p;
   return {
@@ -127,13 +182,13 @@ const mockComment = (p: UserProposal): UserComment[] => {
     ? [
         {
           commentId: Math.random(),
-          body: "I can't WAIT to get my t-shirt!",
+          content: "I can't WAIT to get my t-shirt!",
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body: 'I love the new design. Will they still be available next month?',
+          content: 'I love the new design. Will they still be available next month?',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
@@ -141,27 +196,27 @@ const mockComment = (p: UserProposal): UserComment[] => {
     : [
         {
           commentId: Math.random(),
-          body: 'Ut labore et dolore magna aliqua.',
+          content: 'Ut labore et dolore magna aliqua.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body:
+          content:
             'Adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body:
+          content:
             'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,
         },
         {
           commentId: Math.random(),
-          body:
+          content:
             'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.',
           dateCreated: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30),
           proposal: p,

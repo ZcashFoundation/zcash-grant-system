@@ -1,21 +1,11 @@
-import { SocialAccountMap } from 'types';
+import { SocialMedia } from 'types';
 
 export interface User {
+  userid: number;
   accountAddress: string;
-  userid: number | string;
+  emailAddress: string; // TODO: Split into full user type
   displayName: string;
   title: string;
-  avatar?: {
-    imageUrl: string;
-  };
-}
-
-// TODO: Merge this or extend the `User` type in proposals/reducers.ts
-export interface TeamMember {
-  name: string;
-  title: string;
-  avatarUrl: string;
-  ethAddress: string;
-  emailAddress: string;
-  socialAccounts: SocialAccountMap;
+  socialMedias: SocialMedia[];
+  avatar: { imageUrl: string } | null;
 }

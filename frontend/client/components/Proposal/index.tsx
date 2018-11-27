@@ -144,7 +144,11 @@ export class ProposalDetail extends React.Component<Props, State> {
                     ['is-expanded']: isBodyExpanded,
                   })}
                 >
-                  {proposal ? <Markdown source={proposal.body} /> : <Spin size="large" />}
+                  {proposal ? (
+                    <Markdown source={proposal.content} />
+                  ) : (
+                    <Spin size="large" />
+                  )}
                 </div>
                 {showExpand && (
                   <button

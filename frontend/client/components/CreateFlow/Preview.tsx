@@ -3,10 +3,11 @@ import { connect } from 'react-redux';
 import { Alert } from 'antd';
 import { ProposalDetail } from 'components/Proposal';
 import { AppState } from 'store/reducers';
-import { makeProposalPreviewFromForm } from 'modules/create/utils';
+import { makeProposalPreviewFromDraft } from 'modules/create/utils';
+import { ProposalDraft } from 'types';
 
 interface StateProps {
-  form: AppState['create']['form'];
+  form: ProposalDraft;
 }
 
 type Props = StateProps;
@@ -14,7 +15,7 @@ type Props = StateProps;
 class CreateFlowPreview extends React.Component<Props> {
   render() {
     const { form } = this.props;
-    const proposal = makeProposalPreviewFromForm(form);
+    const proposal = makeProposalPreviewFromDraft(form);
     return (
       <>
         <Alert
@@ -37,5 +38,5 @@ class CreateFlowPreview extends React.Component<Props> {
 }
 
 export default connect<StateProps, {}, {}, AppState>(state => ({
-  form: state.create.form,
+  form: state.create.form as ProposalDraft,
 }))(CreateFlowPreview);

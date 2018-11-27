@@ -1,52 +1,52 @@
 import React from 'react';
 import { Input, Form, Icon, Button, Radio } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
-import { CreateFormState } from 'types';
+import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { ONE_DAY } from 'utils/time';
 import { DONATION } from 'utils/constants';
 
 interface State {
-  payOutAddress: string;
+  payoutAddress: string;
   trustees: string[];
-  deadline: number;
-  milestoneDeadline: number;
+  deadlineDuration: number;
+  voteDuration: number;
 }
 
 interface Props {
   initialState?: Partial<State>;
-  updateForm(form: Partial<CreateFormState>): void;
+  updateForm(form: Partial<ProposalDraft>): void;
 }
 
 export default class CreateFlowTeam extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      payOutAddress: '',
+      payoutAddress: '',
       trustees: [],
-      deadline: ONE_DAY * 60,
-      milestoneDeadline: ONE_DAY * 7,
+      deadlineDuration: ONE_DAY * 60,
+      voteDuration: ONE_DAY * 7,
       ...(props.initialState || {}),
     };
   }
 
   render() {
-    const { payOutAddress, trustees, deadline, milestoneDeadline } = this.state;
+    const { payoutAddress, trustees, deadlineDuration, voteDuration } = this.state;
     const errors = getCreateErrors(this.state, true);
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
         <Form.Item
           label="Payout address"
-          validateStatus={errors.payOutAddress ? 'error' : undefined}
-          help={errors.payOutAddress}
+          validateStatus={errors.payoutAddress ? 'error' : undefined}
+          help={errors.payoutAddress}
         >
           <Input
             size="large"
-            name="payOutAddress"
+            name="payoutAddress"
             placeholder={DONATION.ETH}
             type="text"
-            value={payOutAddress}
+            value={payoutAddress}
             onChange={this.handleInputChange}
           />
         </Form.Item>
@@ -57,7 +57,7 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
             size="large"
             type="text"
             disabled
-            value={payOutAddress}
+            value={payoutAddress}
           />
         </Form.Item>
         {trustees.map((address, idx) => (
@@ -82,13 +82,13 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
 
         <Form.Item label="Funding Deadline">
           <Radio.Group
-            name="deadline"
-            value={deadline}
+            name="deadlineDuration"
+            value={deadlineDuration}
             onChange={this.handleRadioChange}
             size="large"
             style={{ display: 'flex', textAlign: 'center' }}
           >
-            {deadline === 300 && (
+            {deadlineDuration === 300 && (
               <Radio.Button style={{ flex: 1 }} value={300}>
                 5 minutes
               </Radio.Button>
@@ -107,13 +107,13 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
 
         <Form.Item label="Milestone Voting Period">
           <Radio.Group
-            name="milestoneDeadline"
-            value={milestoneDeadline}
+            name="voteDuration"
+            value={voteDuration}
             onChange={this.handleRadioChange}
             size="large"
             style={{ display: 'flex', textAlign: 'center' }}
           >
-            {milestoneDeadline === 60 && (
+            {voteDuration === 60 && (
               <Radio.Button style={{ flex: 1 }} value={60}>
                 60 Seconds
               </Radio.Button>

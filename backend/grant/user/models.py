@@ -3,6 +3,7 @@ from grant.comment.models import Comment
 from grant.email.models import EmailVerification
 from grant.extensions import ma, db
 from grant.utils.misc import make_url
+from grant.utils.social import get_social_info_from_url
 from grant.email.send import send_email
 
 
@@ -41,10 +42,10 @@ class User(db.Model):
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
 
-    social_medias = db.relationship(SocialMedia, backref="user", lazy=True)
+    social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
-    avatar = db.relationship(Avatar, uselist=False, back_populates="user")
-    email_verification = db.relationship(EmailVerification, uselist=False, back_populates="user", lazy=True)
+    avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
+    email_verification = db.relationship(EmailVerification, uselist=False, back_populates="user", lazy=True, cascade="all, delete-orphan")
 
     # TODO - add create and validate methods
 
@@ -119,7 +120,26 @@ class SocialMediaSchema(ma.Schema):
     class Meta:
         model = SocialMedia
         # Fields to expose
-        fields = ("social_media_link",)
+        fields = (
+            "url",
+            "service",
+            "username",
+        )
+    
+    url = ma.Method("get_url")
+    service = ma.Method("get_service")
+    username = ma.Method("get_username")
+
+    def get_url(self, obj):
+        return obj.social_media_link
+
+    def get_service(self, obj):
+        info = get_social_info_from_url(obj.social_media_link)
+        return info['service']
+
+    def get_username(self, obj):
+        info = get_social_info_from_url(obj.social_media_link)
+        return info['username']
 
 
 social_media_schema = SocialMediaSchema()

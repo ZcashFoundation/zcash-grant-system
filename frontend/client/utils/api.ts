@@ -1,31 +1,13 @@
 import BN from 'bn.js';
-import { TeamMember, CrowdFund, ProposalWithCrowdFund, UserProposal } from 'types';
-import { socialAccountsToUrls, socialUrlsToAccounts } from 'utils/social';
+import { socialMediaToUrl } from 'utils/social';
+import { User, CrowdFund, ProposalWithCrowdFund, UserProposal } from 'types';
 import { AppState } from 'store/reducers';
 
-export function formatTeamMemberForPost(user: TeamMember) {
+export function formatUserForPost(user: User) {
   return {
-    displayName: user.name,
-    title: user.title,
-    accountAddress: user.ethAddress,
-    emailAddress: user.emailAddress,
-    avatar: user.avatarUrl ? { link: user.avatarUrl } : {},
-    socialMedias: socialAccountsToUrls(user.socialAccounts).map(url => ({
-      link: url,
-    })),
-  };
-}
-
-export function formatTeamMemberFromGet(user: any): TeamMember {
-  return {
-    name: user.displayName,
-    title: user.title,
-    ethAddress: user.accountAddress,
-    emailAddress: user.emailAddress,
-    avatarUrl: user.avatar && user.avatar.imageUrl,
-    socialAccounts: socialUrlsToAccounts(
-      user.socialMedias.map((sm: any) => sm.socialMediaLink),
-    ),
+    ...user,
+    avatar: user.avatar ? user.avatar.imageUrl : null,
+    socialMedias: user.socialMedias.map(sm => socialMediaToUrl(sm.service, sm.username)),
   };
 }
 
@@ -49,7 +31,6 @@ export function formatCrowdFundFromGet(crowdFund: CrowdFund, base = 10): CrowdFu
 }
 
 export function formatProposalFromGet(proposal: ProposalWithCrowdFund) {
-  proposal.team = proposal.team.map(formatTeamMemberFromGet);
   proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
   proposal.crowdFund = formatCrowdFundFromGet(proposal.crowdFund);
   for (let i = 0; i < proposal.crowdFund.milestones.length; i++) {

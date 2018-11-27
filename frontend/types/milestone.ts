@@ -18,9 +18,7 @@ export interface Milestone {
   isImmediatePayout: boolean;
 }
 
-// TODO - have backend camelCase keys before response
 export interface ProposalMilestone extends Milestone {
-  body: string;
   content: string;
   immediatePayout: boolean;
   dateEstimated: string;
@@ -31,8 +29,8 @@ export interface ProposalMilestone extends Milestone {
 
 export interface CreateMilestone {
   title: string;
-  description: string;
-  date: string;
-  payoutPercent: number;
+  content: string;
+  dateEstimated: string;
+  payoutPercent: string;
   immediatePayout: boolean;
 }

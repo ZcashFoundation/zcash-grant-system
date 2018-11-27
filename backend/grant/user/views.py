@@ -1,7 +1,7 @@
 from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
 
-from grant.proposal.models import Proposal, proposal_team
+from grant.proposal.models import Proposal, proposal_team, ProposalTeamInvite, invites_with_proposal_schema
 from grant.utils.auth import requires_sm, requires_same_user_auth, verify_signed_auth, BadSignatureException
 from grant.utils.upload import save_avatar, send_upload, remove_avatar
 from grant.settings import UPLOAD_URL
@@ -19,8 +19,13 @@ def get_users(proposal_id):
     if not proposal:
         users = User.query.all()
     else:
-        users = User.query.join(proposal_team).join(Proposal) \
-            .filter(proposal_team.c.proposal_id == proposal.id).all()
+        users = (
+            User.query
+            .join(proposal_team)
+            .join(Proposal)
+            .filter(proposal_team.c.proposal_id == proposal.id)
+            .all()
+        )
     result = users_schema.dump(users)
     return result
 
@@ -155,7 +160,7 @@ def delete_avatar(url):
     parameter('displayName', type=str, required=True),
     parameter('title', type=str, required=True),
     parameter('socialMedias', type=list, required=True),
-    parameter('avatar', type=dict, required=True)
+    parameter('avatar', type=str, required=True)
 )
 def update_user(user_identity, display_name, title, social_medias, avatar):
     user = g.current_user
@@ -166,29 +171,52 @@ def update_user(user_identity, display_name, title, social_medias, avatar):
     if title is not None:
         user.title = title
 
+    db_socials = SocialMedia.query.filter_by(user_id=user.id).all()
+    for db_social in db_socials:
+        db.session.delete(db_social)
     if social_medias is not None:
-        SocialMedia.query.filter_by(user_id=user.id).delete()
         for social_media in social_medias:
-            sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
+            sm = SocialMedia(social_media_link=social_media, user_id=user.id)
             db.session.add(sm)
-    else:
-        SocialMedia.query.filter_by(user_id=user.id).delete()
 
-    old_avatar = Avatar.query.filter_by(user_id=user.id).first()
-    if avatar is not None:
-        Avatar.query.filter_by(user_id=user.id).delete()
-        avatar_link = avatar.get('link')
-        if avatar_link:
-            avatar_obj = Avatar(image_url=avatar_link, user_id=user.id)
-            db.session.add(avatar_obj)
-    else:
-        Avatar.query.filter_by(user_id=user.id).delete()
+    db_avatar = Avatar.query.filter_by(user_id=user.id).first()
+    if db_avatar:
+        db.session.delete(db_avatar)
+    if avatar:
+        new_avatar = Avatar(image_url=avatar, user_id=user.id)
+        db.session.add(new_avatar)
 
-    old_avatar_url = old_avatar and old_avatar.image_url
-    new_avatar_url = avatar and avatar['link']
-    if old_avatar_url and old_avatar_url != new_avatar_url:
-        remove_avatar(old_avatar_url, user.id)
+        old_avatar_url = db_avatar and db_avatar.image_url
+        if old_avatar_url and old_avatar_url != new_avatar.image_url:
+            remove_avatar(old_avatar_url, user.id)
 
     db.session.commit()
     result = user_schema.dump(user)
     return result
+
+@blueprint.route("/<user_identity>/invites", methods=["GET"])
+@requires_same_user_auth
+@endpoint.api()
+def get_user_invites(user_identity):
+    invites = ProposalTeamInvite.get_pending_for_user(g.current_user)
+    return invites_with_proposal_schema.dump(invites)
+
+@blueprint.route("/<user_identity>/invites/<invite_id>/respond", methods=["PUT"])
+@requires_same_user_auth
+@endpoint.api(
+    parameter('response', type=bool, required=True)
+)
+def respond_to_invite(user_identity, invite_id, response):
+    invite = ProposalTeamInvite.query.filter_by(id=invite_id).first()
+    if not invite:
+        return {"message": "No invite found with id {}".format(invite_id)}, 404
+    
+    invite.accepted = response
+    db.session.add(invite)
+
+    if invite.accepted:
+        invite.proposal.team.append(g.current_user)
+        db.session.add(invite)
+    
+    db.session.commit()
+    return None, 200

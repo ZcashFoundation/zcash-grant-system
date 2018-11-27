@@ -2,6 +2,7 @@ import datetime
 import time
 import random
 import string
+import re
 from grant.settings import SITE_URL
 
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -26,3 +27,6 @@ def gen_random_code(length=32):
 
 def make_url(path: str):
   return f'{SITE_URL}{path}'
+
+def is_email(email: str):
+  return bool(re.match(r"[^@]+@[^@]+\.[^@]+", email))
