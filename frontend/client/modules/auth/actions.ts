@@ -42,7 +42,7 @@ export function authUser(address: string, authSignature?: Falsy | AuthSignatureD
       Sentry.configureScope(scope => {
         scope.setUser({
           email: res.data.emailAddress,
-          accountAddress: res.data.ethAddress,
+          accountAddress: res.data.accountAddress,
         });
       });
       dispatch({

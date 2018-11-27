@@ -1,18 +1,18 @@
 import React from 'react';
 import Identicon from 'components/Identicon';
-import { TeamMember } from 'types';
+import { User } from 'types';
 import defaultUserImg from 'static/images/default-user.jpg';
 
 interface Props {
-  user: TeamMember;
+  user: User;
   className?: string;
 }
 
 const UserAvatar: React.SFC<Props> = ({ user, className }) => {
-  if (user.avatarUrl) {
-    return <img className={className} src={user.avatarUrl} />;
-  } else if (user.ethAddress) {
-    return <Identicon className={className} address={user.ethAddress} />;
+  if (user.avatar && user.avatar.imageUrl) {
+    return <img className={className} src={user.avatar.imageUrl} />;
+  } else if (user.accountAddress) {
+    return <Identicon className={className} address={user.accountAddress} />;
   } else {
     return <img className={className} src={defaultUserImg} />;
   }

@@ -3,7 +3,6 @@ export interface SocialMedia {
   socialMediaLink: string;
 }
 export interface Milestone {
-  body: string;
   content: string;
   dateCreated: string;
   dateEstimated: string;
@@ -17,7 +16,7 @@ export interface Proposal {
   proposalAddress: string;
   dateCreated: number;
   title: string;
-  body: string;
+  content: string;
   stage: string;
   category: string;
   milestones: Milestone[];

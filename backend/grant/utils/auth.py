@@ -11,6 +11,7 @@ import sentry_sdk
 from grant.settings import SECRET_KEY, AUTH_URL
 from ..proposal.models import Proposal
 from ..user.models import User
+from ..proposal.models import Proposal
 
 TWO_WEEKS = 1209600
 
@@ -79,7 +80,6 @@ def requires_sm(f):
         return jsonify(message="Authentication is required to access this resource"), 401
 
     return decorated
-
 
 # Decorator that requires you to be the user you're interacting with
 def requires_same_user_auth(f):

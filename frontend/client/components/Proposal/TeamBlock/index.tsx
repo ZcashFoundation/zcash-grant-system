@@ -10,7 +10,7 @@ interface Props {
 const TeamBlock = ({ proposal }: Props) => {
   let content;
   if (proposal) {
-    content = proposal.team.map(user => <UserRow key={user.name} user={user} />);
+    content = proposal.team.map(user => <UserRow key={user.displayName} user={user} />);
   } else {
     content = <Spin />;
   }

@@ -15,6 +15,7 @@ import Template, { TemplateProps } from 'components/Template';
 // wrap components in loadable...import & they will be split
 const Home = loadable(() => import('pages/index'));
 const Create = loadable(() => import('pages/create'));
+const ProposalEdit = loadable(() => import('pages/proposal-edit'));
 const Proposals = loadable(() => import('pages/proposals'));
 const Proposal = loadable(() => import('pages/proposal'));
 const Auth = loadable(() => import('pages/auth'));
@@ -60,10 +61,9 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Create a Proposal',
-      isFullScreen: true,
-      hideFooter: true,
       requiresWeb3: true,
     },
+    onlyLoggedIn: true,
   },
   {
     // Browse proposals
@@ -76,6 +76,20 @@ const routeConfigs: RouteConfig[] = [
       title: 'Browse proposals',
       requiresWeb3: false,
     },
+  },
+  {
+    // Proposal edit page
+    route: {
+      path: '/proposals/:id/edit',
+      component: ProposalEdit,
+    },
+    template: {
+      title: 'Edit proposal',
+      isFullScreen: true,
+      hideFooter: true,
+      requiresWeb3: true,
+    },
+    onlyLoggedIn: true,
   },
   {
     // Proposal detail page

@@ -1,22 +1,22 @@
 import React from 'react';
 import { Form } from 'antd';
 import MarkdownEditor from 'components/MarkdownEditor';
-import { CreateFormState } from 'types';
+import { ProposalDraft } from 'types';
 
 interface State {
-  details: string;
+  content: string;
 }
 
 interface Props {
   initialState?: Partial<State>;
-  updateForm(form: Partial<CreateFormState>): void;
+  updateForm(form: Partial<ProposalDraft>): void;
 }
 
 export default class CreateFlowTeam extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      details: '',
+      content: '',
       ...(props.initialState || {}),
     };
   }
@@ -26,15 +26,17 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
       <Form layout="vertical" style={{ maxWidth: 980, margin: '0 auto' }}>
         <MarkdownEditor
           onChange={this.handleChange}
-          initialMarkdown={this.state.details}
+          initialMarkdown={this.state.content}
         />
       </Form>
     );
   }
 
   private handleChange = (markdown: string) => {
-    this.setState({ details: markdown }, () => {
-      this.props.updateForm(this.state);
-    });
+    if (markdown !== this.state.content) {
+      this.setState({ content: markdown }, () => {
+        this.props.updateForm(this.state);
+      });
+    }
   };
 }
