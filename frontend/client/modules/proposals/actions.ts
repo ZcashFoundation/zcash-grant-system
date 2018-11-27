@@ -5,9 +5,10 @@ import {
   getProposalComments,
   getProposalUpdates,
   postProposalContribution as apiPostProposalContribution,
+  postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
-import { ProposalWithCrowdFund, Comment } from 'types';
+import { ProposalWithCrowdFund, Comment, AuthSignatureData } from 'types';
 import { signData } from 'modules/web3/actions';
 
 export type TFetchProposals = typeof fetchProposals;
@@ -58,46 +59,41 @@ export function fetchProposalUpdates(proposalId: ProposalWithCrowdFund['proposal
 export function postProposalComment(
   proposalId: ProposalWithCrowdFund['proposalId'],
   comment: string,
-  parentCommentId?: Comment['commentId'],
+  parentCommentId?: Comment['id'],
 ) {
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.POST_PROPOSAL_COMMENT_PENDING });
 
     try {
-      const signedComment = await dispatch(
+      const sigData: AuthSignatureData = (await dispatch(
         signData(
           { comment },
           {
-            comment: {
-              name: 'Comment',
-              type: 'string',
-            },
+            comment: [
+              {
+                name: 'Comment',
+                type: 'string',
+              },
+            ],
           },
           'comment',
         ),
-      );
+      )) as any;
 
-      // TODO: API up the comment & signed comment, handle response / failures
-      // TODO: Remove console log
-      console.log(signedComment);
+      const res = await apiPostProposalComment({
+        proposalId,
+        parentCommentId,
+        comment,
+        signedMessage: sigData.signedMessage,
+        rawTypedData: JSON.stringify(sigData.rawTypedData),
+      });
+
       dispatch({
         type: types.POST_PROPOSAL_COMMENT_FULFILLED,
         payload: {
           proposalId,
           parentCommentId,
-          comment: {
-            commentId: Math.random(),
-            content: comment,
-            dateCreated: Date.now(),
-            replies: [],
-            author: {
-              accountAddress: '0x0',
-              userid: 'test',
-              username: 'test',
-              title: 'test',
-              avatar: { '120x120': 'test' },
-            },
-          },
+          comment: res.data,
         },
       });
     } catch (err) {

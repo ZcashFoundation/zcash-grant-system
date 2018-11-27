@@ -161,3 +161,14 @@ export function postProposalContribution(
     amount,
   });
 }
+
+export function postProposalComment(payload: {
+  proposalId: number;
+  parentCommentId?: number;
+  comment: string;
+  signedMessage: string;
+  rawTypedData: string;
+}): Promise<{ data: any }> {
+  const { proposalId, ...args } = payload;
+  return axios.post(`/api/v1/proposals/${proposalId}/comments`, args);
+}

@@ -39,31 +39,30 @@ interface Props {
 }
 
 interface State {
+  randomKey: string;
   mdeState: ReactMdeTypes.MdeState | null;
 }
 
 export default class MarkdownEditor extends React.PureComponent<Props, State> {
-  state: State = {
-    mdeState: null,
-  };
-
   constructor(props: Props) {
     super(props);
     const mdeState = props.initialMarkdown ? { markdown: props.initialMarkdown } : null;
-    this.state = { mdeState };
+    this.state = {
+      mdeState,
+      randomKey: Math.random().toString(),
+    };
   }
 
-  handleChange = (mdeState: ReactMdeTypes.MdeState) => {
-    this.setState({ mdeState });
-    this.props.onChange(mdeState.markdown || '');
-  };
-
-  generatePreview = (md: string) => {
-    return Promise.resolve(convert(md, this.props.type));
-  };
+  reset() {
+    this.setState({
+      randomKey: Math.random().toString(),
+      mdeState: null,
+    });
+  }
 
   render() {
     const type = this.props.type || MARKDOWN_TYPE.FULL;
+    const { mdeState, randomKey } = this.state;
     return (
       <div
         className={classnames({
@@ -72,8 +71,9 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
         })}
       >
         <ReactMde
+          key={randomKey}
           onChange={this.handleChange}
-          editorState={this.state.mdeState as ReactMdeTypes.MdeState}
+          editorState={mdeState as ReactMdeTypes.MdeState}
           generateMarkdownPreview={this.generatePreview}
           commands={commands[type]}
           layout="tabbed"
@@ -81,6 +81,15 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
       </div>
     );
   }
+
+  private handleChange = (mdeState: ReactMdeTypes.MdeState) => {
+    this.setState({ mdeState });
+    this.props.onChange(mdeState.markdown || '');
+  };
+
+  private generatePreview = (md: string) => {
+    return Promise.resolve(convert(md, this.props.type));
+  };
 }
 
 export { MARKDOWN_TYPE } from 'utils/markdown';

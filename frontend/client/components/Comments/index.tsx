@@ -1,16 +1,15 @@
 import React from 'react';
-import { Proposal, ProposalComments } from 'types';
+import { ProposalComments } from 'types';
 import Comment from 'components/Comment';
 
 interface Props {
   comments: ProposalComments['comments'];
-  proposalId: Proposal['proposalId'];
 }
 
-const Comments = ({ comments, proposalId }: Props) => (
+const Comments = ({ comments }: Props) => (
   <React.Fragment>
     {comments.map(c => (
-      <Comment key={c.commentId} comment={c} proposalId={proposalId} />
+      <Comment key={c.id} comment={c} />
     ))}
   </React.Fragment>
 );
