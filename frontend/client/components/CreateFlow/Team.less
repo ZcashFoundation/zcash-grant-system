@@ -6,49 +6,76 @@
   width: 100%;
   margin: 0 auto;
 
+  &-pending,
   &-add {
-    display: flex;
-    width: 100%;
-    padding: 1rem;
-    align-items: center;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 80ms ease, transform 80ms ease;
-    outline: none;
+    margin-top: 2rem;
 
-    &:hover,
-    &:focus {
-      opacity: 1;
+    &-title {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      padding-left: 0.25rem;
     }
-    &:active {
-      transform: translateY(2px);
-    }
+  }
 
-    &-icon {
+  &-pending {
+    &-invite {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      margin-right: 1.25rem;
-      width: 7.4rem;
-      height: 7.4rem;
-      border: 2px dashed @success-color;
-      color: @success-color;
-      border-radius: 8px;
-      font-size: 2rem;
-    }
+      padding: 1rem;
+      font-size: 1rem;
+      background: #FFF;
+      box-shadow: 0 1px 2px rgba(#000, 0.2);
+      border-bottom: 1px solid rgba(#000, 0.05);
 
-    &-text {
-      text-align: left;
-
-      &-title {
-        font-size: 1.6rem;
-        font-weight: 300;
-        color: @success-color;
+      &:first-child {
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
       }
 
-      &-subtitle {
-        opacity: 0.7;
+      &:last-child {
+        border-bottom-left-radius: 2px;
+        border-bottom-right-radius: 2px;
+        border-bottom: 0;
+      }
+
+      &-delete {
+        opacity: 0.3;
+        outline: none;
         font-size: 1rem;
+        padding: 0 0.25rem;
+        transition: opacity 100ms ease, color 100ms ease;
+
+        &:hover,
+        &:focus,
+        &:active {
+          color: @error-color;
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  &-add {
+    &-form {
+      display: flex;
+      padding: 1rem 1rem 0.3rem;
+      border-radius: 2px;
+      background: #FFF;
+      box-shadow: 0 1px 2px rgba(#000, 0.2);
+
+      &-field {
+        flex: 1;
+
+        .ant-form-explain {
+          margin-top: 0.3rem;
+          padding-left: 0.25rem;
+          font-size: 0.75rem;
+        }
+      }
+
+      &-submit {
+        margin-left: 0.5rem;
       }
     }
   }

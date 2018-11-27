@@ -2,20 +2,31 @@ import * as React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { storiesOf } from '@storybook/react';
 import { DONATION } from 'utils/constants';
+import { User } from 'types';
 
 import 'components/UserRow/style.less';
 import UserRow from 'components/UserRow';
 
-const user = {
-  name: 'Dana Hayes',
+const user: User = {
+  userid: 123,
+  displayName: 'Dana Hayes',
   title: 'QA Engineer',
-  avatarUrl: 'https://randomuser.me/api/portraits/women/19.jpg',
-  ethAddress: DONATION.ETH,
+  avatar: {
+    imageUrl: 'https://randomuser.me/api/portraits/women/19.jpg',
+  },
+  accountAddress: DONATION.ETH,
   emailAddress: 'test@test.test',
-  socialAccounts: {},
+  socialMedias: [],
 };
 
-const cases = [
+interface Case {
+  disp: string;
+  props: {
+    user: User;
+  };
+}
+
+const cases: Case[] = [
   {
     disp: 'Full User',
     props: {
@@ -29,7 +40,7 @@ const cases = [
     props: {
       user: {
         ...user,
-        avatarUrl: '',
+        avatar: null,
       },
     },
   },
@@ -38,8 +49,8 @@ const cases = [
     props: {
       user: {
         ...user,
-        avatarUrl: '',
-        ethAddress: '',
+        avatar: null,
+        accountAddress: '',
       },
     },
   },
@@ -48,7 +59,7 @@ const cases = [
     props: {
       user: {
         ...user,
-        name: 'Dr. Baron Longnamivitch von Testeronomous III Esq.',
+        displayName: 'Dr. Baron Longnamivitch von Testeronomous III Esq.',
         title: 'Amazing person, all around cool neat-o guy, 10/10 would order again',
       },
     },

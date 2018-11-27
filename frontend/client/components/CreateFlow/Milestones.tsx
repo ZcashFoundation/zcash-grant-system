@@ -1,25 +1,25 @@
 import React from 'react';
 import { Form, Input, DatePicker, Card, Icon, Alert, Checkbox, Button } from 'antd';
 import moment from 'moment';
-import { CreateFormState, CreateMilestone } from 'types';
+import { ProposalDraft, CreateMilestone } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 
 interface State {
-  milestones: CreateMilestone[];
+  milestones: ProposalDraft['milestones'];
 }
 
 interface Props {
   initialState: Partial<State>;
-  updateForm(form: Partial<CreateFormState>): void;
+  updateForm(form: Partial<ProposalDraft>): void;
 }
 
 const DEFAULT_STATE: State = {
   milestones: [
     {
       title: '',
-      description: '',
-      date: '',
-      payoutPercent: 100,
+      content: '',
+      dateEstimated: '',
+      payoutPercent: '100',
       immediatePayout: false,
     },
   ],
@@ -53,17 +53,17 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
   addMilestone = () => {
     const { milestones: oldMilestones } = this.state;
     const lastMilestone = oldMilestones[oldMilestones.length - 1];
-    const halfPayout = lastMilestone.payoutPercent / 2;
+    const halfPayout = parseInt(lastMilestone.payoutPercent, 10) / 2;
     const milestones = [
       ...oldMilestones,
       {
         ...DEFAULT_STATE.milestones[0],
-        payoutPercent: halfPayout,
+        payoutPercent: halfPayout.toString(),
       },
     ];
     milestones[milestones.length - 2] = {
       ...lastMilestone,
-      payoutPercent: halfPayout,
+      payoutPercent: halfPayout.toString(),
     };
     this.setState({ milestones });
   };
@@ -146,11 +146,11 @@ const MilestoneFields = ({
     <div style={{ marginBottom: '0.5rem' }}>
       <Input.TextArea
         rows={3}
-        name="body"
+        name="content"
         placeholder="Description of the deliverable"
-        value={milestone.description}
+        value={milestone.content}
         onChange={ev =>
-          onChange(index, { ...milestone, description: ev.currentTarget.value })
+          onChange(index, { ...milestone, content: ev.currentTarget.value })
         }
       />
     </div>
@@ -159,10 +159,10 @@ const MilestoneFields = ({
       <DatePicker.MonthPicker
         style={{ flex: 1, marginRight: '0.5rem' }}
         placeholder="Expected completion date"
-        value={milestone.date ? moment(milestone.date, 'MMMM YYYY') : undefined}
+        value={milestone.dateEstimated ? moment(milestone.dateEstimated) : undefined}
         format="MMMM YYYY"
         allowClear={false}
-        onChange={(_, date) => onChange(index, { ...milestone, date })}
+        onChange={(_, dateEstimated) => onChange(index, { ...milestone, dateEstimated })}
       />
       <Input
         min={1}
@@ -172,7 +172,7 @@ const MilestoneFields = ({
         onChange={ev =>
           onChange(index, {
             ...milestone,
-            payoutPercent: parseInt(ev.currentTarget.value, 10) || 0,
+            payoutPercent: ev.currentTarget.value || '0',
           })
         }
         addonAfter="%"
