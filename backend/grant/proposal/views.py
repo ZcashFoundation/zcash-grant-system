@@ -87,7 +87,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id, signed_messa
     # Make sure comment content matches
     typed_data = ast.literal_eval(raw_typed_data)
     if comment != typed_data['message']['comment']:
-        return {"message": "Comment doesn’t match signature data"}, 404
+        return {"message": "Comment doesn’t match signature data"}, 400
 
     # Verify the signature
     try:

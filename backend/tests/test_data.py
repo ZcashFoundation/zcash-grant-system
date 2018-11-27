@@ -92,3 +92,90 @@ milestones = [
         "immediatePayout": False
     }
 ]
+
+test_comment_message = {
+    "sig": "0x08d5922e48e44229a764d85000558ac9a603ee2ce6a4439a211de4c64a7c3e782efeea90d63760dafb155af53c1dadcec10dac682e1fff8df1b4f40f9fcf08891b",
+    "data": {
+        "domain": {
+            "name": "Grant.io",
+            "version": 1,
+            "chainId": 1543277948575
+        },
+        "types": {
+            "comment": [
+                {
+                    "name": "Comment",
+                    "type": "string"
+                }
+            ],
+            "EIP712Domain": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "chainId",
+                    "type": "uint256"
+                }
+            ]
+        },
+        "message": {
+            "comment": "Test comment"
+        },
+        "primaryType": "comment"
+    }
+}
+
+test_comment = {
+    "signedMessage": test_comment_message["sig"],
+    "rawTypedData": json.dumps(test_comment_message["data"]),
+    "comment": test_comment_message["data"]["message"]["comment"]
+}
+
+test_reply_message = {
+    "sig": "0x08d5922e48e44229a764d85000558ac9a603ee2ce6a4439a211de4c64a7c3e782efeea90d63760dafb155af53c1dadcec10dac682e1fff8df1b4f40f9fcf08891b",
+    "data": {
+        "domain": {
+            "name": "Grant.io",
+            "version": 1,
+            "chainId": 1543277948575
+        },
+        "types": {
+            "comment": [
+                {
+                    "name": "Comment",
+                    "type": "string"
+                }
+            ],
+            "EIP712Domain": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "chainId",
+                    "type": "uint256"
+                }
+            ]
+        },
+        "message": {
+            "comment": "Test reply"
+        },
+        "primaryType": "comment"
+    }
+}
+
+test_reply = {
+    "signedMessage": test_reply_message["sig"],
+    "rawTypedData": json.dumps(test_reply_message["data"]),
+    "comment": test_reply_message["data"]["message"]["comment"]
+    # Fill in parentCommentId in test
+}

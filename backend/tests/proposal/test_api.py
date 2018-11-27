@@ -20,20 +20,6 @@ class TestAPI(BaseUserConfig):
         proposal_db = Proposal.query.filter_by(id=resp.json['proposalId'])
         self.assertIsNotNone(proposal_db)
 
-    def test_create_new_proposal_comment(self):
-        proposal = Proposal(
-            status="LIVE"
-        )
-
-        comment_res = self.app.post(
-            "/api/v1/proposals/{}/comments".format(proposal.id),
-            data=json.dumps({ "content": "What a comment" }),
-            headers=self.headers,
-            content_type='application/json'
-        )
-
-        self.assertTrue(comment_res.json)
-
     @patch('grant.web3.proposal.validate_contribution_tx', return_value=True)
     def test_create_proposal_contribution(self, mock_validate_contribution_tx):
         proposal_res = self.app.post(
