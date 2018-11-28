@@ -30,7 +30,7 @@ get_info_lookup = {
 
 
 def send_email(to, type, email_args):
-    if current_app and current_app.config["TESTING"]:
+    if current_app and current_app.config.get("TESTING"):
         return
 
     try:

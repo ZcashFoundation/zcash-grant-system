@@ -2,13 +2,14 @@ from flask_testing import TestCase
 
 from grant.app import create_app
 from grant.user.models import User, SocialMedia, db, Avatar
-from .test_data import test_user, message
+from grant.proposal.models import Proposal
+from .test_data import test_user, test_proposal, message
 
 
 class BaseTestConfig(TestCase):
 
     def create_app(self):
-        app = create_app()
+        app = create_app(['grant.settings', 'tests.settings'])
         app.config.from_object('tests.settings')
         return app
 
@@ -27,7 +28,7 @@ class BaseTestConfig(TestCase):
         """
 
         message = message or 'HTTP Status %s expected but got %s. Response json: %s' \
-                             % (status_code, response.status_code, response.json)
+                             % (status_code, response.status_code, response.json or response.data)
         self.assertEqual(response.status_code, status_code, message)
 
     assert_status = assertStatus
@@ -54,4 +55,12 @@ class BaseUserConfig(BaseTestConfig):
 
     def remove_default_user(self):
         User.query.filter_by(id=self.user.id).delete()
+        db.session.commit()
+
+class BaseProposalCreatorConfig(BaseUserConfig):
+    def setUp(self):
+        super().setUp()
+        self.proposal = Proposal.create(status="DRAFT")
+        self.proposal.team.append(self.user)
+        db.session.add(self.proposal)
         db.session.commit()
