@@ -182,7 +182,11 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     const propsAvatar = this.props.user.avatar;
     const stateAvatar = this.state.fields.avatar;
     // cleanup uploaded file if we cancel
-    if (propsAvatar && stateAvatar && propsAvatar.imageUrl !== stateAvatar.imageUrl) {
+    if (
+      stateAvatar &&
+      stateAvatar.imageUrl &&
+      (!propsAvatar || propsAvatar.imageUrl !== stateAvatar.imageUrl)
+    ) {
       axios.delete('/api/v1/users/avatar', {
         params: { url: stateAvatar.imageUrl },
       });

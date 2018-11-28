@@ -4,6 +4,7 @@ import { Upload, Icon, Modal, Button, Alert } from 'antd';
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 import { UploadFile } from 'antd/lib/upload/interface';
+import { uploadSignedPost } from 'utils/s3';
 import { User } from 'types';
 import { getBase64 } from 'utils/blob';
 import UserAvatar from 'components/UserAvatar';
@@ -155,17 +156,12 @@ export default class AvatarEdit extends React.PureComponent<Props, State> {
     this.cropperRef.current
       .getCroppedCanvas({ width: 400, height: 400 })
       .toBlob((blob: Blob) => {
-        const formData = new FormData();
-        formData.append('file', blob);
         this.setState({ isUploading: true });
         axios
-          .post('/api/v1/users/avatar', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          })
-          .then(res => {
-            this.props.onDone(res.data.url);
+          .post('/api/v1/users/avatar', { mimetype: blob.type })
+          .then(res => uploadSignedPost(blob, res.data.data).then(() => res.data.url))
+          .then(url => {
+            this.props.onDone(url);
             this.handleClose();
           })
           .catch(err => {
