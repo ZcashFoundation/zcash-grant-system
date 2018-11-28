@@ -97,14 +97,14 @@ To learn more about this auth service, you can visit the repo [here](https://git
 
 1. create bucket, keep the `bucket name` and `region` handy
 1. unblock public access `Amazon S3 > BUCKET_NAME > Permissions > Public access settings`
-1. set the CORS configuration (for development, you may set AllowedOrigin to `*`)  
+1. set the CORS configuration, replace HOST_NAME with desired domain, or \* to allow all
    Amazon S3 > BUCKET_NAME > Permissions > CORS configuration
 
    ```
    <?xml version="1.0" encoding="UTF-8"?>
    <CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
         <CORSRule>
-            <AllowedOrigin>http://demo.grant.io</AllowedOrigin>
+            <AllowedOrigin>HOST_NAME</AllowedOrigin>
             <AllowedMethod>GET</AllowedMethod>
             <AllowedMethod>POST</AllowedMethod>
             <AllowedMethod>PUT</AllowedMethod>
@@ -128,7 +128,7 @@ To learn more about this auth service, you can visit the repo [here](https://git
                     "s3:DeleteObject"
                 ],
                 "Resource": [
-                    "arn:aws:s3:::grantio-avatar-dev/*"
+                    "arn:aws:s3:::BUCKET_NAME/*"
                 ]
             }
         ]
