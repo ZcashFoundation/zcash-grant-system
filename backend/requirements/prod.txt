@@ -63,3 +63,6 @@ web3==4.8.1
 
 #sentry
 sentry-sdk[flask]==0.5.5
+
+#boto3 (AWS sdk)
+boto3==1.9.52

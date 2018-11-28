@@ -3,7 +3,7 @@ from flask_yoloapi import endpoint, parameter
 
 from grant.proposal.models import Proposal, proposal_team, ProposalTeamInvite, invites_with_proposal_schema
 from grant.utils.auth import requires_sm, requires_same_user_auth, verify_signed_auth, BadSignatureException
-from grant.utils.upload import save_avatar, send_upload, remove_avatar
+from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from grant.settings import UPLOAD_URL
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 
@@ -123,24 +123,16 @@ def auth_user(account_address, signed_message, raw_typed_data):
 
 @blueprint.route("/avatar", methods=["POST"])
 @requires_sm
-@endpoint.api()
-def upload_avatar():
+@endpoint.api(
+    parameter('mimetype', type=str, required=True)
+)
+def upload_avatar(mimetype):
     user = g.current_user
-    if 'file' not in request.files:
-        return {"message": "No file in post"}, 400
-    file = request.files['file']
-    if file.filename == '':
-        return {"message": "No selected file"}, 400
     try:
-        filename = save_avatar(file, user.id)
-        return {"url": "{0}/api/v1/users/avatar/{1}".format(UPLOAD_URL, filename)}
-    except Exception as e:
+        signed_post = sign_avatar_upload(mimetype, user.id)
+        return signed_post
+    except AvatarException as e:
         return {"message": str(e)}, 400
-
-
-@blueprint.route("/avatar/<filename>", methods=["GET"])
-def get_avatar(filename):
-    return send_upload(filename)
 
 
 @blueprint.route("/avatar", methods=["DELETE"])
@@ -186,13 +178,14 @@ def update_user(user_identity, display_name, title, social_medias, avatar):
         new_avatar = Avatar(image_url=avatar, user_id=user.id)
         db.session.add(new_avatar)
 
-        old_avatar_url = db_avatar and db_avatar.image_url
-        if old_avatar_url and old_avatar_url != new_avatar.image_url:
-            remove_avatar(old_avatar_url, user.id)
+    old_avatar_url = db_avatar and db_avatar.image_url
+    if old_avatar_url and old_avatar_url != avatar:
+        remove_avatar(old_avatar_url, user.id)
 
     db.session.commit()
     result = user_schema.dump(user)
     return result
+
 
 @blueprint.route("/<user_identity>/invites", methods=["GET"])
 @requires_same_user_auth
@@ -200,6 +193,7 @@ def update_user(user_identity, display_name, title, social_medias, avatar):
 def get_user_invites(user_identity):
     invites = ProposalTeamInvite.get_pending_for_user(g.current_user)
     return invites_with_proposal_schema.dump(invites)
+
 
 @blueprint.route("/<user_identity>/invites/<invite_id>/respond", methods=["PUT"])
 @requires_same_user_auth
@@ -210,13 +204,13 @@ def respond_to_invite(user_identity, invite_id, response):
     invite = ProposalTeamInvite.query.filter_by(id=invite_id).first()
     if not invite:
         return {"message": "No invite found with id {}".format(invite_id)}, 404
-    
+
     invite.accepted = response
     db.session.add(invite)
 
     if invite.accepted:
         invite.proposal.team.append(g.current_user)
         db.session.add(invite)
-    
+
     db.session.commit()
     return None, 200

@@ -9,11 +9,13 @@ environment variables.
 import subprocess
 from environs import Env
 
+
 def git_revision_short_hash():
     try:
         return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
     except subprocess.CalledProcessError:
         return 0
+
 
 env = Env()
 env.read_env()
@@ -41,3 +43,7 @@ SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=git_revision_short_hash())
 UPLOAD_DIRECTORY = env.str("UPLOAD_DIRECTORY")
 UPLOAD_URL = env.str("UPLOAD_URL")
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB (limits file uploads, raises RequestEntityTooLarge)
+AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY")
+AWS_DEFAULT_REGION = env.str("AWS_DEFAULT_REGION")
+S3_BUCKET = env.str("S3_BUCKET")

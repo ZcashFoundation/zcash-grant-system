@@ -1,54 +1,60 @@
-import os
 import re
-from hashlib import md5
-from werkzeug.utils import secure_filename
-from flask import send_from_directory
-from grant.settings import UPLOAD_DIRECTORY
+import uuid
+import boto3
+from grant.settings import S3_BUCKET
 
 IMAGE_MIME_TYPES = set(['image/png', 'image/jpg', 'image/gif'])
 AVATAR_MAX_SIZE = 2 * 1024 * 1024  # 2MB
 
 
-class FileValidationException(Exception):
+class AvatarException(Exception):
     pass
 
 
-def allowed_avatar_file(file):
-    if file.mimetype not in IMAGE_MIME_TYPES:
-        raise FileValidationException("Unacceptable file type: {0}".format(file.mimetype))
-    file.seek(0, os.SEEK_END)
-    size = file.tell()
-    file.seek(0)
-    if size > AVATAR_MAX_SIZE:
-        raise FileValidationException(
-            "File size is too large ({0}KB), max size is {1}KB".format(size / 1024, AVATAR_MAX_SIZE / 1024)
-        )
+def allowed_avatar_type(mimetype):
+    if mimetype not in IMAGE_MIME_TYPES:
+        raise AvatarException("Unacceptable file type: {0}".format(mimetype))
     return True
 
 
-def hash_file(file):
-    hasher = md5()
-    buf = file.read()
-    hasher.update(buf)
-    file.seek(0)
-    return hasher.hexdigest()
+def extract_avatar_filename(url):
+    match = re.search(r'avatars/(\d+\.\w+\.\w+)$', url)
+    if match:
+        return match.group(1)
+    else:
+        raise AvatarException("Unable to extract avatar filename from %s" % url)
 
 
-def save_avatar(file, user_id):
-    if file and allowed_avatar_file(file):
-        ext = file.mimetype.replace('image/', '')
-        filename = "{0}.{1}.{2}".format(user_id, hash_file(file), ext)
-        file.save(os.path.join(UPLOAD_DIRECTORY, filename))
-        return filename
+def construct_avatar_url(filename):
+    return "https://%s.s3.amazonaws.com/avatars/%s" % (S3_BUCKET, filename)
 
 
 def remove_avatar(url, user_id):
-    match = re.search(r'/api/v1/users/avatar/(\d+.\w+.\w+)', url)
-    if match:
-        filename = match.group(1)
-        if filename.startswith(str(user_id) + '.'):
-            os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
+    filename = extract_avatar_filename(url)
+    user_match = re.search(r'^(\d+)\.\w+\.\w+$', filename)
+    if user_match and user_match.group(1) == str(user_id):
+        s3 = boto3.resource('s3')
+        s3.Object(S3_BUCKET, 'avatars/' + filename).delete()
 
 
-def send_upload(filename):
-    return send_from_directory(UPLOAD_DIRECTORY, secure_filename(filename))
+def sign_avatar_upload(mimetype, user_id):
+    if mimetype and allowed_avatar_type(mimetype):
+        ext = mimetype.replace('image/', '')
+        filename = "{0}.{1}.{2}".format(user_id, uuid.uuid4().hex, ext)
+        key = "avatars/" + filename
+        s3 = boto3.client('s3')
+        presigned_post = s3.generate_presigned_post(
+            Bucket=S3_BUCKET,
+            Key=key,
+            Fields={"acl": "public-read", "Content-Type": mimetype},
+            Conditions=[
+                {"acl": "public-read"},
+                {"Content-Type": mimetype},
+                ["content-length-range", 0, AVATAR_MAX_SIZE]
+            ],
+            ExpiresIn=3600
+        )
+        return {
+            "data": presigned_post,
+            "url": construct_avatar_url(filename)
+        }

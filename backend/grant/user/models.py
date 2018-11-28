@@ -1,8 +1,10 @@
 from sqlalchemy import func
+from sqlalchemy.ext.hybrid import hybrid_property
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification
 from grant.extensions import ma, db
 from grant.utils.misc import make_url
+from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils.social import get_social_info_from_url
 from grant.email.send import send_email
 
@@ -24,9 +26,17 @@ class Avatar(db.Model):
     __tablename__ = "avatar"
 
     id = db.Column(db.Integer(), primary_key=True)
-    image_url = db.Column(db.String(255), unique=False, nullable=True)
+    _image_url = db.Column("image_url", db.String(255), unique=False, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship("User", back_populates="avatar")
+
+    @hybrid_property
+    def image_url(self):
+        return construct_avatar_url(self._image_url)
+
+    @image_url.setter
+    def image_url(self, image_url):
+        self._image_url = extract_avatar_filename(image_url)
 
     def __init__(self, image_url, user_id):
         self.image_url = image_url
@@ -45,7 +55,8 @@ class User(db.Model):
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
-    email_verification = db.relationship(EmailVerification, uselist=False, back_populates="user", lazy=True, cascade="all, delete-orphan")
+    email_verification = db.relationship(EmailVerification, uselist=False,
+                                         back_populates="user", lazy=True, cascade="all, delete-orphan")
 
     # TODO - add create and validate methods
 
@@ -92,6 +103,7 @@ class User(db.Model):
             (func.lower(User.email_address) == func.lower(email_address))
         ).first()
 
+
 class UserSchema(ma.Schema):
     class Meta:
         model = User
@@ -128,7 +140,7 @@ class SocialMediaSchema(ma.Schema):
             "service",
             "username",
         )
-    
+
     url = ma.Method("get_url")
     service = ma.Method("get_service")
     username = ma.Method("get_username")
