@@ -92,7 +92,7 @@ def create_user(
         title=title
     )
     result = user_schema.dump(user)
-    return result
+    return result, 201
 
 
 @blueprint.route("/auth", methods=["POST"])

@@ -85,7 +85,7 @@ class User(db.Model):
         db.session.add(ev)
         db.session.commit()
 
-        if send_email:
+        if _send_email:
             send_email(user.email_address, 'signup', {
                 'display_name': user.display_name,
                 'confirm_url': make_url(f'/email/verify?code={ev.code}')
@@ -116,7 +116,6 @@ class UserSchema(ma.Schema):
             "avatar",
             "display_name",
             "userid"
-
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
@@ -126,10 +125,8 @@ class UserSchema(ma.Schema):
     def get_userid(self, obj):
         return obj.id
 
-
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
-
 
 class SocialMediaSchema(ma.Schema):
     class Meta:

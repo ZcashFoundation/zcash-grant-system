@@ -2,22 +2,24 @@ import React from 'react';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import { Button } from 'antd';
+import { Link } from 'react-router-dom';
 import Markdown from 'components/Markdown';
-import Identicon from 'components/Identicon';
+import UserAvatar from 'components/UserAvatar';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import { postProposalComment } from 'modules/proposals/actions';
-import { Comment as IComment, Proposal } from 'types';
+import { getIsSignedIn } from 'modules/auth/selectors';
+import { Comment as IComment } from 'types';
 import { AppState } from 'store/reducers';
 import './style.less';
 
 interface OwnProps {
   comment: IComment;
-  proposalId: Proposal['proposalId'];
 }
 
 interface StateProps {
   isPostCommentPending: AppState['proposal']['isPostCommentPending'];
   postCommentError: AppState['proposal']['postCommentError'];
+  isSignedIn: ReturnType<typeof getIsSignedIn>;
 }
 
 interface DispatchProps {
@@ -46,29 +48,37 @@ class Comment extends React.Component<Props> {
   }
 
   public render(): React.ReactNode {
-    const { comment, proposalId } = this.props;
+    const { comment, isSignedIn, isPostCommentPending } = this.props;
     const { isReplying, reply } = this.state;
+    const authorPath = `/profile/${comment.author.accountAddress}`;
     return (
       <div className="Comment">
         <div className="Comment-info">
-          <div className="Comment-info-thumb">
-            <Identicon address={comment.author.accountAddress} />
+          <Link to={authorPath}>
+            <div className="Comment-info-thumb">
+              <UserAvatar user={comment.author} />
+            </div>
+          </Link>
+          <Link to={authorPath}>
+            <div className="Comment-info-name">{comment.author.displayName}</div>
+          </Link>
+          <div className="Comment-info-time">
+            {moment.unix(comment.dateCreated).fromNow()}
           </div>
-          {/* <div className="Comment-info-thumb" src={comment.author.avatar['120x120']} /> */}
-          <div className="Comment-info-name">{comment.author.displayName}</div>
-          <div className="Comment-info-time">{moment(comment.dateCreated).fromNow()}</div>
         </div>
 
         <div className="Comment-body">
           <Markdown source={comment.content} type={MARKDOWN_TYPE.REDUCED} />
         </div>
 
-        <div className="Comment-controls">
-          <a className="Comment-controls-button" onClick={this.toggleReply}>
-            {isReplying ? 'Cancel' : 'Reply'}
-          </a>
-          {/*<a className="Comment-controls-button">Report</a>*/}
-        </div>
+        {isSignedIn && (
+          <div className="Comment-controls">
+            <a className="Comment-controls-button" onClick={this.toggleReply}>
+              {isReplying ? 'Cancel' : 'Reply'}
+            </a>
+            {/*<a className="Comment-controls-button">Report</a>*/}
+          </div>
+        )}
 
         {(comment.replies.length || isReplying) && (
           <div className="Comment-replies">
@@ -79,17 +89,17 @@ class Comment extends React.Component<Props> {
                   type={MARKDOWN_TYPE.REDUCED}
                 />
                 <div style={{ marginTop: '0.5rem' }} />
-                <Button onClick={this.reply} disabled={!reply.length}>
+                <Button
+                  onClick={this.reply}
+                  disabled={!reply.length}
+                  loading={isPostCommentPending}
+                >
                   Submit reply
                 </Button>
               </div>
             )}
             {comment.replies.map(subComment => (
-              <ConnectedComment
-                key={subComment.commentId}
-                comment={subComment}
-                proposalId={proposalId}
-              />
+              <ConnectedComment key={subComment.id} comment={subComment} />
             ))}
           </div>
         )}
@@ -106,9 +116,9 @@ class Comment extends React.Component<Props> {
   };
 
   private reply = () => {
-    const { comment, proposalId } = this.props;
+    const { comment } = this.props;
     const { reply } = this.state;
-    this.props.postProposalComment(proposalId, reply, comment.commentId);
+    this.props.postProposalComment(comment.proposalId, reply, comment.id);
   };
 }
 
@@ -116,6 +126,7 @@ const ConnectedComment = connect<StateProps, DispatchProps, OwnProps, AppState>(
   (state: AppState) => ({
     isPostCommentPending: state.proposal.isPostCommentPending,
     postCommentError: state.proposal.postCommentError,
+    isSignedIn: getIsSignedIn(state),
   }),
   {
     postProposalComment,
