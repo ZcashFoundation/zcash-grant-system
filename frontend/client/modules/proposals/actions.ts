@@ -13,7 +13,7 @@ import { signData } from 'modules/web3/actions';
 
 export type TFetchProposals = typeof fetchProposals;
 export function fetchProposals() {
-  return (dispatch: Dispatch<any>) => {
+  return async (dispatch: Dispatch<any>) => {
     return dispatch({
       type: types.PROPOSALS_DATA,
       payload: async () => {
