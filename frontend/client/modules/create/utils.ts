@@ -148,25 +148,6 @@ export function getCreateErrors(
       errors.milestones = milestoneErrors;
     }
   }
-
-  // Team
-  if (team) {
-    let didTeamError = false;
-    const teamErrors = team.map(u => {
-      if (!u.displayName || !u.title || !u.emailAddress || !u.accountAddress) {
-        didTeamError = true;
-        return '';
-      }
-
-      const err = getCreateTeamMemberError(u);
-      didTeamError = didTeamError || !!err;
-      return err;
-    });
-    if (didTeamError) {
-      errors.team = teamErrors;
-    }
-  }
-
   return errors;
 }
 
