@@ -40,8 +40,6 @@ ETHEREUM_PROVIDER = "http"
 ETHEREUM_ENDPOINT_URI = env.str("ETHEREUM_ENDPOINT_URI")
 SENTRY_DSN = env.str("SENTRY_DSN", default=None)
 SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=git_revision_short_hash())
-UPLOAD_DIRECTORY = env.str("UPLOAD_DIRECTORY")
-UPLOAD_URL = env.str("UPLOAD_URL")
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB (limits file uploads, raises RequestEntityTooLarge)
 AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY")
