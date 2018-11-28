@@ -26,23 +26,23 @@ message = {
                 {
                     "name": "name",
                     "type": "string"
-            },
-            {
-                "name": "version",
-                "type": "string"
-            },
-            {
-                "name": "chainId",
-                "type": "uint256"
-            }
-        ]
-    },
-    "message": {
-        "message": "I am proving the identity of 0x6bEeA1Cef016c23e292381b6FcaeC092960e41aa on Grant.io",
-        "time": "Tue, 27 Nov 2018 19:02:04 GMT"
-    },
-    "primaryType": "authorization"
-}
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "chainId",
+                    "type": "uint256"
+                }
+            ]
+        },
+        "message": {
+            "message": "I am proving the identity of 0x6bEeA1Cef016c23e292381b6FcaeC092960e41aa on Grant.io",
+            "time": "Tue, 27 Nov 2018 19:02:04 GMT"
+        },
+        "primaryType": "authorization"
+    }
 }
 
 test_user = {
@@ -51,7 +51,7 @@ test_user = {
     "emailAddress": 'iam@groot.com',
     "title": 'I am Groot!',
     "avatar": {
-        "link": 'https://some-bucket-name.s3.amazonaws.com/avatars/1.b0be8bf740ce419a80ea9e1f55974ce1.png'
+        "link": 'https://your-bucket-name.s3.amazonaws.com/avatars/1.b0be8bf740ce419a80ea9e1f55974ce1.png'
     },
     "socialMedias": [
         {

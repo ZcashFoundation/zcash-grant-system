@@ -50,7 +50,7 @@ class TestAPI(BaseUserConfig):
         self.assertEqual(users_json["socialMedias"][0]["username"], 'groot')
         self.assertEqual(users_json["socialMedias"][0]["url"], self.user.social_medias[0].social_media_link)
         self.assertEqual(users_json["displayName"], self.user.display_name)
-    
+
     def test_get_single_user_by_account_address(self):
         users_get_resp = self.app.get(
             "/api/v1/users/{}".format(self.user.account_address)
@@ -73,7 +73,8 @@ class TestAPI(BaseUserConfig):
 
         self.assertEqual(response.status_code, 409)
 
-    def test_update_user_remove_social_and_avatar(self):
+    @patch('grant.user.views.remove_avatar')
+    def test_update_user_remove_social_and_avatar(self, mock_remove_avatar):
         updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
         updated_user["displayName"] = 'new display name'
         updated_user["avatar"] = {}
@@ -92,6 +93,7 @@ class TestAPI(BaseUserConfig):
         self.assertFalse(len(user_json["socialMedias"]))
         self.assertEqual(user_json["displayName"], updated_user["displayName"])
         self.assertEqual(user_json["title"], updated_user["title"])
+        mock_remove_avatar.assert_called_with(test_user["avatar"]["link"], 1)
 
     def test_update_user_400_when_required_param_not_passed(self):
         updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
