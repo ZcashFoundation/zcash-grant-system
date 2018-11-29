@@ -64,6 +64,14 @@ test_user = {
 
 test_team = [test_user]
 
+test_other_user = {
+    "accountAddress": "0xA65AD9c6006fe8948E75EC0861A1BAbaD8168DE0",
+    "displayName": 'Faketoshi',
+    "emailAddress": 'fake@toshi.com',
+    "title": 'The Real Fake Satoshi'
+    # TODO make signed messages for this for more tests
+}
+
 milestones = [
     {
         "title": "All the money straightaway",

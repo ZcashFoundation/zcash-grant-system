@@ -3,7 +3,7 @@ from flask_testing import TestCase
 from grant.app import create_app
 from grant.user.models import User, SocialMedia, db, Avatar
 from grant.proposal.models import Proposal
-from .test_data import test_user, test_proposal, message
+from .test_data import test_user, test_other_user, test_proposal, message
 
 
 class BaseTestConfig(TestCase):
@@ -51,6 +51,14 @@ class BaseUserConfig(BaseTestConfig):
         db.session.add(sm)
         avatar = Avatar(image_url=test_user["avatar"]["link"], user_id=self.user.id)
         db.session.add(avatar)
+
+        self.other_user = User.create(
+            account_address=test_other_user["accountAddress"],
+            email_address=test_other_user["emailAddress"],
+            display_name=test_other_user["displayName"],
+            title=test_other_user["title"]
+        )
+
         db.session.commit()
 
     def remove_default_user(self):
@@ -63,4 +71,8 @@ class BaseProposalCreatorConfig(BaseUserConfig):
         self.proposal = Proposal.create(status="DRAFT")
         self.proposal.team.append(self.user)
         db.session.add(self.proposal)
+
+        self.other_proposal = Proposal.create(status="DRAFT")
+        self.other_proposal.team.append(self.other_user)
+        db.session.add(self.other_proposal)
         db.session.commit()
