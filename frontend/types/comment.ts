@@ -10,7 +10,7 @@ export interface Comment {
 }
 
 export interface UserComment {
-  commentId: number | string;
+  id: number | string;
   content: string;
   dateCreated: number;
   proposal: UserProposal;

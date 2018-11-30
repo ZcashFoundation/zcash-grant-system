@@ -22,9 +22,6 @@ interface StateProps {
 
 interface DispatchProps {
   fetchUser: typeof usersActions['fetchUser'];
-  fetchUserCreated: typeof usersActions['fetchUserCreated'];
-  fetchUserFunded: typeof usersActions['fetchUserFunded'];
-  fetchUserComments: typeof usersActions['fetchUserComments'];
   fetchUserInvites: typeof usersActions['fetchUserInvites'];
 }
 
@@ -68,14 +65,13 @@ class Profile extends React.Component<Props> {
     }
 
     const { createdProposals, fundedProposals, comments, invites } = user;
-    const noneCreated = user.hasFetchedCreated && createdProposals.length === 0;
-    const noneFunded = user.hasFetchedFunded && fundedProposals.length === 0;
-    const noneCommented = user.hasFetchedComments && comments.length === 0;
+    const noneCreated = createdProposals.length === 0;
+    const noneFunded = fundedProposals.length === 0;
+    const noneCommented = comments.length === 0;
     const noneInvites = user.hasFetchedInvites && invites.length === 0;
 
     return (
       <div className="Profile">
-        {/* TODO: SSR fetch user details */}
         {/* TODO: customize details for funders/creators */}
         <HeaderDetails
           title={`${user.displayName} is funding projects on Grant.io`}
@@ -84,11 +80,7 @@ class Profile extends React.Component<Props> {
         />
         <ProfileUser user={user} />
         <Tabs>
-          <Tabs.TabPane
-            tab={TabTitle('Created', createdProposals.length)}
-            key="created"
-            disabled={!user.hasFetchedCreated}
-          >
+          <Tabs.TabPane tab={TabTitle('Created', createdProposals.length)} key="created">
             <div>
               {noneCreated && (
                 <Placeholder subtitle="Has not created any proposals yet" />
@@ -98,31 +90,19 @@ class Profile extends React.Component<Props> {
               ))}
             </div>
           </Tabs.TabPane>
-          <Tabs.TabPane
-            tab={TabTitle('Funded', fundedProposals.length)}
-            key="funded"
-            disabled={!user.hasFetchedFunded}
-          >
+          <Tabs.TabPane tab={TabTitle('Funded', fundedProposals.length)} key="funded">
             <div>
               {noneFunded && <Placeholder subtitle="Has not funded any proposals yet" />}
-              {createdProposals.map(p => (
+              {fundedProposals.map(p => (
                 <ProfileProposal key={p.proposalId} proposal={p} />
               ))}
             </div>
           </Tabs.TabPane>
-          <Tabs.TabPane
-            tab={TabTitle('Comments', comments.length)}
-            key="comments"
-            disabled={!user.hasFetchedComments}
-          >
+          <Tabs.TabPane tab={TabTitle('Comments', comments.length)} key="comments">
             <div>
               {noneCommented && <Placeholder subtitle="Has not made any comments yet" />}
               {comments.map(c => (
-                <ProfileComment
-                  key={c.commentId}
-                  userName={user.displayName}
-                  comment={c}
-                />
+                <ProfileComment key={c.id} userName={user.displayName} comment={c} />
               ))}
             </div>
           </Tabs.TabPane>
@@ -158,9 +138,6 @@ class Profile extends React.Component<Props> {
     const userLookupId = match.params.id;
     if (userLookupId) {
       this.props.fetchUser(userLookupId);
-      this.props.fetchUserCreated(userLookupId);
-      this.props.fetchUserFunded(userLookupId);
-      this.props.fetchUserComments(userLookupId);
       this.props.fetchUserInvites(userLookupId);
     }
   }
@@ -184,9 +161,6 @@ const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
   }),
   {
     fetchUser: usersActions.fetchUser,
-    fetchUserCreated: usersActions.fetchUserCreated,
-    fetchUserFunded: usersActions.fetchUserFunded,
-    fetchUserComments: usersActions.fetchUserComments,
     fetchUserInvites: usersActions.fetchUserInvites,
   },
 );

@@ -14,17 +14,8 @@ export interface UserState extends User {
   fetchError: number | null;
   isUpdating: boolean;
   updateError: number | null;
-  isFetchingCreated: boolean;
-  hasFetchedCreated: boolean;
-  fetchErrorCreated: number | null;
   createdProposals: UserProposal[];
-  isFetchingFunded: boolean;
-  hasFetchedFunded: boolean;
-  fetchErrorFunded: number | null;
   fundedProposals: UserProposal[];
-  isFetchingComments: boolean;
-  hasFetchedComments: boolean;
-  fetchErrorComments: number | null;
   comments: UserComment[];
   isFetchingInvites: boolean;
   hasFetchedInvites: boolean;
@@ -53,17 +44,8 @@ export const INITIAL_USER_STATE: UserState = {
   fetchError: null,
   isUpdating: false,
   updateError: null,
-  isFetchingCreated: false,
-  hasFetchedCreated: false,
-  fetchErrorCreated: null,
   createdProposals: [],
-  isFetchingFunded: false,
-  hasFetchedFunded: false,
-  fetchErrorFunded: null,
   fundedProposals: [],
-  isFetchingComments: false,
-  hasFetchedComments: false,
-  fetchErrorComments: null,
   comments: [],
   isFetchingInvites: false,
   hasFetchedInvites: false,
@@ -78,8 +60,6 @@ export const INITIAL_STATE: UsersState = {
 export default (state = INITIAL_STATE, action: any) => {
   const { payload } = action;
   const userFetchId = payload && payload.userFetchId;
-  const proposals = payload && payload.proposals;
-  const comments = payload && payload.comments;
   const invites = payload && payload.invites;
   const errorStatus =
     (payload &&
@@ -121,60 +101,6 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, payload.user.accountAddress, {
         isUpdating: false,
         updateError: errorStatus,
-      });
-    // created proposals
-    case types.FETCH_USER_CREATED_PENDING:
-      return updateUserState(state, userFetchId, {
-        isFetchingCreated: true,
-        fetchErrorCreated: null,
-      });
-    case types.FETCH_USER_CREATED_FULFILLED:
-      return updateUserState(state, userFetchId, {
-        isFetchingCreated: false,
-        hasFetchedCreated: true,
-        createdProposals: proposals,
-      });
-    case types.FETCH_USER_CREATED_REJECTED:
-      return updateUserState(state, userFetchId, {
-        isFetchingCreated: false,
-        hasFetchedCreated: true,
-        fetchErrorCreated: errorStatus,
-      });
-    // funded proposals
-    case types.FETCH_USER_FUNDED_PENDING:
-      return updateUserState(state, userFetchId, {
-        isFetchingFunded: true,
-        fetchErrorFunded: null,
-      });
-    case types.FETCH_USER_FUNDED_FULFILLED:
-      return updateUserState(state, userFetchId, {
-        isFetchingFunded: false,
-        hasFetchedFunded: true,
-        fundedProposals: proposals,
-      });
-    case types.FETCH_USER_FUNDED_REJECTED:
-      return updateUserState(state, userFetchId, {
-        isFetchingFunded: false,
-        hasFetchedFunded: true,
-        fetchErrorFunded: errorStatus,
-      });
-    // comments
-    case types.FETCH_USER_COMMENTS_PENDING:
-      return updateUserState(state, userFetchId, {
-        isFetchingComments: true,
-        fetchErrorComments: null,
-      });
-    case types.FETCH_USER_COMMENTS_FULFILLED:
-      return updateUserState(state, userFetchId, {
-        isFetchingComments: false,
-        hasFetchedComments: true,
-        comments,
-      });
-    case types.FETCH_USER_COMMENTS_REJECTED:
-      return updateUserState(state, userFetchId, {
-        isFetchingComments: false,
-        hasFetchedComments: true,
-        fetchErrorComments: errorStatus,
       });
     // invites
     case types.FETCH_USER_INVITES_PENDING:
