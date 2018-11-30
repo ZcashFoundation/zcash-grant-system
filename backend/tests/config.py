@@ -68,7 +68,18 @@ class BaseUserConfig(BaseTestConfig):
 class BaseProposalCreatorConfig(BaseUserConfig):
     def setUp(self):
         super().setUp()
-        self.proposal = Proposal.create(status="DRAFT")
+        self.proposal = Proposal.create(
+            status="DRAFT",
+            title=test_proposal["title"],
+            content=test_proposal["content"],
+            brief=test_proposal["brief"],
+            category=test_proposal["category"],
+            target=test_proposal["target"],
+            payout_address=test_proposal["payoutAddress"],
+            trustees=test_proposal["trustees"][0],
+            deadline_duration=test_proposal["deadlineDuration"],
+            vote_duration=test_proposal["voteDuration"]
+        )
         self.proposal.team.append(self.user)
         db.session.add(self.proposal)
 

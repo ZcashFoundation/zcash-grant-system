@@ -75,8 +75,8 @@ test_other_user = {
 milestones = [
     {
         "title": "All the money straightaway",
-        "description": "cool stuff with it",
-        "date": "June 2019",
+        "content": "cool stuff with it",
+        "dateEstimated": "Fri, 30 Nov 2018 01:42:23 GMT",
         "payoutPercent": "100",
         "immediatePayout": False
     }
@@ -87,19 +87,15 @@ test_proposal = {
     "crowdFundContractAddress": "0x20000",
     "content": "## My Proposal",
     "title": "Give Me Money",
+    "brief": "$$$",
     "milestones": milestones,
-    "category": random.choice(CATEGORIES)
+    "category": random.choice(CATEGORIES),
+    "target": "123.456",
+    "payoutAddress": test_team[0]["accountAddress"],
+    "trustees": [test_team[0]["accountAddress"]],
+    "deadlineDuration": 100,
+    "voteDuration": 100
 }
-
-milestones = [
-    {
-        "title": "All the money straightaway",
-        "description": "cool stuff with it",
-        "date": "June 2019",
-        "payoutPercent": "100",
-        "immediatePayout": False
-    }
-]
 
 test_comment_message = {
     "sig": "0x08d5922e48e44229a764d85000558ac9a603ee2ce6a4439a211de4c64a7c3e782efeea90d63760dafb155af53c1dadcec10dac682e1fff8df1b4f40f9fcf08891b",
