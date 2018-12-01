@@ -91,6 +91,11 @@ const start = async () => {
     logMessage('An error occured attempting to run the server. Exiting', 'error');
     process.exit(1);
   });
+
+  process.on('SIGINT', () => {
+    console.log(' Dev exited, see you next time.');
+    process.exit();
+  });
 };
 
 start();
