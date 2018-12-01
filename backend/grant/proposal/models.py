@@ -32,6 +32,7 @@ proposal_team = db.Table(
     db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'))
 )
 
+
 class ProposalTeamInvite(db.Model):
     __tablename__ = "proposal_team_invite"
 
@@ -141,8 +142,8 @@ class Proposal(db.Model):
             target: str = '0',
             payout_address: str = '',
             trustees: List[str] = [],
-            deadline_duration: int = 5184000, # 60 days
-            vote_duration: int = 604800, # 7 days
+            deadline_duration: int = 5184000,  # 60 days
+            vote_duration: int = 604800,  # 7 days
             proposal_address: str = None,
             category: str = ''
     ):
@@ -178,7 +179,22 @@ class Proposal(db.Model):
         return Proposal(
             **kwargs
         )
-    
+
+    @staticmethod
+    def get_by_user(user):
+        return Proposal.query \
+            .join(proposal_team) \
+            .filter(proposal_team.c.user_id == user.id) \
+            .all()
+
+    @staticmethod
+    def get_by_user_contribution(user):
+        return Proposal.query \
+            .join(ProposalContribution) \
+            .filter(ProposalContribution.user_id == user.id) \
+            .order_by(ProposalContribution.date_created.desc()) \
+            .all()
+
     def update(
         self,
         title: str = '',
@@ -188,8 +204,8 @@ class Proposal(db.Model):
         target: str = '0',
         payout_address: str = '',
         trustees: List[str] = [],
-        deadline_duration: int = 5184000, # 60 days
-        vote_duration: int = 604800 # 7 days
+        deadline_duration: int = 5184000,  # 60 days
+        vote_duration: int = 604800  # 7 days
     ):
         self.title = title
         self.brief = brief
@@ -201,7 +217,6 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         self.vote_duration = vote_duration
         Proposal.validate(vars(self))
-
 
     def publish(self):
         # Require certain fields
@@ -215,8 +230,6 @@ class Proposal(db.Model):
         # Then run through regular validation
         Proposal.validate(vars(self))
         self.status = 'LIVE'
-
-        
 
 
 class ProposalSchema(ma.Schema):
@@ -315,10 +328,13 @@ class ProposalTeamInviteSchema(ma.Schema):
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
 
+
 proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
 
 # TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
+
+
 class InviteWithProposalSchema(ma.Schema):
     class Meta:
         model = ProposalTeamInvite
@@ -335,6 +351,7 @@ class InviteWithProposalSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
+
 
 invite_with_proposal_schema = InviteWithProposalSchema()
 invites_with_proposal_schema = InviteWithProposalSchema(many=True)
@@ -362,5 +379,33 @@ class ProposalContributionSchema(ma.Schema):
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
 
+
 proposal_contribution_schema = ProposalContributionSchema()
 proposals_contribution_schema = ProposalContributionSchema(many=True)
+
+
+class UserProposalSchema(ma.Schema):
+    class Meta:
+        model = Proposal
+        # Fields to expose
+        fields = (
+            "proposal_id",
+            "proposal_address",
+            "title",
+            "brief",
+            "date_created",
+            "team",
+        )
+    date_created = ma.Method("get_date_created")
+    proposal_id = ma.Method("get_proposal_id")
+    team = ma.Nested("UserSchema", many=True)
+
+    def get_proposal_id(self, obj):
+        return obj.id
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created) * 1000
+
+
+user_proposal_schema = UserProposalSchema()
+user_proposals_schema = UserProposalSchema(many=True)

@@ -1,11 +1,6 @@
 import { Store } from 'redux';
+import { fetchUser } from 'modules/users/actions';
 import { fetchProposals, fetchProposal } from 'modules/proposals/actions';
-import {
-  fetchUser,
-  fetchUserCreated,
-  fetchUserFunded,
-  fetchUserComments,
-} from 'modules/users/actions';
 import { extractProposalIdFromUrl } from 'utils/api';
 
 const pathActions = [
@@ -29,12 +24,7 @@ const pathActions = [
     action: (match: RegExpMatchArray, store: Store) => {
       const userId = match[1];
       if (userId) {
-        return Promise.all([
-          store.dispatch<any>(fetchUser(userId)),
-          store.dispatch<any>(fetchUserCreated(userId)),
-          store.dispatch<any>(fetchUserFunded(userId)),
-          store.dispatch<any>(fetchUserComments(userId)),
-        ]);
+        return store.dispatch<any>(fetchUser(userId));
       }
     },
   },

@@ -21,7 +21,7 @@ def get_crowd_fund_abi():
 
 def read_proposal(address):
     current_web3.eth.defaultAccount = '0x537680D921C000fC52Af9962ceEb4e359C50F424' if not current_web3.eth.accounts else \
-    current_web3.eth.accounts[0]
+        current_web3.eth.accounts[0]
     crowd_fund_abi = get_crowd_fund_abi()
     contract = current_web3.eth.contract(address=address, abi=crowd_fund_abi)
 
@@ -130,6 +130,33 @@ def read_proposal(address):
     bn_keys = ['amountVotingForRefund', 'balance', 'funded', 'target']
     for k in bn_keys:
         crowd_fund[k] = str(crowd_fund[k])
+
+    return crowd_fund
+
+
+def read_user_proposal(address):
+    current_web3.eth.defaultAccount = '0x537680D921C000fC52Af9962ceEb4e359C50F424' if not current_web3.eth.accounts else \
+        current_web3.eth.accounts[0]
+    crowd_fund_abi = get_crowd_fund_abi()
+    contract = current_web3.eth.contract(address=address, abi=crowd_fund_abi)
+
+    crowd_fund = {}
+    methods = [
+        "raiseGoal",
+    ]
+
+    # batched
+    calls = list(map(lambda x: [x, None], methods))
+    try:
+        crowd_fund = batch_call(current_web3, address, crowd_fund_abi, calls, contract)
+    # catch dead contracts here
+    except RpcError:
+        return None
+
+    # balance (sync)
+    crowd_fund['balance'] = current_web3.eth.getBalance(address)
+    crowd_fund['target'] = str(crowd_fund.pop('raiseGoal'))
+    crowd_fund['funded'] = str(crowd_fund.pop('balance'))
 
     return crowd_fund
 

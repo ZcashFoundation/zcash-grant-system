@@ -1,6 +1,7 @@
 import BN from 'bn.js';
 import { socialMediaToUrl } from 'utils/social';
 import { User, CrowdFund, ProposalWithCrowdFund, UserProposal } from 'types';
+import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 
 export function formatUserForPost(user: User) {
@@ -9,6 +10,17 @@ export function formatUserForPost(user: User) {
     avatar: user.avatar ? user.avatar.imageUrl : null,
     socialMedias: user.socialMedias.map(sm => socialMediaToUrl(sm.service, sm.username)),
   };
+}
+
+export function formatUserFromGet(user: UserState) {
+  const bnUserProp = (p: UserProposal) => {
+    p.funded = new BN(p.funded);
+    p.target = new BN(p.target);
+    return p;
+  };
+  user.createdProposals = user.createdProposals.map(bnUserProp);
+  user.fundedProposals = user.fundedProposals.map(bnUserProp);
+  return user;
 }
 
 export function formatCrowdFundFromGet(crowdFund: CrowdFund, base = 10): CrowdFund {
