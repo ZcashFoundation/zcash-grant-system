@@ -97,7 +97,7 @@ To learn more about this auth service, you can visit the repo [here](https://git
 
 1. create bucket, keep the `bucket name` and `region` handy
 1. unblock public access `Amazon S3 > BUCKET_NAME > Permissions > Public access settings`
-1. set the CORS configuration, replace HOST_NAME with desired domain, or \* to allow all  
+1. set the CORS configuration, replace HOST_NAME with desired domain, or `*` to allow all  
    Amazon S3 > BUCKET_NAME > Permissions > CORS configuration
 
    ```
@@ -113,7 +113,7 @@ To learn more about this auth service, you can visit the repo [here](https://git
    </CORSConfiguration>
    ```
 
-1. create IAM Policy
+1. create IAM Policy, replace `BUCKET_NAME` with correct name.
 
    ```
     {
