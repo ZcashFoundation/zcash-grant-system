@@ -10,19 +10,21 @@ from grant.extensions import bcrypt, migrate, db, ma, mail, web3
 from grant.settings import SENTRY_RELEASE, ENV
 
 
-def create_app(config_object="grant.settings"):
+def create_app(config_objects=["grant.settings"]):
     app = Flask(__name__.split(".")[0])
-    app.config.from_object(config_object)
+    for conf in config_objects:
+        app.config.from_object(conf)
     app.url_map.strict_slashes = False
     register_extensions(app)
     register_blueprints(app)
     register_shellcontext(app)
     register_commands(app)
-    sentry_sdk.init(
-        environment=ENV,
-        release=SENTRY_RELEASE,
-        integrations=[FlaskIntegration()]
-    )
+    if not app.config.get("TESTING"):
+        sentry_sdk.init(
+            environment=ENV,
+            release=SENTRY_RELEASE,
+            integrations=[FlaskIntegration()]
+        )
     return app
 
 

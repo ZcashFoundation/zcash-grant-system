@@ -1,4 +1,5 @@
 import datetime
+from sqlalchemy.orm import raiseload
 
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix
@@ -25,6 +26,14 @@ class Comment(db.Model):
         self.content = content
         self.date_created = datetime.datetime.now()
 
+    @staticmethod
+    def get_by_user(user):
+        return Comment.query \
+            .options(raiseload(Comment.replies)) \
+            .filter(Comment.user_id == user.id) \
+            .order_by(Comment.date_created.desc()) \
+            .all()
+
 
 class CommentSchema(ma.Schema):
     class Meta:
@@ -50,3 +59,35 @@ class CommentSchema(ma.Schema):
 
 comment_schema = CommentSchema()
 comments_schema = CommentSchema(many=True)
+
+
+class UserCommentSchema(ma.Schema):
+    class Meta:
+        model = Comment
+        fields = (
+            "id",
+            "proposal",
+            "content",
+            "date_created",
+        )
+    proposal = ma.Nested(
+        "ProposalSchema",
+        exclude=[
+            "comments",
+            "contributions",
+            "team",
+            "milestones",
+            "content",
+            "invites",
+            "trustees",
+            "updates"
+        ]
+    )
+    date_created = ma.Method("get_date_created")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created) * 1000
+
+
+user_comment_schema = UserCommentSchema()
+user_comments_schema = UserCommentSchema(many=True)

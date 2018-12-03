@@ -1,12 +1,34 @@
 from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
 
-from grant.proposal.models import Proposal, proposal_team, ProposalTeamInvite, invites_with_proposal_schema
+from grant.comment.models import Comment, user_comments_schema
+from grant.proposal.models import (
+    Proposal,
+    proposals_schema,
+    proposal_team,
+    ProposalTeamInvite,
+    invites_with_proposal_schema,
+    user_proposals_schema
+)
 from grant.utils.auth import requires_sm, requires_same_user_auth, verify_signed_auth, BadSignatureException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
+from grant.web3.proposal import read_user_proposal
+
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
+
+
+def populate_user_proposals_cfs(proposals):
+    for p in proposals:
+        proposal_contract = read_user_proposal(p['proposal_address'])
+        if proposal_contract:
+            p['target'] = proposal_contract['target']
+            p['funded'] = proposal_contract['funded']
+        else:
+            p['target'] = None
+    filtered_proposals = list(filter(lambda p: p['target'] is not None, proposals))
+    return filtered_proposals
 
 
 @blueprint.route("/", methods=["GET"])
@@ -38,11 +60,27 @@ def get_me():
 
 
 @blueprint.route("/<user_identity>", methods=["GET"])
-@endpoint.api()
-def get_user(user_identity):
+@endpoint.api(
+    parameter("withProposals", type=bool, required=False),
+    parameter("withComments", type=bool, required=False),
+    parameter("withFunded", type=bool, required=False)
+)
+def get_user(user_identity, with_proposals, with_comments, with_funded):
     user = User.get_by_identifier(email_address=user_identity, account_address=user_identity)
     if user:
         result = user_schema.dump(user)
+        if with_proposals:
+            proposals = Proposal.get_by_user(user)
+            proposals_dump = user_proposals_schema.dump(proposals)
+            result["createdProposals"] = populate_user_proposals_cfs(proposals_dump)
+        if with_funded:
+            contributions = Proposal.get_by_user_contribution(user)
+            contributions_dump = user_proposals_schema.dump(contributions)
+            result["fundedProposals"] = populate_user_proposals_cfs(contributions_dump)
+        if with_comments:
+            comments = Comment.get_by_user(user)
+            comments_dump = user_comments_schema.dump(comments)
+            result["comments"] = comments_dump
         return result
     else:
         message = "User with account_address or user_identity matching {} not found".format(user_identity)

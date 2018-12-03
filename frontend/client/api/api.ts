@@ -8,7 +8,7 @@ import {
   TeamInviteWithProposal,
   Contribution,
 } from 'types';
-import { formatUserForPost, formatProposalFromGet } from 'utils/api';
+import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
@@ -41,7 +41,18 @@ export function postProposal(payload: ProposalDraft) {
 }
 
 export function getUser(address: string): Promise<{ data: User }> {
-  return axios.get(`/api/v1/users/${address}`);
+  return axios
+    .get(`/api/v1/users/${address}`, {
+      params: {
+        withProposals: true,
+        withComments: true,
+        withFunded: true,
+      },
+    })
+    .then(res => {
+      res.data = formatUserFromGet(res.data);
+      return res;
+    });
 }
 
 export function createUser(payload: {

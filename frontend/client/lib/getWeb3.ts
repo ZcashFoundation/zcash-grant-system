@@ -32,7 +32,7 @@ export default () =>
       resolveWeb3(resolve, reject);
     });
     // If document has loaded already, try to get Web3 immediately.
-    if (document.readyState === `complete`) {
+    if (document.readyState !== `loading`) {
       resolveWeb3(resolve, reject);
     }
   });

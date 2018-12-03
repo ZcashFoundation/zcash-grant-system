@@ -92,6 +92,9 @@ def requires_same_user_auth(f):
             return jsonify(message="Decorator requires_same_user_auth requires path variable <user_identity>"), 500
 
         user = User.get_by_identifier(account_address=user_identity, email_address=user_identity)
+        if not user:
+            return jsonify(message="Could not find user with identity {}".format(user_identity)), 403
+
         if user.id != g.current_user.id:
             return jsonify(message="You are not authorized to modify this user"), 403
 
@@ -110,7 +113,7 @@ def requires_team_member_auth(f):
 
         proposal = Proposal.query.filter_by(id=proposal_id).first()
         if not proposal:
-            return jsonify(message="No proposal exists with id: {}".format(proposal_id)), 404
+            return jsonify(message="No proposal exists with id {}".format(proposal_id)), 404
 
         if not g.current_user in proposal.team:
             return jsonify(message="You are not authorized to modify this proposal"), 403
