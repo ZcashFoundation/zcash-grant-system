@@ -12,7 +12,7 @@ from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
 from grant.utils.auth import requires_sm, requires_team_member_auth, verify_signed_auth, BadSignatureException
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email
+from grant.utils.misc import is_email, make_url
 from grant.web3.proposal import read_proposal
 from .models import(
     Proposal,
@@ -301,7 +301,8 @@ def post_proposal_team_invite(proposal_id, address):
         send_email(email, 'team_invite', {
             'user': user,
             'inviter': g.current_user,
-            'proposal': g.current_proposal
+            'proposal': g.current_proposal,
+            'invite_url': make_url(f'/profile/{user.account_address}' if user else '/auth')
         })
 
     return proposal_team_invite_schema.dump(invite), 201

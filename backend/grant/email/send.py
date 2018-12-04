@@ -18,9 +18,9 @@ def signup_info(email_args):
 
 def team_invite_info(email_args):
     return {
-        'subject': '{} has invited you to a project'.format(email_args.inviter.display_name),
+        'subject': '{} has invited you to a project'.format(email_args['inviter'].display_name),
         'title': 'You’ve been invited!',
-        'preview': 'You’ve been invited to the "{}" project team'.format(email_args.proposal.title)
+        'preview': 'You’ve been invited to the "{}" project team'.format(email_args['proposal'].title)
     }
 
 get_info_lookup = {
