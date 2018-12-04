@@ -1,22 +1,12 @@
-import Web3 from 'web3';
 import types from './types';
 
-interface Contract {
-  _address: string;
-}
-
 export interface Web3State {
-  web3: Web3 | null;
   isMissingWeb3: boolean;
   isWrongNetwork: boolean;
   isWeb3Locked: boolean;
 
   isEnablingWeb3: boolean;
   web3EnableError: null | string;
-
-  contracts: Contract[];
-  contractsLoading: boolean;
-  contractsError: null | string;
 
   accounts: any[];
   accountsLoading: boolean;
@@ -37,17 +27,12 @@ export interface Web3State {
 }
 
 export const INITIAL_STATE: Web3State = {
-  web3: null,
   isMissingWeb3: false,
   isWrongNetwork: false,
   isWeb3Locked: false,
 
   isEnablingWeb3: false,
   web3EnableError: null,
-
-  contracts: [],
-  contractsLoading: false,
-  contractsError: null,
 
   accounts: [],
   accountsLoading: false,
@@ -67,24 +52,6 @@ export const INITIAL_STATE: Web3State = {
   refundActionError: null,
 };
 
-function addContract(state: Web3State, payload: Contract) {
-  let contracts = state.contracts;
-
-  const existingContract = state.contracts.find(
-    (c: Contract) => c._address === payload._address,
-  );
-
-  if (!existingContract) {
-    contracts = contracts.concat(payload);
-  }
-
-  return {
-    ...state,
-    contracts,
-    contractsLoading: false,
-  };
-}
-
 export default (state = INITIAL_STATE, action: any): Web3State => {
   const { payload } = action;
 
@@ -92,13 +59,11 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
     case types.WEB3_FULFILLED:
       return {
         ...state,
-        web3: payload,
         isMissingWeb3: false,
       };
     case types.WEB3_REJECTED:
       return {
         ...state,
-        web3: null,
         isMissingWeb3: true,
       };
 
@@ -143,20 +108,6 @@ export default (state = INITIAL_STATE, action: any): Web3State => {
         crowdFundLoading: false,
         crowdFundError: null,
         crowdFundCreatedAddress: null,
-      };
-
-    case types.CONTRACT_PENDING:
-      return {
-        ...state,
-        contractsLoading: true,
-      };
-    case types.CONTRACT_FULFILLED:
-      return addContract(state, payload);
-    case types.CONTRACT_REJECTED:
-      return {
-        ...state,
-        contractsLoading: false,
-        contractsError: payload,
       };
 
     case types.ACCOUNTS_PENDING:

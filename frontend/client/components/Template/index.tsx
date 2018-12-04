@@ -1,11 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Layout, Spin } from 'antd';
+import { Layout } from 'antd';
 import classnames from 'classnames';
 import BasicHead from 'components/BasicHead';
 import Header from 'components/Header';
 import Footer from 'components/Footer';
-import Web3Container from 'lib/Web3Container';
 import Web3Error from './Web3Error';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
@@ -94,16 +93,7 @@ class Template extends React.PureComponent<Props> {
           />
         );
       } else {
-        content = (
-          <Web3Container
-            render={() => children}
-            renderLoading={() => (
-              <div className="Template-content-inner-loading">
-                <Spin size="large" />
-              </div>
-            )}
-          />
-        );
+        content = children;
       }
     }
 

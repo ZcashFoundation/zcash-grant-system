@@ -1,28 +1,26 @@
 import { SagaIterator } from 'redux-saga';
 import { all, call, fork, put, select, take, takeLatest } from 'redux-saga/effects';
-import { setAccounts, setContract, setWeb3 } from './actions';
-import { selectWeb3 } from './selectors';
+import { checkNetwork, setAccounts, setWeb3 } from './actions';
 import { safeEnable } from 'utils/web3';
 import types from './types';
-import { fetchCrowdFundFactoryJSON } from 'api/api';
+import { selectIsMissingWeb3 } from 'modules/web3/selectors';
 
 export function* bootstrapWeb3(): SagaIterator {
   // Don't attempt to bootstrap web3 on SSR
   if (process.env.SERVER_SIDE_RENDER) {
     return;
   }
-  const CrowdFundFactory = yield call(fetchCrowdFundFactoryJSON);
   yield put<any>(setWeb3());
   yield take(types.WEB3_FULFILLED);
 
-  yield all([put<any>(setAccounts()), put<any>(setContract(CrowdFundFactory))]);
+  yield all([put<any>(setAccounts()), put<any>(checkNetwork())]);
 }
 
 export function* handleEnableWeb3(): SagaIterator {
-  const web3 = yield select(selectWeb3);
+  const isMissingWeb3 = yield select(selectIsMissingWeb3);
 
   try {
-    if (!web3) {
+    if (isMissingWeb3) {
       const web3Action = yield take([types.WEB3_FULFILLED, types.WEB3_REJECTED]);
       if (web3Action.type === types.WEB3_REJECTED) {
         throw new Error('No web3 instance available');

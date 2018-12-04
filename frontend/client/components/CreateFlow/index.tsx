@@ -21,7 +21,6 @@ import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
-import { Web3RenderProps } from 'lib/Web3Container';
 
 import './index.less';
 
@@ -101,14 +100,11 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   },
 };
 
-interface OwnProps {
-  accounts: Web3RenderProps['accounts'];
-}
-
 interface StateProps {
   form: AppState['create']['form'];
   isSavingDraft: AppState['create']['isSavingDraft'];
   hasSavedDraft: AppState['create']['hasSavedDraft'];
+  accounts: AppState['web3']['accounts'];
 }
 
 interface DispatchProps {
@@ -116,7 +112,7 @@ interface DispatchProps {
   resetCreateCrowdFund: typeof web3Actions['resetCreateCrowdFund'];
 }
 
-type Props = OwnProps & StateProps & DispatchProps & RouteComponentProps<any>;
+type Props = StateProps & DispatchProps & RouteComponentProps<any>;
 
 interface State {
   step: CREATE_STEP;
@@ -329,7 +325,7 @@ class CreateFlow extends React.Component<Props, State> {
   };
 }
 
-const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
+const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
   (state: AppState) => ({
     form: state.create.form,
     isSavingDraft: state.create.isSavingDraft,
@@ -337,6 +333,7 @@ const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
     crowdFundLoading: state.web3.crowdFundLoading,
     crowdFundError: state.web3.crowdFundError,
     crowdFundCreatedAddress: state.web3.crowdFundCreatedAddress,
+    accounts: state.web3.accounts,
   }),
   {
     updateForm: createActions.updateForm,
@@ -344,7 +341,7 @@ const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
   },
 );
 
-export default compose<Props, OwnProps>(
+export default compose<Props, {}>(
   withRouter,
   withConnect,
 )(CreateFlow);

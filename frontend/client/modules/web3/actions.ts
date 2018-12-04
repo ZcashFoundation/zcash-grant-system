@@ -1,7 +1,7 @@
 import types from './types';
 import { Dispatch } from 'redux';
-import getWeb3 from 'lib/getWeb3';
-import getContract, { WrongNetworkError } from 'lib/getContract';
+import getWeb3, { initializeWeb3 } from 'lib/getWeb3';
+import { WrongNetworkError } from 'lib/getContract';
 import { sleep } from 'utils/helpers';
 import { web3ErrorToString } from 'utils/web3';
 import { putProposalPublish } from 'api/api';
@@ -15,6 +15,7 @@ import {
   postProposalContribution,
 } from 'modules/proposals/actions';
 import { getCrowdFundContract } from 'lib/crowdFundContracts';
+import { getCrowdFundFactoryContract } from 'lib/crowdFundFactoryContract';
 
 type GetState = () => AppState;
 
@@ -33,8 +34,18 @@ export function setWeb3() {
   return (dispatch: Dispatch<any>) => {
     return dispatch({
       type: types.WEB3,
-      payload: getWeb3(),
+      payload: initializeWeb3(),
     });
+  };
+}
+
+export function checkNetwork() {
+  return async (dispatch: Dispatch<any>) => {
+    try {
+      await getCrowdFundFactoryContract(getWeb3());
+    } catch (err) {
+      handleWrongNetworkError(dispatch)(err);
+    }
   };
 }
 
@@ -42,35 +53,14 @@ export function enableWeb3() {
   return { type: types.ENABLE_WEB3_PENDING };
 }
 
-export type TSetContract = typeof setContract;
-export function setContract(json: any, deployedAddress?: string) {
-  return (dispatch: Dispatch<any>, getState: GetState) => {
-    const state = getState();
-    if (state.web3.web3) {
-      // TODO: Type me as promise dispatch
-      (dispatch as any)({
-        type: types.CONTRACT,
-        payload: getContract(state.web3.web3, json, deployedAddress),
-      }).catch(handleWrongNetworkError(dispatch));
-    } else {
-      dispatch({
-        type: types.CONTRACT_REJECTED,
-        payload: {
-          error: 'No web3 object available',
-        },
-      });
-    }
-  };
-}
-
 export type TSetAccounts = typeof setAccounts;
 export function setAccounts() {
-  return (dispatch: Dispatch<any>, getState: GetState) => {
-    const state = getState();
-    if (state.web3.web3) {
+  return (dispatch: Dispatch<any>) => {
+    const web3 = getWeb3();
+    if (web3) {
       dispatch({ type: types.ACCOUNTS_PENDING });
 
-      state.web3.web3.eth
+      web3.eth
         .getAccounts()
         .then((accounts: any[]) => {
           if (accounts && accounts.length) {
@@ -111,7 +101,7 @@ export interface ProposalContractData {
 }
 
 export type TCreateCrowdFund = typeof createCrowdFund;
-export function createCrowdFund(CrowdFundFactoryContract: any, proposal: ProposalDraft) {
+export function createCrowdFund(proposal: ProposalDraft) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.CROWD_FUND_PENDING,
@@ -131,6 +121,7 @@ export function createCrowdFund(CrowdFundFactoryContract: any, proposal: Proposa
     const accounts = state.web3.accounts;
 
     try {
+      const CrowdFundFactoryContract = await getCrowdFundFactoryContract(getWeb3());
       await CrowdFundFactoryContract.methods
         .createCrowdFund(
           ethAmount,
@@ -176,10 +167,7 @@ export function requestMilestonePayout(proposal: ProposalWithCrowdFund, index: n
     const state = getState();
     const account = state.web3.accounts[0];
     const { proposalAddress, proposalId } = proposal;
-    const crowdFundContract = await getCrowdFundContract(
-      state.web3.web3,
-      proposalAddress,
-    );
+    const crowdFundContract = await getCrowdFundContract(getWeb3(), proposalAddress);
 
     try {
       await crowdFundContract.methods
@@ -194,7 +182,7 @@ export function requestMilestonePayout(proposal: ProposalWithCrowdFund, index: n
         });
     } catch (err) {
       dispatch({
-        type: types.REQUEST_MILESTONE_PAYOUT,
+        type: types.REQUEST_MILESTONE_PAYOUT_REJECTED,
         payload: err.message || err.toString(),
         error: true,
       });
@@ -211,10 +199,7 @@ export function payMilestonePayout(proposal: ProposalWithCrowdFund, index: numbe
     const state = getState();
     const account = state.web3.accounts[0];
     const { proposalAddress, proposalId } = proposal;
-    const crowdFundContract = await getCrowdFundContract(
-      state.web3.web3,
-      proposalAddress,
-    );
+    const crowdFundContract = await getCrowdFundContract(getWeb3(), proposalAddress);
 
     try {
       await crowdFundContract.methods
@@ -246,7 +231,7 @@ export function fundCrowdFund(proposal: ProposalWithCrowdFund, value: number | s
       type: types.SEND_PENDING,
     });
     const state = getState();
-    const web3 = state.web3.web3;
+    const web3 = getWeb3();
     const account = state.web3.accounts[0];
     const { proposalAddress, proposalId } = proposal;
     const crowdFundContract = await getCrowdFundContract(web3, proposalAddress);
@@ -301,10 +286,7 @@ export function voteMilestonePayout(
     const state = getState();
     const account = state.web3.accounts[0];
     const { proposalAddress, proposalId } = proposal;
-    const crowdFundContract = await getCrowdFundContract(
-      state.web3.web3,
-      proposalAddress,
-    );
+    const crowdFundContract = await getCrowdFundContract(getWeb3(), proposalAddress);
 
     try {
       await crowdFundContract.methods
@@ -332,10 +314,7 @@ export function voteRefund(proposal: ProposalWithCrowdFund, vote: boolean) {
     const state = getState();
     const account = state.web3.accounts[0];
     const { proposalAddress, proposalId } = proposal;
-    const crowdFundContract = await getCrowdFundContract(
-      state.web3.web3,
-      proposalAddress,
-    );
+    const crowdFundContract = await getCrowdFundContract(getWeb3(), proposalAddress);
 
     try {
       await crowdFundContract.methods
@@ -385,10 +364,7 @@ export function triggerRefund(proposal: ProposalWithCrowdFund) {
     const state = getState();
     const account = state.web3.accounts[0];
     const { proposalAddress, proposalId } = proposal;
-    const crowdFundContract = await getCrowdFundContract(
-      state.web3.web3,
-      proposalAddress,
-    );
+    const crowdFundContract = await getCrowdFundContract(getWeb3(), proposalAddress);
 
     try {
       await freezeContract(crowdFundContract, account);
@@ -410,10 +386,7 @@ export function withdrawRefund(proposal: ProposalWithCrowdFund, address: string)
     const state = getState();
     const account = state.web3.accounts[0];
     const { proposalAddress, proposalId } = proposal;
-    const crowdFundContract = await getCrowdFundContract(
-      state.web3.web3,
-      proposalAddress,
-    );
+    const crowdFundContract = await getCrowdFundContract(getWeb3(), proposalAddress);
 
     try {
       await freezeContract(crowdFundContract, account);
@@ -440,7 +413,8 @@ export function signData(data: object, dataTypes: object, primaryType: string) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({ type: types.SIGN_DATA_PENDING });
     const state = getState();
-    const { web3, accounts } = state.web3;
+    const { accounts } = state.web3;
+    const web3 = getWeb3();
 
     return new Promise(async (resolve, reject) => {
       const handleErr = (err: any) => {
@@ -454,10 +428,6 @@ export function signData(data: object, dataTypes: object, primaryType: string) {
       };
 
       try {
-        if (!web3) {
-          throw new Error('No web3 instance available!');
-        }
-
         const chainId = await web3.eth.net.getId();
         const rawTypedData = {
           domain: {
