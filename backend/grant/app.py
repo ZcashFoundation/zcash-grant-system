@@ -2,6 +2,7 @@
 """The app module, containing the app factory function."""
 from flask import Flask
 from flask_cors import CORS
+from flask_sslify import SSLify
 from sentry_sdk.integrations.flask import FlaskIntegration
 import sentry_sdk
 
@@ -36,7 +37,9 @@ def register_extensions(app):
     ma.init_app(app)
     mail.init_app(app)
     web3.init_app(app)
+
     CORS(app)
+    SSLify(app)
     return None
 
 

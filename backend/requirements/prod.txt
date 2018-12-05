@@ -63,3 +63,5 @@ web3==4.8.1
 
 #sentry
 sentry-sdk[flask]==0.5.5
+
+Flask-SSLify

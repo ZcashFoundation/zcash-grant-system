@@ -138,6 +138,9 @@ def read_proposal(address):
 
 
 def read_user_proposal(address):
+    if not address:
+        return None
+
     current_web3.eth.defaultAccount = '0x537680D921C000fC52Af9962ceEb4e359C50F424' if not current_web3.eth.accounts else \
         current_web3.eth.accounts[0]
     crowd_fund_abi = get_crowd_fund_abi()
