@@ -1,11 +1,34 @@
-from flask import Blueprint, g
+from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
 
-from grant.proposal.models import Proposal, proposal_team
+from grant.comment.models import Comment, user_comments_schema
+from grant.proposal.models import (
+    Proposal,
+    proposals_schema,
+    proposal_team,
+    ProposalTeamInvite,
+    invites_with_proposal_schema,
+    user_proposals_schema
+)
 from grant.utils.auth import requires_sm, requires_same_user_auth, verify_signed_auth, BadSignatureException
+from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
+from grant.web3.proposal import read_user_proposal
+
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
+
+
+def populate_user_proposals_cfs(proposals):
+    for p in proposals:
+        proposal_contract = read_user_proposal(p['proposal_address'])
+        if proposal_contract:
+            p['target'] = proposal_contract['target']
+            p['funded'] = proposal_contract['funded']
+        else:
+            p['target'] = None
+    filtered_proposals = list(filter(lambda p: p['target'] is not None, proposals))
+    return filtered_proposals
 
 
 @blueprint.route("/", methods=["GET"])
@@ -17,8 +40,13 @@ def get_users(proposal_id):
     if not proposal:
         users = User.query.all()
     else:
-        users = User.query.join(proposal_team).join(Proposal) \
-            .filter(proposal_team.c.proposal_id == proposal.id).all()
+        users = (
+            User.query
+            .join(proposal_team)
+            .join(Proposal)
+            .filter(proposal_team.c.proposal_id == proposal.id)
+            .all()
+        )
     result = users_schema.dump(users)
     return result
 
@@ -32,11 +60,27 @@ def get_me():
 
 
 @blueprint.route("/<user_identity>", methods=["GET"])
-@endpoint.api()
-def get_user(user_identity):
+@endpoint.api(
+    parameter("withProposals", type=bool, required=False),
+    parameter("withComments", type=bool, required=False),
+    parameter("withFunded", type=bool, required=False)
+)
+def get_user(user_identity, with_proposals, with_comments, with_funded):
     user = User.get_by_identifier(email_address=user_identity, account_address=user_identity)
     if user:
         result = user_schema.dump(user)
+        if with_proposals:
+            proposals = Proposal.get_by_user(user)
+            proposals_dump = user_proposals_schema.dump(proposals)
+            result["createdProposals"] = populate_user_proposals_cfs(proposals_dump)
+        if with_funded:
+            contributions = Proposal.get_by_user_contribution(user)
+            contributions_dump = user_proposals_schema.dump(contributions)
+            result["fundedProposals"] = populate_user_proposals_cfs(contributions_dump)
+        if with_comments:
+            comments = Comment.get_by_user(user)
+            comments_dump = user_comments_schema.dump(comments)
+            result["comments"] = comments_dump
         return result
     else:
         message = "User with account_address or user_identity matching {} not found".format(user_identity)
@@ -69,11 +113,11 @@ def create_user(
         sig_address = verify_signed_auth(signed_message, raw_typed_data)
         if sig_address.lower() != account_address.lower():
             return {
-                       "message": "Message signature address ({sig_address}) doesn't match account_address ({account_address})".format(
+                "message": "Message signature address ({sig_address}) doesn't match account_address ({account_address})".format(
                            sig_address=sig_address,
                            account_address=account_address
-                       )
-                   }, 400
+                )
+            }, 400
     except BadSignatureException:
         return {"message": "Invalid message signature"}, 400
 
@@ -85,7 +129,7 @@ def create_user(
         title=title
     )
     result = user_schema.dump(user)
-    return result
+    return result, 201
 
 
 @blueprint.route("/auth", methods=["POST"])
@@ -103,15 +147,39 @@ def auth_user(account_address, signed_message, raw_typed_data):
         sig_address = verify_signed_auth(signed_message, raw_typed_data)
         if sig_address.lower() != account_address.lower():
             return {
-                       "message": "Message signature address ({sig_address}) doesn't match account_address ({account_address})".format(
+                "message": "Message signature address ({sig_address}) doesn't match account_address ({account_address})".format(
                            sig_address=sig_address,
                            account_address=account_address
-                       )
-                   }, 400
+                )
+            }, 400
     except BadSignatureException:
         return {"message": "Invalid message signature"}, 400
 
     return user_schema.dump(existing_user)
+
+
+@blueprint.route("/avatar", methods=["POST"])
+@requires_sm
+@endpoint.api(
+    parameter('mimetype', type=str, required=True)
+)
+def upload_avatar(mimetype):
+    user = g.current_user
+    try:
+        signed_post = sign_avatar_upload(mimetype, user.id)
+        return signed_post
+    except AvatarException as e:
+        return {"message": str(e)}, 400
+
+
+@blueprint.route("/avatar", methods=["DELETE"])
+@requires_sm
+@endpoint.api(
+    parameter('url', type=str, required=True)
+)
+def delete_avatar(url):
+    user = g.current_user
+    remove_avatar(url, user.id)
 
 
 @blueprint.route("/<user_identity>", methods=["PUT"])
@@ -121,7 +189,7 @@ def auth_user(account_address, signed_message, raw_typed_data):
     parameter('displayName', type=str, required=True),
     parameter('title', type=str, required=True),
     parameter('socialMedias', type=list, required=True),
-    parameter('avatar', type=dict, required=True)
+    parameter('avatar', type=str, required=True)
 )
 def update_user(user_identity, display_name, title, social_medias, avatar):
     user = g.current_user
@@ -132,23 +200,54 @@ def update_user(user_identity, display_name, title, social_medias, avatar):
     if title is not None:
         user.title = title
 
+    db_socials = SocialMedia.query.filter_by(user_id=user.id).all()
+    for db_social in db_socials:
+        db.session.delete(db_social)
     if social_medias is not None:
-        SocialMedia.query.filter_by(user_id=user.id).delete()
         for social_media in social_medias:
-            sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
+            sm = SocialMedia(social_media_link=social_media, user_id=user.id)
             db.session.add(sm)
-    else:
-        SocialMedia.query.filter_by(user_id=user.id).delete()
 
-    if avatar is not None:
-        Avatar.query.filter_by(user_id=user.id).delete()
-        avatar_link = avatar.get('link')
-        if avatar_link:
-            avatar_obj = Avatar(image_url=avatar_link, user_id=user.id)
-            db.session.add(avatar_obj)
-    else:
-        Avatar.query.filter_by(user_id=user.id).delete()
+    db_avatar = Avatar.query.filter_by(user_id=user.id).first()
+    if db_avatar:
+        db.session.delete(db_avatar)
+    if avatar:
+        new_avatar = Avatar(image_url=avatar, user_id=user.id)
+        db.session.add(new_avatar)
+
+    old_avatar_url = db_avatar and db_avatar.image_url
+    if old_avatar_url and old_avatar_url != avatar:
+        remove_avatar(old_avatar_url, user.id)
 
     db.session.commit()
     result = user_schema.dump(user)
     return result
+
+
+@blueprint.route("/<user_identity>/invites", methods=["GET"])
+@requires_same_user_auth
+@endpoint.api()
+def get_user_invites(user_identity):
+    invites = ProposalTeamInvite.get_pending_for_user(g.current_user)
+    return invites_with_proposal_schema.dump(invites)
+
+
+@blueprint.route("/<user_identity>/invites/<invite_id>/respond", methods=["PUT"])
+@requires_same_user_auth
+@endpoint.api(
+    parameter('response', type=bool, required=True)
+)
+def respond_to_invite(user_identity, invite_id, response):
+    invite = ProposalTeamInvite.query.filter_by(id=invite_id).first()
+    if not invite:
+        return {"message": "No invite found with id {}".format(invite_id)}, 404
+
+    invite.accepted = response
+    db.session.add(invite)
+
+    if invite.accepted:
+        invite.proposal.team.append(g.current_user)
+        db.session.add(invite)
+
+    db.session.commit()
+    return None, 200

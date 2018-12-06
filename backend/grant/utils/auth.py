@@ -6,6 +6,7 @@ import requests
 from flask import request, g, jsonify
 from itsdangerous import SignatureExpired, BadSignature
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+import sentry_sdk
 
 from grant.settings import SECRET_KEY, AUTH_URL
 from ..proposal.models import Proposal
@@ -39,6 +40,9 @@ class BadSignatureException(Exception):
 
 def verify_signed_auth(signature, typed_data):
     loaded_typed_data = ast.literal_eval(typed_data)
+    if loaded_typed_data['domain']['name'] != 'Grant.io':
+        raise BadSignatureException("Signature is not for Grant.io")
+
     url = AUTH_URL + "/message/recover"
     payload = json.dumps({"sig": signature, "data": loaded_typed_data})
     headers = {'content-type': 'application/json'}
@@ -69,12 +73,15 @@ def requires_sm(f):
                 return jsonify(message="No user exists with address: {}".format(auth_address)), 401
 
             g.current_user = user
+            with sentry_sdk.configure_scope() as scope:
+                scope.user = {
+                    "id": user.id,
+                }
             return f(*args, **kwargs)
 
         return jsonify(message="Authentication is required to access this resource"), 401
 
     return decorated
-
 
 # Decorator that requires you to be the user you're interacting with
 def requires_same_user_auth(f):
@@ -85,6 +92,9 @@ def requires_same_user_auth(f):
             return jsonify(message="Decorator requires_same_user_auth requires path variable <user_identity>"), 500
 
         user = User.get_by_identifier(account_address=user_identity, email_address=user_identity)
+        if not user:
+            return jsonify(message="Could not find user with identity {}".format(user_identity)), 403
+
         if user.id != g.current_user.id:
             return jsonify(message="You are not authorized to modify this user"), 403
 
@@ -103,7 +113,7 @@ def requires_team_member_auth(f):
 
         proposal = Proposal.query.filter_by(id=proposal_id).first()
         if not proposal:
-            return jsonify(message="No proposal exists with id: {}".format(proposal_id)), 404
+            return jsonify(message="No proposal exists with id {}".format(proposal_id)), 404
 
         if not g.current_user in proposal.team:
             return jsonify(message="You are not authorized to modify this proposal"), 403

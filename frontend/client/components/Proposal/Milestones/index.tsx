@@ -208,7 +208,7 @@ class ProposalMilestones extends React.Component<Props, State> {
               <h3 className="ProposalMilestones-milestone-title">{milestone.title}</h3>
               {statuses}
               {notification}
-              {milestone.body}
+              {milestone.content}
             </div>
             {this.state.activeMilestoneIdx === i &&
               !wasRefunded && (

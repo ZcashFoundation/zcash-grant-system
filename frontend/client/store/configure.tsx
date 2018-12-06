@@ -4,8 +4,10 @@ import thunkMiddleware, { ThunkMiddleware } from 'redux-thunk';
 import promiseMiddleware from 'redux-promise-middleware';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import { persistStore, Persistor } from 'redux-persist';
+import { routerMiddleware } from 'connected-react-router';
 import rootReducer, { AppState, combineInitialState } from './reducers';
 import rootSaga from './sagas';
+import history from './history';
 import axios from 'api/axios';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -13,7 +15,7 @@ const sagaMiddleware = createSagaMiddleware();
 type MiddleWare = ThunkMiddleware | SagaMiddleware<any> | any;
 
 const bindMiddleware = (middleware: MiddleWare[]) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
     const { createLogger } = require('redux-logger');
     const logger = createLogger({
       collapsed: true,
@@ -27,7 +29,12 @@ export function configureStore(initialState: Partial<AppState> = combineInitialS
   const store: Store<AppState> = createStore(
     rootReducer,
     initialState,
-    bindMiddleware([sagaMiddleware, thunkMiddleware, promiseMiddleware()]),
+    bindMiddleware([
+      sagaMiddleware,
+      thunkMiddleware,
+      promiseMiddleware(),
+      routerMiddleware(history),
+    ]),
   );
   // Don't persist server side, but don't mess up types for client side
   const persistor: Persistor = process.env.SERVER_SIDE_RENDER

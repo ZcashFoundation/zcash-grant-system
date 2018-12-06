@@ -1,16 +1,17 @@
-import { User, UserProposal } from 'types';
+import { UserProposal, User } from 'types';
 
 export interface Comment {
-  commentId: number | string;
-  body: string;
+  id: number;
+  proposalId: number;
+  content: string;
   dateCreated: number;
   author: User;
   replies: Comment[];
 }
 
 export interface UserComment {
-  commentId: number | string;
-  body: string;
+  id: number | string;
+  content: string;
   dateCreated: number;
   proposal: UserProposal;
 }

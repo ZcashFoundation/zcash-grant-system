@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin, Button } from 'antd';
+import { Spin, Button, message } from 'antd';
 import { AppState } from 'store/reducers';
 import { ProposalWithCrowdFund } from 'types';
 import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
@@ -9,6 +9,7 @@ import {
   getIsFetchingComments,
   getCommentsError,
 } from 'modules/proposals/selectors';
+import { getIsSignedIn } from 'modules/auth/selectors';
 import Comments from 'components/Comments';
 import Placeholder from 'components/Placeholder';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
@@ -22,6 +23,9 @@ interface StateProps {
   comments: ReturnType<typeof getProposalComments>;
   isFetchingComments: ReturnType<typeof getIsFetchingComments>;
   commentsError: ReturnType<typeof getCommentsError>;
+  isPostCommentPending: AppState['proposal']['isPostCommentPending'];
+  postCommentError: AppState['proposal']['postCommentError'];
+  isSignedIn: ReturnType<typeof getIsSignedIn>;
 }
 
 interface DispatchProps {
@@ -40,6 +44,8 @@ class ProposalComments extends React.Component<Props, State> {
     comment: '',
   };
 
+  private editor: MarkdownEditor | null = null;
+
   componentDidMount() {
     if (this.props.proposalId) {
       this.props.fetchProposalComments(this.props.proposalId);
@@ -52,8 +58,27 @@ class ProposalComments extends React.Component<Props, State> {
     }
   }
 
+  componentDidUpdate(prevProps: Props) {
+    // TODO: Come up with better check on if our comment post was a success
+    const { isPostCommentPending, postCommentError } = this.props;
+    if (!isPostCommentPending && !postCommentError && prevProps.isPostCommentPending) {
+      this.setState({ comment: '' });
+      this.editor!.reset();
+    }
+
+    if (postCommentError && postCommentError !== prevProps.postCommentError) {
+      message.error('Failed to submit comment');
+    }
+  }
+
   render() {
-    const { proposalId, comments, isFetchingComments, commentsError } = this.props;
+    const {
+      comments,
+      isFetchingComments,
+      commentsError,
+      isPostCommentPending,
+      isSignedIn,
+    } = this.props;
     const { comment } = this.state;
     let content = null;
 
@@ -68,7 +93,7 @@ class ProposalComments extends React.Component<Props, State> {
       );
     } else if (comments) {
       if (comments.length) {
-        content = <Comments comments={comments} proposalId={proposalId} />;
+        content = <Comments comments={comments} />;
       } else {
         content = (
           <Placeholder
@@ -81,16 +106,23 @@ class ProposalComments extends React.Component<Props, State> {
 
     return (
       <>
-        <div className="ProposalComments-post">
-          <MarkdownEditor
-            onChange={this.handleCommentChange}
-            type={MARKDOWN_TYPE.REDUCED}
-          />
-          <div style={{ marginTop: '0.5rem' }} />
-          <Button onClick={this.postComment} disabled={!comment.length}>
-            Submit comment
-          </Button>
-        </div>
+        {isSignedIn && (
+          <div className="ProposalComments-post">
+            <MarkdownEditor
+              ref={el => (this.editor = el)}
+              onChange={this.handleCommentChange}
+              type={MARKDOWN_TYPE.REDUCED}
+            />
+            <div style={{ marginTop: '0.5rem' }} />
+            <Button
+              onClick={this.postComment}
+              disabled={!comment.length}
+              loading={isPostCommentPending}
+            >
+              Submit comment
+            </Button>
+          </div>
+        )}
         {content}
       </>
     );
@@ -105,11 +137,14 @@ class ProposalComments extends React.Component<Props, State> {
   };
 }
 
-export default connect(
-  (state: AppState, ownProps: OwnProps) => ({
+export default connect<StateProps, DispatchProps, OwnProps, AppState>(
+  (state, ownProps) => ({
     comments: getProposalComments(state, ownProps.proposalId),
     isFetchingComments: getIsFetchingComments(state),
     commentsError: getCommentsError(state),
+    isPostCommentPending: state.proposal.isPostCommentPending,
+    postCommentError: state.proposal.postCommentError,
+    isSignedIn: getIsSignedIn(state),
   }),
   {
     fetchProposalComments,

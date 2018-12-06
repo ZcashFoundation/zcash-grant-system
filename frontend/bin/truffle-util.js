@@ -12,16 +12,30 @@ require('../config/env');
 
 module.exports = {};
 
+const CHECK_CONTRACT_IDS = ['CrowdFundFactory.json']
+
 const clean = (module.exports.clean = () => {
   rimraf.sync(paths.contractsBuild);
 });
 
 const compile = (module.exports.compile = () => {
-  childProcess.execSync('yarn build', { cwd: paths.contractsBase });
+  logMessage('truffle compile, please wait...', 'info');
+  try {
+    childProcess.execSync('yarn build', { cwd: paths.contractsBase });
+  } catch (e) {
+    logMessage(e.stdout.toString('utf8'), 'error');
+    process.exit(1);
+  }
 });
 
 const migrate = (module.exports.migrate = () => {
-  childProcess.execSync('truffle migrate', { cwd: paths.contractsBase });
+  logMessage('truffle migrate, please wait...', 'info');
+  try {
+    childProcess.execSync('truffle migrate', { cwd: paths.contractsBase });
+  } catch (e) {
+    logMessage(e.stdout.toString('utf8'), 'error');
+    process.exit(1);
+  }
 });
 
 const makeWeb3Conn = () => {
@@ -62,27 +76,41 @@ const getGanacheNetworkId = (module.exports.getGanacheNetworkId = () => {
     .catch(() => -1);
 });
 
-const checkContractsNetworkIds = (module.exports.checkContractsNetworkIds = id =>
+const checkContractsNetworkIds = (id) =>
   new Promise((res, rej) => {
     const buildDir = paths.contractsBuild;
-    fs.readdir(buildDir, (err, names) => {
+    fs.readdir(buildDir, (err) => {
       if (err) {
         logMessage(`No contracts build directory @ ${buildDir}`, 'error');
         res(false);
       } else {
-        const allHaveId = names.reduce((ok, name) => {
-          const contract = require(path.join(buildDir, name));
-          if (Object.keys(contract.networks).length > 0 && !contract.networks[id]) {
-            const actual = Object.keys(contract.networks).join(', ');
-            logMessage(`${name} should have networks[${id}], it has ${actual}`, 'error');
+        const allHaveId = CHECK_CONTRACT_IDS.reduce((ok, name) => {
+          const contractPath = path.join(buildDir, name);
+          if (!fs.existsSync(contractPath)) {
             return false;
+          }
+          const contract = require(contractPath);
+          const contractHasKeys = Object.keys(contract.networks).length > 0;
+          if (!contractHasKeys) {
+            logMessage('Contract does not contain network keys.', 'error');
+            return false;
+          } else {
+            if (contractHasKeys && !contract.networks[id]) {
+              const actual = Object.keys(contract.networks).join(', ');
+              logMessage(
+                `${name} should have networks[${id}], it has ${actual}`,
+                'error',
+              );
+              return false;
+            }
           }
           return true && ok;
         }, true);
         res(allHaveId);
       }
     });
-  }));
+  });
+module.exports.checkContractsNetworkIds = checkContractsNetworkIds;
 
 const fundWeb3v1 = (module.exports.fundWeb3v1 = () => {
   // Fund ETH accounts
@@ -128,9 +156,7 @@ module.exports.ethereumCheck = () =>
       if (!allHaveId) {
         logMessage('Contract problems, will compile & migrate.', 'warning');
         clean();
-        logMessage('truffle compile, please wait...', 'info');
         compile();
-        logMessage('truffle migrate, please wait...', 'info');
         migrate();
         fundWeb3v1();
       } else {

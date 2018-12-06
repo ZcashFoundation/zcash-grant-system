@@ -18,6 +18,7 @@ import i18n from './i18n';
 
 // @ts-ignore
 import * as paths from '../config/paths';
+import { storeActionsForPath } from './ssrAsync';
 const isDev = process.env.NODE_ENV === 'development';
 
 let cachedStats: any;
@@ -78,6 +79,7 @@ const chunkExtractFromLoadables = (loadableState: any) =>
 
 const serverRenderer = () => async (req: Request, res: Response) => {
   const { store } = configureStore();
+  await storeActionsForPath(req.url, store);
 
   // i18n
   const locale = (req as any).language;

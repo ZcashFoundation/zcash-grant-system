@@ -1,14 +1,33 @@
-from datetime import datetime
+from dateutil.parser import parse
+from functools import wraps
+import ast
 
 from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 from sqlalchemy.exc import IntegrityError
 
-from grant.comment.models import Comment, comment_schema
+from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
-from grant.utils.auth import requires_sm, requires_team_member_auth
-from .models import Proposal, proposals_schema, proposal_schema, ProposalUpdate, proposal_update_schema, db
+from grant.email.send import send_email
+from grant.utils.auth import requires_sm, requires_team_member_auth, verify_signed_auth, BadSignatureException
+from grant.utils.exceptions import ValidationException
+from grant.utils.misc import is_email
+from grant.web3.proposal import read_proposal
+from .models import(
+    Proposal,
+    proposals_schema,
+    proposal_schema,
+    ProposalUpdate,
+    proposal_update_schema,
+    ProposalContribution,
+    proposal_contribution_schema,
+    proposal_team,
+    ProposalTeamInvite,
+    proposal_team_invite_schema,
+    db
+)
+import traceback
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 
@@ -19,6 +38,10 @@ def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
+        proposal_contract = read_proposal(dumped_proposal['proposal_address'])
+        if not proposal_contract:
+            return {"message": "Proposal retired"}, 404
+        dumped_proposal['crowd_fund'] = proposal_contract
         return dumped_proposal
     else:
         return {"message": "No proposal matching id"}, 404
@@ -28,36 +51,68 @@ def get_proposal(proposal_id):
 @endpoint.api()
 def get_proposal_comments(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        dumped_proposal = proposal_schema.dump(proposal)
-        return {
-            "proposalId": proposal_id,
-            "totalComments": len(dumped_proposal["comments"]),
-            "comments": dumped_proposal["comments"]
-        }
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+    
+    # Only pull top comments, replies will be attached to them
+    comments = Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None)
+    num_comments = Comment.query.filter_by(proposal_id=proposal_id).count()
+    return {
+        "proposalId": proposal_id,
+        "totalComments": num_comments,
+        "comments": comments_schema.dump(comments)
+    }
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
 @requires_sm
 @endpoint.api(
-    parameter('content', type=str, required=True)
+    parameter('comment', type=str, required=True),
+    parameter('parentCommentId', type=int, required=False),
+    parameter('signedMessage', type=str, required=True),
+    parameter('rawTypedData', type=str, required=True)
 )
-def post_proposal_comments(proposal_id, user_id, content):
+def post_proposal_comments(proposal_id, comment, parent_comment_id, signed_message, raw_typed_data):
+    # Make sure proposal exists
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        comment = Comment(
-            proposal_id=proposal_id,
-            user_id=g.current_user.id,
-            content=content
-        )
-        db.session.add(comment)
-        db.session.commit()
-        dumped_comment = comment_schema.dump(comment)
-        return dumped_comment, 201
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+
+    # Make sure the parent comment exists
+    if parent_comment_id:
+        parent = Comment.query.filter_by(id=parent_comment_id).first()
+        if not parent:
+            return {"message": "Parent comment doesn’t exist"}, 400
+
+    # Make sure comment content matches
+    typed_data = ast.literal_eval(raw_typed_data)
+    if comment != typed_data['message']['comment']:
+        return {"message": "Comment doesn’t match signature data"}, 400
+
+    # Verify the signature
+    try:
+        sig_address = verify_signed_auth(signed_message, raw_typed_data)
+        if sig_address.lower() != g.current_user.account_address.lower():
+            return {
+                "message": "Message signature address ({sig_address}) doesn't match current account address ({account_address})".format(
+                    sig_address=sig_address,
+                    account_address=g.current_user.account_address
+                )
+            }, 400
+    except BadSignatureException:
+        return {"message": "Invalid message signature"}, 400
+
+    # Make the comment
+    comment = Comment(
+        proposal_id=proposal_id,
+        user_id=g.current_user.id,
+        parent_comment_id=parent_comment_id,
+        content=comment
+    )
+    db.session.add(comment)
+    db.session.commit()
+    dumped_comment = comment_schema.dump(comment)
+    return dumped_comment, 201
 
 
 @blueprint.route("/", methods=["GET"])
@@ -67,94 +122,117 @@ def post_proposal_comments(proposal_id, user_id, content):
 def get_proposals(stage):
     if stage:
         proposals = (
-            Proposal.query.filter_by(stage=stage)
+            Proposal.query.filter_by(status="LIVE", stage=stage)
                 .order_by(Proposal.date_created.desc())
                 .all()
         )
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
     dumped_proposals = proposals_schema.dump(proposals)
-    return dumped_proposals
-
-
-@blueprint.route("/", methods=["POST"])
-@requires_sm
-@endpoint.api(
-    parameter('crowdFundContractAddress', type=str, required=True),
-    parameter('content', type=str, required=True),
-    parameter('title', type=str, required=True),
-    parameter('milestones', type=list, required=True),
-    parameter('category', type=str, required=True),
-    parameter('team', type=list, required=True)
-)
-def make_proposal(crowd_fund_contract_address, content, title, milestones, category, team):
-    existing_proposal = Proposal.query.filter_by(proposal_address=crowd_fund_contract_address).first()
-    if existing_proposal:
-        return {"message": "Oops! Something went wrong."}, 409
-
-    proposal = Proposal.create(
-        stage="FUNDING_REQUIRED",
-        proposal_address=crowd_fund_contract_address,
-        content=content,
-        title=title,
-        category=category
-    )
-
-    db.session.add(proposal)
-
-    if not len(team) > 0:
-        return {"message": "Team must be at least 1"}, 400
-
-    for team_member in team:
-        account_address = team_member.get("accountAddress")
-        display_name = team_member.get("displayName")
-        email_address = team_member.get("emailAddress")
-        title = team_member.get("title")
-        user = User.query.filter(
-            (User.account_address == account_address) | (User.email_address == email_address)).first()
-        if not user:
-            user = User(
-                account_address=account_address,
-                email_address=email_address,
-                display_name=display_name,
-                title=title
-            )
-            db.session.add(user)
-            db.session.flush()
-
-            avatar_data = team_member.get("avatar")
-            if avatar_data:
-                avatar = Avatar(image_url=avatar_data.get('link'), user_id=user.id)
-                db.session.add(avatar)
-
-            social_medias = team_member.get("socialMedias")
-            if social_medias:
-                for social_media in social_medias:
-                    sm = SocialMedia(social_media_link=social_media.get("link"), user_id=user.id)
-                    db.session.add(sm)
-
-        proposal.team.append(user)
-
-    for each_milestone in milestones:
-        m = Milestone(
-            title=each_milestone["title"],
-            content=each_milestone["description"],
-            date_estimated=datetime.strptime(each_milestone["date"], '%B %Y'),
-            payout_percent=str(each_milestone["payoutPercent"]),
-            immediate_payout=each_milestone["immediatePayout"],
-            proposal_id=proposal.id
-        )
-
-        db.session.add(m)
 
     try:
-        db.session.commit()
-    except IntegrityError as e:
+        for p in dumped_proposals:
+            proposal_contract = read_proposal(p['proposal_address'])
+            p['crowd_fund'] = proposal_contract
+        filtered_proposals = list(filter(lambda p: p['crowd_fund'] is not None, dumped_proposals))
+        return filtered_proposals
+    except Exception as e:
         print(e)
-        return {"message": "Oops! Something went wrong."}, 409
+        print(traceback.format_exc())
+        return {"message": "Oops! Something went wrong."}, 500
 
-    results = proposal_schema.dump(proposal)
-    return results, 201
+
+@blueprint.route("/drafts", methods=["POST"])
+@requires_sm
+@endpoint.api()
+def make_proposal_draft():
+    proposal = Proposal.create(status="DRAFT")
+    proposal.team.append(g.current_user)
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal), 201
+
+
+@blueprint.route("/drafts", methods=["GET"])
+@requires_sm
+@endpoint.api()
+def get_proposal_drafts():
+    proposals = (
+        Proposal.query
+        .filter_by(status="DRAFT")
+        .join(proposal_team)
+        .filter(proposal_team.c.user_id == g.current_user.id)
+        .order_by(Proposal.date_created.desc())
+        .all()
+    )
+    return proposals_schema.dump(proposals), 200
+
+@blueprint.route("/<proposal_id>", methods=["PUT"])
+@requires_team_member_auth
+@endpoint.api(
+    parameter('title', type=str),
+    parameter('brief', type=str),
+    parameter('category', type=str),
+    parameter('content', type=str),
+    parameter('target', type=str),
+    parameter('payoutAddress', type=str),
+    parameter('trustees', type=list),
+    parameter('deadlineDuration', type=int),
+    parameter('voteDuration', type=int),
+    parameter('milestones', type=list)
+)
+def update_proposal(milestones, proposal_id, **kwargs):
+    # Update the base proposal fields
+    try:
+        g.current_proposal.update(**kwargs)
+    except ValidationException as e:
+        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+    db.session.add(g.current_proposal)
+
+    # Delete & re-add milestones
+    [db.session.delete(x) for x in g.current_proposal.milestones]
+    if milestones:
+        for mdata in milestones:
+            m = Milestone(
+                title=mdata["title"],
+                content=mdata["content"],
+                date_estimated=parse(mdata["dateEstimated"]),
+                payout_percent=str(mdata["payoutPercent"]),
+                immediate_payout=mdata["immediatePayout"],
+                proposal_id=g.current_proposal.id
+            )
+            db.session.add(m)
+    
+    # Commit
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
+
+
+@blueprint.route("/<proposal_id>", methods=["DELETE"])
+@requires_team_member_auth
+@endpoint.api()
+def delete_proposal_draft(proposal_id):
+    if g.current_proposal.status != 'DRAFT':
+        return {"message": "Cannot delete non-draft proposals"}, 400
+    db.session.delete(g.current_proposal)
+    db.session.commit()
+    return None, 202
+
+
+@blueprint.route("/<proposal_id>/publish", methods=["PUT"])
+@requires_team_member_auth
+@endpoint.api(
+    parameter('contractAddress', type=str, required=True)
+)
+def publish_proposal(proposal_id, contract_address):
+    try:
+        g.current_proposal.proposal_address = contract_address
+        g.current_proposal.publish()
+    except ValidationException as e:
+        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+    db.session.add(g.current_proposal)
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["GET"])
@@ -184,7 +262,6 @@ def get_proposal_update(proposal_id, update_id):
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
 @requires_team_member_auth
-@requires_sm
 @endpoint.api(
     parameter('title', type=str, required=True),
     parameter('content', type=str, required=True)
@@ -200,3 +277,98 @@ def post_proposal_update(proposal_id, title, content):
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
+
+@blueprint.route("/<proposal_id>/invite", methods=["POST"])
+@requires_team_member_auth
+@endpoint.api(
+    parameter('address', type=str, required=True)
+)
+def post_proposal_team_invite(proposal_id, address):
+    invite = ProposalTeamInvite(
+        proposal_id=proposal_id,
+        address=address
+    )
+    db.session.add(invite)
+    db.session.commit()
+
+    # Send email
+    # TODO: Move this to some background task / after request action
+    email = address
+    user = User.get_by_identifier(email_address=address, account_address=address)
+    if user:
+        email = user.email_address
+    if is_email(email):
+        send_email(email, 'team_invite', {
+            'user': user,
+            'inviter': g.current_user,
+            'proposal': g.current_proposal
+        })
+
+    return proposal_team_invite_schema.dump(invite), 201
+
+
+@blueprint.route("/<proposal_id>/invite/<id_or_address>", methods=["DELETE"])
+@requires_team_member_auth
+@endpoint.api()
+def delete_proposal_team_invite(proposal_id, id_or_address):
+    invite = ProposalTeamInvite.query.filter(
+        (ProposalTeamInvite.id == id_or_address) |
+        (ProposalTeamInvite.address == id_or_address)
+    ).first()
+    if not invite:
+        return {"message": "No invite found given {}".format(id_or_address)}, 404
+    if invite.accepted:
+        return {"message": "Cannot delete an invite that has been accepted"}, 403
+
+    db.session.delete(invite)
+    db.session.commit()
+    return None, 202
+
+
+@blueprint.route("/<proposal_id>/contributions", methods=["GET"])
+@endpoint.api()
+def get_proposal_contributions(proposal_id):
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if proposal:
+        dumped_proposal = proposal_schema.dump(proposal)
+        return dumped_proposal["contributions"]
+    else:
+        return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/contributions/<contribution_id>", methods=["GET"])
+@endpoint.api()
+def get_proposal_contribution(proposal_id, contribution_id):
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if proposal:
+        contribution = ProposalContribution.query.filter_by(tx_id=contribution_id).first()
+        if contribution:
+            return proposal_contribution_schema.dump(contribution)
+        else:
+            return {"message": "No contribution matching id"}
+    else:
+        return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/contributions", methods=["POST"])
+@requires_sm
+@endpoint.api(
+    parameter('txId', type=str, required=True),
+    parameter('fromAddress', type=str, required=True),
+    parameter('amount', type=str, required=True)
+)
+def post_proposal_contribution(proposal_id, tx_id, from_address, amount):
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if proposal:
+        contribution = ProposalContribution(
+            tx_id=tx_id,
+            proposal_id=proposal_id,
+            user_id=g.current_user.id,
+            from_address=from_address,
+            amount=amount
+        )
+        db.session.add(contribution)
+        db.session.commit()
+        dumped_contribution = proposal_contribution_schema.dump(contribution)
+        return dumped_contribution, 201
+    return {"message": "No proposal matching id"}, 404

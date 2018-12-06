@@ -1,8 +1,11 @@
 from sqlalchemy import func
+from sqlalchemy.ext.hybrid import hybrid_property
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification
 from grant.extensions import ma, db
 from grant.utils.misc import make_url
+from grant.utils.upload import extract_avatar_filename, construct_avatar_url
+from grant.utils.social import get_social_info_from_url
 from grant.email.send import send_email
 
 
@@ -23,9 +26,17 @@ class Avatar(db.Model):
     __tablename__ = "avatar"
 
     id = db.Column(db.Integer(), primary_key=True)
-    image_url = db.Column(db.String(255), unique=False, nullable=True)
+    _image_url = db.Column("image_url", db.String(255), unique=False, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship("User", back_populates="avatar")
+
+    @hybrid_property
+    def image_url(self):
+        return construct_avatar_url(self._image_url)
+
+    @image_url.setter
+    def image_url(self, image_url):
+        self._image_url = extract_avatar_filename(image_url)
 
     def __init__(self, image_url, user_id):
         self.image_url = image_url
@@ -41,10 +52,11 @@ class User(db.Model):
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
 
-    social_medias = db.relationship(SocialMedia, backref="user", lazy=True)
+    social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
-    avatar = db.relationship(Avatar, uselist=False, back_populates="user")
-    email_verification = db.relationship(EmailVerification, uselist=False, back_populates="user", lazy=True)
+    avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
+    email_verification = db.relationship(EmailVerification, uselist=False,
+                                         back_populates="user", lazy=True, cascade="all, delete-orphan")
 
     # TODO - add create and validate methods
 
@@ -73,7 +85,7 @@ class User(db.Model):
         db.session.add(ev)
         db.session.commit()
 
-        if send_email:
+        if _send_email:
             send_email(user.email_address, 'signup', {
                 'display_name': user.display_name,
                 'confirm_url': make_url(f'/email/verify?code={ev.code}')
@@ -91,6 +103,7 @@ class User(db.Model):
             (func.lower(User.email_address) == func.lower(email_address))
         ).first()
 
+
 class UserSchema(ma.Schema):
     class Meta:
         model = User
@@ -103,7 +116,6 @@ class UserSchema(ma.Schema):
             "avatar",
             "display_name",
             "userid"
-
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
@@ -113,16 +125,33 @@ class UserSchema(ma.Schema):
     def get_userid(self, obj):
         return obj.id
 
-
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
-
 
 class SocialMediaSchema(ma.Schema):
     class Meta:
         model = SocialMedia
         # Fields to expose
-        fields = ("social_media_link",)
+        fields = (
+            "url",
+            "service",
+            "username",
+        )
+
+    url = ma.Method("get_url")
+    service = ma.Method("get_service")
+    username = ma.Method("get_username")
+
+    def get_url(self, obj):
+        return obj.social_media_link
+
+    def get_service(self, obj):
+        info = get_social_info_from_url(obj.social_media_link)
+        return info['service']
+
+    def get_username(self, obj):
+        info = get_social_info_from_url(obj.social_media_link)
+        return info['username']
 
 
 social_media_schema = SocialMediaSchema()

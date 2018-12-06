@@ -1,28 +1,29 @@
 import React from 'react';
 import lodash from 'lodash';
-import { Input, Form, Col, Row, Button, Icon, Alert } from 'antd';
-import { SOCIAL_INFO } from 'utils/social';
-import { SOCIAL_TYPE, TeamMember } from 'types';
+import axios from 'api/axios';
+import { Input, Form, Col, Row, Button, Alert } from 'antd';
+import { SOCIAL_INFO, socialMediaToUrl } from 'utils/social';
+import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { getCreateTeamMemberError } from 'modules/create/utils';
-import UserAvatar from 'components/UserAvatar';
+import AvatarEdit from './AvatarEdit';
 import './ProfileEdit.less';
 
 interface Props {
   user: UserState;
   onDone(): void;
-  onEdit(user: TeamMember): void;
+  onEdit(user: User): void;
 }
 
 interface State {
-  fields: TeamMember;
+  fields: User;
   isChanged: boolean;
   showError: boolean;
 }
 
 export default class ProfileEdit extends React.PureComponent<Props, State> {
   state: State = {
-    fields: { ...this.props.user } as TeamMember,
+    fields: { ...this.props.user } as User,
     isChanged: false,
     showError: false,
   };
@@ -48,33 +49,21 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     const { fields } = this.state;
     const error = getCreateTeamMemberError(fields);
     const isMissingField =
-      !fields.name || !fields.title || !fields.emailAddress || !fields.ethAddress;
+      !fields.displayName ||
+      !fields.title ||
+      !fields.emailAddress ||
+      !fields.accountAddress;
     const isDisabled = !!error || isMissingField || !this.state.isChanged;
 
     return (
       <>
         <div className="ProfileEdit">
-          <div className="ProfileEdit-avatar">
-            <UserAvatar className="ProfileEdit-avatar-img" user={fields} />
-            <Button
-              className="ProfileEdit-avatar-change"
-              onClick={this.handleChangePhoto}
-            >
-              <Icon
-                className="ProfileEdit-avatar-change-icon"
-                type={fields.avatarUrl ? 'picture' : 'plus-circle'}
-              />
-              <div>{fields.avatarUrl ? 'Change photo' : 'Add photo'}</div>
-            </Button>
-            {fields.avatarUrl && (
-              <Button
-                className="ProfileEdit-avatar-delete"
-                icon="delete"
-                shape="circle"
-                onClick={this.handleDeletePhoto}
-              />
-            )}
-          </div>
+          <AvatarEdit
+            user={fields}
+            onDone={this.handleChangePhoto}
+            onDelete={this.handleDeletePhoto}
+          />
+
           <div className="ProfileEdit-info">
             <Form
               className="ProfileEdit-info-form"
@@ -86,7 +75,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
                   name="name"
                   autoComplete="off"
                   placeholder="Display name (Required)"
-                  value={fields.name}
+                  value={fields.displayName}
                   onChange={this.handleChangeField}
                 />
               </Form.Item>
@@ -115,29 +104,32 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
 
               <Form.Item>
                 <Input
-                  name="ethAddress"
+                  name="accountAddress"
                   disabled={true}
-                  autoComplete="ethAddress"
+                  autoComplete="accountAddress"
                   placeholder="Ethereum address (Required)"
-                  value={fields.ethAddress}
+                  value={fields.accountAddress}
                   onChange={this.handleChangeField}
                 />
               </Form.Item>
 
               <Row gutter={12}>
-                {Object.values(SOCIAL_INFO).map(s => (
-                  <Col xs={24} sm={12} key={s.type}>
-                    <Form.Item>
-                      <Input
-                        placeholder={`${s.name} account`}
-                        autoComplete="off"
-                        value={fields.socialAccounts[s.type]}
-                        onChange={ev => this.handleSocialChange(ev, s.type)}
-                        addonBefore={s.icon}
-                      />
-                    </Form.Item>
-                  </Col>
-                ))}
+                {Object.values(SOCIAL_INFO).map(s => {
+                  const field = fields.socialMedias.find(sm => sm.service === s.service);
+                  return (
+                    <Col xs={24} sm={12} key={s.service}>
+                      <Form.Item>
+                        <Input
+                          placeholder={`${s.name} account`}
+                          autoComplete="off"
+                          value={field ? field.username : ''}
+                          onChange={ev => this.handleSocialChange(ev, s.service)}
+                          addonBefore={s.icon}
+                        />
+                      </Form.Item>
+                    </Col>
+                  );
+                })}
               </Row>
 
               {!isMissingField &&
@@ -187,6 +179,18 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
   };
 
   private handleCancel = () => {
+    const propsAvatar = this.props.user.avatar;
+    const stateAvatar = this.state.fields.avatar;
+    // cleanup uploaded file if we cancel
+    if (
+      stateAvatar &&
+      stateAvatar.imageUrl &&
+      (!propsAvatar || propsAvatar.imageUrl !== stateAvatar.imageUrl)
+    ) {
+      axios.delete('/api/v1/users/avatar', {
+        params: { url: stateAvatar.imageUrl },
+      });
+    }
     this.props.onDone();
   };
 
@@ -205,20 +209,27 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
 
   private handleSocialChange = (
     ev: React.ChangeEvent<HTMLInputElement>,
-    type: SOCIAL_TYPE,
+    service: SOCIAL_SERVICE,
   ) => {
     const { value } = ev.currentTarget;
+
+    // First remove...
+    const socialMedias = this.state.fields.socialMedias.filter(
+      sm => sm.service !== service,
+    );
+    if (value) {
+      // Then re-add if there as a value
+      socialMedias.push({
+        service,
+        username: value,
+        url: socialMediaToUrl(service, value),
+      });
+    }
+
     const fields = {
       ...this.state.fields,
-      socialAccounts: {
-        ...this.state.fields.socialAccounts,
-        [type]: value,
-      },
+      socialMedias,
     };
-    // delete key for empty string
-    if (!value) {
-      delete fields.socialAccounts[type];
-    }
     const isChanged = this.isChangedCheck(fields);
     this.setState({
       isChanged,
@@ -226,13 +237,12 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     });
   };
 
-  private handleChangePhoto = () => {
-    // TODO: Actual file uploading
-    const gender = ['men', 'women'][Math.floor(Math.random() * 2)];
-    const num = Math.floor(Math.random() * 80);
+  private handleChangePhoto = (url: string) => {
     const fields = {
       ...this.state.fields,
-      avatarUrl: `https://randomuser.me/api/portraits/${gender}/${num}.jpg`,
+      avatar: {
+        imageUrl: url,
+      },
     };
     const isChanged = this.isChangedCheck(fields);
     this.setState({
@@ -242,13 +252,15 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
   };
 
   private handleDeletePhoto = () => {
-    const fields = lodash.clone(this.state.fields);
-    delete fields.avatarUrl;
+    const fields = {
+      ...this.state.fields,
+      avatar: null,
+    };
     const isChanged = this.isChangedCheck(fields);
     this.setState({ isChanged, fields });
   };
 
-  private isChangedCheck = (a: TeamMember) => {
+  private isChangedCheck = (a: User) => {
     return !lodash.isEqual(a, this.props.user);
   };
 }

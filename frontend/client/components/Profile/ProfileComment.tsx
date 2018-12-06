@@ -13,7 +13,7 @@ export default class Profile extends React.Component<OwnProps> {
   render() {
     const {
       userName,
-      comment: { body, proposal, dateCreated },
+      comment: { content, proposal, dateCreated },
     } = this.props;
 
     return (
@@ -28,7 +28,7 @@ export default class Profile extends React.Component<OwnProps> {
           </Link>{' '}
           {moment(dateCreated).from(Date.now())}
         </div>
-        <div className="ProfileComment-body">{body}</div>
+        <div className="ProfileComment-body">{content}</div>
       </div>
     );
   }

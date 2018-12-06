@@ -29,3 +29,7 @@ export function isValidEthAddress(addr: string): boolean {
     return addr === toChecksumAddress(addr);
   }
 }
+
+export function isValidEmail(email: string): boolean {
+  return /\S+@\S+\.\S+/.test(email);
+}

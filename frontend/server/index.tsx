@@ -4,10 +4,11 @@ import * as path from 'path';
 import chalk from 'chalk';
 import manifestHelpers from 'express-manifest-helpers';
 import * as bodyParser from 'body-parser';
-import dotenv from 'dotenv';
 import expressWinston from 'express-winston';
 import i18nMiddleware from 'i18next-express-middleware';
+import * as Sentry from '@sentry/node';
 
+import '../config/env';
 // @ts-ignore
 import * as paths from '../config/paths';
 import log from './log';
@@ -17,9 +18,16 @@ import i18n from './i18n';
 process.env.SERVER_SIDE_RENDER = 'true';
 const isDev = process.env.NODE_ENV === 'development';
 
-dotenv.config();
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  release: process.env.SENTRY_RELEASE,
+  environment: process.env.NODE_ENV,
+});
 
 const app = express();
+
+// sentry
+app.use(Sentry.Handlers.requestHandler());
 
 // log requests
 app.use(expressWinston.logger({ winstonInstance: log }));
@@ -61,6 +69,7 @@ app.use(
 
 app.use(serverRender());
 
+app.use(Sentry.Handlers.errorHandler());
 app.use(expressWinston.errorLogger({ winstonInstance: log }));
 
 app.listen(process.env.PORT || 3000, () => {

@@ -10,11 +10,11 @@ export async function sleep(ms: number) {
 }
 
 export function findComment(
-  commentId: Comment['commentId'],
+  commentId: Comment['id'],
   comments: Comment[],
 ): Comment | null {
   for (const comment of comments) {
-    if (comment.commentId === commentId) {
+    if (comment.id === commentId) {
       return comment;
     } else if (comment.replies.length) {
       const foundComment = findComment(commentId, comment.replies);

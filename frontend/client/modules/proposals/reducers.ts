@@ -92,7 +92,7 @@ function addUpdates(state: ProposalState, payload: ProposalUpdates) {
 interface PostCommentPayload {
   proposalId: ProposalWithCrowdFund['proposalId'];
   comment: Comment;
-  parentCommentId?: Comment['commentId'];
+  parentCommentId?: Comment['id'];
 }
 function addPostedComment(state: ProposalState, payload: PostCommentPayload) {
   const { proposalId, comment, parentCommentId } = payload;

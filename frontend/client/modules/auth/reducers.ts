@@ -1,13 +1,14 @@
 import types from './types';
+import usersTypes from 'modules/users/types';
 // TODO: Use a common User type instead of this
-import { TeamMember, AuthSignatureData } from 'types';
+import { User, AuthSignatureData } from 'types';
 
 export interface AuthState {
-  user: TeamMember | null;
+  user: User | null;
   isAuthingUser: boolean;
   authUserError: string | null;
 
-  checkedUsers: { [address: string]: TeamMember | false };
+  checkedUsers: { [address: string]: User | false };
   isCheckingUser: boolean;
 
   isCreatingUser: boolean;
@@ -53,8 +54,16 @@ export default function createReducer(
         ...state,
         user: action.payload.user,
         authSignature: action.payload.authSignature, // TODO: Make this the real token
-        authSignatureAddress: action.payload.user.ethAddress,
+        authSignatureAddress: action.payload.user.accountAddress,
         isAuthingUser: false,
+      };
+    case usersTypes.UPDATE_USER_FULFILLED:
+      return {
+        ...state,
+        user:
+          state.user && state.user.accountAddress === action.payload.user.accountAddress
+            ? action.payload.user
+            : state.user,
       };
     case types.AUTH_USER_REJECTED:
       return {
@@ -74,7 +83,7 @@ export default function createReducer(
         ...state,
         user: action.payload.user,
         authSignature: action.payload.authSignature,
-        authSignatureAddress: action.payload.user.ethAddress,
+        authSignatureAddress: action.payload.user.accountAddress,
         isCreatingUser: false,
         checkedUsers: {
           ...state.checkedUsers,
