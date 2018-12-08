@@ -12,23 +12,10 @@ from grant.proposal.models import (
 )
 from grant.utils.auth import requires_sm, requires_same_user_auth, verify_signed_auth, BadSignatureException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
-from grant.web3.proposal import read_user_proposal
 
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
-
-
-def populate_user_proposals_cfs(proposals):
-    for p in proposals:
-        proposal_contract = read_user_proposal(p['proposal_address'])
-        if proposal_contract:
-            p['target'] = proposal_contract['target']
-            p['funded'] = proposal_contract['funded']
-        else:
-            p['target'] = None
-    filtered_proposals = list(filter(lambda p: p['target'] is not None, proposals))
-    return filtered_proposals
 
 
 @blueprint.route("/", methods=["GET"])
@@ -72,11 +59,11 @@ def get_user(user_identity, with_proposals, with_comments, with_funded):
         if with_proposals:
             proposals = Proposal.get_by_user(user)
             proposals_dump = user_proposals_schema.dump(proposals)
-            result["createdProposals"] = populate_user_proposals_cfs(proposals_dump)
+            result["createdProposals"] = proposals_dump
         if with_funded:
             contributions = Proposal.get_by_user_contribution(user)
             contributions_dump = user_proposals_schema.dump(contributions)
-            result["fundedProposals"] = populate_user_proposals_cfs(contributions_dump)
+            result["fundedProposals"] = contributions_dump
         if with_comments:
             comments = Comment.get_by_user(user)
             comments_dump = user_comments_schema.dump(comments)
