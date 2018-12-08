@@ -5,7 +5,6 @@ module.exports = {
   modules: paths.resolveModules,
   // tsconfig.compilerOptions.paths should sync with these
   alias: {
-    contracts: paths.contractsBuild, // truffle build contracts dir
     api: `${paths.srcClient}/api`,
     components: `${paths.srcClient}/components`,
     lib: `${paths.srcClient}/lib`,
@@ -17,6 +16,5 @@ module.exports = {
     typings: `${paths.srcClient}/typings`,
     types: `${paths.srcTypes}`,
     utils: `${paths.srcClient}/utils`,
-    web3interact: `${paths.srcClient}/web3interact`,
   },
 };

@@ -1,7 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
-import { web3Actions } from 'modules/web3';
 import { Alert } from 'antd';
 import metaMaskImgSrc from 'static/images/metamask.png';
 import './index.less';
@@ -16,11 +15,7 @@ interface StateProps {
   isWrongNetwork: boolean;
 }
 
-interface DispatchProps {
-  setAccounts: typeof web3Actions['setAccounts'];
-}
-
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps;
 
 class MetaMaskRequiredButton extends React.PureComponent<Props> {
   render() {
@@ -48,7 +43,7 @@ class MetaMaskRequiredButton extends React.PureComponent<Props> {
             message={
               <>
                 It looks like your MetaMask account is locked. Please unlock it and{' '}
-                <a onClick={this.props.setAccounts}>click here to continue</a>.
+                <a onClick={() => null}>click here to continue</a>.
               </>
             }
           />
@@ -70,13 +65,11 @@ class MetaMaskRequiredButton extends React.PureComponent<Props> {
   }
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, AppState>(
-  state => ({
-    isMissingWeb3: state.web3.isMissingWeb3,
-    isWeb3Locked: state.web3.isWeb3Locked,
-    isWrongNetwork: state.web3.isWrongNetwork,
-  }),
-  {
-    setAccounts: web3Actions.setAccounts,
-  },
-)(MetaMaskRequiredButton);
+export default connect<StateProps, {}, OwnProps, AppState>(state => {
+  console.warn('TODO - convert to LoginRequiredButton?', state);
+  return {
+    isMissingWeb3: false,
+    isWeb3Locked: false,
+    isWrongNetwork: false,
+  };
+})(MetaMaskRequiredButton);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Button } from 'antd';
-import { isValidEthAddress } from 'utils/validators';
+import { isValidAddress } from 'utils/validators';
 import AddressInput from 'components/AddressInput';
 import './Address.less';
 
@@ -32,7 +32,7 @@ export default class AddressProvider extends React.Component<Props, State> {
           type="primary"
           htmlType="submit"
           size="large"
-          disabled={!isValidEthAddress(address)}
+          disabled={!isValidAddress(address)}
           block
         >
           Continue

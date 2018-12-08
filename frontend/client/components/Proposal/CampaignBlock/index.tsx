@@ -8,7 +8,6 @@ import { fromWei } from 'utils/units';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
-import { web3Actions } from 'modules/web3';
 import { withRouter } from 'react-router';
 import ShortAddress from 'components/ShortAddress';
 import UnitDisplay from 'components/UnitDisplay';
@@ -22,14 +21,10 @@ interface OwnProps {
 }
 
 interface StateProps {
-  sendLoading: AppState['web3']['sendLoading'];
+  sendLoading: boolean;
 }
 
-interface ActionProps {
-  fundCrowdFund: typeof web3Actions['fundCrowdFund'];
-}
-
-type Props = OwnProps & StateProps & ActionProps;
+type Props = OwnProps & StateProps;
 
 interface State {
   amountToRaise: string;
@@ -71,8 +66,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
   };
 
   sendTransaction = () => {
-    const { proposal, fundCrowdFund } = this.props;
-    fundCrowdFund(proposal, this.state.amountToRaise);
+    const { proposal } = this.props;
+    console.warn('TODO - remove, implement or refactor sendTransaction', proposal);
 
     this.setState({ amountToRaise: '' });
   };
@@ -226,15 +221,13 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 }
 
 function mapStateToProps(state: AppState) {
+  console.warn('TODO - new redux flag for sendLoading?', state);
   return {
-    sendLoading: state.web3.sendLoading,
+    sendLoading: false,
   };
 }
 
-const withConnect = connect(
-  mapStateToProps,
-  { fundCrowdFund: web3Actions.fundCrowdFund },
-);
+const withConnect = connect(mapStateToProps);
 
 const ConnectedProposalCampaignBlock = compose<Props, OwnProps>(
   withRouter,

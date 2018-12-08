@@ -20,7 +20,6 @@ import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
 import classnames from 'classnames';
 import { withRouter } from 'react-router';
-import { web3Actions } from 'modules/web3';
 import SocialShare from 'components/SocialShare';
 import './style.less';
 
@@ -253,14 +252,15 @@ export class ProposalDetail extends React.Component<Props, State> {
 }
 
 function mapStateToProps(state: AppState, ownProps: OwnProps) {
+  console.warn('TODO - new redux user-proposal-role/account');
   return {
     proposal: getProposal(state, ownProps.proposalId),
-    account: (state.web3.accounts.length && state.web3.accounts[0]) || null,
+    account: 'notarealaccount' || null,
   };
 }
 
 function mapDispatchToProps(dispatch: Dispatch) {
-  return bindActionCreators({ ...proposalActions, ...web3Actions }, dispatch);
+  return bindActionCreators({ ...proposalActions }, dispatch);
 }
 
 const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(

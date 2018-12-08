@@ -11,7 +11,6 @@ import ProvideIdentity from './ProvideIdentity';
 import './index.less';
 
 interface StateProps {
-  web3Accounts: AppState['web3']['accounts'];
   checkedUsers: AppState['auth']['checkedUsers'];
   isCheckingUser: AppState['auth']['isCheckingUser'];
 }
@@ -29,7 +28,7 @@ interface State {
 
 const DEFAULT_STATE: State = {
   // Temporarily hardcode to web3, change to null when others are supported
-  provider: AUTH_PROVIDER.WEB3,
+  provider: AUTH_PROVIDER.ADDRESS,
   address: null,
 };
 
@@ -74,13 +73,6 @@ class AuthFlow extends React.Component<Props> {
         switch (this.state.provider) {
           case AUTH_PROVIDER.ADDRESS:
             return 'Enter your Ethereum Address';
-          case AUTH_PROVIDER.LEDGER:
-            return 'Connect with your Ledger';
-          case AUTH_PROVIDER.TREZOR:
-            return 'Connect with your TREZOR';
-          case AUTH_PROVIDER.WEB3:
-            // TODO: Dynamically use web3 name
-            return 'Connect with MetaMask';
         }
       },
       render: () => {
@@ -98,15 +90,16 @@ class AuthFlow extends React.Component<Props> {
   };
 
   componentDidMount() {
+    console.warn('TODO - initialize authorization');
     // If web3 is available, default to it
-    const { web3Accounts } = this.props;
-    if (web3Accounts && web3Accounts[0]) {
-      this.setState({
-        provider: AUTH_PROVIDER.WEB3,
-        address: web3Accounts[0],
-      });
-      this.props.checkUser(web3Accounts[0]);
-    }
+    // const { web3Accounts } = this.props;
+    // if (web3Accounts && web3Accounts[0]) {
+    //   this.setState({
+    //     provider: AUTH_PROVIDER.WEB3,
+    //     address: web3Accounts[0],
+    //   });
+    //   this.props.checkUser(web3Accounts[0]);
+    // }
   }
 
   render() {
@@ -157,7 +150,6 @@ class AuthFlow extends React.Component<Props> {
 
 export default connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
-    web3Accounts: state.web3.accounts,
     checkedUsers: state.auth.checkedUsers,
     isCheckingUser: state.auth.isCheckingUser,
   }),

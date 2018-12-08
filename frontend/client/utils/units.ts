@@ -1,6 +1,5 @@
 // From https://github.com/MyCryptoHQ/MyCrypto/blob/develop/common/libs/units.ts
 import BN from 'bn.js';
-import { toBuffer, addHexPrefix } from 'ethereumjs-util';
 import { stripHexPrefix } from 'utils/formatters';
 
 type UnitKey = keyof typeof Units;
@@ -51,10 +50,6 @@ const handleValues = (input: string | BN) => {
     throw Error('unsupported value conversion');
   }
 };
-
-const Address = (input: string) => toBuffer(addHexPrefix(input));
-
-const Data = (input: string) => toBuffer(addHexPrefix(input));
 
 const Nonce = (input: string | BN) => handleValues(input);
 

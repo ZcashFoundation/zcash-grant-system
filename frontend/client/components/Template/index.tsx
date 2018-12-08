@@ -5,9 +5,7 @@ import classnames from 'classnames';
 import BasicHead from 'components/BasicHead';
 import Header from 'components/Header';
 import Footer from 'components/Footer';
-import Web3Container from 'lib/Web3Container';
 import Web3Error from './Web3Error';
-import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import MetamaskIcon from 'static/images/metamask.png';
 import WrongNetworkIcon from 'static/images/wrong-network.png';
@@ -19,10 +17,6 @@ interface StateProps {
   isWrongNetwork: boolean;
 }
 
-interface DispatchProps {
-  setAccounts: typeof web3Actions['setAccounts'];
-}
-
 export interface TemplateProps {
   title: string;
   isHeaderTransparent?: boolean;
@@ -31,7 +25,7 @@ export interface TemplateProps {
   requiresWeb3?: boolean;
 }
 
-type Props = StateProps & DispatchProps & TemplateProps;
+type Props = StateProps & TemplateProps;
 
 class Template extends React.PureComponent<Props> {
   render() {
@@ -76,7 +70,7 @@ class Template extends React.PureComponent<Props> {
             `}
             button={{
               text: 'Try again',
-              onClick: this.props.setAccounts,
+              onClick: () => null,
             }}
           />
         );
@@ -94,16 +88,7 @@ class Template extends React.PureComponent<Props> {
           />
         );
       } else {
-        content = (
-          <Web3Container
-            render={() => children}
-            renderLoading={() => (
-              <div className="Template-content-inner-loading">
-                <Spin size="large" />
-              </div>
-            )}
-          />
-        );
+        content = <Spin size="large" />;
       }
     }
 
@@ -126,13 +111,14 @@ class Template extends React.PureComponent<Props> {
   }
 }
 
-export default connect<StateProps, DispatchProps, TemplateProps, AppState>(
-  state => ({
-    isMissingWeb3: state.web3.isMissingWeb3,
-    isWeb3Locked: state.web3.isWeb3Locked,
-    isWrongNetwork: state.web3.isWrongNetwork,
-  }),
-  {
-    setAccounts: web3Actions.setAccounts,
-  },
-)(Template);
+export default connect<StateProps, {}, TemplateProps, AppState>(state => {
+  console.warn(
+    'TODO - Template.index: convert `requiresWeb3` -> `requiresLogin`?',
+    state,
+  );
+  return {
+    isMissingWeb3: false,
+    isWeb3Locked: false,
+    isWrongNetwork: false,
+  };
+})(Template);

@@ -1,7 +1,6 @@
 import { combineReducers, Reducer } from 'redux';
 import { connectRouter, RouterState } from 'connected-react-router';
 import { persistReducer } from 'redux-persist';
-import web3, { Web3State, INITIAL_STATE as web3InitialState } from 'modules/web3';
 import proposal, {
   ProposalState,
   INITIAL_STATE as proposalInitialState,
@@ -17,7 +16,6 @@ import history from './history';
 
 export interface AppState {
   proposal: ProposalState;
-  web3: Web3State;
   create: CreateState;
   users: UsersState;
   auth: AuthState;
@@ -26,7 +24,6 @@ export interface AppState {
 
 export const combineInitialState: Partial<AppState> = {
   proposal: proposalInitialState,
-  web3: web3InitialState,
   create: createInitialState,
   users: usersInitialState,
   auth: authInitialState,
@@ -34,7 +31,6 @@ export const combineInitialState: Partial<AppState> = {
 
 export default combineReducers<AppState>({
   proposal,
-  web3,
   create,
   users,
   // Don't allow for redux-persist's _persist key to be touched in our code

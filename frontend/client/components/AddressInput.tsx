@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { Form, Input } from 'antd';
 import { InputProps } from 'antd/lib/input';
 import { FormItemProps } from 'antd/lib/form';
-import { isValidEthAddress } from 'utils/validators';
+import { isValidAddress } from 'utils/validators';
 import Identicon from 'components/Identicon';
 import { DONATION } from 'utils/constants';
 import './AddressInput.less';
@@ -22,7 +22,7 @@ export default class AddressInput extends React.Component<Props> {
     const { value, onChange, className, showIdenticon } = this.props;
     const passedFormItemProps = this.props.formItemProps || {};
     const passedInputProps = this.props.inputProps || {};
-    const isInvalid = value && !isValidEthAddress(value);
+    const isInvalid = value && !isValidAddress(value);
 
     const formItemProps = {
       validateStatus: (isInvalid

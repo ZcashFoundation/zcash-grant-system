@@ -31,7 +31,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  accounts: AppState['web3']['accounts'];
+  accounts: string[];
 }
 
 type Props = OwnProps & StateProps;
@@ -294,8 +294,11 @@ class ProposalMilestones extends React.Component<Props, State> {
   };
 }
 
-const ConnectedProposalMilestones = connect((state: AppState) => ({
-  accounts: state.web3.accounts,
-}))(ProposalMilestones);
+const ConnectedProposalMilestones = connect((state: AppState) => {
+  console.warn('TODO - new redux accounts/user-role-for-proposal', state);
+  return {
+    accounts: [],
+  };
+})(ProposalMilestones);
 
 export default ConnectedProposalMilestones;
