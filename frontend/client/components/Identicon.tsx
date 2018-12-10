@@ -1,5 +1,4 @@
 import React from 'react';
-import makeBlockie from 'ethereum-blockies-base64';
 import defaultUserImg from 'static/images/default-user.jpg';
 
 interface Props {
@@ -10,8 +9,8 @@ interface Props {
 
 export default class Identicon extends React.PureComponent<Props> {
   render() {
-    const { address, className } = this.props;
-    const blockie = address ? makeBlockie(address) : defaultUserImg;
+    const { className } = this.props;
+    const blockie = defaultUserImg;
     const style = {
       display: 'block',
       ...(this.props.style || {}),

@@ -13,7 +13,6 @@ from grant.email.send import send_email
 from grant.utils.auth import requires_sm, requires_team_member_auth, verify_signed_auth, BadSignatureException
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email
-from grant.web3.proposal import read_proposal
 from .models import(
     Proposal,
     proposals_schema,
@@ -38,10 +37,6 @@ def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
-        proposal_contract = read_proposal(dumped_proposal['proposal_address'])
-        if not proposal_contract:
-            return {"message": "Proposal retired"}, 404
-        dumped_proposal['crowd_fund'] = proposal_contract
         return dumped_proposal
     else:
         return {"message": "No proposal matching id"}, 404
@@ -129,17 +124,11 @@ def get_proposals(stage):
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
     dumped_proposals = proposals_schema.dump(proposals)
-
-    try:
-        for p in dumped_proposals:
-            proposal_contract = read_proposal(p['proposal_address'])
-            p['crowd_fund'] = proposal_contract
-        filtered_proposals = list(filter(lambda p: p['crowd_fund'] is not None, dumped_proposals))
-        return filtered_proposals
-    except Exception as e:
-        print(e)
-        print(traceback.format_exc())
-        return {"message": "Oops! Something went wrong."}, 500
+    return dumped_proposals
+    # except Exception as e:
+    #     print(e)
+    #     print(traceback.format_exc())
+    #     return {"message": "Oops! Something went wrong."}, 500
 
 
 @blueprint.route("/drafts", methods=["POST"])

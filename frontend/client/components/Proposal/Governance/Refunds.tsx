@@ -1,9 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin, Progress, Button, Alert } from 'antd';
+import { Progress, Button, Alert } from 'antd';
 import { ProposalWithCrowdFund } from 'types';
-import Web3Container, { Web3RenderProps } from 'lib/Web3Container';
-import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import classnames from 'classnames';
 import Placeholder from 'components/Placeholder';
@@ -13,28 +11,20 @@ interface OwnProps {
 }
 
 interface StateProps {
-  isRefundActionPending: AppState['web3']['isRefundActionPending'];
-  refundActionError: AppState['web3']['refundActionError'];
+  isRefundActionPending: boolean;
+  refundActionError: string;
 }
 
-interface ActionProps {
-  voteRefund: typeof web3Actions['voteRefund'];
-  withdrawRefund: typeof web3Actions['withdrawRefund'];
-}
-
-interface Web3Props {
-  web3: Web3RenderProps['web3'];
-  account: Web3RenderProps['accounts'][0];
-}
-
-type Props = OwnProps & StateProps & ActionProps & Web3Props;
+type Props = OwnProps & StateProps;
 
 class GovernanceRefunds extends React.Component<Props> {
   render() {
-    const { proposal, account, isRefundActionPending, refundActionError } = this.props;
+    const { proposal, isRefundActionPending, refundActionError } = this.props;
     const { crowdFund } = proposal;
     const isStillFunding =
       !crowdFund.isRaiseGoalReached && crowdFund.deadline > Date.now();
+
+    const account = 'sorrynotanaccount';
 
     if (isStillFunding && !crowdFund.isFrozen) {
       return (
@@ -197,31 +187,21 @@ class GovernanceRefunds extends React.Component<Props> {
   }
 
   voteRefund = (vote: boolean) => {
-    this.props.voteRefund(this.props.proposal, vote);
+    console.warn('TODO - implement or remove voteRefund', vote);
   };
 
   withdrawRefund = () => {
-    const { proposal, account } = this.props;
-    this.props.withdrawRefund(proposal, account);
+    const { proposal } = this.props;
+    console.warn('TODO - implement or remove withdrawRefund', proposal);
   };
 }
 
-const ConnectedGovernanceRefunds = connect<StateProps, ActionProps, OwnProps, AppState>(
-  state => ({
-    isRefundActionPending: state.web3.isRefundActionPending,
-    refundActionError: state.web3.refundActionError,
-  }),
-  {
-    voteRefund: web3Actions.voteRefund,
-    withdrawRefund: web3Actions.withdrawRefund,
-  },
-)(GovernanceRefunds);
+const ConnectedGovernanceRefunds = connect<StateProps, {}, OwnProps, AppState>(state => {
+  console.warn('TODO - new redux isRefundActionPending/refundActionError?', state);
+  return {
+    isRefundActionPending: false,
+    refundActionError: '',
+  };
+})(GovernanceRefunds);
 
-export default (props: OwnProps) => (
-  <Web3Container
-    renderLoading={() => <Spin />}
-    render={({ web3, accounts }: Web3RenderProps) => (
-      <ConnectedGovernanceRefunds web3={web3} account={accounts[0]} {...props} />
-    )}
-  />
-);
+export default ConnectedGovernanceRefunds;

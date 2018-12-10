@@ -40,14 +40,6 @@ envProductionRequiredHandler(
   'PUBLIC_HOST_URL',
   'http://localhost:' + (process.env.PORT || 3000),
 );
-envProductionRequiredHandler(
-  'CROWD_FUND_URL',
-  'https://eip-712.herokuapp.com/contract/crowd-fund',
-);
-envProductionRequiredHandler(
-  'CROWD_FUND_FACTORY_URL',
-  'https://eip-712.herokuapp.com/contract/factory',
-);
 
 if (!process.env.BACKEND_URL) {
   process.env.BACKEND_URL = 'http://localhost:5000';
@@ -70,8 +62,6 @@ process.env.NODE_PATH = (process.env.NODE_PATH || '')
 module.exports = () => {
   const raw = {
     BACKEND_URL: process.env.BACKEND_URL,
-    CROWD_FUND_FACTORY_URL: process.env.CROWD_FUND_FACTORY_URL,
-    CROWD_FUND_URL: process.env.CROWD_FUND_URL,
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: process.env.PORT || 3000,
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,

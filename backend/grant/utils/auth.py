@@ -8,7 +8,7 @@ from itsdangerous import SignatureExpired, BadSignature
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import sentry_sdk
 
-from grant.settings import SECRET_KEY, AUTH_URL
+from grant.settings import SECRET_KEY
 from ..proposal.models import Proposal
 from ..user.models import User
 
@@ -42,8 +42,8 @@ def verify_signed_auth(signature, typed_data):
     loaded_typed_data = ast.literal_eval(typed_data)
     if loaded_typed_data['domain']['name'] != 'Grant.io':
         raise BadSignatureException("Signature is not for Grant.io")
-
-    url = AUTH_URL + "/message/recover"
+    # TODO - implement new auth scheme
+    url = 'AUTH_URL' + "/message/recover"
     payload = json.dumps({"sig": signature, "data": loaded_typed_data})
     headers = {'content-type': 'application/json'}
     response = requests.request("POST", url, data=payload, headers=headers)
@@ -59,27 +59,30 @@ def verify_signed_auth(signature, typed_data):
 def requires_sm(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        signature = request.headers.get('MsgSignature', None)
-        typed_data = request.headers.get('RawTypedData', None)
+        # TODO - implemnent new auth scheme
+        return jsonify(message="TODO - utils/auth.py - implement new auth scheme"), 401
 
-        if typed_data and signature:
-            try:
-                auth_address = verify_signed_auth(signature, typed_data)
-            except BadSignatureException:
-                return jsonify(message="Invalid auth message signature"), 401
+        # signature = request.headers.get('MsgSignature', None)
+        # typed_data = request.headers.get('RawTypedData', None)
 
-            user = User.get_by_identifier(account_address=auth_address)
-            if not user:
-                return jsonify(message="No user exists with address: {}".format(auth_address)), 401
+        # if typed_data and signature:
+        #     try:
+        #         auth_address = verify_signed_auth(signature, typed_data)
+        #     except BadSignatureException:
+        #         return jsonify(message="Invalid auth message signature"), 401
 
-            g.current_user = user
-            with sentry_sdk.configure_scope() as scope:
-                scope.user = {
-                    "id": user.id,
-                }
-            return f(*args, **kwargs)
+        #     user = User.get_by_identifier(account_address=auth_address)
+        #     if not user:
+        #         return jsonify(message="No user exists with address: {}".format(auth_address)), 401
 
-        return jsonify(message="Authentication is required to access this resource"), 401
+        #     g.current_user = user
+        #     with sentry_sdk.configure_scope() as scope:
+        #         scope.user = {
+        #             "id": user.id,
+        #         }
+        #     return f(*args, **kwargs)
+
+        # return jsonify(message="Authentication is required to access this resource"), 401
 
     return decorated
 

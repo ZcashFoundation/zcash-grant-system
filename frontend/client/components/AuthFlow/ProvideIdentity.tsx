@@ -4,15 +4,9 @@ import { AUTH_PROVIDER } from 'utils/auth';
 import './ProvideIdentity.less';
 
 const AddressProvider = loadable(() => import('./providers/Address'));
-const LedgerProvider = loadable(() => import('./providers/Ledger'));
-const TrezorProvider = loadable(() => import('./providers/Trezor'));
-const Web3Provider = loadable(() => import('./providers/Web3'));
 
 const PROVIDER_COMPONENTS = {
   [AUTH_PROVIDER.ADDRESS]: AddressProvider,
-  [AUTH_PROVIDER.LEDGER]: LedgerProvider,
-  [AUTH_PROVIDER.TREZOR]: TrezorProvider,
-  [AUTH_PROVIDER.WEB3]: Web3Provider,
 };
 
 interface Props {

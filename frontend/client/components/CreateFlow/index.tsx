@@ -19,9 +19,8 @@ import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
-import { web3Actions } from 'modules/web3';
+
 import { AppState } from 'store/reducers';
-import { Web3RenderProps } from 'lib/Web3Container';
 
 import './index.less';
 
@@ -101,22 +100,18 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   },
 };
 
-interface OwnProps {
-  accounts: Web3RenderProps['accounts'];
-}
-
 interface StateProps {
   form: AppState['create']['form'];
   isSavingDraft: AppState['create']['isSavingDraft'];
   hasSavedDraft: AppState['create']['hasSavedDraft'];
+  accounts: string[];
 }
 
 interface DispatchProps {
   updateForm: typeof createActions['updateForm'];
-  resetCreateCrowdFund: typeof web3Actions['resetCreateCrowdFund'];
 }
 
-type Props = OwnProps & StateProps & DispatchProps & RouteComponentProps<any>;
+type Props = StateProps & DispatchProps & RouteComponentProps<any>;
 
 interface State {
   step: CREATE_STEP;
@@ -149,7 +144,7 @@ class CreateFlow extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    this.props.resetCreateCrowdFund();
+    console.warn('TODO - implement RESET_CROWDFUND if necessary');
   }
 
   componentWillUnmount() {
@@ -329,22 +324,22 @@ class CreateFlow extends React.Component<Props, State> {
   };
 }
 
-const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
-  (state: AppState) => ({
-    form: state.create.form,
-    isSavingDraft: state.create.isSavingDraft,
-    hasSavedDraft: state.create.hasSavedDraft,
-    crowdFundLoading: state.web3.crowdFundLoading,
-    crowdFundError: state.web3.crowdFundError,
-    crowdFundCreatedAddress: state.web3.crowdFundCreatedAddress,
-  }),
+const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
+  (state: AppState) => {
+    console.warn('TODO - remove/refactor accounts');
+    return {
+      form: state.create.form,
+      isSavingDraft: state.create.isSavingDraft,
+      hasSavedDraft: state.create.hasSavedDraft,
+      accounts: ['notanaccount'],
+    };
+  },
   {
     updateForm: createActions.updateForm,
-    resetCreateCrowdFund: web3Actions.resetCreateCrowdFund,
   },
 );
 
-export default compose<Props, OwnProps>(
+export default compose<Props, {}>(
   withRouter,
   withConnect,
 )(CreateFlow);

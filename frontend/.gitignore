@@ -8,5 +8,4 @@ dist
 *.log
 .env
 *.pid
-client/lib/contracts
 .vscode

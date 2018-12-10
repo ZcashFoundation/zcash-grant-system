@@ -4,15 +4,12 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 import UserAvatar from 'components/UserAvatar';
-import Identicon from 'components/Identicon';
 import { AppState } from 'store/reducers';
 import './Auth.less';
 
 interface StateProps {
   user: AppState['auth']['user'];
   isAuthingUser: AppState['auth']['isAuthingUser'];
-  accounts: AppState['web3']['accounts'];
-  accountsLoading: AppState['web3']['accountsLoading'];
 }
 
 type Props = StateProps;
@@ -27,7 +24,7 @@ class HeaderAuth extends React.Component<Props> {
   };
 
   render() {
-    const { accounts, accountsLoading, user, isAuthingUser } = this.props;
+    const { user, isAuthingUser } = this.props;
     const { isMenuOpen } = this.state;
     const isAuthed = !!user;
 
@@ -35,9 +32,7 @@ class HeaderAuth extends React.Component<Props> {
     let isLoading;
     if (user) {
       avatar = <UserAvatar user={user} />;
-    } else if (accounts && accounts[0]) {
-      avatar = <Identicon address={accounts[0]} />;
-    } else if (accountsLoading || isAuthingUser) {
+    } else if (isAuthingUser) {
       avatar = '';
       isLoading = true;
     }
@@ -118,6 +113,4 @@ class HeaderAuth extends React.Component<Props> {
 export default connect<StateProps, {}, {}, AppState>(state => ({
   user: state.auth.user,
   isAuthingUser: state.auth.isAuthingUser,
-  accounts: state.web3.accounts,
-  accountsLoading: state.web3.accountsLoading,
 }))(HeaderAuth);

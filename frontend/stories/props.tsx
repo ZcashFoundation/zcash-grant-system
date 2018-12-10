@@ -6,13 +6,6 @@ import {
   ProposalMilestone,
 } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import {
-  fundCrowdFund,
-  requestMilestonePayout,
-  payMilestonePayout,
-  voteMilestonePayout,
-} from 'modules/web3/actions';
-import Web3 from 'web3';
 import BN from 'bn.js';
 
 const oneEth = new BN('1000000000000000000');
@@ -30,9 +23,6 @@ export function getGovernanceMilestonesProps({
     ],
     isMilestoneActionPending: false,
     milestoneActionError: '',
-    requestMilestonePayout,
-    payMilestonePayout,
-    voteMilestonePayout,
   };
 }
 
@@ -220,8 +210,6 @@ export function getProposalWithCrowdFund({
 
   const props = {
     sendLoading: false,
-    fundCrowdFund,
-    web3: new Web3(),
     isMissingWeb3: false,
     proposal,
     ...proposal, // yeah...

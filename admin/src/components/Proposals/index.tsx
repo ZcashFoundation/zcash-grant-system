@@ -1,17 +1,11 @@
 import React from 'react';
 import { view } from 'react-easy-state';
-import { Icon, Button, Popover, InputNumber, Checkbox, Alert, Input } from 'antd';
+import { Icon, Button, Popover } from 'antd';
 import { RouteComponentProps, withRouter } from 'react-router';
 import Showdown from 'showdown';
 import moment from 'moment';
 import store from 'src/store';
-import {
-  Proposal,
-  Contract,
-  ContractMethod as TContractMethod,
-  ContractMilestone,
-  ContractContributor,
-} from 'src/types';
+import { Proposal } from 'src/types';
 import './index.less';
 import Field from 'components/Field';
 import { Link } from 'react-router-dom';
@@ -52,9 +46,6 @@ class ProposalsNaked extends React.Component<Props> {
                 icon="reload"
                 onClick={() => store.fetchProposals()}
               />
-              <div className="Proposals-controls-status">
-                {store.crowdFundGeneralStatus}
-              </div>
             </div>
             <ProposalItem key={singleProposal.proposalId} {...singleProposal} />
           </div>
@@ -68,7 +59,6 @@ class ProposalsNaked extends React.Component<Props> {
       <div className="Proposals">
         <div className="Proposals-controls">
           <Button title="refresh" icon="reload" onClick={() => store.fetchProposals()} />
-          <div className="Proposals-controls-status">{store.crowdFundGeneralStatus}</div>
         </div>
         {proposals.length === 0 && <div>no proposals</div>}
         {proposals.length > 0 &&
@@ -191,34 +181,6 @@ class ProposalItemNaked extends React.Component<Proposal> {
               </div>
             }
           />
-          {!store.web3Enabled && <Field title="web3" value={'UNAVAILABLE'} />}
-          {store.web3Enabled && (
-            <Field
-              title={`web3 (${p.contractStatus || 'not loaded'})`}
-              value={
-                <div className="Proposals-proposal-contract">
-                  <Button
-                    icon="reload"
-                    size="small"
-                    title="refresh contract"
-                    onClick={() => store.populateProposalContract(p.proposalId)}
-                  >
-                    refresh contract
-                  </Button>
-                  {Object.keys(p.contract)
-                    .map(k => k as keyof Contract)
-                    .map(k => (
-                      <ContractMethod
-                        key={k}
-                        proposalId={p.proposalId}
-                        name={k}
-                        {...p.contract[k]}
-                      />
-                    ))}
-                </div>
-              }
-            />
-          )}
         </div>
       </div>
     );
@@ -228,183 +190,6 @@ class ProposalItemNaked extends React.Component<Proposal> {
   };
 }
 const ProposalItem = view(ProposalItemNaked);
-
-// tslint:disable-next-line:max-classes-per-file
-class ContractMethodNaked extends React.Component<
-  TContractMethod & { proposalId: number; name: string }
-> {
-  state = {};
-  render() {
-    const { name, value, status, type, format } = this.props;
-    const isObj = typeof value === 'object' && value !== null;
-    const isArray = Array.isArray(value);
-    const fmt = (val: any) => {
-      if (val && format === 'time') {
-        const asNumber = Number(val) * 1000;
-        return `${moment(asNumber).format()} (${moment(asNumber).fromNow()})`;
-      } else if (val && format === 'duration') {
-        const asNumber = Number(val) * 1000;
-        return `${asNumber} (${moment.duration(asNumber).humanize()})`;
-      }
-      return value;
-    };
-    if (type === 'send') {
-      return <ContractMethodSend {...this.props} />;
-    }
-    return (
-      <div>
-        <div className={`Proposals-proposal-contract-status is-${status || ''}`} />
-        <span className="Proposals-proposal-contract-method">{name}:</span>
-        {(!isObj && <span> {fmt(value)}</span>) || (
-          <div className="Proposals-proposal-contract-array">
-            {isArray &&
-              name !== 'milestones' &&
-              name !== 'contributors' &&
-              (value as string[]).map((x, i) => (
-                <div key={x}>
-                  {i}: {x}
-                </div>
-              ))}
-            {isArray &&
-              name === 'milestones' && (
-                <div className="Proposals-proposal-contract-array-milestones">
-                  {(value as ContractMilestone[]).map((cm, idx) => (
-                    <div key={idx}>
-                      <div>
-                        <span>paid:</span> {JSON.stringify(cm.paid)}
-                      </div>
-                      <div>
-                        <span>amount:</span> {cm.amount}
-                      </div>
-                      <div>
-                        <span>payoutRequestVoteDeadline:</span>{' '}
-                        {Number(cm.payoutRequestVoteDeadline) < 2
-                          ? cm.payoutRequestVoteDeadline
-                          : moment(Number(cm.payoutRequestVoteDeadline) * 1000).fromNow()}
-                      </div>
-                      <div>
-                        <span>amountVotingAgainstPayout:</span>{' '}
-                        {cm.amountVotingAgainstPayout}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            {isArray &&
-              name === 'contributors' && (
-                <div className="Proposals-proposal-contract-array-contributors">
-                  {(value as ContractContributor[]).map(c => (
-                    <div key={c.address}>
-                      <div>
-                        <span>address:</span> {c.address}
-                      </div>
-                      <div>
-                        <span>milestoneNoVotes:</span>{' '}
-                        {JSON.stringify(c.milestoneNoVotes)}
-                      </div>
-                      <div>
-                        <span>contributionAmount:</span> {c.contributionAmount}
-                      </div>
-                      <div>
-                        <span>refundVote:</span> {JSON.stringify(c.refundVote)}
-                      </div>
-                      <div>
-                        <span>refunded:</span> {JSON.stringify(c.refunded)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-          </div>
-        )}
-      </div>
-    );
-  }
-}
-const ContractMethod = view(ContractMethodNaked);
-
-// tslint:disable-next-line:max-classes-per-file
-class ContractMethodSendNaked extends React.Component<
-  TContractMethod & { proposalId: number; name: string }
-> {
-  state = {
-    args: this.props.input.map(i => (i.type === 'boolean' ? false : '')) as any[],
-  };
-  render() {
-    const { name, status, input, proposalId, error } = this.props;
-    return (
-      <div className="Proposals-proposal-contract-method">
-        <div className={`Proposals-proposal-contract-status is-${status || ''}`} />
-        <div className="Proposals-proposal-contract-inputs">
-          {input.length === 0 && 'no input'}
-          {input.map(
-            (x, idx) =>
-              ((x.type === 'wei' || x.type === 'integer') && (
-                <InputNumber
-                  size="small"
-                  key={x.name}
-                  name={x.name}
-                  placeholder={`${x.name} (${x.type})`}
-                  onChange={val => {
-                    const args = [...this.state.args];
-                    args[idx] = val;
-                    this.setState({ args });
-                  }}
-                  value={this.state.args[idx]}
-                  className={`Proposals-proposal-contract-input is-${x.type || ''}`}
-                />
-              )) ||
-              (x.type === 'string' && (
-                <Input
-                  size="small"
-                  key={x.name}
-                  name={x.name}
-                  placeholder={`${x.name} (${x.type})`}
-                  onChange={evt => {
-                    const args = [...this.state.args];
-                    args[idx] = evt.currentTarget.value;
-                    this.setState({ args });
-                  }}
-                  value={this.state.args[idx]}
-                  className={`Proposals-proposal-contract-input is-${x.type || ''}`}
-                />
-              )) || (
-                <Checkbox
-                  key={x.name}
-                  onChange={evt => {
-                    const args = [...this.state.args];
-                    args[idx] = evt.target.checked;
-                    this.setState({ args });
-                  }}
-                  value={this.state.args[idx]}
-                  className={`Proposals-proposal-contract-input is-${x.type || ''}`}
-                >
-                  {x.name}
-                </Checkbox>
-              ),
-          )}
-        </div>
-        <Button
-          icon="arrow-right"
-          size="default"
-          loading={status === 'loading' || status === 'waiting'}
-          onClick={() =>
-            store.proposalContractSend(
-              proposalId,
-              name as keyof Contract,
-              input,
-              this.state.args,
-            )
-          }
-        >
-          {name}
-        </Button>
-        {error && <Alert message={error} type="error" closable={true} />}
-      </div>
-    );
-  }
-}
-const ContractMethodSend = view(ContractMethodSendNaked);
 
 const Proposals = withRouter(view(ProposalsNaked));
 export default Proposals;

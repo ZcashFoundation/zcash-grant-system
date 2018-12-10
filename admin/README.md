@@ -11,8 +11,6 @@ This is the admin component of [Grant.io](http://grant.io).
    yarn
    ```
 
-1. Make sure ganache is running and contracts have been built for the dev network (if frontend dev is running this should be the case).
-
 1. Run the webpack build for the admin ui:
 
    ```bash

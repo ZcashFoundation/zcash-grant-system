@@ -8,8 +8,7 @@ import {
   postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
-import { ProposalWithCrowdFund, Comment, AuthSignatureData } from 'types';
-import { signData } from 'modules/web3/actions';
+import { ProposalWithCrowdFund, Comment } from 'types';
 
 export type TFetchProposals = typeof fetchProposals;
 export function fetchProposals() {
@@ -65,27 +64,12 @@ export function postProposalComment(
     dispatch({ type: types.POST_PROPOSAL_COMMENT_PENDING });
 
     try {
-      const sigData: AuthSignatureData = (await dispatch(
-        signData(
-          { comment },
-          {
-            comment: [
-              {
-                name: 'Comment',
-                type: 'string',
-              },
-            ],
-          },
-          'comment',
-        ),
-      )) as any;
-
       const res = await apiPostProposalComment({
         proposalId,
         parentCommentId,
         comment,
-        signedMessage: sigData.signedMessage,
-        rawTypedData: JSON.stringify(sigData.rawTypedData),
+        signedMessage: '',
+        rawTypedData: '',
       });
 
       dispatch({

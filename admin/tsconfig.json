@@ -20,7 +20,6 @@
     "lib": ["dom", "es2017"],
     "paths": {
       "src/*": ["./*"],
-      "contracts/*": ["../../contract/build/*"],
       "components/*": ["./components/*"],
       "styles/*": ["./styles/*"]
     }
