@@ -15,6 +15,8 @@ matrix:
       before_install:
         - cd backend/
         - cp .env.example .env
+      env:
+        - CROWD_FUND_URL=https://eip-712.herokuapp.com/contract/crowd-fund CROWD_FUND_FACTORY_URL=https://eip-712.herokuapp.com/contract/factory
       install: pip install -r requirements/dev.txt
       script:
         - flask test

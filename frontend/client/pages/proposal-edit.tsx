@@ -26,7 +26,6 @@ class ProposalEdit extends React.Component<Props> {
 
   render() {
     const { form, initializeFormError } = this.props;
-
     if (form) {
       return <CreateFlow />;
     } else if (initializeFormError) {

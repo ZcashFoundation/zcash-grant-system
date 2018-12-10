@@ -106,7 +106,7 @@ class User(db.Model):
         return User.query.filter(
             func.lower(User.email_address) == func.lower(email_address)
         ).first()
-    
+
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
 
@@ -134,8 +134,10 @@ class UserSchema(ma.Schema):
     def get_userid(self, obj):
         return obj.id
 
+
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+
 
 class SocialMediaSchema(ma.Schema):
     class Meta:
@@ -146,7 +148,6 @@ class SocialMediaSchema(ma.Schema):
             "service",
             "username",
         )
-
     url = ma.Method("get_url")
     service = ma.Method("get_service")
     username = ma.Method("get_username")

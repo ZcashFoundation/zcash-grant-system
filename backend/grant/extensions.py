@@ -11,4 +11,3 @@ db = SQLAlchemy()
 migrate = Migrate()
 ma = Marshmallow()
 mail = SendGrid()
-

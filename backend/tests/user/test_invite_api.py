@@ -43,14 +43,14 @@ class TestAPI(BaseProposalCreatorConfig):
         invites_res = self.app.put(
             "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
             headers=self.headers,
-            data=json.dumps({ "response": True }),
+            data=json.dumps({"response": True}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 200)
 
         # Make sure we made the team, coach
         proposal = Proposal.query.filter_by(id=proposal_id).first()
-        self.assertTrue(len(proposal.team) == 2) #TODO: More thorough check than length
+        self.assertTrue(len(proposal.team) == 2)  # TODO: More thorough check than length
 
     def test_put_user_invite_response_reject(self):
         proposal_id = self.other_proposal.id
@@ -64,14 +64,14 @@ class TestAPI(BaseProposalCreatorConfig):
         invites_res = self.app.put(
             "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
             headers=self.headers,
-            data=json.dumps({ "response": False }),
+            data=json.dumps({"response": False}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 200)
 
         # Make sure we made the team, coach
         proposal = Proposal.query.filter_by(id=proposal_id).first()
-        self.assertTrue(len(proposal.team) == 1) #TODO: More thorough check than length
+        self.assertTrue(len(proposal.team) == 1)  # TODO: More thorough check than length
 
     def test_no_auth_put_user_invite_response(self):
         proposal_id = self.other_proposal.id
@@ -84,7 +84,7 @@ class TestAPI(BaseProposalCreatorConfig):
 
         invites_res = self.app.put(
             "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
-            data=json.dumps({ "response": True }),
+            data=json.dumps({"response": True}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 401)
@@ -93,7 +93,7 @@ class TestAPI(BaseProposalCreatorConfig):
         invites_res = self.app.put(
             "/api/v1/users/{}/invites/1234567890/respond".format(self.user.id),
             headers=self.headers,
-            data=json.dumps({ "response": True }),
+            data=json.dumps({"response": True}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 404)

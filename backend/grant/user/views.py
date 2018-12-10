@@ -18,6 +18,18 @@ from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
 
+def populate_user_proposals_cfs(proposals):
+    for p in proposals:
+        proposal_contract = read_user_proposal(p['proposal_address'])
+        if proposal_contract:
+            p['target'] = proposal_contract['target']
+            p['funded'] = proposal_contract['funded']
+        else:
+            p['target'] = None
+    filtered_proposals = list(filter(lambda p: p['target'] is not None, proposals))
+    return filtered_proposals
+
+
 @blueprint.route("/", methods=["GET"])
 @endpoint.api(
     parameter('proposalId', type=str, required=False)

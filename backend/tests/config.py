@@ -21,7 +21,7 @@ class BaseTestConfig(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
-    
+
     def assertStatus(self, response, status_code, message=None):
         """
         Overrides TestCase's default to print out response JSON.
@@ -32,6 +32,7 @@ class BaseTestConfig(TestCase):
         self.assertEqual(response.status_code, status_code, message)
 
     assert_status = assertStatus
+
 
 class BaseUserConfig(BaseTestConfig):
     headers = {
@@ -64,6 +65,7 @@ class BaseUserConfig(BaseTestConfig):
     def remove_default_user(self):
         User.query.filter_by(id=self.user.id).delete()
         db.session.commit()
+
 
 class BaseProposalCreatorConfig(BaseUserConfig):
     def setUp(self):
