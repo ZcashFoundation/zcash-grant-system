@@ -7,15 +7,6 @@ from ..test_data import test_proposal, test_user
 
 
 class TestAPI(BaseProposalCreatorConfig):
-    def test_create_invite_by_account_address(self):
-        invite_res = self.app.post(
-            "/api/v1/proposals/{}/invite".format(self.proposal.id),
-            data=json.dumps({ "address": "0x8B0B72F8bDE212991135668922fD5acE557DE6aB" }),
-            headers=self.headers,
-            content_type='application/json'
-        )
-        self.assertStatus(invite_res, 201)
-    
     def test_create_invite_by_email_address(self):
         invite_res = self.app.post(
             "/api/v1/proposals/{}/invite".format(self.proposal.id),

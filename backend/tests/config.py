@@ -42,8 +42,8 @@ class BaseUserConfig(BaseTestConfig):
     def setUp(self):
         super(BaseUserConfig, self).setUp()
         self.user = User.create(
-            account_address=test_user["accountAddress"],
             email_address=test_user["emailAddress"],
+            password=test_user["password"],
             display_name=test_user["displayName"],
             title=test_user["title"],
         )
@@ -53,8 +53,8 @@ class BaseUserConfig(BaseTestConfig):
         db.session.add(avatar)
 
         self.other_user = User.create(
-            account_address=test_other_user["accountAddress"],
             email_address=test_other_user["emailAddress"],
+            password=test_other_user["password"],
             display_name=test_other_user["displayName"],
             title=test_other_user["title"]
         )

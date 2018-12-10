@@ -37,24 +37,6 @@ def verify_token(token):
 class BadSignatureException(Exception):
     pass
 
-
-def verify_signed_auth(signature, typed_data):
-    loaded_typed_data = ast.literal_eval(typed_data)
-    if loaded_typed_data['domain']['name'] != 'Grant.io':
-        raise BadSignatureException("Signature is not for Grant.io")
-    # TODO - implement new auth scheme
-    url = 'AUTH_URL' + "/message/recover"
-    payload = json.dumps({"sig": signature, "data": loaded_typed_data})
-    headers = {'content-type': 'application/json'}
-    response = requests.request("POST", url, data=payload, headers=headers)
-    json_response = response.json()
-    recovered_address = json_response.get('recoveredAddress')
-    if not recovered_address:
-        raise BadSignatureException("Authorization signature is invalid")
-
-    return recovered_address
-
-
 # Decorator that requires you to have EIP-712 message signature headers for auth
 def requires_sm(f):
     @wraps(f)
@@ -90,13 +72,13 @@ def requires_sm(f):
 def requires_same_user_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        user_identity = kwargs["user_identity"]
-        if not user_identity:
-            return jsonify(message="Decorator requires_same_user_auth requires path variable <user_identity>"), 500
+        user_id = kwargs["user_id"]
+        if not user_id:
+            return jsonify(message="Decorator requires_same_user_auth requires path variable <user_id>"), 500
 
-        user = User.get_by_identifier(account_address=user_identity, email_address=user_identity)
+        user = User.get_by_id(user_id=user_id)
         if not user:
-            return jsonify(message="Could not find user with identity {}".format(user_identity)), 403
+            return jsonify(message="Could not find user with id {}".format(user_id)), 403
 
         if user.id != g.current_user.id:
             return jsonify(message="You are not authorized to modify this user"), 403

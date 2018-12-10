@@ -26,10 +26,10 @@ class TestAPI(BaseUserConfig):
         self.assertStatus(response, 201)
 
         # User
-        user_db = User.get_by_identifier(account_address=test_user["accountAddress"])
+        user_db = User.get_by_email(test_user["emailAddress"])
         self.assertEqual(user_db.display_name, test_user["displayName"])
         self.assertEqual(user_db.title, test_user["title"])
-        self.assertEqual(user_db.account_address, test_user["accountAddress"])
+        self.assertEqual(user_db.email_address, test_user["emailAddress"])
 
     def test_get_all_users(self):
         users_get_resp = self.app.get(
@@ -42,18 +42,6 @@ class TestAPI(BaseUserConfig):
     def test_get_single_user_by_email(self):
         users_get_resp = self.app.get(
             "/api/v1/users/{}".format(self.user.email_address)
-        )
-
-        users_json = users_get_resp.json
-        self.assertEqual(users_json["avatar"]["imageUrl"], self.user.avatar.image_url)
-        self.assertEqual(users_json["socialMedias"][0]["service"], 'GITHUB')
-        self.assertEqual(users_json["socialMedias"][0]["username"], 'groot')
-        self.assertEqual(users_json["socialMedias"][0]["url"], self.user.social_medias[0].social_media_link)
-        self.assertEqual(users_json["displayName"], self.user.display_name)
-
-    def test_get_single_user_by_account_address(self):
-        users_get_resp = self.app.get(
-            "/api/v1/users/{}".format(self.user.account_address)
         )
 
         users_json = users_get_resp.json
@@ -81,7 +69,7 @@ class TestAPI(BaseUserConfig):
         updated_user["socialMedias"] = []
 
         user_update_resp = self.app.put(
-            "/api/v1/users/{}".format(self.user.account_address),
+            "/api/v1/users/{}".format(self.user.id),
             data=json.dumps(updated_user),
             headers=self.headers,
             content_type='application/json'
@@ -100,7 +88,7 @@ class TestAPI(BaseUserConfig):
         updated_user["displayName"] = 'new display name'
         del updated_user["avatar"]
         user_update_resp = self.app.put(
-            "/api/v1/users/{}".format(self.user.account_address),
+            "/api/v1/users/{}".format(self.user.id),
             data=json.dumps(updated_user),
             headers=self.headers,
             content_type='application/json'

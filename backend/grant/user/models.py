@@ -74,10 +74,10 @@ class User(db.Model):
         self.set_password(password)
 
     @staticmethod
-    def create(email_address=None, account_address=None, display_name=None, title=None, _send_email=True):
+    def create(email_address=None, password=None, display_name=None, title=None, _send_email=True):
         user = User(
-            account_address=account_address,
             email_address=email_address,
+            password=password,
             display_name=display_name,
             title=title
         )
@@ -98,19 +98,19 @@ class User(db.Model):
         return user
 
     @staticmethod
-    def get_by_identifier(email_address: str = None, account_address: str = None):
-        if not email_address and not account_address:
-            raise ValueError("Either email_address or account_address is required to get a user")
+    def get_by_id(user_id: int):
+        return User.query.filter(id=user_id).first()
 
+    @staticmethod
+    def get_by_email(email_address: str):
         return User.query.filter(
-            (func.lower(User.account_address) == func.lower(account_address)) |
-            (func.lower(User.email_address) == func.lower(email_address))
+            func.lower(User.email_address) == func.lower(email_address)
         ).first()
     
-    def set_password(password: str):
+    def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
 
-    def check_password(password: str):
+    def check_password(self, password: str):
         return check_password_hash(self.password_hash, password)
 
 
@@ -119,7 +119,6 @@ class UserSchema(ma.Schema):
         model = User
         # Fields to expose
         fields = (
-            "account_address",
             "title",
             "email_address",
             "social_medias",

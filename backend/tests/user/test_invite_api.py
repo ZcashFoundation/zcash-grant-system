@@ -8,22 +8,6 @@ from ..test_data import test_proposal, test_user
 
 
 class TestAPI(BaseProposalCreatorConfig):
-    def test_get_user_invites_by_address(self):
-        invite = ProposalTeamInvite(
-            proposal_id=self.proposal.id,
-            address=self.user.account_address
-        )
-        db.session.add(invite)
-        db.session.commit()
-
-        invites_res = self.app.get(
-            "/api/v1/users/{}/invites".format(self.user.account_address),
-            headers=self.headers
-        )
-        self.assertStatus(invites_res, 200)
-        self.assertEqual(invites_res.json[0]['address'], self.user.account_address)
-        self.assertEqual(invites_res.json[0]['proposal']['proposalId'], self.proposal.id)
-
     def test_get_user_invites_by_email(self):
         invite = ProposalTeamInvite(
             proposal_id=self.proposal.id,
@@ -51,13 +35,13 @@ class TestAPI(BaseProposalCreatorConfig):
         proposal_id = self.other_proposal.id
         invite = ProposalTeamInvite(
             proposal_id=proposal_id,
-            address=self.user.account_address
+            address=self.user.email_address
         )
         db.session.add(invite)
         db.session.commit()
 
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/{}/respond".format(self.user.account_address, invite.id),
+            "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
             headers=self.headers,
             data=json.dumps({ "response": True }),
             content_type='application/json'
@@ -72,13 +56,13 @@ class TestAPI(BaseProposalCreatorConfig):
         proposal_id = self.other_proposal.id
         invite = ProposalTeamInvite(
             proposal_id=proposal_id,
-            address=self.user.account_address
+            address=self.user.email_address
         )
         db.session.add(invite)
         db.session.commit()
 
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/{}/respond".format(self.user.account_address, invite.id),
+            "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
             headers=self.headers,
             data=json.dumps({ "response": False }),
             content_type='application/json'
@@ -93,13 +77,13 @@ class TestAPI(BaseProposalCreatorConfig):
         proposal_id = self.other_proposal.id
         invite = ProposalTeamInvite(
             proposal_id=proposal_id,
-            address=self.user.account_address
+            address=self.user.email_address
         )
         db.session.add(invite)
         db.session.commit()
 
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/{}/respond".format(self.user.account_address, invite.id),
+            "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
             data=json.dumps({ "response": True }),
             content_type='application/json'
         )
@@ -107,7 +91,7 @@ class TestAPI(BaseProposalCreatorConfig):
 
     def test_invalid_invite_put_user_invite_response(self):
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/1234567890/respond".format(self.user.account_address),
+            "/api/v1/users/{}/invites/1234567890/respond".format(self.user.id),
             headers=self.headers,
             data=json.dumps({ "response": True }),
             content_type='application/json'
