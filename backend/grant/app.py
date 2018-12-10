@@ -36,7 +36,6 @@ def register_extensions(app):
     migrate.init_app(app, db)
     ma.init_app(app)
     mail.init_app(app)
-    web3.init_app(app)
 
     CORS(app)
     SSLify(app)
@@ -51,9 +50,6 @@ def register_blueprints(app):
     app.register_blueprint(milestone.views.blueprint)
     app.register_blueprint(admin.views.blueprint)
     app.register_blueprint(email.views.blueprint)
-    # Only add these routes locally
-    if ENV == 'development':
-        app.register_blueprint(web3module.dev_contracts.blueprint)
 
 
 def register_shellcontext(app):

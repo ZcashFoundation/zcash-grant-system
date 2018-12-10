@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Layout } from 'antd';
+import { Layout, Spin } from 'antd';
 import classnames from 'classnames';
 import BasicHead from 'components/BasicHead';
 import Header from 'components/Header';

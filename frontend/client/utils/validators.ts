@@ -21,7 +21,3 @@ export function isValidAddress(address: string): boolean {
   console.warn('TODO - implement utils.isValidAddress', address);
   return true;
 }
-
-export function isValidEmail(email: string): boolean {
-  return /\S+@\S+\.\S+/.test(email);
-}
