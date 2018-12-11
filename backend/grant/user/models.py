@@ -99,7 +99,7 @@ class User(db.Model):
 
     @staticmethod
     def get_by_id(user_id: int):
-        return User.query.filter(id=user_id).first()
+        return User.query.filter_by(id=user_id).first()
 
     @staticmethod
     def get_by_email(email_address: str):

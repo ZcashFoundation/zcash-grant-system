@@ -39,9 +39,9 @@ class TestAPI(BaseUserConfig):
         users_json = users_get_resp.json
         self.assertEqual(users_json[0]["displayName"], self.user.display_name)
 
-    def test_get_single_user_by_email(self):
+    def test_get_single_user_by_id(self):
         users_get_resp = self.app.get(
-            "/api/v1/users/{}".format(self.user.email_address)
+            "/api/v1/users/{}".format(self.user.id)
         )
 
         users_json = users_get_resp.json
