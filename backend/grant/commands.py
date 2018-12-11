@@ -15,11 +15,19 @@ TEST_PATH = os.path.join(PROJECT_ROOT, "tests")
 
 
 @click.command()
-def test():
+@click.option(
+    "-t",
+    "--test",
+    default=None,
+    help="Specify a specific test string to match (ex: test_api_user)"
+)
+def test(test):
     """Run the tests."""
     import pytest
-
-    rv = pytest.main([TEST_PATH, "--verbose"])
+    if test:
+        rv = pytest.main([TEST_PATH, "--verbose", "-k", test])
+    else:
+        rv = pytest.main([TEST_PATH, "--verbose"])
     exit(rv)
 
 
