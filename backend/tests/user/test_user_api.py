@@ -51,6 +51,42 @@ class TestAPI(BaseUserConfig):
         self.assertEqual(users_json["socialMedias"][0]["url"], self.user.social_medias[0].social_media_link)
         self.assertEqual(users_json["displayName"], self.user.display_name)
 
+    def test_user_auth_success(self):
+        user_auth_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+            content_type="application/json"
+        )
+        self.assertEqual(user_auth_resp.json['emailAddress'], self.user.email_address)
+        self.assertEqual(user_auth_resp.json['displayName'], self.user.display_name)
+
+    def test_user_auth_bad_password(self):
+        user_auth_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": "badpassword"
+            }),
+            content_type="application/json"
+        )
+        self.assert403(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
+
+    def test_user_auth_bad_email(self):
+        user_auth_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": "bademail@bad.com",
+                "password": "somepassword"
+            }),
+            content_type="application/json"
+        )
+        self.assert400(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
+
     def test_create_user_duplicate_400(self):
         # self.user is identical to test_user, should throw
         response = self.app.post(

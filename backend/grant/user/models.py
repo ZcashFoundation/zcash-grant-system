@@ -49,7 +49,7 @@ class User(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     email_address = db.Column(db.String(255), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), unique=False, nullable=False)
+    _password_hash = db.Column("password_hash", db.String(255), unique=False, nullable=False)
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
 
@@ -58,6 +58,14 @@ class User(db.Model):
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
     email_verification = db.relationship(EmailVerification, uselist=False,
                                          back_populates="user", lazy=True, cascade="all, delete-orphan")
+
+    @hybrid_property
+    def password_hash(self):
+        return self._password_hash
+
+    @password_hash.setter
+    def password_hash(self, password_hash):
+        self._password_hash = generate_password_hash(password_hash)
 
     # TODO - add create and validate methods
 
@@ -71,7 +79,7 @@ class User(db.Model):
         self.email_address = email_address
         self.display_name = display_name
         self.title = title
-        self.set_password(password)
+        self.password_hash = password
 
     @staticmethod
     def create(email_address=None, password=None, display_name=None, title=None, _send_email=True):
@@ -106,9 +114,6 @@ class User(db.Model):
         return User.query.filter(
             func.lower(User.email_address) == func.lower(email_address)
         ).first()
-
-    def set_password(self, password: str):
-        self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str):
         return check_password_hash(self.password_hash, password)

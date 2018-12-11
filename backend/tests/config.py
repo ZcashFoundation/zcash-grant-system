@@ -53,6 +53,8 @@ class BaseUserConfig(BaseTestConfig):
         avatar = Avatar(image_url=test_user["avatar"]["link"], user_id=self.user.id)
         db.session.add(avatar)
 
+        self.user_password = test_user["password"]
+
         self.other_user = User.create(
             email_address=test_other_user["emailAddress"],
             password=test_other_user["password"],

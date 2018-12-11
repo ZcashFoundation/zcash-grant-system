@@ -107,8 +107,8 @@ def create_user(
     parameter('email', type=str, required=True),
     parameter('password', type=str, required=True)
 )
-def auth_user(email_address, password):
-    existing_user = User.get_by_email(email_address)
+def auth_user(email, password):
+    existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
 
