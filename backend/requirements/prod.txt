@@ -63,4 +63,8 @@ sentry-sdk[flask]==0.5.5
 #boto3 (AWS sdk)
 boto3==1.9.52
 
+# force SSL
 Flask-SSLify==0.1.5
+
+# sessions
+Flask-Security==3.0.0

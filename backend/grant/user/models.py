@@ -1,13 +1,29 @@
 from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
+from flask_security import UserMixin, RoleMixin
+from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification
-from grant.extensions import ma, db
+from grant.extensions import ma, db, security
 from grant.utils.misc import make_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils.social import get_social_info_from_url
 from grant.email.send import send_email
+
+
+class RolesUsers(db.Model):
+    __tablename__ = 'roles_users'
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'))
+    role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+
+
+class Role(db.Model, RoleMixin):
+    __tablename__ = 'role'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
 
 
 class SocialMedia(db.Model):
@@ -44,28 +60,23 @@ class Avatar(db.Model):
         self.user_id = user_id
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = "user"
 
     id = db.Column(db.Integer(), primary_key=True)
     email_address = db.Column(db.String(255), unique=True, nullable=False)
-    _password_hash = db.Column("password_hash", db.String(255), unique=False, nullable=False)
+    password = db.Column(db.String(255), unique=False, nullable=False)
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
+    active = db.Column(db.Boolean, default=True)
 
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
     email_verification = db.relationship(EmailVerification, uselist=False,
                                          back_populates="user", lazy=True, cascade="all, delete-orphan")
-
-    @hybrid_property
-    def password_hash(self):
-        return self._password_hash
-
-    @password_hash.setter
-    def password_hash(self, password_hash):
-        self._password_hash = generate_password_hash(password_hash)
+    roles = db.relationship('Role', secondary='roles_users',
+                            backref=db.backref('users', lazy='dynamic'))
 
     # TODO - add create and validate methods
 
@@ -73,24 +84,25 @@ class User(db.Model):
         self,
         email_address,
         password,
+        active,
+        roles,
         display_name=None,
-        title=None
+        title=None,
     ):
         self.email_address = email_address
         self.display_name = display_name
         self.title = title
-        self.password_hash = password
+        self.password = password
 
     @staticmethod
     def create(email_address=None, password=None, display_name=None, title=None, _send_email=True):
-        user = User(
+        user = security.datastore.create_user(
             email_address=email_address,
-            password=password,
+            password=hash_password(password),
             display_name=display_name,
             title=title
         )
-        db.session.add(user)
-        db.session.flush()
+        security.datastore.commit()
 
         # Setup & send email verification
         ev = EmailVerification(user_id=user.id)
@@ -107,16 +119,18 @@ class User(db.Model):
 
     @staticmethod
     def get_by_id(user_id: int):
-        return User.query.filter_by(id=user_id).first()
+        return security.datastore.get_user(user_id)
 
     @staticmethod
     def get_by_email(email_address: str):
-        return User.query.filter(
-            func.lower(User.email_address) == func.lower(email_address)
-        ).first()
+        return security.datastore.get_user(email_address)
 
     def check_password(self, password: str):
-        return check_password_hash(self.password_hash, password)
+        return verify_and_update_password(password, self)
+
+    def login(self):
+        login_user(self)
+        security.datastore.commit()
 
 
 class UserSchema(ma.Schema):

@@ -10,7 +10,7 @@ from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_sm, requires_team_member_auth
+from grant.utils.auth import requires_auth, requires_team_member_auth
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email
 from .models import(
@@ -64,7 +64,7 @@ def get_proposal_comments(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('comment', type=str, required=True),
     parameter('parentCommentId', type=int, required=False)
@@ -116,7 +116,7 @@ def get_proposals(stage):
 
 
 @blueprint.route("/drafts", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def make_proposal_draft():
     proposal = Proposal.create(status="DRAFT")
@@ -127,7 +127,7 @@ def make_proposal_draft():
 
 
 @blueprint.route("/drafts", methods=["GET"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def get_proposal_drafts():
     proposals = (
@@ -327,7 +327,7 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('txId', type=str, required=True),
     parameter('fromAddress', type=str, required=True),

@@ -3,11 +3,12 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_sslify import SSLify
+from flask_security import SQLAlchemyUserDatastore
 from sentry_sdk.integrations.flask import FlaskIntegration
 import sentry_sdk
 
 from grant import commands, proposal, user, comment, milestone, admin, email
-from grant.extensions import bcrypt, migrate, db, ma, mail
+from grant.extensions import bcrypt, migrate, db, ma, mail, security
 from grant.settings import SENTRY_RELEASE, ENV
 
 
@@ -36,6 +37,8 @@ def register_extensions(app):
     migrate.init_app(app, db)
     ma.init_app(app)
     mail.init_app(app)
+    user_datastore = SQLAlchemyUserDatastore(db, user.models.User, user.models.Role)
+    security.init_app(app, user_datastore)
 
     CORS(app)
     SSLify(app)

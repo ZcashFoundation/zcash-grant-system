@@ -1,3 +1,4 @@
+import json
 from flask_testing import TestCase
 
 from grant.app import create_app
@@ -63,6 +64,16 @@ class BaseUserConfig(BaseTestConfig):
         )
 
         db.session.commit()
+
+    def login_default_user(self):
+        self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+            content_type="application/json"
+        )
 
     def remove_default_user(self):
         User.query.filter_by(id=self.user.id).delete()

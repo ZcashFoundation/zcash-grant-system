@@ -10,7 +10,7 @@ from grant.proposal.models import (
     invites_with_proposal_schema,
     user_proposals_schema
 )
-from grant.utils.auth import requires_sm, requires_same_user_auth
+from grant.utils.auth import requires_auth, requires_same_user_auth
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
@@ -39,7 +39,7 @@ def get_users(proposal_id):
 
 
 @blueprint.route("/me", methods=["GET"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def get_me():
     dumped_user = user_schema.dump(g.current_user)
@@ -114,12 +114,13 @@ def auth_user(email, password):
 
     if not existing_user.check_password(password):
         return {"message": "Invalid password"}, 403
-
+    else:
+        existing_user.login()
     return user_schema.dump(existing_user)
 
 
 @blueprint.route("/avatar", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('mimetype', type=str, required=True)
 )
@@ -133,7 +134,7 @@ def upload_avatar(mimetype):
 
 
 @blueprint.route("/avatar", methods=["DELETE"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('url', type=str, required=True)
 )
@@ -143,7 +144,7 @@ def delete_avatar(url):
 
 
 @blueprint.route("/<user_id>", methods=["PUT"])
-@requires_sm
+@requires_auth
 @requires_same_user_auth
 @endpoint.api(
     parameter('displayName', type=str, required=True),
