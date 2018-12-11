@@ -1,4 +1,4 @@
-import { generateApiKey } from "./util";
+import { generateApiKey } from "../util";
 
 const result = generateApiKey();
 

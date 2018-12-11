@@ -1,10 +1,8 @@
-import Clock from "./clock";
-import { Send, Message } from "../service";
+import { Notifier } from './notifier';
+import BlockchainNotifier from './blockchain';
+import ContributionNotifier from './contribution';
 
-export interface Notifier {
-  registerSend(send: Send): void;
-  receive(message: Message): void;
-  destroy(): void;
-}
-
-export const initializeNotifiers = () => [new Clock()] as Notifier[];
+export const initializeNotifiers = () => [
+  new BlockchainNotifier(),
+  new ContributionNotifier(),
+] as Notifier[];

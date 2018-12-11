@@ -62,3 +62,4 @@ typings/
 
 # zcash
 .zcash/regtest
+.zcash/export

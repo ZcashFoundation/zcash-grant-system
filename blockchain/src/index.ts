@@ -5,7 +5,7 @@ dotenv.load();
 start();
 
 process.on("SIGINT", () => {
-  console.log("Service exited.");
   exit();
+  console.log("Service exited.");
   process.exit();
 });
