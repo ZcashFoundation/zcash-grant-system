@@ -1,0 +1,34 @@
+{
+  "name": "zcash-blockchain-watcher",
+  "version": "1.0.0",
+  "engines": {
+    "node": "8.13.0"
+  },
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "yarn run build:live",
+    "build": "tsc -p .",
+    "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/dev/index.ts",
+    "genkey": "yarn run ts-node src/genkey.ts",
+    "test": "yarn ts-mocha --no-colors src/**/*.spec.ts"
+  },
+  "devDependencies": {
+    "@types/expect": "^1.20.3",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.11",
+    "isomorphic-ws": "^4.0.1",
+    "mocha": "^5.2.0",
+    "nodemon": "^1.18.7",
+    "ts-mocha": "^2.0.0",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.1"
+  },
+  "dependencies": {
+    "@types/dotenv": "^6.1.0",
+    "@types/ws": "^6.0.1",
+    "dotenv": "^6.1.0",
+    "stdrpc": "1.0.0",
+    "ws": "^6.1.2"
+  }
+}

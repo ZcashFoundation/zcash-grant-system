@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ts-node-websocket-microservice DEV</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      crossorigin="anonymous"
+    />
+    <style>
+      body {
+        margin: 0 1rem;
+      }
+      #status {
+        position: fixed;
+        z-index: 10;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: rgb(255, 255, 255);
+        box-shadow: 0px 3px 20px 0px #a2a2a2;
+      }
+      #status > button {
+        float: right;
+      }
+      #responses {
+        margin-top: 6.5rem;
+      }
+      #responses > div {
+        margin: 1rem 1rem;
+      }
+      #controls {
+        position: fixed;
+        z-index: 10;
+        bottom: 0;
+        left: 0;
+        padding: 1rem;
+        background: rgb(255, 255, 255);
+        box-shadow: 0px -3px 20px 0px #a2a2a2;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">
+      <span id="disconnected" class="when-disconnected label label-default"
+        >disconnected</span
+      >
+      <span
+        id="connected"
+        style="display:none"
+        class="when-connected label label-success"
+        >connected</span
+      >
+      <button
+        id="doOpen"
+        type="button"
+        class="when-disconnected btn btn-success btn-sm"
+      >
+        open
+      </button>
+      <button
+        id="doClose"
+        style="display: none"
+        type="button"
+        class="when-connected btn btn-danger btn-sm"
+      >
+        close
+      </button>
+    </div>
+    <div id="responses"></div>
+    <div id="controls">
+      <div class="input-group">
+        <input
+          id="sendInput"
+          type="text"
+          class="form-control"
+          placeholder="{ &quot;type&quot;: &quot;clock&quot;, &quot;payload&quot;: &quot;getTime&quot; }"
+          disabled
+        />
+        <span class="input-group-btn">
+          <button id="doSend" class="btn btn-primary" type="button">
+            Send
+          </button>
+        </span>
+      </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+      integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      let socket = null;
+
+      const createWebSocket = () => {
+        socket = new WebSocket("ws://localhost:$$PORT", "$$API_SECRET_KEY");
+        $("#sendInput").prop('disabled', false);
+        socket.addEventListener("open", function(event) {
+          $(".when-connected").show();
+          $(".when-disconnected").hide();
+        });
+        socket.addEventListener("close", function(event) {
+          $(".when-connected").hide();
+          $(".when-disconnected").show();
+        });
+        socket.addEventListener("message", function(event) {
+          const json = JSON.stringify(JSON.parse(event.data), null, 2);
+          $("#responses").prepend(`<div><pre>${json}</pre></div>`);
+          console.log("Message from server ", event.data);
+        });
+      };
+
+      $("#doSend").click(() => {
+        const input = $("#sendInput").val();
+        console.log("Send message to server ", input);
+        socket.send(input);
+        $("#sendInput").val("");
+      });
+
+      $("#doClose").click(() => {
+        socket.close();
+      });
+
+      $("#doOpen").click(() => {
+        socket && socket.close();
+        createWebSocket();
+      });
+      createWebSocket();
+    </script>
+  </body>
+</html>
