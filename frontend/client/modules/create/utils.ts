@@ -155,10 +155,8 @@ export function getCreateTeamMemberError(user: User) {
     return 'Display name can only be 30 characters maximum';
   } else if (user.title.length > 30) {
     return 'Title can only be 30 characters maximum';
-  } else if (!/.+\@.+\..+/.test(user.emailAddress)) {
+  } else if (!user.emailAddress || !/.+\@.+\..+/.test(user.emailAddress)) {
     return 'That doesn’t look like a valid email address';
-  } else if (!user.accountAddress) {
-    return 'That doesn’t look like a valid ETH address';
   }
 
   return '';

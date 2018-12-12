@@ -52,7 +52,6 @@ class Profile extends React.Component<Props> {
 
     const user = this.props.usersMap[userLookupParam];
     const waiting = !user || !user.hasFetched;
-    // TODO: Replace with userid checks
     const isAuthedUser = user && authUser && user.userid === authUser.userid;
 
     if (waiting) {
@@ -119,11 +118,7 @@ class Profile extends React.Component<Props> {
                   />
                 )}
                 {invites.map(invite => (
-                  <ProfileInvite
-                    key={invite.id}
-                    userId={user.accountAddress}
-                    invite={invite}
-                  />
+                  <ProfileInvite key={invite.id} userId={user.userid} invite={invite} />
                 ))}
               </div>
             </Tabs.TabPane>

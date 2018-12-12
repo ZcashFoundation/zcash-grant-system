@@ -8,7 +8,7 @@ import {
 } from 'api/api';
 import { Dispatch } from 'redux';
 import { cleanClone } from 'utils/helpers';
-import { INITIAL_TEAM_MEMBER_STATE } from 'modules/users/reducers';
+import { INITIAL_USER } from 'modules/users/reducers';
 
 export function fetchUser(userFetchId: string) {
   return async (dispatch: Dispatch<any>) => {
@@ -26,7 +26,7 @@ export function fetchUser(userFetchId: string) {
 }
 
 export function updateUser(user: User) {
-  const userClone = cleanClone(INITIAL_TEAM_MEMBER_STATE, user);
+  const userClone = cleanClone(INITIAL_USER, user);
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.UPDATE_USER_PENDING, payload: { user } });
     try {

@@ -27,9 +27,8 @@ export interface UsersState {
   map: { [index: string]: UserState };
 }
 
-export const INITIAL_TEAM_MEMBER_STATE: User = {
+export const INITIAL_USER: User = {
   userid: 0,
-  accountAddress: '',
   avatar: null,
   displayName: '',
   emailAddress: '',
@@ -38,7 +37,7 @@ export const INITIAL_TEAM_MEMBER_STATE: User = {
 };
 
 export const INITIAL_USER_STATE: UserState = {
-  ...INITIAL_TEAM_MEMBER_STATE,
+  ...INITIAL_USER,
   isFetching: false,
   hasFetched: false,
   fetchError: null,
@@ -86,19 +85,19 @@ export default (state = INITIAL_STATE, action: any) => {
       });
     // update
     case types.UPDATE_USER_PENDING:
-      return updateUserState(state, payload.user.accountAddress, {
+      return updateUserState(state, payload.user.userid, {
         isUpdating: true,
         updateError: null,
       });
     case types.UPDATE_USER_FULFILLED:
       return updateUserState(
         state,
-        payload.user.accountAddress,
+        payload.user.userid,
         { isUpdating: false },
         payload.user,
       );
     case types.UPDATE_USER_REJECTED:
-      return updateUserState(state, payload.user.accountAddress, {
+      return updateUserState(state, payload.user.userid, {
         isUpdating: false,
         updateError: errorStatus,
       });

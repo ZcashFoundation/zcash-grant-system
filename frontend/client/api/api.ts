@@ -86,7 +86,7 @@ export function checkUserAuth(): Promise<{ data: User }> {
 }
 
 export function updateUser(user: User): Promise<{ data: User }> {
-  return axios.put(`/api/v1/users/${user.accountAddress}`, formatUserForPost(user));
+  return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
 }
 
 export function verifyEmail(code: string): Promise<any> {
