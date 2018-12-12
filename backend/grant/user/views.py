@@ -119,6 +119,14 @@ def auth_user(email, password):
     return user_schema.dump(existing_user)
 
 
+@blueprint.route("/logout", methods=["POST"])
+@requires_auth
+@endpoint.api()
+def logout_user():
+    User.logout_current_user()
+    return None, 200
+
+
 @blueprint.route("/avatar", methods=["POST"])
 @requires_auth
 @endpoint.api(

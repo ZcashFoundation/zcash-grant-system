@@ -125,12 +125,15 @@ class User(db.Model, UserMixin):
     def get_by_email(email_address: str):
         return security.datastore.get_user(email_address)
 
+    @staticmethod
+    def logout_current_user():
+        logout_user()  # logs current user out
+
     def check_password(self, password: str):
         return verify_and_update_password(password, self)
 
     def login(self):
         login_user(self)
-        security.datastore.commit()
 
 
 class UserSchema(ma.Schema):
