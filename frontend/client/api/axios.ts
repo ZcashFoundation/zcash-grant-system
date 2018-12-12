@@ -3,6 +3,8 @@ import axios from 'axios';
 const instance = axios.create({
   baseURL: process.env.BACKEND_URL,
   headers: {},
+  // for session cookies
+  withCredentials: true,
 });
 
 instance.interceptors.response.use(

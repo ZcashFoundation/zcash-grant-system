@@ -67,11 +67,18 @@ export function createUser(payload: {
 }
 
 export function authUser(payload: {
-  accountAddress: string;
-  signedMessage: string;
-  rawTypedData: string;
+  email: string;
+  password: string;
 }): Promise<{ data: User }> {
   return axios.post('/api/v1/users/auth', payload);
+}
+
+export function logoutUser() {
+  return axios.post('/api/v1/users/logout');
+}
+
+export function checkUserAuth(): Promise<{ data: User }> {
+  return axios.get(`/api/v1/users/me`);
 }
 
 export function updateUser(user: User): Promise<{ data: User }> {

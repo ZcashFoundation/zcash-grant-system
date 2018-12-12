@@ -23,7 +23,7 @@ class SignInPage extends React.Component<Props> {
           <>
             <Link to="/auth" style={{ marginRight: '0.5rem' }}>
               <Button type="primary" size="large">
-                Change account
+                Sign in
               </Button>
             </Link>
             <Link to="/">

@@ -41,7 +41,7 @@ class ProfileUser extends React.Component<Props> {
       user: { socialMedias },
     } = this.props;
 
-    const isSelf = !!authUser && authUser.accountAddress === user.accountAddress;
+    const isSelf = !!authUser && authUser.userid === user.userid;
 
     if (this.state.isEditing) {
       return (

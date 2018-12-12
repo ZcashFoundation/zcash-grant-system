@@ -1,9 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Form, Input, Button, Alert } from 'antd';
-import Identicon from 'components/Identicon';
-import ShortAddress from 'components/ShortAddress';
-import { AUTH_PROVIDER } from 'utils/auth';
 import { authActions } from 'modules/auth';
 import { AppState } from 'store/reducers';
 import './SignUp.less';
@@ -17,13 +14,7 @@ interface DispatchProps {
   createUser: typeof authActions['createUser'];
 }
 
-interface OwnProps {
-  address: string;
-  provider: AUTH_PROVIDER;
-  reset(): void;
-}
-
-type Props = StateProps & DispatchProps & OwnProps;
+type Props = StateProps & DispatchProps;
 
 interface State {
   name: string;
@@ -39,17 +30,12 @@ class SignUp extends React.Component<Props, State> {
   };
 
   render() {
-    const { address, isCreatingUser, createUserError } = this.props;
+    const { isCreatingUser, createUserError } = this.props;
     const { name, title, email } = this.state;
 
     return (
       <div className="SignUp">
         <div className="SignUp-container">
-          <div className="SignUp-identity">
-            <Identicon address={address} className="SignUp-identity-identicon" />
-            <ShortAddress address={address} className="SignUp-identity-address" />
-          </div>
-
           <Form className="SignUp-form" onSubmit={this.handleSubmit} layout="vertical">
             <Form.Item className="SignUp-form-item" label="Display name">
               <Input
@@ -100,13 +86,6 @@ class SignUp extends React.Component<Props, State> {
             )}
           </Form>
         </div>
-
-        {/*
-          Temporarily only supporting web3, so there are no other identites
-          <p className="SignUp-back">
-            Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
-          </p>
-        */}
       </div>
     );
   }
@@ -118,13 +97,13 @@ class SignUp extends React.Component<Props, State> {
 
   private handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    const { address, createUser } = this.props;
+    const { createUser } = this.props;
     const { name, title, email } = this.state;
-    createUser({ address, name, title, email });
+    createUser({ address: 'notandaddress', name, title, email });
   };
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, AppState>(
+export default connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
     isCreatingUser: state.auth.isCreatingUser,
     createUserError: state.auth.createUserError,
