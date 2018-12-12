@@ -91,13 +91,13 @@ def create_user(
     if existing_user:
         return {"message": "User with that email already exists"}, 409
 
-    # TODO: Handle avatar & social stuff too
     user = User.create(
         email_address=email_address,
         password=password,
         display_name=display_name,
         title=title
     )
+    user.login()
     result = user_schema.dump(user)
     return result, 201
 

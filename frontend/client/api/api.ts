@@ -55,14 +55,18 @@ export function getUser(address: string): Promise<{ data: User }> {
     });
 }
 
-export function createUser(payload: {
-  accountAddress: string;
-  emailAddress: string;
-  displayName: string;
+export function createUser(user: {
+  email: string;
+  password: string;
+  name: string;
   title: string;
-  signedMessage: string;
-  rawTypedData: string;
 }): Promise<{ data: User }> {
+  const payload = {
+    emailAddress: user.email,
+    password: user.password,
+    displayName: user.name,
+    title: user.title,
+  };
   return axios.post('/api/v1/users', payload);
 }
 

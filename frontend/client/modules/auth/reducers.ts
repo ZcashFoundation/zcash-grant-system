@@ -8,7 +8,6 @@ export interface AuthState {
   isAuthingUser: boolean;
   authUserError: string | null;
 
-  checkedUsers: { [address: string]: User | false };
   isCheckingUser: boolean;
 
   isCreatingUser: boolean;
@@ -28,7 +27,6 @@ export const INITIAL_STATE: AuthState = {
   isCreatingUser: false,
   createUserError: null,
 
-  checkedUsers: {},
   isCheckingUser: false,
 
   authSignature: null,
@@ -72,7 +70,6 @@ export default function createReducer(
         ...state,
         user: action.payload.user,
         isCheckingUser: false,
-        checkedUsers: action.payload.user,
       };
     case types.CHECK_USER_REJECTED:
       return {
@@ -101,10 +98,6 @@ export default function createReducer(
         ...state,
         user: action.payload.user,
         isCreatingUser: false,
-        checkedUsers: {
-          ...state.checkedUsers,
-          [action.payload.user.address]: action.payload.user,
-        },
       };
     case types.CREATE_USER_REJECTED:
       return {

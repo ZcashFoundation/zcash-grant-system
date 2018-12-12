@@ -2,7 +2,7 @@ import types from './types';
 import { Dispatch } from 'redux';
 import * as Sentry from '@sentry/browser';
 import {
-  // createUser as apiCreateUser,
+  createUser as apiCreateUser,
   checkUserAuth,
   authUser as apiAuthUser,
   logoutUser,
@@ -63,32 +63,21 @@ export function authUser(email: string, password: string) {
 }
 
 export function createUser(user: {
-  address: string;
   email: string;
+  password: string;
   name: string;
   title: string;
 }) {
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.CREATE_USER_PENDING });
-
     try {
-      console.log('TODO - apiCreateUser', user);
-      throw new Error('TODO - apiCreateUser');
-      // const res = await apiCreateUser({
-      //   accountAddress: user.address,
-      //   emailAddress: user.email,
-      //   displayName: user.name,
-      //   title: user.title,
-      //   signedMessage: authSignature.signedMessage,
-      //   rawTypedData: JSON.stringify(authSignature.rawTypedData),
-      // });
-      // dispatch({
-      //   type: types.CREATE_USER_FULFILLED,
-      //   payload: {
-      //     user: res.data,
-      //     authSignature,
-      //   },
-      // });
+      const res = await apiCreateUser(user);
+      dispatch({
+        type: types.CREATE_USER_FULFILLED,
+        payload: {
+          user: res.data,
+        },
+      });
     } catch (err) {
       dispatch({
         type: types.CREATE_USER_REJECTED,
