@@ -1,0 +1,7 @@
+Please use the below link to reset your password. The link will expire in one hour.
+
+{{ args.recover_url }}
+
+If you did not make this request, you can safely ignore this email. A password
+reset request can be made by anyone, and it does not indicate that your
+account is in any danger of being accessed by someone else.

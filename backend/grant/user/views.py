@@ -140,6 +140,18 @@ def logout_user():
     return None, 200
 
 
+@blueprint.route("/recover", methods=["POST"])
+@endpoint.api(
+    parameter('email', type=str, required=True)
+)
+def recover_user(email):
+    existing_user = User.get_by_email(email)
+    if not existing_user:
+        return {"message": "No user exists with that email"}, 400
+    existing_user.send_recovery_email()
+    return None, 200
+
+
 @blueprint.route("/avatar", methods=["POST"])
 @requires_auth
 @endpoint.api(

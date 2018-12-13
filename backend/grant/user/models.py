@@ -5,7 +5,7 @@ from flask_security.utils import hash_password, verify_and_update_password, logi
 from flask_security.core import current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from grant.comment.models import Comment
-from grant.email.models import EmailVerification
+from grant.email.models import EmailVerification, EmailRecovery
 from grant.extensions import ma, db, security
 from grant.utils.misc import make_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
@@ -81,6 +81,8 @@ class User(db.Model, UserMixin):
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
     email_verification = db.relationship(EmailVerification, uselist=False,
                                          back_populates="user", lazy=True, cascade="all, delete-orphan")
+    email_recovery = db.relationship(EmailRecovery, uselist=False, back_populates="user",
+                                     lazy=True, cascade="all, delete-orphan")
     roles = db.relationship('Role', secondary='roles_users',
                             backref=db.backref('users', lazy='dynamic'))
 
@@ -144,6 +146,18 @@ class User(db.Model, UserMixin):
 
     def login(self):
         login_user(self)
+
+    def send_recovery_email(self):
+        existing = self.email_recovery
+        if existing:
+            db.session.delete(existing)
+        er = EmailRecovery(user_id=self.id)
+        db.session.add(er)
+        db.session.commit()
+        send_email(self.email_address, 'recover', {
+            'display_name': self.display_name,
+            'recover_url': make_url(f'/email/recover?code={er.code}'),
+        })
 
 
 class UserSchema(ma.Schema):
