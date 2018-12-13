@@ -7,7 +7,7 @@ export default class ContributionNotifier implements Notifier {
 
   onNewBlock = (block: Block) => {
     this.send({
-      type: "blockchain-block",
+      type: "blockchain:block",
       payload: block,
     });
   };

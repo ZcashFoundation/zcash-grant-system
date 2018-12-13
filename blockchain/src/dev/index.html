@@ -23,25 +23,41 @@
         right: 0;
         padding: 1rem;
         background: rgb(255, 255, 255);
-        box-shadow: 0px 3px 20px 0px #a2a2a2;
+        box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.12);
       }
       #status > button {
         float: right;
       }
       #responses {
-        margin-top: 6.5rem;
+        padding-top: 7rem;
+        padding-bottom: 7rem;
       }
-      #responses > div {
+      #responses .message {
         margin: 1rem 1rem;
       }
+      #responses .message.sent {
+        color: #66C;
+      }
+      #responses .message.received {
+        color: #6C6;
+      }
       #controls {
+        display: flex;
         position: fixed;
         z-index: 10;
         bottom: 0;
         left: 0;
+        right: 0;
         padding: 1rem;
         background: rgb(255, 255, 255);
-        box-shadow: 0px -3px 20px 0px #a2a2a2;
+        box-shadow: 0px -3px 6px 0px rgba(0, 0, 0, 0.12);
+      }
+      #controls > * {
+        width: auto;
+        margin: 0 0.5rem;
+      }
+      #sendPayload {
+        flex: 1;
       }
     </style>
   </head>
@@ -73,22 +89,23 @@
       </button>
     </div>
     <div id="responses"></div>
-    <div id="controls">
-      <div class="input-group">
-        <input
-          id="sendInput"
-          type="text"
-          class="form-control"
-          placeholder="{ &quot;type&quot;: &quot;clock&quot;, &quot;payload&quot;: &quot;getTime&quot; }"
-          disabled
-        />
-        <span class="input-group-btn">
-          <button id="doSend" class="btn btn-primary" type="button">
-            Send
-          </button>
-        </span>
-      </div>
-    </div>
+    <form id="controls">
+      <select id="sendType" class="form-control">
+        <option value="contribution:disclosure">
+          contribution:disclosure
+        </option>
+      </select>
+      <input
+        id="sendPayload"
+        class="form-control"
+        type="text"
+        placeholder="Payload JSON, must be valid JSON"
+        disabled
+      />
+      <button id="doSend" class="btn btn-primary">
+        Send
+      </button>
+    </form>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script
       src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
@@ -98,9 +115,20 @@
     <script>
       let socket = null;
 
+      const addMessage = (type, payload) => {
+        $("#responses").prepend(`
+          <div class="message ${type}">
+            <div class="message-info">
+              ${type} at ${new Date().toLocaleTimeString()}
+            </div>
+            <pre>${JSON.stringify(payload, null, 2)}</pre>
+          </div>
+        `);
+      };
+
       const createWebSocket = () => {
         socket = new WebSocket("ws://localhost:$$PORT", "$$API_SECRET_KEY");
-        $("#sendInput").prop('disabled', false);
+        $("#sendPayload").prop('disabled', false);
         socket.addEventListener("open", function(event) {
           $(".when-connected").show();
           $(".when-disconnected").hide();
@@ -110,17 +138,27 @@
           $(".when-disconnected").show();
         });
         socket.addEventListener("message", function(event) {
-          const json = JSON.stringify(JSON.parse(event.data), null, 2);
-          $("#responses").prepend(`<div><pre>${json}</pre></div>`);
+          const json = JSON.parse(event.data);
           console.log("Message from server ", event.data);
+          addMessage('received', json);
         });
       };
 
-      $("#doSend").click(() => {
-        const input = $("#sendInput").val();
-        console.log("Send message to server ", input);
-        socket.send(input);
-        $("#sendInput").val("");
+      $("#controls").on('submit', (ev) => {
+        ev.preventDefault();
+        const type = $("#sendType").val();
+        const payload = $("#sendPayload").val();
+        try {
+          const message = {
+            type: type,
+            payload: JSON.parse(payload),
+          };
+          socket.send(JSON.stringify(message));
+          console.log("Sending message to server:", message);
+          addMessage('sent', message);
+        } catch(err) {
+          alert('Error: ' + err.message);
+        }
       });
 
       $("#doClose").click(() => {

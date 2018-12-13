@@ -18,7 +18,7 @@ const parse = (data: WebSocket.Data) => {
   try {
     return JSON.parse(data.toString());
   } catch (e) {
-    console.log(
+    log(
       `unable to parse message, it was probably not JSON, data: ${data}`
     );
     return null;
@@ -58,7 +58,6 @@ async function initNode() {
     process.exit(1);
   }
 
-  // Setup view key for address
   try {
     if (!process.env.SPROUT_ADDRESS) {
       log('Missing SPROUT_ADDRESS environment variable, exiting');
@@ -67,7 +66,7 @@ async function initNode() {
     await node.z_getbalance(process.env.SPROUT_ADDRESS as string);
   } catch(err) {
     if (!process.env.SPROUT_VIEWKEY) {
-      log('Missing SPROUT_VIEWKEY environment variable, exiting');
+      log('Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting');
       process.exit(1);
     }
     await node.z_importviewingkey(process.env.SPROUT_VIEWKEY as string);
@@ -84,7 +83,6 @@ async function initNode() {
         currentBlock++;
         consecutiveBlockFailures = 0;
       } catch(err) {
-        console.log(err);
         log(err.response ? err.response.data : err);
         log(`Failed to fetch block ${currentBlock + 1}`);
         consecutiveBlockFailures++;
