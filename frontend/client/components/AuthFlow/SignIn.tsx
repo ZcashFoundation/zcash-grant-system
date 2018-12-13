@@ -26,7 +26,6 @@ class SignIn extends React.Component<Props> {
   render() {
     const { authUserError, isAuthingUser } = this.props;
     const { email, password, isAttemptedAuth } = this.state;
-    const valid = isValidEmail(email) && password.length > 0;
     return (
       <div className="SignIn">
         <div className="SignIn-container">
@@ -44,19 +43,17 @@ class SignIn extends React.Component<Props> {
             onChange={e => this.setState({ password: e.currentTarget.value })}
             size="large"
             autoComplete="current-password"
+            onPressEnter={this.handleLogin}
           />
           <Button
             type="primary"
             size="large"
-            disabled={!valid}
+            disabled={!this.isValid()}
             loading={isAuthingUser}
             block
-            onClick={() => {
-              this.setState({ isAttemptedAuth: true });
-              this.props.authUser(email, password);
-            }}
+            onClick={this.handleLogin}
           >
-            Login
+            Sign in
           </Button>
         </div>
 
@@ -73,6 +70,20 @@ class SignIn extends React.Component<Props> {
       </div>
     );
   }
+
+  private isValid = () => {
+    const { email, password } = this.state;
+    return isValidEmail(email) && password.length > 0;
+  };
+
+  private handleLogin = () => {
+    if (!this.isValid()) {
+      return;
+    }
+    const { email, password } = this.state;
+    this.setState({ isAttemptedAuth: true });
+    this.props.authUser(email, password);
+  };
 }
 
 export default connect<StateProps, DispatchProps, {}, AppState>(

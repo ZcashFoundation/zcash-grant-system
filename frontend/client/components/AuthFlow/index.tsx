@@ -26,7 +26,7 @@ class AuthFlow extends React.Component<Props> {
       renderSwitch: () => (
         <>
           No account?{' '}
-          <a onClick={() => this.setState({ page: 'SIGN_UP' })}>Create an new account</a>.
+          <a onClick={() => this.setState({ page: 'SIGN_UP' })}>Create a new account</a>.
         </>
       ),
     },
