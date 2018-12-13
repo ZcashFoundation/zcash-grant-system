@@ -41,6 +41,7 @@ class ChangePassword extends React.Component<Props> {
               rules: [{ required: true, message: 'Please enter your current password' }],
             })(
               <Input
+                autoComplete="current-password"
                 name="currentPassword"
                 type="password"
                 placeholder="Current password"
@@ -62,7 +63,14 @@ class ChangePassword extends React.Component<Props> {
                   },
                 },
               ],
-            })(<Input name="password" type="password" placeholder="New password" />)}
+            })(
+              <Input
+                name="password"
+                type="password"
+                placeholder="New password"
+                autoComplete="new-password"
+              />,
+            )}
           </Form.Item>
 
           <Form.Item>
@@ -81,6 +89,7 @@ class ChangePassword extends React.Component<Props> {
               ],
             })(
               <Input
+                autoComplete="off"
                 name="passwordConfirm"
                 type="password"
                 onBlur={e =>

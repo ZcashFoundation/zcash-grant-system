@@ -39,6 +39,7 @@ class SignUp extends React.Component<Props> {
                   name="name"
                   placeholder="Non-unique name that others will see you as"
                   size="large"
+                  autoComplete="name"
                 />,
               )}
             </Form.Item>
@@ -64,6 +65,7 @@ class SignUp extends React.Component<Props> {
                 <Input
                   name="email"
                   placeholder="We promise not to spam you or share your email"
+                  autoComplete="username"
                 />,
               )}
             </Form.Item>
@@ -87,6 +89,7 @@ class SignUp extends React.Component<Props> {
                   name="password"
                   type="password"
                   placeholder="Enter a strong password"
+                  autoComplete="new-password"
                 />,
               )}
             </Form.Item>

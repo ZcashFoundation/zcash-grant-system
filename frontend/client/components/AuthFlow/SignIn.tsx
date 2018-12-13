@@ -35,6 +35,7 @@ class SignIn extends React.Component<Props> {
             placeholder="email"
             onChange={e => this.setState({ email: e.currentTarget.value })}
             size="large"
+            autoComplete="email"
           />
           <Input
             value={password}
@@ -42,6 +43,7 @@ class SignIn extends React.Component<Props> {
             type="password"
             onChange={e => this.setState({ password: e.currentTarget.value })}
             size="large"
+            autoComplete="current-password"
           />
           <Button
             type="primary"
