@@ -126,7 +126,7 @@ class SignUp extends React.Component<Props> {
               block
               loading={isCreatingUser}
             >
-              Claim Identity
+              Create account
             </Button>
 
             {createUserError && (

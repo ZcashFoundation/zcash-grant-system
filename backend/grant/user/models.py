@@ -132,6 +132,10 @@ class User(db.Model, UserMixin):
     def check_password(self, password: str):
         return verify_and_update_password(password, self)
 
+    def set_password(self, password: str):
+        self.password = hash_password(password)
+        db.session.commit()
+
     def login(self):
         login_user(self)
 

@@ -85,6 +85,10 @@ export function checkUserAuth(): Promise<{ data: User }> {
   return axios.get(`/api/v1/users/me`);
 }
 
+export function updateUserPassword(currentPassword: string, password: string) {
+  return axios.put(`/api/v1/users/password`, { currentPassword, password });
+}
+
 export function updateUser(user: User): Promise<{ data: User }> {
   return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
 }
