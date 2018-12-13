@@ -23,7 +23,6 @@ env.read_env()
 ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
 SITE_URL = env.str('SITE_URL', default='https://grant.io')
-
 SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL")
 QUEUES = ["default"]
 SECRET_KEY = env.str("SECRET_KEY")
@@ -41,3 +40,6 @@ AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY")
 AWS_DEFAULT_REGION = env.str("AWS_DEFAULT_REGION")
 S3_BUCKET = env.str("S3_BUCKET")
+SECURITY_USER_IDENTITY_ATTRIBUTES = ['email_address']  # default is 'email'
+SECURITY_PASSWORD_HASH = 'bcrypt'
+SECURITY_PASSWORD_SALT = SECRET_KEY

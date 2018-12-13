@@ -48,11 +48,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
   render() {
     const { fields } = this.state;
     const error = getCreateTeamMemberError(fields);
-    const isMissingField =
-      !fields.displayName ||
-      !fields.title ||
-      !fields.emailAddress ||
-      !fields.accountAddress;
+    const isMissingField = !fields.displayName || !fields.title || !fields.emailAddress;
     const isDisabled = !!error || isMissingField || !this.state.isChanged;
 
     return (
@@ -72,7 +68,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
             >
               <Form.Item>
                 <Input
-                  name="name"
+                  name="displayName"
                   autoComplete="off"
                   placeholder="Display name (Required)"
                   value={fields.displayName}
@@ -98,17 +94,6 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
                   type="email"
                   autoComplete="email"
                   value={fields.emailAddress}
-                  onChange={this.handleChangeField}
-                />
-              </Form.Item>
-
-              <Form.Item>
-                <Input
-                  name="accountAddress"
-                  disabled={true}
-                  autoComplete="accountAddress"
-                  placeholder="Ethereum address (Required)"
-                  value={fields.accountAddress}
                   onChange={this.handleChangeField}
                 />
               </Form.Item>

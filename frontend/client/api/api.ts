@@ -55,27 +55,42 @@ export function getUser(address: string): Promise<{ data: User }> {
     });
 }
 
-export function createUser(payload: {
-  accountAddress: string;
-  emailAddress: string;
-  displayName: string;
+export function createUser(user: {
+  email: string;
+  password: string;
+  name: string;
   title: string;
-  signedMessage: string;
-  rawTypedData: string;
 }): Promise<{ data: User }> {
+  const payload = {
+    emailAddress: user.email,
+    password: user.password,
+    displayName: user.name,
+    title: user.title,
+  };
   return axios.post('/api/v1/users', payload);
 }
 
 export function authUser(payload: {
-  accountAddress: string;
-  signedMessage: string;
-  rawTypedData: string;
+  email: string;
+  password: string;
 }): Promise<{ data: User }> {
   return axios.post('/api/v1/users/auth', payload);
 }
 
+export function logoutUser() {
+  return axios.post('/api/v1/users/logout');
+}
+
+export function checkUserAuth(): Promise<{ data: User }> {
+  return axios.get(`/api/v1/users/me`);
+}
+
+export function updateUserPassword(currentPassword: string, password: string) {
+  return axios.put(`/api/v1/users/password`, { currentPassword, password });
+}
+
 export function updateUser(user: User): Promise<{ data: User }> {
-  return axios.put(`/api/v1/users/${user.accountAddress}`, formatUserForPost(user));
+  return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
 }
 
 export function verifyEmail(code: string): Promise<any> {

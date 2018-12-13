@@ -1,3 +1,4 @@
+import json
 from flask_testing import TestCase
 
 from grant.app import create_app
@@ -21,7 +22,7 @@ class BaseTestConfig(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
-    
+
     def assertStatus(self, response, status_code, message=None):
         """
         Overrides TestCase's default to print out response JSON.
@@ -32,6 +33,7 @@ class BaseTestConfig(TestCase):
         self.assertEqual(response.status_code, status_code, message)
 
     assert_status = assertStatus
+
 
 class BaseUserConfig(BaseTestConfig):
     headers = {
@@ -52,6 +54,8 @@ class BaseUserConfig(BaseTestConfig):
         avatar = Avatar(image_url=test_user["avatar"]["link"], user_id=self.user.id)
         db.session.add(avatar)
 
+        self.user_password = test_user["password"]
+
         self.other_user = User.create(
             email_address=test_other_user["emailAddress"],
             password=test_other_user["password"],
@@ -61,9 +65,20 @@ class BaseUserConfig(BaseTestConfig):
 
         db.session.commit()
 
+    def login_default_user(self):
+        self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+            content_type="application/json"
+        )
+
     def remove_default_user(self):
         User.query.filter_by(id=self.user.id).delete()
         db.session.commit()
+
 
 class BaseProposalCreatorConfig(BaseUserConfig):
     def setUp(self):

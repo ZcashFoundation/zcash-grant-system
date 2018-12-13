@@ -1,12 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin } from 'antd';
 import { Route, Redirect, RouteProps } from 'react-router-dom';
 import { AppState } from 'store/reducers';
 
 interface StateProps {
   user: AppState['auth']['user'];
-  isAuthingUser: AppState['auth']['isAuthingUser'];
 }
 
 interface OwnProps {
@@ -17,11 +15,8 @@ type Props = RouteProps & StateProps & OwnProps;
 
 class AuthRoute extends React.Component<Props> {
   public render() {
-    const { user, isAuthingUser, onlyLoggedOut, ...routeProps } = this.props;
-
-    if (isAuthingUser) {
-      return <Spin size="large" />;
-    } else if ((user && !onlyLoggedOut) || (!user && onlyLoggedOut)) {
+    const { user, onlyLoggedOut, ...routeProps } = this.props;
+    if ((user && !onlyLoggedOut) || (!user && onlyLoggedOut)) {
       return <Route {...routeProps} />;
     } else {
       // TODO: redirect to desired destination after auth
@@ -33,5 +28,4 @@ class AuthRoute extends React.Component<Props> {
 
 export default connect((state: AppState) => ({
   user: state.auth.user,
-  isAuthingUser: state.auth.isAuthingUser,
 }))(AuthRoute);

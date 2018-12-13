@@ -9,7 +9,7 @@ interface Props {
 }
 
 const UserRow = ({ user }: Props) => (
-  <Link to={`/profile/${user.accountAddress || user.emailAddress}`} className="UserRow">
+  <Link to={`/profile/${user.userid}`} className="UserRow">
     <div className="UserRow-avatar">
       <UserAvatar user={user} className="UserRow-avatar-img" />
     </div>

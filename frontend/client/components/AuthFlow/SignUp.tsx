@@ -1,12 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Form, Input, Button, Alert } from 'antd';
-import Identicon from 'components/Identicon';
-import ShortAddress from 'components/ShortAddress';
-import { AUTH_PROVIDER } from 'utils/auth';
 import { authActions } from 'modules/auth';
 import { AppState } from 'store/reducers';
 import './SignUp.less';
+import { FormComponentProps } from 'antd/lib/form';
 
 interface StateProps {
   isCreatingUser: AppState['auth']['isCreatingUser'];
@@ -17,66 +15,111 @@ interface DispatchProps {
   createUser: typeof authActions['createUser'];
 }
 
-interface OwnProps {
-  address: string;
-  provider: AUTH_PROVIDER;
-  reset(): void;
-}
+type Props = StateProps & DispatchProps & FormComponentProps;
 
-type Props = StateProps & DispatchProps & OwnProps;
-
-interface State {
-  name: string;
-  title: string;
-  email: string;
-}
-
-class SignUp extends React.Component<Props, State> {
-  state: State = {
-    name: '',
-    title: '',
-    email: '',
+class SignUp extends React.Component<Props> {
+  state = {
+    passwordConfirmDirty: false,
   };
 
   render() {
-    const { address, isCreatingUser, createUserError } = this.props;
-    const { name, title, email } = this.state;
+    const { isCreatingUser, createUserError } = this.props;
+    const { passwordConfirmDirty } = this.state;
+    const { getFieldDecorator, validateFields, getFieldValue } = this.props.form;
 
     return (
       <div className="SignUp">
         <div className="SignUp-container">
-          <div className="SignUp-identity">
-            <Identicon address={address} className="SignUp-identity-identicon" />
-            <ShortAddress address={address} className="SignUp-identity-address" />
-          </div>
-
           <Form className="SignUp-form" onSubmit={this.handleSubmit} layout="vertical">
             <Form.Item className="SignUp-form-item" label="Display name">
-              <Input
-                name="name"
-                value={name}
-                onChange={this.handleChange}
-                placeholder="Non-unique name that others will see you as"
-                size="large"
-              />
+              {getFieldDecorator('name', {
+                rules: [{ required: true, message: 'Please add a display name' }],
+              })(
+                <Input
+                  name="name"
+                  placeholder="Non-unique name that others will see you as"
+                  size="large"
+                  autoComplete="name"
+                />,
+              )}
             </Form.Item>
 
             <Form.Item className="SignUp-form-item" label="Title">
-              <Input
-                name="title"
-                value={title}
-                onChange={this.handleChange}
-                placeholder="A short description about you, e.g. Core Ethereum Developer"
-              />
+              {getFieldDecorator('title', {
+                rules: [{ required: true, message: 'Please add your title' }],
+              })(
+                <Input
+                  name="title"
+                  placeholder="A short description about you, e.g. Core Ethereum Developer"
+                />,
+              )}
             </Form.Item>
 
             <Form.Item className="SignUp-form-item" label="Email address">
-              <Input
-                name="email"
-                value={email}
-                onChange={this.handleChange}
-                placeholder="We promise not to spam you or share your email"
-              />
+              {getFieldDecorator('email', {
+                rules: [
+                  { type: 'email', message: 'Invalid email' },
+                  { required: true, message: 'Please enter your email' },
+                ],
+              })(
+                <Input
+                  name="email"
+                  placeholder="We promise not to spam you or share your email"
+                  autoComplete="username"
+                />,
+              )}
+            </Form.Item>
+
+            <Form.Item className="SignUp-form-item" label="Password">
+              {getFieldDecorator('password', {
+                rules: [
+                  { required: true, message: 'Please enter a password' },
+                  { min: 8, message: 'Please use at least 8 characters' },
+                  {
+                    validator: (_, val, cb) => {
+                      if (val && passwordConfirmDirty) {
+                        validateFields(['passwordConfirm'], { force: true });
+                      }
+                      cb();
+                    },
+                  },
+                ],
+              })(
+                <Input
+                  name="password"
+                  type="password"
+                  placeholder="Enter a strong password"
+                  autoComplete="new-password"
+                />,
+              )}
+            </Form.Item>
+
+            <Form.Item className="SignUp-form-item" label="Confirm password">
+              {getFieldDecorator('passwordConfirm', {
+                rules: [
+                  { required: true, message: 'Please confirm your password' },
+                  {
+                    validator: (_, val, cb) => {
+                      if (val && val !== getFieldValue('password')) {
+                        cb('Passwords do not match');
+                      } else {
+                        cb();
+                      }
+                    },
+                  },
+                ],
+              })(
+                <Input
+                  name="passwordConfirm"
+                  type="password"
+                  onBlur={e =>
+                    this.setState({
+                      passwordConfirmDirty: passwordConfirmDirty || !!e.target.value,
+                    })
+                  }
+                  placeholder="Confirm your password"
+                />,
+              )}
             </Form.Item>
 
             <Button
@@ -86,7 +129,7 @@ class SignUp extends React.Component<Props, State> {
               block
               loading={isCreatingUser}
             >
-              Claim Identity
+              Create account
             </Button>
 
             {createUserError && (
@@ -100,31 +143,25 @@ class SignUp extends React.Component<Props, State> {
             )}
           </Form>
         </div>
-
-        {/*
-          Temporarily only supporting web3, so there are no other identites
-          <p className="SignUp-back">
-            Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
-          </p>
-        */}
       </div>
     );
   }
 
-  private handleChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = ev.currentTarget;
-    this.setState({ [name]: value } as any);
-  };
-
   private handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    const { address, createUser } = this.props;
-    const { name, title, email } = this.state;
-    createUser({ address, name, title, email });
+    const { createUser } = this.props;
+    this.props.form.validateFieldsAndScroll((err: any, values: any) => {
+      if (!err) {
+        delete values.passwordConfirm;
+        createUser(values);
+      }
+    });
   };
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, AppState>(
+const FormWrappedSignUp = Form.create()(SignUp);
+
+export default connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
     isCreatingUser: state.auth.isCreatingUser,
     createUserError: state.auth.createUserError,
@@ -132,4 +169,4 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
   {
     createUser: authActions.createUser,
   },
-)(SignUp);
+)(FormWrappedSignUp);

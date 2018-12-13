@@ -10,7 +10,7 @@ from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_sm, requires_team_member_auth
+from grant.utils.auth import requires_auth, requires_team_member_auth
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email
 from .models import(
@@ -37,6 +37,10 @@ def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
         dumped_proposal = proposal_schema.dump(proposal)
+        proposal_contract = read_proposal(dumped_proposal['proposal_address'])
+        if not proposal_contract:
+            return {"message": "Proposal retired"}, 404
+        dumped_proposal['crowd_fund'] = proposal_contract
         return dumped_proposal
     else:
         return {"message": "No proposal matching id"}, 404
@@ -48,7 +52,7 @@ def get_proposal_comments(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
         return {"message": "No proposal matching id"}, 404
-    
+
     # Only pull top comments, replies will be attached to them
     comments = Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None)
     num_comments = Comment.query.filter_by(proposal_id=proposal_id).count()
@@ -60,7 +64,7 @@ def get_proposal_comments(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('comment', type=str, required=True),
     parameter('parentCommentId', type=int, required=False)
@@ -98,8 +102,8 @@ def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(status="LIVE", stage=stage)
-                .order_by(Proposal.date_created.desc())
-                .all()
+            .order_by(Proposal.date_created.desc())
+            .all()
         )
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
@@ -112,7 +116,7 @@ def get_proposals(stage):
 
 
 @blueprint.route("/drafts", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def make_proposal_draft():
     proposal = Proposal.create(status="DRAFT")
@@ -123,7 +127,7 @@ def make_proposal_draft():
 
 
 @blueprint.route("/drafts", methods=["GET"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def get_proposal_drafts():
     proposals = (
@@ -135,6 +139,7 @@ def get_proposal_drafts():
         .all()
     )
     return proposals_schema.dump(proposals), 200
+
 
 @blueprint.route("/<proposal_id>", methods=["PUT"])
 @requires_team_member_auth
@@ -171,7 +176,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
                 proposal_id=g.current_proposal.id
             )
             db.session.add(m)
-    
+
     # Commit
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
@@ -247,6 +252,7 @@ def post_proposal_update(proposal_id, title, content):
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
 
+
 @blueprint.route("/<proposal_id>/invite", methods=["POST"])
 @requires_team_member_auth
 @endpoint.api(
@@ -270,7 +276,8 @@ def post_proposal_team_invite(proposal_id, address):
         send_email(email, 'team_invite', {
             'user': user,
             'inviter': g.current_user,
-            'proposal': g.current_proposal
+            'proposal': g.current_proposal,
+            'invite_url': make_url(f'/profile/{user.account_address}' if user else '/auth')
         })
 
     return proposal_team_invite_schema.dump(invite), 201
@@ -320,7 +327,7 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('txId', type=str, required=True),
     parameter('fromAddress', type=str, required=True),

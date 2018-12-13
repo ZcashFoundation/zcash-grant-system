@@ -1,13 +1,35 @@
 from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
+from flask_security import UserMixin, RoleMixin
+from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
+from flask_security.core import current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification
-from grant.extensions import ma, db
+from grant.extensions import ma, db, security
 from grant.utils.misc import make_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils.social import get_social_info_from_url
 from grant.email.send import send_email
+
+
+def is_current_authed_user_id(user_id):
+    return current_user.is_authenticated and \
+        current_user.id == user_id
+
+
+class RolesUsers(db.Model):
+    __tablename__ = 'roles_users'
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'))
+    role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+
+
+class Role(db.Model, RoleMixin):
+    __tablename__ = 'role'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
 
 
 class SocialMedia(db.Model):
@@ -44,20 +66,23 @@ class Avatar(db.Model):
         self.user_id = user_id
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = "user"
 
     id = db.Column(db.Integer(), primary_key=True)
     email_address = db.Column(db.String(255), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), unique=False, nullable=False)
+    password = db.Column(db.String(255), unique=False, nullable=False)
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
+    active = db.Column(db.Boolean, default=True)
 
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
     email_verification = db.relationship(EmailVerification, uselist=False,
                                          back_populates="user", lazy=True, cascade="all, delete-orphan")
+    roles = db.relationship('Role', secondary='roles_users',
+                            backref=db.backref('users', lazy='dynamic'))
 
     # TODO - add create and validate methods
 
@@ -65,24 +90,25 @@ class User(db.Model):
         self,
         email_address,
         password,
+        active,
+        roles,
         display_name=None,
-        title=None
+        title=None,
     ):
         self.email_address = email_address
         self.display_name = display_name
         self.title = title
-        self.set_password(password)
+        self.password = password
 
     @staticmethod
     def create(email_address=None, password=None, display_name=None, title=None, _send_email=True):
-        user = User(
+        user = security.datastore.create_user(
             email_address=email_address,
-            password=password,
+            password=hash_password(password),
             display_name=display_name,
             title=title
         )
-        db.session.add(user)
-        db.session.flush()
+        security.datastore.commit()
 
         # Setup & send email verification
         ev = EmailVerification(user_id=user.id)
@@ -99,19 +125,25 @@ class User(db.Model):
 
     @staticmethod
     def get_by_id(user_id: int):
-        return User.query.filter(id=user_id).first()
+        return security.datastore.get_user(user_id)
 
     @staticmethod
     def get_by_email(email_address: str):
-        return User.query.filter(
-            func.lower(User.email_address) == func.lower(email_address)
-        ).first()
-    
-    def set_password(self, password: str):
-        self.password_hash = generate_password_hash(password)
+        return security.datastore.get_user(email_address)
+
+    @staticmethod
+    def logout_current_user():
+        logout_user()  # logs current user out
 
     def check_password(self, password: str):
-        return check_password_hash(self.password_hash, password)
+        return verify_and_update_password(password, self)
+
+    def set_password(self, password: str):
+        self.password = hash_password(password)
+        db.session.commit()
+
+    def login(self):
+        login_user(self)
 
 
 class UserSchema(ma.Schema):
@@ -130,12 +162,20 @@ class UserSchema(ma.Schema):
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
+    email_address = ma.Method("populate_email")
 
     def get_userid(self, obj):
         return obj.id
 
+    def populate_email(self, obj):
+        if is_current_authed_user_id(obj.id):
+            return obj.email_address
+        return None
+
+
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+
 
 class SocialMediaSchema(ma.Schema):
     class Meta:
@@ -146,7 +186,6 @@ class SocialMediaSchema(ma.Schema):
             "service",
             "username",
         )
-
     url = ma.Method("get_url")
     service = ma.Method("get_service")
     username = ma.Method("get_username")

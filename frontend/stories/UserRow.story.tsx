@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { storiesOf } from '@storybook/react';
-import { DONATION } from 'utils/constants';
 import { User } from 'types';
 
 import 'components/UserRow/style.less';
@@ -14,7 +13,6 @@ const user: User = {
   avatar: {
     imageUrl: 'https://randomuser.me/api/portraits/women/19.jpg',
   },
-  accountAddress: DONATION.ETH,
   emailAddress: 'test@test.test',
   socialMedias: [],
 };
@@ -50,7 +48,6 @@ const cases: Case[] = [
       user: {
         ...user,
         avatar: null,
-        accountAddress: '',
       },
     },
   },

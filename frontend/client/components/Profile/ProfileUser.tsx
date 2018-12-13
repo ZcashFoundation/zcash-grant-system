@@ -7,7 +7,6 @@ import { UserState } from 'modules/users/reducers';
 import ProfileEdit from './ProfileEdit';
 import UserAvatar from 'components/UserAvatar';
 import { SOCIAL_INFO } from 'utils/social';
-import ShortAddress from 'components/ShortAddress';
 import './ProfileUser.less';
 import { AppState } from 'store/reducers';
 
@@ -41,7 +40,7 @@ class ProfileUser extends React.Component<Props> {
       user: { socialMedias },
     } = this.props;
 
-    const isSelf = !!authUser && authUser.accountAddress === user.accountAddress;
+    const isSelf = !!authUser && authUser.userid === user.userid;
 
     if (this.state.isEditing) {
       return (
@@ -66,12 +65,6 @@ class ProfileUser extends React.Component<Props> {
               <div className="ProfileUser-info-address">
                 <span>email address</span>
                 {user.emailAddress}
-              </div>
-            )}
-            {user.accountAddress && (
-              <div className="ProfileUser-info-address">
-                <span>ethereum address</span>
-                <ShortAddress address={user.accountAddress} />
               </div>
             )}
           </div>

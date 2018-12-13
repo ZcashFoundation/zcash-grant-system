@@ -50,7 +50,7 @@ class Comment extends React.Component<Props> {
   public render(): React.ReactNode {
     const { comment, isSignedIn, isPostCommentPending } = this.props;
     const { isReplying, reply } = this.state;
-    const authorPath = `/profile/${comment.author.accountAddress}`;
+    const authorPath = `/profile/${comment.author.userid}`;
     return (
       <div className="Comment">
         <div className="Comment-info">

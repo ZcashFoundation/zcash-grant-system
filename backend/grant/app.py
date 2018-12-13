@@ -2,11 +2,13 @@
 """The app module, containing the app factory function."""
 from flask import Flask
 from flask_cors import CORS
+from flask_sslify import SSLify
+from flask_security import SQLAlchemyUserDatastore
 from sentry_sdk.integrations.flask import FlaskIntegration
 import sentry_sdk
 
 from grant import commands, proposal, user, comment, milestone, admin, email
-from grant.extensions import bcrypt, migrate, db, ma, mail
+from grant.extensions import bcrypt, migrate, db, ma, mail, security
 from grant.settings import SENTRY_RELEASE, ENV
 
 
@@ -35,7 +37,12 @@ def register_extensions(app):
     migrate.init_app(app, db)
     ma.init_app(app)
     mail.init_app(app)
-    CORS(app)
+    user_datastore = SQLAlchemyUserDatastore(db, user.models.User, user.models.Role)
+    security.init_app(app, user_datastore)
+
+    # supports_credentials for session cookies
+    CORS(app, supports_credentials=True)
+    SSLify(app)
     return None
 
 

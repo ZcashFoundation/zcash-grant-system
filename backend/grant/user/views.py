@@ -10,7 +10,7 @@ from grant.proposal.models import (
     invites_with_proposal_schema,
     user_proposals_schema
 )
-from grant.utils.auth import requires_sm, requires_same_user_auth
+from grant.utils.auth import requires_auth, requires_same_user_auth
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
@@ -39,7 +39,7 @@ def get_users(proposal_id):
 
 
 @blueprint.route("/me", methods=["GET"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def get_me():
     dumped_user = user_schema.dump(g.current_user)
@@ -91,13 +91,13 @@ def create_user(
     if existing_user:
         return {"message": "User with that email already exists"}, 409
 
-    # TODO: Handle avatar & social stuff too
     user = User.create(
         email_address=email_address,
         password=password,
         display_name=display_name,
         title=title
     )
+    user.login()
     result = user_schema.dump(user)
     return result, 201
 
@@ -107,19 +107,41 @@ def create_user(
     parameter('email', type=str, required=True),
     parameter('password', type=str, required=True)
 )
-def auth_user(email_address, password):
-    existing_user = User.get_by_email(email_address)
+def auth_user(email, password):
+    existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
 
     if not existing_user.check_password(password):
         return {"message": "Invalid password"}, 403
-
+    else:
+        existing_user.login()
     return user_schema.dump(existing_user)
 
 
+@blueprint.route("/password", methods=["PUT"])
+@requires_auth
+@endpoint.api(
+    parameter('currentPassword', type=str, required=True),
+    parameter('password', type=str, required=True),
+)
+def update_user_password(current_password, password):
+    if not g.current_user.check_password(current_password):
+        return {"message": "Current password incorrect"}, 403
+    g.current_user.set_password(password)
+    return None, 200
+
+
+@blueprint.route("/logout", methods=["POST"])
+@requires_auth
+@endpoint.api()
+def logout_user():
+    User.logout_current_user()
+    return None, 200
+
+
 @blueprint.route("/avatar", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('mimetype', type=str, required=True)
 )
@@ -133,7 +155,7 @@ def upload_avatar(mimetype):
 
 
 @blueprint.route("/avatar", methods=["DELETE"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('url', type=str, required=True)
 )
@@ -143,7 +165,7 @@ def delete_avatar(url):
 
 
 @blueprint.route("/<user_id>", methods=["PUT"])
-@requires_sm
+@requires_auth
 @requires_same_user_auth
 @endpoint.api(
     parameter('displayName', type=str, required=True),

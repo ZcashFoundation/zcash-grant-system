@@ -39,9 +39,9 @@ class TestAPI(BaseUserConfig):
         users_json = users_get_resp.json
         self.assertEqual(users_json[0]["displayName"], self.user.display_name)
 
-    def test_get_single_user_by_email(self):
+    def test_get_single_user_by_id(self):
         users_get_resp = self.app.get(
-            "/api/v1/users/{}".format(self.user.email_address)
+            "/api/v1/users/{}".format(self.user.id)
         )
 
         users_json = users_get_resp.json
@@ -50,6 +50,79 @@ class TestAPI(BaseUserConfig):
         self.assertEqual(users_json["socialMedias"][0]["username"], 'groot')
         self.assertEqual(users_json["socialMedias"][0]["url"], self.user.social_medias[0].social_media_link)
         self.assertEqual(users_json["displayName"], self.user.display_name)
+
+    def test_user_auth_success(self):
+        user_auth_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+            content_type="application/json"
+        )
+        print(user_auth_resp.headers)
+        self.assertEqual(user_auth_resp.json['emailAddress'], self.user.email_address)
+        self.assertEqual(user_auth_resp.json['displayName'], self.user.display_name)
+
+    def test_user_auth_required(self):
+        login_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+            content_type="application/json"
+        )
+        print(login_resp.headers)
+        # should have session cookie now
+        me_resp = self.app.get(
+            "/api/v1/users/me",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+            content_type="application/json"
+        )
+        print(me_resp.headers)
+        self.assert200(me_resp)
+
+    def test_user_auth_required_fail(self):
+        me_resp = self.app.get(
+            "/api/v1/users/me",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+
+            content_type="application/json"
+        )
+        print(me_resp.json)
+        print(me_resp.headers)
+        self.assert401(me_resp)
+
+    def test_user_auth_bad_password(self):
+        user_auth_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": "badpassword"
+            }),
+            content_type="application/json"
+        )
+        self.assert403(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
+
+    def test_user_auth_bad_email(self):
+        user_auth_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": "bademail@bad.com",
+                "password": "somepassword"
+            }),
+            content_type="application/json"
+        )
+        self.assert400(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
 
     def test_create_user_duplicate_400(self):
         # self.user is identical to test_user, should throw
@@ -63,6 +136,7 @@ class TestAPI(BaseUserConfig):
 
     @patch('grant.user.views.remove_avatar')
     def test_update_user_remove_social_and_avatar(self, mock_remove_avatar):
+        self.login_default_user()
         updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
         updated_user["displayName"] = 'new display name'
         updated_user["avatar"] = {}
@@ -84,6 +158,7 @@ class TestAPI(BaseUserConfig):
         mock_remove_avatar.assert_called_with(test_user["avatar"]["link"], 1)
 
     def test_update_user_400_when_required_param_not_passed(self):
+        self.login_default_user()
         updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
         updated_user["displayName"] = 'new display name'
         del updated_user["avatar"]

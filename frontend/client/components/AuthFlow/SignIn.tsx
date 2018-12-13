@@ -1,12 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Alert } from 'antd';
+import { Button, Alert, Input } from 'antd';
 import { authActions } from 'modules/auth';
-import { User } from 'types';
 import { AppState } from 'store/reducers';
-import { AUTH_PROVIDER } from 'utils/auth';
-import Identicon from 'components/Identicon';
-import ShortAddress from 'components/ShortAddress';
+import { isValidEmail } from 'utils/validators';
 import './SignIn.less';
 
 interface StateProps {
@@ -18,65 +15,78 @@ interface DispatchProps {
   authUser: typeof authActions['authUser'];
 }
 
-interface OwnProps {
-  // TODO: Use common use User type instead
-  user: User;
-  provider: AUTH_PROVIDER;
-  reset(): void;
-}
-
-type Props = StateProps & DispatchProps & OwnProps;
+type Props = StateProps & DispatchProps;
 
 class SignIn extends React.Component<Props> {
+  state = {
+    password: '',
+    email: '',
+    isAttemptedAuth: false,
+  };
   render() {
-    const { user, authUserError } = this.props;
+    const { authUserError, isAuthingUser } = this.props;
+    const { email, password, isAttemptedAuth } = this.state;
     return (
       <div className="SignIn">
         <div className="SignIn-container">
-          <div className="SignIn-identity">
-            <Identicon
-              address={user.accountAddress}
-              className="SignIn-identity-identicon"
-            />
-            <div className="SignIn-identity-info">
-              <div className="SignIn-identity-info-name">{user.displayName}</div>
-              <code className="SignIn-identity-info-address">
-                <ShortAddress address={user.accountAddress} />
-              </code>
-            </div>
-          </div>
-
-          <Button type="primary" size="large" block onClick={this.authUser}>
-            Prove identity
+          <Input
+            value={email}
+            placeholder="email"
+            onChange={e => this.setState({ email: e.currentTarget.value })}
+            size="large"
+            autoComplete="email"
+          />
+          <Input
+            value={password}
+            placeholder="password"
+            type="password"
+            onChange={e => this.setState({ password: e.currentTarget.value })}
+            size="large"
+            autoComplete="current-password"
+            onPressEnter={this.handleLogin}
+          />
+          <Button
+            type="primary"
+            size="large"
+            disabled={!this.isValid()}
+            loading={isAuthingUser}
+            block
+            onClick={this.handleLogin}
+          >
+            Sign in
           </Button>
         </div>
 
-        {authUserError && (
-          <Alert
-            className="SignIn-error"
-            type="error"
-            message="Failed to sign in"
-            description={authUserError}
-            showIcon
-          />
-        )}
-
-        {/*
-          Temporarily only supporting web3, so there are no other identites
-          <p className="SignIn-back">
-            Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
-          </p>
-        */}
+        {isAttemptedAuth &&
+          authUserError && (
+            <Alert
+              className="SignIn-error"
+              type="error"
+              message="Failed to sign in"
+              description={authUserError}
+              showIcon
+            />
+          )}
       </div>
     );
   }
 
-  private authUser = () => {
-    this.props.authUser(this.props.user.accountAddress);
+  private isValid = () => {
+    const { email, password } = this.state;
+    return isValidEmail(email) && password.length > 0;
+  };
+
+  private handleLogin = () => {
+    if (!this.isValid()) {
+      return;
+    }
+    const { email, password } = this.state;
+    this.setState({ isAttemptedAuth: true });
+    this.props.authUser(email, password);
   };
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, AppState>(
+export default connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
     isAuthingUser: state.auth.isAuthingUser,
     authUserError: state.auth.authUserError,

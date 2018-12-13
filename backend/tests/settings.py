@@ -8,5 +8,8 @@ DEBUG_TB_ENABLED = False
 CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 WTF_CSRF_ENABLED = False  # Allows form testing
-ETHEREUM_PROVIDER = "test"
-ETHEREUM_ENDPOINT_URI = ""
+
+AWS_ACCESS_KEY_ID = "your-user-access-key"
+AWS_SECRET_ACCESS_KEY = "your-user-secret-access-key"
+AWS_DEFAULT_REGION = "us-west-2"
+S3_BUCKET = "your-bucket-name"
