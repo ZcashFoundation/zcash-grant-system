@@ -5,6 +5,11 @@ import { authActions } from 'modules/auth';
 import { AppState } from 'store/reducers';
 import { isValidEmail } from 'utils/validators';
 import './SignIn.less';
+import { FNOnPage } from '.';
+
+interface OwnProps {
+  onPage: FNOnPage;
+}
 
 interface StateProps {
   isAuthingUser: AppState['auth']['isAuthingUser'];
@@ -15,7 +20,7 @@ interface DispatchProps {
   authUser: typeof authActions['authUser'];
 }
 
-type Props = StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps;
 
 class SignIn extends React.Component<Props> {
   state = {
@@ -55,6 +60,10 @@ class SignIn extends React.Component<Props> {
           >
             Sign in
           </Button>
+          <div className="SignIn-container-bottom">
+            Forgot your password?{' '}
+            <a onClick={() => this.props.onPage('RECOVER')}>Recover your account</a>.
+          </div>
         </div>
 
         {isAttemptedAuth &&

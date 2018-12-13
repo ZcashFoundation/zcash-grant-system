@@ -5,6 +5,7 @@ import { AppState } from 'store/reducers';
 import { authActions } from 'modules/auth';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
+import AccountRecovery from './AccountRecovery';
 import './index.less';
 
 interface StateProps {
@@ -14,19 +15,27 @@ interface StateProps {
 
 type Props = StateProps;
 
-class AuthFlow extends React.Component<Props> {
-  state: { page: 'SIGN_IN' | 'SIGN_UP' } = { page: 'SIGN_IN' };
+interface State {
+  page: 'SIGN_IN' | 'SIGN_UP' | 'RECOVER';
+}
+
+export type FNOnPage = (page: State['page']) => void;
+
+// TODO: use Nested Routing to load subpages (so we can direct link to AccountRecovery &etc)
+// https://reacttraining.com/react-router/web/guides/quick-start/example-nested-routing
+class AuthFlow extends React.Component<Props, State> {
+  state: State = { page: 'SIGN_IN' };
   private pages = {
     SIGN_IN: {
       title: 'Sign in',
       subtitle: '',
       render: () => {
-        return <SignIn />;
+        return <SignIn onPage={this.handlePage} />;
       },
       renderSwitch: () => (
         <>
           No account?{' '}
-          <a onClick={() => this.setState({ page: 'SIGN_UP' })}>Create a new account</a>.
+          <a onClick={() => this.handlePage('SIGN_UP')}>Create a new account</a>.
         </>
       ),
     },
@@ -39,7 +48,20 @@ class AuthFlow extends React.Component<Props> {
       renderSwitch: () => (
         <>
           Already have an account?{' '}
-          <a onClick={() => this.setState({ page: 'SIGN_IN' })}>Sign in</a>.
+          <a onClick={() => this.handlePage('SIGN_IN')}>Sign in</a>.
+        </>
+      ),
+    },
+    RECOVER: {
+      title: 'Account Recovery',
+      subtitle: 'Please enter your email below',
+      render: () => {
+        return <AccountRecovery />;
+      },
+      renderSwitch: () => (
+        <>
+          Already have an account?{' '}
+          <a onClick={() => this.handlePage('SIGN_IN')}>Sign in</a>.
         </>
       ),
     },
@@ -62,6 +84,10 @@ class AuthFlow extends React.Component<Props> {
       </div>
     );
   }
+
+  private handlePage: FNOnPage = page => {
+    this.setState({ page });
+  };
 }
 
 export default connect<StateProps, {}, {}, AppState>(

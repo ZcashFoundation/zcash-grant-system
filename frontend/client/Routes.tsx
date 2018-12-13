@@ -28,6 +28,7 @@ const About = loadable(() => import('pages/about'));
 const Privacy = loadable(() => import('pages/privacy'));
 const Contact = loadable(() => import('pages/contact'));
 const VerifyEmail = loadable(() => import('pages/email-verify'));
+const RecoverEmail = loadable(() => import('pages/email-recover'));
 
 import 'styles/style.less';
 
@@ -212,6 +213,17 @@ const routeConfigs: RouteConfig[] = [
     route: {
       path: '/email/verify',
       component: VerifyEmail,
+      exact: true,
+    },
+    template: {
+      title: 'Verify email',
+    },
+  },
+  {
+    // Recover email
+    route: {
+      path: '/email/recover',
+      component: RecoverEmail,
       exact: true,
     },
     template: {
