@@ -2,6 +2,7 @@ from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_security import UserMixin, RoleMixin
 from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
+from flask_security.core import current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification
@@ -10,6 +11,11 @@ from grant.utils.misc import make_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils.social import get_social_info_from_url
 from grant.email.send import send_email
+
+
+def is_current_authed_user_id(user_id):
+    return current_user.is_authenticated and \
+        current_user.id == user_id
 
 
 class RolesUsers(db.Model):
@@ -156,9 +162,15 @@ class UserSchema(ma.Schema):
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
+    email_address = ma.Method("populate_email")
 
     def get_userid(self, obj):
         return obj.id
+
+    def populate_email(self, obj):
+        if is_current_authed_user_id(obj.id):
+            return obj.email_address
+        return None
 
 
 user_schema = UserSchema()
