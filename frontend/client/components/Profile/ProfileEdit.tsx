@@ -68,7 +68,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
             >
               <Form.Item>
                 <Input
-                  name="name"
+                  name="displayName"
                   autoComplete="off"
                   placeholder="Display name (Required)"
                   value={fields.displayName}
