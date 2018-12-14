@@ -1,21 +1,20 @@
-from sqlalchemy import func
-from sqlalchemy.ext.hybrid import hybrid_property
 from flask_security import UserMixin, RoleMixin
-from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
 from flask_security.core import current_user
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
+from sqlalchemy.ext.hybrid import hybrid_property
+
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification
+from grant.email.send import send_email
 from grant.extensions import ma, db, security
 from grant.utils.misc import make_url
-from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils.social import get_social_info_from_url
-from grant.email.send import send_email
+from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 
 
 def is_current_authed_user_id(user_id):
     return current_user.is_authenticated and \
-        current_user.id == user_id
+           current_user.id == user_id
 
 
 class RolesUsers(db.Model):
@@ -87,13 +86,13 @@ class User(db.Model, UserMixin):
     # TODO - add create and validate methods
 
     def __init__(
-        self,
-        email_address,
-        password,
-        active,
-        roles,
-        display_name=None,
-        title=None,
+            self,
+            email_address,
+            password,
+            active,
+            roles,
+            display_name=None,
+            title=None,
     ):
         self.email_address = email_address
         self.display_name = display_name
@@ -180,6 +179,7 @@ class SocialMediaSchema(ma.Schema):
             "service",
             "username",
         )
+
     url = ma.Method("get_url")
     service = ma.Method("get_service")
     username = ma.Method("get_username")
