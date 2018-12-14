@@ -32,10 +32,10 @@ export default class AddressInput extends React.Component<Props, State> {
     return (
       <Row className="PasswordFormItems" gutter={8}>
         <Col span={12}>
-          <Form.Item {...formItemProps} label="New password">
+          <Form.Item {...formItemProps} label="Password">
             {getFieldDecorator('password', {
               rules: [
-                { required: true, message: 'Please enter a new password' },
+                { required: true, message: 'Please enter a password' },
                 { min: 8, message: 'Please use at least 8 characters' },
                 {
                   validator: (_, val, cb) => {
@@ -50,17 +50,17 @@ export default class AddressInput extends React.Component<Props, State> {
               <Input
                 name="password"
                 type="password"
-                placeholder="new password"
+                placeholder="password"
                 autoComplete="new-password"
               />,
             )}
           </Form.Item>
         </Col>
         <Col span={12} className="PasswordFormItems-confirm">
-          <Form.Item {...formItemProps} label="Confirm new password">
+          <Form.Item {...formItemProps} label="Confirm password">
             {getFieldDecorator('passwordConfirm', {
               rules: [
-                { required: true, message: 'Please confirm new password' },
+                { required: true, message: 'Please confirm password' },
                 {
                   validator: (_, val, cb) => {
                     if (val && val !== getFieldValue('password')) {
@@ -80,7 +80,7 @@ export default class AddressInput extends React.Component<Props, State> {
                     passwordConfirmDirty: passwordConfirmDirty || !!e.target.value,
                   })
                 }
-                placeholder="confirm new password"
+                placeholder="confirm password"
                 autoComplete="off"
               />,
             )}
