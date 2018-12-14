@@ -1,42 +1,36 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import { Form, Input, Button, Alert } from 'antd';
-import { AppState } from 'store/reducers';
 import { FormComponentProps } from 'antd/lib/form';
 import { updateUserPassword } from 'api/api';
+import PasswordFormItems from 'components/PasswordFormItems';
 import './ChangePassword.less';
 
-interface StateProps {
-  authUser: AppState['auth']['user'];
-}
+type Props = FormComponentProps;
 
-type Props = StateProps & FormComponentProps;
+const STATE = {
+  passwordConfirmDirty: false,
+  passwordChangePending: false,
+  passwordChangeSuccess: false,
+  passwordChangeError: '',
+};
 
-class ChangePassword extends React.Component<Props> {
-  state = {
-    passwordConfirmDirty: false,
-    passwordChangePending: false,
-    passwordChangeSuccess: false,
-    passwordChangeError: '',
-  };
+type State = typeof STATE;
+
+class ChangePassword extends React.Component<Props, State> {
+  state: State = { ...STATE };
 
   render() {
     const {
-      passwordConfirmDirty,
       passwordChangeError,
       passwordChangePending,
       passwordChangeSuccess,
     } = this.state;
-    const { getFieldDecorator, validateFields, getFieldValue } = this.props.form;
+    const { getFieldDecorator } = this.props.form;
 
     return (
       <div className="ChangePassword">
-        <Form
-          className="ChangePassword-form"
-          onSubmit={this.handleSubmit}
-          layout="horizontal"
-        >
-          <Form.Item>
+        <Form className="ChangePassword-form" onSubmit={this.handleSubmit}>
+          <Form.Item label="Current password">
             {getFieldDecorator('currentPassword', {
               rules: [{ required: true, message: 'Please enter your current password' }],
             })(
@@ -44,65 +38,14 @@ class ChangePassword extends React.Component<Props> {
                 autoComplete="current-password"
                 name="currentPassword"
                 type="password"
-                placeholder="Current password"
+                placeholder="current password"
               />,
             )}
           </Form.Item>
 
-          <Form.Item>
-            {getFieldDecorator('password', {
-              rules: [
-                { required: true, message: 'Please enter a new password' },
-                { min: 8, message: 'Please use at least 8 characters' },
-                {
-                  validator: (_, val, cb) => {
-                    if (val && passwordConfirmDirty) {
-                      validateFields(['passwordConfirm'], { force: true });
-                    }
-                    cb();
-                  },
-                },
-              ],
-            })(
-              <Input
-                name="password"
-                type="password"
-                placeholder="New password"
-                autoComplete="new-password"
-              />,
-            )}
-          </Form.Item>
+          <PasswordFormItems form={this.props.form} />
 
-          <Form.Item>
-            {getFieldDecorator('passwordConfirm', {
-              rules: [
-                { required: true, message: 'Please confirm new password' },
-                {
-                  validator: (_, val, cb) => {
-                    if (val && val !== getFieldValue('password')) {
-                      cb('Passwords do not match');
-                    } else {
-                      cb();
-                    }
-                  },
-                },
-              ],
-            })(
-              <Input
-                autoComplete="off"
-                name="passwordConfirm"
-                type="password"
-                onBlur={e =>
-                  this.setState({
-                    passwordConfirmDirty: passwordConfirmDirty || !!e.target.value,
-                  })
-                }
-                placeholder="Confirm new password"
-              />,
-            )}
-          </Form.Item>
-
-          <div style={{ display: 'flex' }}>
+          <div>
             <Button
               type="primary"
               htmlType="submit"
@@ -120,7 +63,7 @@ class ChangePassword extends React.Component<Props> {
               message={passwordChangeError}
               showIcon
               closable
-              style={{ marginTop: '1rem' }}
+              className="ChangePassword-alert"
             />
           )}
 
@@ -131,7 +74,7 @@ class ChangePassword extends React.Component<Props> {
               showIcon
               closable
               onClose={() => this.setState({ passwordChangeSuccess: false })}
-              style={{ marginTop: '1rem' }}
+              className="ChangePassword-alert"
             />
           )}
         </Form>
@@ -166,6 +109,4 @@ class ChangePassword extends React.Component<Props> {
 
 const FormWrappedChangePassword = Form.create()(ChangePassword);
 
-export default connect<StateProps, {}, {}, AppState>(state => ({
-  authUser: state.auth.user,
-}))(FormWrappedChangePassword);
+export default FormWrappedChangePassword;
