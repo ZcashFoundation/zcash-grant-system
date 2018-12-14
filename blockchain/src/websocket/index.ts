@@ -46,40 +46,14 @@ export function exit() {
 
 
 async function initNode() {
-  let currentBlock: number;
-
-  // Check if node is available
-  try {
-    const info = await node.getblockchaininfo();
-    currentBlock = info.blocks;
-    log(`Connected to ${info.chain} node at block height ${info.blocks}`);
-  }
-  catch(err) {
-    log(err.response ? err.response.data : err);
-    log('Failed to connect to zcash node with the following credentials:\r\n', rpcOptions);
-    process.exit(1);
-  }
-
-  try {
-    if (!env.SPROUT_ADDRESS) {
-      log('Missing SPROUT_ADDRESS environment variable, exiting');
-      process.exit(1);
-    }
-    await node.z_getbalance(env.SPROUT_ADDRESS as string);
-  } catch(err) {
-    if (!env.SPROUT_VIEWKEY) {
-      log('Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting');
-      process.exit(1);
-    }
-    await node.z_importviewingkey(env.SPROUT_VIEWKEY as string);
-    await node.z_getbalance(env.SPROUT_ADDRESS as string);
-  }
+  const info = await node.getblockchaininfo();
+  let currentBlock = info.blocks;
 
   setInterval(async () => {
     const blockHeight = await node.getblockcount();
     if (blockHeight > currentBlock) {
       try {
-        const block = await node.getblock(String(currentBlock + 1));
+        const block = await node.getblock(String(currentBlock + 1), 2);
         notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
         currentBlock++;
         consecutiveBlockFailures = 0;

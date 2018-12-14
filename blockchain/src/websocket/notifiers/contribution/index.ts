@@ -1,6 +1,7 @@
 import { Send, Message } from "../../index";
 import { Notifier } from "../notifier";
-import node from "../../../node";
+import node, { BlockWithTransactions } from "../../../node";
+import { store, getWatchAddresses } from "../../../store";
 import env from "../../../env";
 
 interface ContributionConfirmationPayload {
@@ -21,8 +22,11 @@ export default class ContributionNotifier implements Notifier {
     }
   };
 
-  onNewBlock = () => {
-    // Check contributions
+  onNewBlock = (block: BlockWithTransactions) => {
+    const state = store.getState();
+    const addresses = getWatchAddresses(state);
+    console.log(addresses);
+    console.log(block);
   };
 
   registerSend = (sm: Send) => (this.send = sm);

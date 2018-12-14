@@ -1,4 +1,5 @@
 import stdrpc from "stdrpc";
+import bitcore from "zcash-bitcore-lib";
 import env from "./env";
 
 export interface BlockChainInfo {
@@ -103,3 +104,50 @@ export const rpcOptions = {
 const node: ZCashNode = stdrpc(rpcOptions);
 
 export default node;
+
+let network: any;
+export async function initNode() {
+  // Check if node is available & setup network
+  try {
+    const info = await node.getblockchaininfo();
+    console.log(`Connected to ${info.chain} node at block height ${info.blocks}`);
+
+    if (info.chain === "regtest") {
+      bitcore.Networks.enableRegtest();
+    }
+    if (info.chain === "regtest" || info.chain.includes("testnet")) {
+      network = bitcore.Networks.testnet;
+    }
+    else {
+      network = bitcore.Networks.mainnet;
+    }
+  }
+  catch(err) {
+    console.log(err.response ? err.response.data : err);
+    console.log('Failed to connect to zcash node with the following credentials:\r\n', rpcOptions);
+    process.exit(1);
+  }
+
+  // Check if sprout address is readable
+  try {
+    if (!env.SPROUT_ADDRESS) {
+      console.error('Missing SPROUT_ADDRESS environment variable, exiting');
+      process.exit(1);
+    }
+    await node.z_getbalance(env.SPROUT_ADDRESS as string);
+  } catch(err) {
+    if (!env.SPROUT_VIEWKEY) {
+      console.error('Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting');
+      process.exit(1);
+    }
+    await node.z_importviewingkey(env.SPROUT_VIEWKEY as string);
+    await node.z_getbalance(env.SPROUT_ADDRESS as string);
+  }
+}
+
+export function getNetwork() {
+  if (!network) {
+    throw new Error('Called getNetwork before initNode');
+  }
+  return network;
+}

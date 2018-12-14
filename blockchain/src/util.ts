@@ -1,8 +1,6 @@
 import { randomBytes, createHmac } from "crypto";
 import { IncomingMessage } from "http";
-// import bitcoin from "bitcoinjs-lib-zcash";
-// import bip32 from "bip32";
-import bitcore from "zcash-bitcore-lib";
+import { HDPublicKey, Address } from "zcash-bitcore-lib";
 import env from "./env";
 
 function sha256(input: string) {
@@ -48,8 +46,9 @@ export function authenticateRequest(req: IncomingMessage) {
   return secret ? authenticate(secret) : false;
 }
 
-export function deriveTransparentAddress(index: number) {
-  const root = new bitcore.HDPublicKey(env.BIP32_XPUB);
+export function deriveTransparentAddress(index: number, network: any) {
+  const root = new HDPublicKey(env.BIP32_XPUB);
   const child = root.derive(`m/0/${index}`);
-  return child.publicKey.toAddress().toString();
+  const address = new Address(child.publicKey);
+  return address.toString();
 }
