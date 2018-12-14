@@ -162,15 +162,9 @@ class UserSchema(ma.Schema):
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
-    email_address = ma.Method("populate_email")
 
     def get_userid(self, obj):
         return obj.id
-
-    def populate_email(self, obj):
-        if is_current_authed_user_id(obj.id):
-            return obj.email_address
-        return None
 
 
 user_schema = UserSchema()
