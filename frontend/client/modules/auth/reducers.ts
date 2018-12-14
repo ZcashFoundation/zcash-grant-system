@@ -8,7 +8,6 @@ export interface AuthState {
   isAuthingUser: boolean;
   authUserError: string | null;
 
-  checkedUsers: { [address: string]: User | false };
   isCheckingUser: boolean;
 
   isCreatingUser: boolean;
@@ -28,7 +27,6 @@ export const INITIAL_STATE: AuthState = {
   isCreatingUser: false,
   createUserError: null,
 
-  checkedUsers: {},
   isCheckingUser: false,
 
   authSignature: null,
@@ -53,23 +51,40 @@ export default function createReducer(
       return {
         ...state,
         user: action.payload.user,
-        authSignature: action.payload.authSignature, // TODO: Make this the real token
-        authSignatureAddress: action.payload.user.accountAddress,
         isAuthingUser: false,
-      };
-    case usersTypes.UPDATE_USER_FULFILLED:
-      return {
-        ...state,
-        user:
-          state.user && state.user.accountAddress === action.payload.user.accountAddress
-            ? action.payload.user
-            : state.user,
       };
     case types.AUTH_USER_REJECTED:
       return {
         ...state,
         isAuthingUser: false,
         authUserError: action.payload,
+      };
+
+    case types.CHECK_USER_PENDING:
+      return {
+        ...state,
+        isCheckingUser: true,
+      };
+    case types.CHECK_USER_FULFILLED:
+      return {
+        ...state,
+        user: action.payload.user,
+        isCheckingUser: false,
+      };
+    case types.CHECK_USER_REJECTED:
+      return {
+        ...state,
+        isCheckingUser: false,
+      };
+
+    // update authenticated user when general user updated
+    case usersTypes.UPDATE_USER_FULFILLED:
+      return {
+        ...state,
+        user:
+          state.user && state.user.userid === action.payload.user.userid
+            ? action.payload.user
+            : state.user,
       };
 
     case types.CREATE_USER_PENDING:
@@ -82,44 +97,13 @@ export default function createReducer(
       return {
         ...state,
         user: action.payload.user,
-        authSignature: action.payload.authSignature,
-        authSignatureAddress: action.payload.user.accountAddress,
         isCreatingUser: false,
-        checkedUsers: {
-          ...state.checkedUsers,
-          [action.payload.user.address]: action.payload.user,
-        },
       };
     case types.CREATE_USER_REJECTED:
       return {
         ...state,
         isCreatingUser: false,
         createUserError: action.payload,
-      };
-
-    case types.CHECK_USER_PENDING:
-      return {
-        ...state,
-        isCheckingUser: true,
-      };
-    case types.CHECK_USER_FULFILLED:
-      return {
-        ...state,
-        isCheckingUser: false,
-        checkedUsers: action.payload.user
-          ? {
-              ...state.checkedUsers,
-              [action.payload.address]: action.payload.user,
-            }
-          : {
-              ...state.checkedUsers,
-              [action.payload.address]: false,
-            },
-      };
-    case types.CHECK_USER_REJECTED:
-      return {
-        ...state,
-        isCheckingUser: false,
       };
 
     case types.SIGN_TOKEN_PENDING:
@@ -143,12 +127,10 @@ export default function createReducer(
         signAuthError: action.payload,
       };
 
-    case types.LOGOUT:
+    case types.LOGOUT_FULFILLED:
       return {
         ...state,
         user: null,
-        authSignature: null,
-        authSignatureAddress: null,
       };
   }
   return state;

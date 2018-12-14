@@ -26,32 +26,32 @@ message = {
                 {
                     "name": "name",
                     "type": "string"
-            },
-            {
-                "name": "version",
-                "type": "string"
-            },
-            {
-                "name": "chainId",
-                "type": "uint256"
-            }
-        ]
-    },
-    "message": {
-        "message": "I am proving the identity of 0x6bEeA1Cef016c23e292381b6FcaeC092960e41aa on Grant.io",
-        "time": "Tue, 27 Nov 2018 19:02:04 GMT"
-    },
-    "primaryType": "authorization"
-}
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "chainId",
+                    "type": "uint256"
+                }
+            ]
+        },
+        "message": {
+            "message": "I am proving the identity of 0x6bEeA1Cef016c23e292381b6FcaeC092960e41aa on Grant.io",
+            "time": "Tue, 27 Nov 2018 19:02:04 GMT"
+        },
+        "primaryType": "authorization"
+    }
 }
 
 test_user = {
-    "accountAddress": '0x6bEeA1Cef016c23e292381b6FcaeC092960e41aa',
     "displayName": 'Groot',
     "emailAddress": 'iam@groot.com',
+    "password": "p4ssw0rd",
     "title": 'I am Groot!',
     "avatar": {
-        "link": 'https://avatars2.githubusercontent.com/u/1393943?s=400&v=4'
+        "link": 'https://your-bucket-name.s3.amazonaws.com/avatars/1.b0be8bf740ce419a80ea9e1f55974ce1.png'
     },
     "socialMedias": [
         {
@@ -65,11 +65,10 @@ test_user = {
 test_team = [test_user]
 
 test_other_user = {
-    "accountAddress": "0xA65AD9c6006fe8948E75EC0861A1BAbaD8168DE0",
     "displayName": 'Faketoshi',
     "emailAddress": 'fake@toshi.com',
-    "title": 'The Real Fake Satoshi'
-    # TODO make signed messages for this for more tests
+    "title": 'The Real Fake Satoshi',
+    "password": 'n4k0m0t0'
 }
 
 milestones = [
@@ -91,8 +90,8 @@ test_proposal = {
     "milestones": milestones,
     "category": random.choice(CATEGORIES),
     "target": "123.456",
-    "payoutAddress": test_team[0]["accountAddress"],
-    "trustees": [test_team[0]["accountAddress"]],
+    "payoutAddress": "123",
+    "trustees": ["123"],
     "deadlineDuration": 100,
     "voteDuration": 100
 }

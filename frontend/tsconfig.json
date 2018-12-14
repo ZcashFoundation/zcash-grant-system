@@ -19,7 +19,6 @@
     "baseUrl": ".",
     "lib": ["dom", "es2017"],
     "paths": {
-      "contracts/*": ["../contract/build/contracts/*"],
       "api/*": ["./client/api/*"],
       "components/*": ["./client/components/*"],
       "lib/*": ["./client/lib/*"],
@@ -30,8 +29,7 @@
       "styles/*": ["./client/styles/*"],
       "typings/*": ["./client/typings/*"],
       "types/*": ["./types/*"],
-      "utils/*": ["./client/utils/*"],
-      "web3interact/*": ["./client/web3interact/*"]
+      "utils/*": ["./client/utils/*"]
     }
   },
   "include": ["./client/**/*", "./server/**/*", "./stories/**/*", "./types/**/*"],

@@ -43,8 +43,8 @@ class Profile extends React.Component<Props> {
     const userLookupParam = this.props.match.params.id;
     const { authUser } = this.props;
     if (!userLookupParam) {
-      if (authUser && authUser.accountAddress) {
-        return <Redirect to={`/profile/${authUser.accountAddress}`} />;
+      if (authUser && authUser.userid) {
+        return <Redirect to={`/profile/${authUser.userid}`} />;
       } else {
         return <Redirect to="auth" />;
       }
@@ -52,9 +52,7 @@ class Profile extends React.Component<Props> {
 
     const user = this.props.usersMap[userLookupParam];
     const waiting = !user || !user.hasFetched;
-    // TODO: Replace with userid checks
-    const isAuthedUser =
-      user && authUser && user.accountAddress === authUser.accountAddress;
+    const isAuthedUser = user && authUser && user.userid === authUser.userid;
 
     if (waiting) {
       return <Spin />;
@@ -120,11 +118,7 @@ class Profile extends React.Component<Props> {
                   />
                 )}
                 {invites.map(invite => (
-                  <ProfileInvite
-                    key={invite.id}
-                    userId={user.accountAddress}
-                    invite={invite}
-                  />
+                  <ProfileInvite key={invite.id} userId={user.userid} invite={invite} />
                 ))}
               </div>
             </Tabs.TabPane>

@@ -8,22 +8,6 @@ from ..test_data import test_proposal, test_user
 
 
 class TestAPI(BaseProposalCreatorConfig):
-    def test_get_user_invites_by_address(self):
-        invite = ProposalTeamInvite(
-            proposal_id=self.proposal.id,
-            address=self.user.account_address
-        )
-        db.session.add(invite)
-        db.session.commit()
-
-        invites_res = self.app.get(
-            "/api/v1/users/{}/invites".format(self.user.account_address),
-            headers=self.headers
-        )
-        self.assertStatus(invites_res, 200)
-        self.assertEqual(invites_res.json[0]['address'], self.user.account_address)
-        self.assertEqual(invites_res.json[0]['proposal']['proposalId'], self.proposal.id)
-
     def test_get_user_invites_by_email(self):
         invite = ProposalTeamInvite(
             proposal_id=self.proposal.id,
@@ -51,65 +35,65 @@ class TestAPI(BaseProposalCreatorConfig):
         proposal_id = self.other_proposal.id
         invite = ProposalTeamInvite(
             proposal_id=proposal_id,
-            address=self.user.account_address
+            address=self.user.email_address
         )
         db.session.add(invite)
         db.session.commit()
 
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/{}/respond".format(self.user.account_address, invite.id),
+            "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
             headers=self.headers,
-            data=json.dumps({ "response": True }),
+            data=json.dumps({"response": True}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 200)
 
         # Make sure we made the team, coach
         proposal = Proposal.query.filter_by(id=proposal_id).first()
-        self.assertTrue(len(proposal.team) == 2) #TODO: More thorough check than length
+        self.assertTrue(len(proposal.team) == 2)  # TODO: More thorough check than length
 
     def test_put_user_invite_response_reject(self):
         proposal_id = self.other_proposal.id
         invite = ProposalTeamInvite(
             proposal_id=proposal_id,
-            address=self.user.account_address
+            address=self.user.email_address
         )
         db.session.add(invite)
         db.session.commit()
 
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/{}/respond".format(self.user.account_address, invite.id),
+            "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
             headers=self.headers,
-            data=json.dumps({ "response": False }),
+            data=json.dumps({"response": False}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 200)
 
         # Make sure we made the team, coach
         proposal = Proposal.query.filter_by(id=proposal_id).first()
-        self.assertTrue(len(proposal.team) == 1) #TODO: More thorough check than length
+        self.assertTrue(len(proposal.team) == 1)  # TODO: More thorough check than length
 
     def test_no_auth_put_user_invite_response(self):
         proposal_id = self.other_proposal.id
         invite = ProposalTeamInvite(
             proposal_id=proposal_id,
-            address=self.user.account_address
+            address=self.user.email_address
         )
         db.session.add(invite)
         db.session.commit()
 
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/{}/respond".format(self.user.account_address, invite.id),
-            data=json.dumps({ "response": True }),
+            "/api/v1/users/{}/invites/{}/respond".format(self.user.id, invite.id),
+            data=json.dumps({"response": True}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 401)
 
     def test_invalid_invite_put_user_invite_response(self):
         invites_res = self.app.put(
-            "/api/v1/users/{}/invites/1234567890/respond".format(self.user.account_address),
+            "/api/v1/users/{}/invites/1234567890/respond".format(self.user.id),
             headers=self.headers,
-            data=json.dumps({ "response": True }),
+            data=json.dumps({"response": True}),
             content_type='application/json'
         )
         self.assertStatus(invites_res, 404)

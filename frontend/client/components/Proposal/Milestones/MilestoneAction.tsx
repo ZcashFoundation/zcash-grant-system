@@ -3,7 +3,6 @@ import moment from 'moment';
 import { connect } from 'react-redux';
 import { Button, Progress, Alert } from 'antd';
 import { ProposalWithCrowdFund, MILESTONE_STATE } from 'types';
-import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 import UnitDisplay from 'components/UnitDisplay';
 import Placeholder from 'components/Placeholder';
@@ -15,18 +14,12 @@ interface OwnProps {
 }
 
 interface StateProps {
-  isMilestoneActionPending: AppState['web3']['isMilestoneActionPending'];
-  milestoneActionError: AppState['web3']['milestoneActionError'];
-  accounts: AppState['web3']['accounts'];
+  isMilestoneActionPending: boolean;
+  milestoneActionError: string;
+  accounts: string[];
 }
 
-interface ActionProps {
-  requestMilestonePayout: typeof web3Actions['requestMilestonePayout'];
-  payMilestonePayout: typeof web3Actions['payMilestonePayout'];
-  voteMilestonePayout: typeof web3Actions['voteMilestonePayout'];
-}
-
-type Props = OwnProps & StateProps & ActionProps;
+type Props = OwnProps & StateProps;
 
 export class Milestones extends React.Component<Props> {
   render() {
@@ -234,29 +227,28 @@ export class Milestones extends React.Component<Props> {
   }
 
   private requestPayout = (milestoneIndex: number) => {
-    this.props.requestMilestonePayout(this.props.proposal, milestoneIndex);
+    console.warn('TODO - implement/refactor requestPayout', milestoneIndex);
   };
 
   private payPayout = (milestoneIndex: number) => {
-    this.props.payMilestonePayout(this.props.proposal, milestoneIndex);
+    console.warn('TODO - implement/refactor payPayout', milestoneIndex);
   };
 
   private votePayout = (milestoneIndex: number, vote: boolean) => {
-    this.props.voteMilestonePayout(this.props.proposal, milestoneIndex, vote);
+    console.warn('TODO - implement/refactor votePayout', milestoneIndex, vote);
   };
 }
 
-const ConnectedMilestones = connect(
-  (state: AppState) => ({
-    accounts: state.web3.accounts,
-    isMilestoneActionPending: state.web3.isMilestoneActionPending,
-    milestoneActionError: state.web3.milestoneActionError,
-  }),
-  {
-    requestMilestonePayout: web3Actions.requestMilestonePayout,
-    payMilestonePayout: web3Actions.payMilestonePayout,
-    voteMilestonePayout: web3Actions.voteMilestonePayout,
-  },
-)(Milestones);
+const ConnectedMilestones = connect((state: AppState) => {
+  console.warn(
+    'TODO - new redux user-role-for-proposal/accounts + isMilestoneActionPending + milestoneActionError',
+    state,
+  );
+  return {
+    accounts: [],
+    isMilestoneActionPending: false,
+    milestoneActionError: '',
+  };
+})(Milestones);
 
 export default (props: OwnProps) => <ConnectedMilestones {...props} />;

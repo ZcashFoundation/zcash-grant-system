@@ -5,21 +5,11 @@ import classnames from 'classnames';
 import BasicHead from 'components/BasicHead';
 import Header from 'components/Header';
 import Footer from 'components/Footer';
-import Web3Error from './Web3Error';
-import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
-import MetamaskIcon from 'static/images/metamask.png';
-import WrongNetworkIcon from 'static/images/wrong-network.png';
 import './index.less';
 
 interface StateProps {
-  isMissingWeb3: boolean;
-  isWeb3Locked: boolean;
-  isWrongNetwork: boolean;
-}
-
-interface DispatchProps {
-  setAccounts: typeof web3Actions['setAccounts'];
+  authUser: AppState['auth']['user'];
 }
 
 export interface TemplateProps {
@@ -27,10 +17,10 @@ export interface TemplateProps {
   isHeaderTransparent?: boolean;
   isFullScreen?: boolean;
   hideFooter?: boolean;
-  requiresWeb3?: boolean;
+  requiresAuth?: boolean;
 }
 
-type Props = StateProps & DispatchProps & TemplateProps;
+type Props = StateProps & TemplateProps;
 
 class Template extends React.PureComponent<Props> {
   render() {
@@ -40,60 +30,20 @@ class Template extends React.PureComponent<Props> {
       isHeaderTransparent,
       isFullScreen,
       hideFooter,
-      requiresWeb3,
-      isMissingWeb3,
-      isWeb3Locked,
-      isWrongNetwork,
+      requiresAuth,
+      authUser,
     } = this.props;
 
     let content = children;
     let isCentered = false;
-    if (requiresWeb3) {
-      if (isMissingWeb3) {
+    if (requiresAuth) {
+      if (!authUser) {
         isCentered = true;
         content = (
-          <Web3Error
-            icon={MetamaskIcon}
-            message={`
-              This page requires a web3 client to use. Either unlock or install the
-              MetaMask browser extension and refresh to continue.
-            `}
-            button={{
-              text: 'Get MetaMask',
-              href: 'https://metamask.io/',
-            }}
-          />
+          <div>
+            Login required. <br /> TODO: links or redirect
+          </div>
         );
-      } else if (isWeb3Locked) {
-        isCentered = true;
-        content = (
-          <Web3Error
-            icon={MetamaskIcon}
-            message={`
-              It looks like your MetaMask account is locked. Please unlock it and click the
-              button below to continue.
-            `}
-            button={{
-              text: 'Try again',
-              onClick: this.props.setAccounts,
-            }}
-          />
-        );
-      } else if (isWrongNetwork) {
-        isCentered = true;
-        content = (
-          <Web3Error
-            icon={WrongNetworkIcon}
-            message={
-              <>
-                The Grant.io smart contract is currently only supported on the{' '}
-                <strong>Ropsten</strong> network. Please change your network to continue.
-              </>
-            }
-          />
-        );
-      } else {
-        content = children;
       }
     }
 
@@ -116,13 +66,8 @@ class Template extends React.PureComponent<Props> {
   }
 }
 
-export default connect<StateProps, DispatchProps, TemplateProps, AppState>(
-  state => ({
-    isMissingWeb3: state.web3.isMissingWeb3,
-    isWeb3Locked: state.web3.isWeb3Locked,
-    isWrongNetwork: state.web3.isWrongNetwork,
-  }),
-  {
-    setAccounts: web3Actions.setAccounts,
-  },
-)(Template);
+export default connect<StateProps, {}, TemplateProps, AppState>(state => {
+  return {
+    authUser: state.auth.user,
+  };
+})(Template);

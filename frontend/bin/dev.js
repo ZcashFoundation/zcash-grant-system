@@ -9,7 +9,6 @@ const webpackDevMiddleware = require('webpack-dev-middleware');
 const webpackHotMiddleware = require('webpack-hot-middleware');
 const express = require('express');
 const paths = require('../config/paths');
-const truffleUtil = require('./truffle-util');
 const { logMessage } = require('./utils');
 
 const app = express();
@@ -21,8 +20,6 @@ const WEBPACK_PORT =
 const start = async () => {
   rimraf.sync(paths.clientBuild);
   rimraf.sync(paths.serverBuild);
-
-  await truffleUtil.ethereumCheck();
 
   const [clientConfig, serverConfig] = webpackConfig;
   clientConfig.entry.bundle = [

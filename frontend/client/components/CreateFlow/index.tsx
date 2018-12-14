@@ -19,7 +19,7 @@ import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
-import { web3Actions } from 'modules/web3';
+
 import { AppState } from 'store/reducers';
 
 import './index.less';
@@ -104,12 +104,11 @@ interface StateProps {
   form: AppState['create']['form'];
   isSavingDraft: AppState['create']['isSavingDraft'];
   hasSavedDraft: AppState['create']['hasSavedDraft'];
-  accounts: AppState['web3']['accounts'];
+  accounts: string[];
 }
 
 interface DispatchProps {
   updateForm: typeof createActions['updateForm'];
-  resetCreateCrowdFund: typeof web3Actions['resetCreateCrowdFund'];
 }
 
 type Props = StateProps & DispatchProps & RouteComponentProps<any>;
@@ -145,7 +144,7 @@ class CreateFlow extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    this.props.resetCreateCrowdFund();
+    console.warn('TODO - implement RESET_CROWDFUND if necessary');
   }
 
   componentWillUnmount() {
@@ -326,18 +325,17 @@ class CreateFlow extends React.Component<Props, State> {
 }
 
 const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
-  (state: AppState) => ({
-    form: state.create.form,
-    isSavingDraft: state.create.isSavingDraft,
-    hasSavedDraft: state.create.hasSavedDraft,
-    crowdFundLoading: state.web3.crowdFundLoading,
-    crowdFundError: state.web3.crowdFundError,
-    crowdFundCreatedAddress: state.web3.crowdFundCreatedAddress,
-    accounts: state.web3.accounts,
-  }),
+  (state: AppState) => {
+    console.warn('TODO - remove/refactor accounts');
+    return {
+      form: state.create.form,
+      isSavingDraft: state.create.isSavingDraft,
+      hasSavedDraft: state.create.hasSavedDraft,
+      accounts: ['notanaccount'],
+    };
+  },
   {
     updateForm: createActions.updateForm,
-    resetCreateCrowdFund: web3Actions.resetCreateCrowdFund,
   },
 );
 

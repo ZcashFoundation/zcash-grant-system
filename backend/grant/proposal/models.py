@@ -53,7 +53,6 @@ class ProposalTeamInvite(db.Model):
     def get_pending_for_user(user):
         return ProposalTeamInvite.query.filter(
             ProposalTeamInvite.accepted == None,
-            (func.lower(user.account_address) == func.lower(ProposalTeamInvite.address)) |
             (func.lower(user.email_address) == func.lower(ProposalTeamInvite.address))
         ).all()
 

@@ -10,8 +10,6 @@ import './Final.less';
 
 interface StateProps {
   form: AppState['create']['form'];
-  crowdFundError: AppState['web3']['crowdFundError'];
-  crowdFundCreatedAddress: AppState['web3']['crowdFundCreatedAddress'];
   createdProposal: ProposalWithCrowdFund | null;
 }
 
@@ -27,19 +25,21 @@ class CreateFinal extends React.Component<Props> {
   }
 
   render() {
-    const { crowdFundError, crowdFundCreatedAddress, createdProposal } = this.props;
+    const { createdProposal } = this.props;
     let content;
-    if (crowdFundError) {
-      content = (
-        <div className="CreateFinal-message is-error">
-          <Icon type="close-circle" />
-          <div className="CreateFinal-message-text">
-            Something went wrong during creation: "{crowdFundError}"{' '}
-            <a onClick={this.create}>Click here</a> to try again.
-          </div>
-        </div>
-      );
-    } else if (crowdFundCreatedAddress && createdProposal) {
+    // TODO - handle errors?
+    // if (crowdFundError) {
+    //   content = (
+    //     <div className="CreateFinal-message is-error">
+    //       <Icon type="close-circle" />
+    //       <div className="CreateFinal-message-text">
+    //         Something went wrong during creation: "{crowdFundError}"{' '}
+    //         <a onClick={this.create}>Click here</a> to try again.
+    //       </div>
+    //     </div>
+    //   );
+    // } else
+    if (createdProposal) {
       content = (
         <div className="CreateFinal-message is-success">
           <Icon type="check-circle" />
@@ -72,12 +72,7 @@ class CreateFinal extends React.Component<Props> {
 export default connect<StateProps, DispatchProps, {}, AppState>(
   (state: AppState) => ({
     form: state.create.form,
-    crowdFundError: state.web3.crowdFundError,
-    crowdFundCreatedAddress: state.web3.crowdFundCreatedAddress,
-    createdProposal: getProposalByAddress(
-      state,
-      state.web3.crowdFundCreatedAddress || '',
-    ),
+    createdProposal: getProposalByAddress(state, 'notanaddress'),
   }),
   {
     createProposal: createActions.createProposal,

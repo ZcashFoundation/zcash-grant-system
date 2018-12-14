@@ -1,8 +1,7 @@
 import { ProposalDraft, CreateMilestone } from 'types';
 import { User } from 'types';
-import { isValidEthAddress, getAmountError } from 'utils/validators';
+import { getAmountError } from 'utils/validators';
 import { MILESTONE_STATE, ProposalWithCrowdFund } from 'types';
-import { ProposalContractData } from 'modules/web3/actions';
 import { Wei, toWei } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY } from 'api/constants';
@@ -89,7 +88,7 @@ export function getCreateErrors(
   }
 
   // Payout address
-  if (payoutAddress && !isValidEthAddress(payoutAddress)) {
+  if (!payoutAddress) {
     errors.payoutAddress = 'That doesn’t look like a valid address';
   }
 
@@ -102,7 +101,7 @@ export function getCreateErrors(
       }
 
       let err = '';
-      if (!isValidEthAddress(address)) {
+      if (!address) {
         err = 'That doesn’t look like a valid address';
       } else if (trustees.indexOf(address) !== idx) {
         err = 'That address is already a trustee';
@@ -156,10 +155,8 @@ export function getCreateTeamMemberError(user: User) {
     return 'Display name can only be 30 characters maximum';
   } else if (user.title.length > 30) {
     return 'Title can only be 30 characters maximum';
-  } else if (!/.+\@.+\..+/.test(user.emailAddress)) {
+  } else if (!user.emailAddress || !/.+\@.+\..+/.test(user.emailAddress)) {
     return 'That doesn’t look like a valid email address';
-  } else if (!isValidEthAddress(user.accountAddress)) {
-    return 'That doesn’t look like a valid ETH address';
   }
 
   return '';
@@ -186,7 +183,7 @@ function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Wei) 
   return raiseGoal.divn(100).mul(Wei(milestone.payoutPercent));
 }
 
-export function proposalToContractData(form: ProposalDraft): ProposalContractData {
+export function proposalToContractData(form: ProposalDraft): any {
   const targetInWei = toWei(form.target, 'ether');
   const milestoneAmounts = form.milestones.map(m =>
     milestoneToMilestoneAmount(m, targetInWei),

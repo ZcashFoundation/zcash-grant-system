@@ -34,7 +34,7 @@ import 'styles/style.less';
 interface RouteConfig extends RouteProps {
   route: RouteProps;
   template: TemplateProps;
-  requiresWeb3?: boolean;
+  requiresAuth?: boolean;
   onlyLoggedIn?: boolean;
   onlyLoggedOut?: boolean;
 }
@@ -61,7 +61,7 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Create a Proposal',
-      requiresWeb3: true,
+      requiresAuth: true,
     },
     onlyLoggedIn: true,
   },
@@ -74,7 +74,7 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Browse proposals',
-      requiresWeb3: false,
+      requiresAuth: false,
     },
   },
   {
@@ -87,7 +87,7 @@ const routeConfigs: RouteConfig[] = [
       title: 'Edit proposal',
       isFullScreen: true,
       hideFooter: true,
-      requiresWeb3: true,
+      requiresAuth: true,
     },
     onlyLoggedIn: true,
   },
@@ -99,7 +99,7 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Proposal',
-      requiresWeb3: false,
+      requiresAuth: false,
     },
   },
   {

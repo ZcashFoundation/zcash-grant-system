@@ -9,6 +9,7 @@ default_template_args = {
     'unsubscribe_url': 'https://grant.io/unsubscribe',
 }
 
+
 def signup_info(email_args):
     return {
         'subject': 'Confirm your email on Grant.io',
@@ -16,12 +17,14 @@ def signup_info(email_args):
         'preview': 'Welcome to Grant.io, we just need to confirm your email address.',
     }
 
+
 def team_invite_info(email_args):
     return {
         'subject': '{} has invited you to a project'.format(email_args['inviter'].display_name),
         'title': 'You’ve been invited!',
         'preview': 'You’ve been invited to the "{}" project team'.format(email_args['proposal'].title)
     }
+
 
 get_info_lookup = {
     'signup': signup_info,

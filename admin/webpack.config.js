@@ -113,7 +113,6 @@ module.exports = {
     // tsconfig.compilerOptions.paths should sync with these
     alias: {
       src: path.resolve(__dirname, 'src'),
-      contracts: path.resolve(__dirname, '../contract/build'),
       components: path.resolve(__dirname, 'src/components'),
       styles: path.resolve(__dirname, 'src/styles'),
     },

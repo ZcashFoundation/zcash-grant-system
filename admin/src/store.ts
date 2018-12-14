@@ -1,13 +1,6 @@
-import { cloneDeep } from 'lodash';
-import Web3 from 'web3';
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal, INITIAL_CONTRACT, Contract, ContractMethodInput } from './types';
-import {
-  initializeWeb3,
-  populateProposalContract,
-  proposalContractSend,
-} from './web3helper';
+import { User, Proposal } from './types';
 
 // API
 const api = axios.create({
@@ -50,7 +43,6 @@ async function deleteUser(id: string) {
 
 async function fetchProposals() {
   const { data } = await api.get('/admin/proposals');
-  data.forEach((p: Proposal) => (p.contract = cloneDeep(INITIAL_CONTRACT)));
   return data;
 }
 
@@ -73,12 +65,6 @@ const app = store({
   users: [] as User[],
   proposalsFetched: false,
   proposals: [] as Proposal[],
-  web3Type: '',
-  web3Enabled: false,
-  ethNetId: -1,
-  ethAccount: '',
-  crowdFundFactoryDefinitionStatus: '',
-  crowdFundGeneralStatus: 'idle',
 
   removeGeneralError(i: number) {
     app.generalError.splice(i, 1);
@@ -144,24 +130,6 @@ const app = store({
     }
   },
 
-  async populateProposalContract(proposalId: number) {
-    console.log(proposalId);
-    if (web3) {
-      await populateProposalContract(app, web3, proposalId);
-    }
-  },
-
-  async proposalContractSend(
-    proposalId: number,
-    methodName: keyof Contract,
-    inputs: ContractMethodInput[],
-    args: any[],
-  ) {
-    if (web3) {
-      await proposalContractSend(app, web3, proposalId, methodName, inputs, args);
-    }
-  },
-
   async deleteProposal(id: number) {
     try {
       await deleteProposal(id);
@@ -187,9 +155,6 @@ function handleApiError(e: AxiosError) {
 // check login status periodically
 app.checkLogin();
 window.setInterval(app.checkLogin, 10000);
-
-let web3: null | Web3 = null;
-initializeWeb3(app).then(x => (web3 = x));
 
 export type TApp = typeof app;
 export default app;

@@ -2,7 +2,6 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Modal, Alert } from 'antd';
 import { ProposalWithCrowdFund } from 'types';
-import { web3Actions } from 'modules/web3';
 import { AppState } from 'store/reducers';
 
 interface OwnProps {
@@ -12,15 +11,11 @@ interface OwnProps {
 }
 
 interface StateProps {
-  isRefundActionPending: AppState['web3']['isRefundActionPending'];
-  refundActionError: AppState['web3']['refundActionError'];
+  isRefundActionPending: boolean;
+  refundActionError: string;
 }
 
-interface DispatchProps {
-  triggerRefund: typeof web3Actions['triggerRefund'];
-}
-
-type Props = StateProps & DispatchProps & OwnProps;
+type Props = StateProps & OwnProps;
 
 class CancelModal extends React.Component<Props> {
   componentDidUpdate() {
@@ -90,16 +85,14 @@ class CancelModal extends React.Component<Props> {
   };
 
   private cancelProposal = () => {
-    this.props.triggerRefund(this.props.proposal);
+    console.warn('TODO - implement cancelProposal');
   };
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, AppState>(
-  state => ({
-    isRefundActionPending: state.web3.isRefundActionPending,
-    refundActionError: state.web3.refundActionError,
-  }),
-  {
-    triggerRefund: web3Actions.triggerRefund,
-  },
-)(CancelModal);
+export default connect<StateProps, {}, OwnProps, AppState>(state => {
+  console.warn('TODO - redux isRefundActionPending/refundActionError?', state);
+  return {
+    isRefundActionPending: false,
+    refundActionError: '',
+  };
+})(CancelModal);

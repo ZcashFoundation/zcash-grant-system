@@ -10,10 +10,9 @@ from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_sm, requires_team_member_auth, verify_signed_auth, BadSignatureException
+from grant.utils.auth import requires_auth, requires_team_member_auth
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email, make_url
-from grant.web3.proposal import read_proposal
+from grant.utils.misc import is_email
 from .models import(
     Proposal,
     proposals_schema,
@@ -53,7 +52,7 @@ def get_proposal_comments(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
         return {"message": "No proposal matching id"}, 404
-    
+
     # Only pull top comments, replies will be attached to them
     comments = Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None)
     num_comments = Comment.query.filter_by(proposal_id=proposal_id).count()
@@ -65,12 +64,10 @@ def get_proposal_comments(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('comment', type=str, required=True),
-    parameter('parentCommentId', type=int, required=False),
-    parameter('signedMessage', type=str, required=True),
-    parameter('rawTypedData', type=str, required=True)
+    parameter('parentCommentId', type=int, required=False)
 )
 def post_proposal_comments(proposal_id, comment, parent_comment_id, signed_message, raw_typed_data):
     # Make sure proposal exists
@@ -83,24 +80,6 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id, signed_messa
         parent = Comment.query.filter_by(id=parent_comment_id).first()
         if not parent:
             return {"message": "Parent comment doesn’t exist"}, 400
-
-    # Make sure comment content matches
-    typed_data = ast.literal_eval(raw_typed_data)
-    if comment != typed_data['message']['comment']:
-        return {"message": "Comment doesn’t match signature data"}, 400
-
-    # Verify the signature
-    try:
-        sig_address = verify_signed_auth(signed_message, raw_typed_data)
-        if sig_address.lower() != g.current_user.account_address.lower():
-            return {
-                "message": "Message signature address ({sig_address}) doesn't match current account address ({account_address})".format(
-                    sig_address=sig_address,
-                    account_address=g.current_user.account_address
-                )
-            }, 400
-    except BadSignatureException:
-        return {"message": "Invalid message signature"}, 400
 
     # Make the comment
     comment = Comment(
@@ -123,27 +102,21 @@ def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(status="LIVE", stage=stage)
-                .order_by(Proposal.date_created.desc())
-                .all()
+            .order_by(Proposal.date_created.desc())
+            .all()
         )
     else:
         proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
     dumped_proposals = proposals_schema.dump(proposals)
-
-    try:
-        for p in dumped_proposals:
-            proposal_contract = read_proposal(p['proposal_address'])
-            p['crowd_fund'] = proposal_contract
-        filtered_proposals = list(filter(lambda p: p['crowd_fund'] is not None, dumped_proposals))
-        return filtered_proposals
-    except Exception as e:
-        print(e)
-        print(traceback.format_exc())
-        return {"message": "Oops! Something went wrong."}, 500
+    return dumped_proposals
+    # except Exception as e:
+    #     print(e)
+    #     print(traceback.format_exc())
+    #     return {"message": "Oops! Something went wrong."}, 500
 
 
 @blueprint.route("/drafts", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def make_proposal_draft():
     proposal = Proposal.create(status="DRAFT")
@@ -154,7 +127,7 @@ def make_proposal_draft():
 
 
 @blueprint.route("/drafts", methods=["GET"])
-@requires_sm
+@requires_auth
 @endpoint.api()
 def get_proposal_drafts():
     proposals = (
@@ -166,6 +139,7 @@ def get_proposal_drafts():
         .all()
     )
     return proposals_schema.dump(proposals), 200
+
 
 @blueprint.route("/<proposal_id>", methods=["PUT"])
 @requires_team_member_auth
@@ -202,7 +176,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
                 proposal_id=g.current_proposal.id
             )
             db.session.add(m)
-    
+
     # Commit
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
@@ -278,6 +252,7 @@ def post_proposal_update(proposal_id, title, content):
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
 
+
 @blueprint.route("/<proposal_id>/invite", methods=["POST"])
 @requires_team_member_auth
 @endpoint.api(
@@ -294,7 +269,7 @@ def post_proposal_team_invite(proposal_id, address):
     # Send email
     # TODO: Move this to some background task / after request action
     email = address
-    user = User.get_by_identifier(email_address=address, account_address=address)
+    user = User.get_by_email(email_address=address)
     if user:
         email = user.email_address
     if is_email(email):
@@ -352,7 +327,7 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
-@requires_sm
+@requires_auth
 @endpoint.api(
     parameter('txId', type=str, required=True),
     parameter('fromAddress', type=str, required=True),

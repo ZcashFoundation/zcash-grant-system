@@ -11,12 +11,9 @@ def delete_user(identity):
     print(identity)
     user = None
     if str.isdigit(identity):
-      user = User.query.filter(id=identity).first()
+      user = User.get_by_id(identity)
     else:
-      user = User.query.filter(
-          (User.account_address == identity) |
-          (User.email_address == identity)
-      ).first()
+      user = User.get_by_email(identity)
 
     if user:
       db.session.delete(user)

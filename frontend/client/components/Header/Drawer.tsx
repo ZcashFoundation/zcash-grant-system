@@ -3,13 +3,11 @@ import { connect } from 'react-redux';
 import { Drawer, Menu } from 'antd';
 import { Link } from 'react-router-dom';
 import UserAvatar from 'components/UserAvatar';
-import Identicon from 'components/Identicon';
 import { AppState } from 'store/reducers';
 import './Drawer.less';
 
 interface StateProps {
   user: AppState['auth']['user'];
-  accounts: AppState['web3']['accounts'];
 }
 
 interface OwnProps {
@@ -29,7 +27,7 @@ class HeaderDrawer extends React.Component<Props> {
   }
 
   render() {
-    const { isOpen, onClose, user, accounts } = this.props;
+    const { isOpen, onClose, user } = this.props;
 
     let userTitle: React.ReactNode = 'Account';
     if (user) {
@@ -39,15 +37,7 @@ class HeaderDrawer extends React.Component<Props> {
           My account
         </>
       );
-    } else if (accounts && accounts[0]) {
-      userTitle = (
-        <>
-          <Identicon className="HeaderDrawer-user-avatar" address={accounts[0]} />
-          Account
-        </>
-      );
     }
-
     return (
       <Drawer
         className="HeaderDrawer"
@@ -92,5 +82,4 @@ class HeaderDrawer extends React.Component<Props> {
 
 export default connect<StateProps, {}, OwnProps, AppState>(state => ({
   user: state.auth.user,
-  accounts: state.web3.accounts,
 }))(HeaderDrawer);

@@ -3,107 +3,48 @@ import json
 from functools import wraps
 
 import requests
+from flask_security.core import current_user
 from flask import request, g, jsonify
-from itsdangerous import SignatureExpired, BadSignature
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import sentry_sdk
 
-from grant.settings import SECRET_KEY, AUTH_URL
+from grant.settings import SECRET_KEY
 from ..proposal.models import Proposal
 from ..user.models import User
 
-TWO_WEEKS = 1209600
 
-
-def generate_token(user, expiration=TWO_WEEKS):
-    s = Serializer(SECRET_KEY, expires_in=expiration)
-    token = s.dumps({
-        'id': user.id,
-        'email': user.email,
-    }).decode('utf-8')
-    return token
-
-
-def verify_token(token):
-    s = Serializer(SECRET_KEY)
-    try:
-        data = s.loads(token)
-    except (BadSignature, SignatureExpired):
-        return None
-    return data
-
-
-# Custom exception for bad auth
-class BadSignatureException(Exception):
-    pass
-
-
-def verify_signed_auth(signature, typed_data):
-    loaded_typed_data = ast.literal_eval(typed_data)
-    if loaded_typed_data['domain']['name'] != 'Grant.io':
-        raise BadSignatureException("Signature is not for Grant.io")
-
-    url = AUTH_URL + "/message/recover"
-    payload = json.dumps({"sig": signature, "data": loaded_typed_data})
-    headers = {'content-type': 'application/json'}
-    response = requests.request("POST", url, data=payload, headers=headers)
-    json_response = response.json()
-    recovered_address = json_response.get('recoveredAddress')
-    if not recovered_address:
-        raise BadSignatureException("Authorization signature is invalid")
-
-    return recovered_address
-
-
-# Decorator that requires you to have EIP-712 message signature headers for auth
-def requires_sm(f):
+def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        signature = request.headers.get('MsgSignature', None)
-        typed_data = request.headers.get('RawTypedData', None)
-
-        if typed_data and signature:
-            try:
-                auth_address = verify_signed_auth(signature, typed_data)
-            except BadSignatureException:
-                return jsonify(message="Invalid auth message signature"), 401
-
-            user = User.get_by_identifier(account_address=auth_address)
-            if not user:
-                return jsonify(message="No user exists with address: {}".format(auth_address)), 401
-
-            g.current_user = user
-            with sentry_sdk.configure_scope() as scope:
-                scope.user = {
-                    "id": user.id,
-                }
-            return f(*args, **kwargs)
-
-        return jsonify(message="Authentication is required to access this resource"), 401
-
+        if not current_user.is_authenticated:
+            return jsonify(message="Authentication is required to access this resource"), 401
+        g.current_user = current_user
+        with sentry_sdk.configure_scope() as scope:
+            scope.user = {
+                "id": current_user.id,
+            }
+        return f(*args, **kwargs)
     return decorated
 
-# Decorator that requires you to be the user you're interacting with
+
 def requires_same_user_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        user_identity = kwargs["user_identity"]
-        if not user_identity:
-            return jsonify(message="Decorator requires_same_user_auth requires path variable <user_identity>"), 500
+        user_id = kwargs["user_id"]
+        if not user_id:
+            return jsonify(message="Decorator requires_same_user_auth requires path variable <user_id>"), 500
 
-        user = User.get_by_identifier(account_address=user_identity, email_address=user_identity)
+        user = User.get_by_id(user_id=user_id)
         if not user:
-            return jsonify(message="Could not find user with identity {}".format(user_identity)), 403
+            return jsonify(message="Could not find user with id {}".format(user_id)), 403
 
         if user.id != g.current_user.id:
             return jsonify(message="You are not authorized to modify this user"), 403
 
         return f(*args, **kwargs)
 
-    return requires_sm(decorated)
+    return requires_auth(decorated)
 
 
-# Decorator that requires you to be a team member of a proposal to access
 def requires_team_member_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -121,4 +62,4 @@ def requires_team_member_auth(f):
         g.current_proposal = proposal
         return f(*args, **kwargs)
 
-    return requires_sm(decorated)
+    return requires_auth(decorated)

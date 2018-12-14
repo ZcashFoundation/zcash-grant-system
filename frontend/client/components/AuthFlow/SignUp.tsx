@@ -1,11 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Form, Input, Button, Alert } from 'antd';
-import Identicon from 'components/Identicon';
-import ShortAddress from 'components/ShortAddress';
-import { AUTH_PROVIDER } from 'utils/auth';
+import { FormComponentProps } from 'antd/lib/form';
 import { authActions } from 'modules/auth';
 import { AppState } from 'store/reducers';
+import PasswordFormItems from 'components/PasswordFormItems';
 import './SignUp.less';
 
 interface StateProps {
@@ -17,114 +16,98 @@ interface DispatchProps {
   createUser: typeof authActions['createUser'];
 }
 
-interface OwnProps {
-  address: string;
-  provider: AUTH_PROVIDER;
-  reset(): void;
-}
+type Props = StateProps & DispatchProps & FormComponentProps;
 
-type Props = StateProps & DispatchProps & OwnProps;
-
-interface State {
-  name: string;
-  title: string;
-  email: string;
-}
-
-class SignUp extends React.Component<Props, State> {
-  state: State = {
-    name: '',
-    title: '',
-    email: '',
-  };
-
+class SignUp extends React.Component<Props> {
   render() {
-    const { address, isCreatingUser, createUserError } = this.props;
-    const { name, title, email } = this.state;
+    const { isCreatingUser, createUserError } = this.props;
+    const { getFieldDecorator } = this.props.form;
 
     return (
       <div className="SignUp">
         <div className="SignUp-container">
-          <div className="SignUp-identity">
-            <Identicon address={address} className="SignUp-identity-identicon" />
-            <ShortAddress address={address} className="SignUp-identity-address" />
-          </div>
-
-          <Form className="SignUp-form" onSubmit={this.handleSubmit} layout="vertical">
+          <Form className="SignUp-form" onSubmit={this.handleSubmit}>
             <Form.Item className="SignUp-form-item" label="Display name">
-              <Input
-                name="name"
-                value={name}
-                onChange={this.handleChange}
-                placeholder="Non-unique name that others will see you as"
-                size="large"
-              />
+              {getFieldDecorator('name', {
+                rules: [{ required: true, message: 'Please add a display name' }],
+              })(
+                <Input
+                  name="name"
+                  placeholder="Non-unique name that others will see you as"
+                  autoComplete="name"
+                />,
+              )}
             </Form.Item>
 
             <Form.Item className="SignUp-form-item" label="Title">
-              <Input
-                name="title"
-                value={title}
-                onChange={this.handleChange}
-                placeholder="A short description about you, e.g. Core Ethereum Developer"
-              />
+              {getFieldDecorator('title', {
+                rules: [{ required: true, message: 'Please add your title' }],
+              })(
+                <Input
+                  name="title"
+                  placeholder="A short description about you, e.g. Core Ethereum Developer"
+                />,
+              )}
             </Form.Item>
 
             <Form.Item className="SignUp-form-item" label="Email address">
-              <Input
-                name="email"
-                value={email}
-                onChange={this.handleChange}
-                placeholder="We promise not to spam you or share your email"
-              />
+              {getFieldDecorator('email', {
+                rules: [
+                  { type: 'email', message: 'Invalid email' },
+                  { required: true, message: 'Please enter your email' },
+                ],
+              })(
+                <Input
+                  name="email"
+                  placeholder="We promise not to spam you or share your email"
+                  autoComplete="username"
+                />,
+              )}
             </Form.Item>
 
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              block
-              loading={isCreatingUser}
-            >
-              Claim Identity
-            </Button>
+            <PasswordFormItems form={this.props.form} />
 
+            <div className="SignUp-form-controls">
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                block
+                loading={isCreatingUser}
+              >
+                Create account
+              </Button>
+            </div>
             {createUserError && (
               <Alert
                 type="error"
                 message={createUserError}
                 showIcon
                 closable
-                style={{ marginTop: '1rem' }}
+                className="SignUp-form-alert"
               />
             )}
           </Form>
         </div>
-
-        {/*
-          Temporarily only supporting web3, so there are no other identites
-          <p className="SignUp-back">
-            Want to use a different identity? <a onClick={this.props.reset}>Click here</a>.
-          </p>
-        */}
       </div>
     );
   }
 
-  private handleChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = ev.currentTarget;
-    this.setState({ [name]: value } as any);
-  };
-
   private handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    const { address, createUser } = this.props;
-    const { name, title, email } = this.state;
-    createUser({ address, name, title, email });
+    const { createUser } = this.props;
+    this.props.form.validateFieldsAndScroll((err: any, values: any) => {
+      if (!err) {
+        delete values.passwordConfirm;
+        createUser(values);
+      }
+    });
   };
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, AppState>(
+const FormWrappedSignUp = Form.create()(SignUp);
+
+export default connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
     isCreatingUser: state.auth.isCreatingUser,
     createUserError: state.auth.createUserError,
@@ -132,4 +115,4 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
   {
     createUser: authActions.createUser,
   },
-)(SignUp);
+)(FormWrappedSignUp);

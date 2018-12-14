@@ -1,55 +1,55 @@
 import types from './types';
 import { Dispatch } from 'redux';
 import * as Sentry from '@sentry/browser';
-import { sleep } from 'utils/helpers';
-import { generateAuthSignatureData } from 'utils/auth';
-import { AppState } from 'store/reducers';
 import {
   createUser as apiCreateUser,
-  getUser as apiGetUser,
+  checkUserAuth,
   authUser as apiAuthUser,
+  logoutUser,
 } from 'api/api';
-import { signData } from 'modules/web3/actions';
-import { AuthSignatureData } from 'types';
+import { User } from 'types';
 
-type GetState = () => AppState;
+function setSentryScope(user: User) {
+  Sentry.configureScope(scope => {
+    scope.setUser({
+      id: user.userid.toString(),
+    });
+  });
+}
 
-const getAuthSignature = (
-  address: string,
-  dispatch: Dispatch<any>,
-): Promise<AuthSignatureData> => {
-  const sigData = generateAuthSignatureData(address);
-  return (dispatch(
-    signData(sigData.data, sigData.types, sigData.primaryType),
-  ) as any) as Promise<AuthSignatureData>;
-};
+// check if user has authenticated session
+export function checkUser() {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({ type: types.CHECK_USER_PENDING });
+    try {
+      const res = await checkUserAuth();
+      setSentryScope(res.data);
+      dispatch({
+        type: types.CHECK_USER_FULFILLED,
+        payload: {
+          user: res.data,
+        },
+      });
+    } catch (err) {
+      dispatch({
+        type: types.CHECK_USER_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}
 
-// Auth from previous state, or request signature with new auth
-export function authUser(address: string, authSignature?: Falsy | AuthSignatureData) {
+export function authUser(email: string, password: string) {
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.AUTH_USER_PENDING });
-
     try {
-      if (!authSignature) {
-        authSignature = await getAuthSignature(address, dispatch);
-      }
-      const res = await apiAuthUser({
-        accountAddress: address,
-        signedMessage: authSignature.signedMessage,
-        rawTypedData: JSON.stringify(authSignature.rawTypedData),
-      });
-      // sentry user scope
-      Sentry.configureScope(scope => {
-        scope.setUser({
-          email: res.data.emailAddress,
-          accountAddress: res.data.accountAddress,
-        });
-      });
+      const res = await apiAuthUser({ email, password });
+      setSentryScope(res.data);
       dispatch({
         type: types.AUTH_USER_FULFILLED,
         payload: {
           user: res.data,
-          authSignature,
         },
       });
     } catch (err) {
@@ -63,29 +63,19 @@ export function authUser(address: string, authSignature?: Falsy | AuthSignatureD
 }
 
 export function createUser(user: {
-  address: string;
   email: string;
+  password: string;
   name: string;
   title: string;
 }) {
   return async (dispatch: Dispatch<any>) => {
     dispatch({ type: types.CREATE_USER_PENDING });
-
     try {
-      const authSignature = await getAuthSignature(user.address, dispatch);
-      const res = await apiCreateUser({
-        accountAddress: user.address,
-        emailAddress: user.email,
-        displayName: user.name,
-        title: user.title,
-        signedMessage: authSignature.signedMessage,
-        rawTypedData: JSON.stringify(authSignature.rawTypedData),
-      });
+      const res = await apiCreateUser(user);
       dispatch({
         type: types.CREATE_USER_FULFILLED,
         payload: {
           user: res.data,
-          authSignature,
         },
       });
     } catch (err) {
@@ -98,70 +88,11 @@ export function createUser(user: {
   };
 }
 
-export function checkUser(address: string) {
-  return async (dispatch: Dispatch<any>, getState: GetState) => {
-    const checkedUsers = getState().auth.checkedUsers;
-    if (checkedUsers[address] !== undefined) {
-      return;
-    }
-
-    dispatch({ type: types.CHECK_USER_PENDING });
-
-    try {
-      const res = await apiGetUser(address);
-      dispatch({
-        type: types.CHECK_USER_FULFILLED,
-        payload: {
-          address,
-          user: res.data,
-        },
-      });
-    } catch (err) {
-      if (err.response && err.response.status === 404) {
-        dispatch({
-          type: types.CHECK_USER_FULFILLED,
-          payload: {
-            address,
-            user: false,
-          },
-        });
-      } else {
-        dispatch({
-          type: types.CHECK_USER_REJECTED,
-          payload: err.message || err.toString(),
-          error: true,
-        });
-      }
-    }
-  };
-}
-
-export function signToken(address: string) {
+export function logout() {
   return async (dispatch: Dispatch<any>) => {
-    // TODO: Implement signing
-    dispatch({ type: types.SIGN_TOKEN_PENDING });
-    await sleep(500);
-    dispatch({
-      type: types.SIGN_TOKEN_FULFILLED,
-      payload: {
-        token: Math.random(),
-        address,
-      },
+    await dispatch({
+      type: types.LOGOUT,
+      payload: logoutUser(),
     });
   };
-}
-
-export function setToken(address: string, signedMessage: string) {
-  // TODO: Check token for errors
-  return {
-    type: types.SIGN_TOKEN_FULFILLED,
-    payload: {
-      token: signedMessage,
-      address,
-    },
-  };
-}
-
-export function logout() {
-  return { type: types.LOGOUT };
 }
