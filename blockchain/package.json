@@ -33,6 +33,7 @@
     "body-parser": "1.18.3",
     "dotenv": "^6.1.0",
     "express": "4.16.4",
+    "redux": "4.0.1",
     "stdrpc": "1.0.0",
     "ws": "^6.1.2",
     "zcash-bitcore-lib": "0.13.20-rc3"

@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import { Server } from 'http';
 import authMiddleware from './middleware/auth';
 import { deriveAddress } from '../util';
+import { store, generateAddress, getAddressByContributionId } from '../store';
 import env from '../env';
 
 // Configure server
@@ -14,9 +15,13 @@ app.use(authMiddleware);
 
 // Routes
 app.get('/contribution/t-address', (req, res) => {
-  // 2^31 is the maximum number of BIP32 addresses
-  const index = Math.floor(Math.random() * Math.pow(2, 31));
-  const address = deriveAddress(index);
+  const { contributionId } = req.query;
+  let address = getAddressByContributionId(store.getState(), contributionId);
+  if (!address) {
+    const action = generateAddress(req.query.contributionId);
+    address = action.payload.address;
+    store.dispatch(action);
+  }
   res.json({ data: address });
 });
 
