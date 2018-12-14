@@ -1,10 +1,9 @@
-import dotenv from "dotenv";
 import { randomBytes, createHmac } from "crypto";
 import { IncomingMessage } from "http";
-
-if (process.env.NODE_ENV !== "production") {
-  dotenv.load();
-}
+// import bitcoin from "bitcoinjs-lib-zcash";
+// import bip32 from "bip32";
+import bitcore from "zcash-bitcore-lib";
+import env from "./env";
 
 function sha256(input: string) {
   const hash = createHmac("sha256", input);
@@ -34,7 +33,7 @@ export function getAuthFromRequest(req: IncomingMessage) {
 }
 
 export function authenticate(secret: string) {
-  const hash = process.env.API_SECRET_HASH;
+  const hash = env.API_SECRET_HASH;
   if (!hash) {
     throw Error("API_SECRET_HASH environment variable required.");
   }
@@ -47,4 +46,10 @@ export function authenticateRequest(req: IncomingMessage) {
     console.log(`Client must set 'sec-websocket-protocal' header with secret.`);
   }
   return secret ? authenticate(secret) : false;
+}
+
+export function deriveAddress(index: number) {
+  const root = new bitcore.HDPublicKey(env.BIP32_XPUB);
+  const child = root.derive(`m/0/${index}`);
+  return child.publicKey.toAddress().toString();
 }

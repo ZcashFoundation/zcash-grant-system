@@ -1,6 +1,7 @@
-import { Send, Message } from "../../service";
+import { Send, Message } from "../../index";
 import { Notifier } from "../notifier";
-import node from "../../node";
+import node from "../../../node";
+import env from "../../../env";
 
 interface ContributionConfirmationPayload {
   to: string;
@@ -29,8 +30,8 @@ export default class ContributionNotifier implements Notifier {
   private handleContributionDisclosure = async (payload: any) => {
     try {
       const disclosure = await node.z_validatepaymentdisclosure(payload.disclosure);
-      if (disclosure.valid && disclosure.paymentAddress === process.env.SPROUT_ADDRESS) {
-        const balance = await node.z_getbalance(process.env.SPROUT_ADDRESS);
+      if (disclosure.valid && disclosure.paymentAddress === env.SPROUT_ADDRESS) {
+        const balance = await node.z_getbalance(env.SPROUT_ADDRESS);
         this.sendContributionConfirmation({
           to: disclosure.paymentAddress,
           amount: disclosure.value.toString(),

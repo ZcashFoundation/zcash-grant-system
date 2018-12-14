@@ -49,7 +49,8 @@
     // ts-node requires explicit definition for paths
     // https://www.npmjs.com/package/ts-node#help-my-types-are-missing
     "paths": {
-      "stdrpc": ["types/stdrpc"]
+      "stdrpc": ["types/stdrpc"],
+      "zcash-bitcore-lib": ["types/zcash-bitcore-lib"]
     },
 
     /* Source Map Options */

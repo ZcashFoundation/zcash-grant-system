@@ -1,8 +1,6 @@
-import dotenv from "dotenv";
 import http from "http";
 import fs from "fs";
-
-dotenv.load();
+import env from "../env";
 
 import "../index";
 
@@ -19,12 +17,12 @@ const server = http
       response.write(
         html
           .toString()
-          .replace("$$API_SECRET_KEY", process.env.API_SECRET_KEY || "")
-          .replace("$$PORT", process.env.PORT || "")
+          .replace("$$API_SECRET_KEY", env.API_SECRET_KEY || "")
+          .replace("$$PORT", env.WS_PORT || "")
       );
       response.end();
     });
   })
   .listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+    console.log(`Devtool running at http://${hostname}:${port}/`);
   });

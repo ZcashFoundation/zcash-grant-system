@@ -1,8 +1,9 @@
 import WebSocket from "ws";
 import { initializeNotifiers } from "./notifiers";
 import { Notifier } from "./notifiers/notifier";
-import { getIpFromRequest, authenticateRequest } from "./util";
-import node, { rpcOptions } from "./node";
+import { getIpFromRequest, authenticateRequest } from "../util";
+import node, { rpcOptions } from "../node";
+import env from "../env";
 
 const log = console.log;
 
@@ -40,6 +41,7 @@ export function exit() {
   notifiers.forEach(n => n.destroy && n.destroy());
   wss && wss.close();
   wss = null;
+  console.log('WebSocket server has been closed');
 }
 
 
@@ -59,20 +61,19 @@ async function initNode() {
   }
 
   try {
-    if (!process.env.SPROUT_ADDRESS) {
+    if (!env.SPROUT_ADDRESS) {
       log('Missing SPROUT_ADDRESS environment variable, exiting');
       process.exit(1);
     }
-    await node.z_getbalance(process.env.SPROUT_ADDRESS as string);
+    await node.z_getbalance(env.SPROUT_ADDRESS as string);
   } catch(err) {
-    if (!process.env.SPROUT_VIEWKEY) {
+    if (!env.SPROUT_VIEWKEY) {
       log('Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting');
       process.exit(1);
     }
-    await node.z_importviewingkey(process.env.SPROUT_VIEWKEY as string);
-    await node.z_getbalance(process.env.SPROUT_ADDRESS as string);
+    await node.z_importviewingkey(env.SPROUT_VIEWKEY as string);
+    await node.z_getbalance(env.SPROUT_ADDRESS as string);
   }
-  log(`Watching address ${process.env.SPROUT_ADDRESS}...`);
 
   setInterval(async () => {
     const blockHeight = await node.getblockcount();
@@ -101,8 +102,10 @@ async function initNode() {
 function initWebsocketServer() {
   if (wss) return;
 
-  wss = new WebSocket.Server({ port: parseInt(process.env.PORT as string, 10) });
-  log(`WebSocket Server started on port ${process.env.PORT}`);
+  wss = new WebSocket.Server({
+    port: parseInt(env.WS_PORT as string, 10)
+  });
+  log(`WebSocket Server started on port ${env.WS_PORT}`);
 
   wss.on("connection", function connection(ws, req) {
     log(`${getIpFromRequest(req)} connected`);

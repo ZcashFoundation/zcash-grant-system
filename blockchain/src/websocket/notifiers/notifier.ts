@@ -1,5 +1,5 @@
-import { Send, Message } from "../service";
-import { Block } from "../node";
+import { Send, Message } from "../index";
+import { Block } from "../../node";
 
 export interface Notifier {
   registerSend(send: Send): void;

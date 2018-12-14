@@ -1,6 +1,6 @@
-import { Send } from "../../service";
+import { Send } from "../../index";
 import { Notifier } from "../notifier";
-import { Block } from "../../node";
+import { Block } from "../../../node";
 
 export default class ContributionNotifier implements Notifier {
   private send: Send = () => null;

@@ -1,7 +1,5 @@
 import stdrpc from "stdrpc";
-import dotenv from "dotenv";
-
-dotenv.load();
+import env from "./env";
 
 export interface BlockChainInfo {
   chain: string;
@@ -97,9 +95,9 @@ interface ZCashNode {
 }
 
 export const rpcOptions = {
-  url: process.env.ZCASH_NODE_URL,
-  username: process.env.ZCASH_NODE_USERNAME,
-  password: process.env.ZCASH_NODE_PASSWORD,
+  url: env.ZCASH_NODE_URL,
+  username: env.ZCASH_NODE_USERNAME,
+  password: env.ZCASH_NODE_PASSWORD,
 };
 
 const node: ZCashNode = stdrpc(rpcOptions);

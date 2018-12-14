@@ -1,11 +1,18 @@
-import { start, exit } from "./service";
-import dotenv from "dotenv";
+import * as Websocket from "./websocket";
+import * as RestServer from "./server";
 
-dotenv.load();
-start();
+async function start() {
+  console.log("============== Starting services ==============");
+  await Websocket.start();
+  await RestServer.start();
+  console.log("===============================================");
+}
 
 process.on("SIGINT", () => {
-  exit();
-  console.log("Service exited.");
+  console.log('Shutting down services...');
+  Websocket.exit();
+  console.log('Exiting!');
   process.exit();
 });
+
+start();

@@ -1,16 +1,15 @@
 import "mocha";
-import dotenv from "dotenv";
 import assert from "assert";
 import WebSocket from "isomorphic-ws";
+import * as service from "./index";
+import env from "../env";
 
-dotenv.load();
-import * as service from "./service";
-const { PORT, API_SECRET_KEY } = process.env;
+const { WS_PORT, API_SECRET_KEY } = env;
 
 describe("index", () => {
   it("should authenticate and connect", done => {
     service.start();
-    const socket = new WebSocket(`ws://localhost:${PORT}`, API_SECRET_KEY);
+    const socket = new WebSocket(`ws://localhost:${WS_PORT}`, API_SECRET_KEY);
     socket.addEventListener("open", () => {
       service.exit();
       done();
@@ -18,7 +17,7 @@ describe("index", () => {
   });
   it("should fail authentication", done => {
     service.start();
-    const socket = new WebSocket(`ws://localhost:${PORT}`, "incorrectkey");
+    const socket = new WebSocket(`ws://localhost:${WS_PORT}`, "incorrectkey");
     socket.addEventListener("message", m => {
       console.log(m.data);
       assert.equal('{"type":"auth","payload":"rejected"}', m.data);
