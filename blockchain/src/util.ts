@@ -48,7 +48,7 @@ export function authenticateRequest(req: IncomingMessage) {
   return secret ? authenticate(secret) : false;
 }
 
-export function deriveAddress(index: number) {
+export function deriveTransparentAddress(index: number) {
   const root = new bitcore.HDPublicKey(env.BIP32_XPUB);
   const child = root.derive(`m/0/${index}`);
   return child.publicKey.toAddress().toString();

@@ -2,8 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { Server } from 'http';
 import authMiddleware from './middleware/auth';
-import { deriveAddress } from '../util';
-import { store, generateAddress, getAddressByContributionId } from '../store';
+import { store, generateAddresses, getAddressesByContributionId } from '../store';
 import env from '../env';
 
 // Configure server
@@ -13,17 +12,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(authMiddleware);
 
+
+
 // Routes
 app.get('/contribution/t-address', (req, res) => {
   const { contributionId } = req.query;
-  let address = getAddressByContributionId(store.getState(), contributionId);
-  if (!address) {
-    const action = generateAddress(req.query.contributionId);
-    address = action.payload.address;
+  let addresses = getAddressesByContributionId(store.getState(), contributionId)
+  if (!addresses) {
+    const action = generateAddresses(req.query.contributionId);
+    addresses = action.payload.addresses;
     store.dispatch(action);
   }
-  res.json({ data: address });
+  res.json({ data: addresses });
 });
+
 
 app.post('/contribution/disclosure', (req, res) => {
   const { disclosure } = req.body;
@@ -33,6 +35,8 @@ app.post('/contribution/disclosure', (req, res) => {
   // TODO: Simple check if disclosure is in right format
   return res.json({ data: 'yee' });
 });
+
+
 
 // Exports
 let server: Server;

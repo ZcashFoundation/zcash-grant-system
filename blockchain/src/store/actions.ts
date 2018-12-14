@@ -1,14 +1,18 @@
-import type from './types';
-import { deriveAddress } from '../util';
+import type, { AddressCollection } from './types';
+import { deriveTransparentAddress } from '../util';
+import env from '../env';
 
-export function generateAddress(contributionId: string) {
+export function generateAddresses(contributionId: string) {
   // 2^31 is the maximum number of BIP32 addresses
   const index = Math.floor(Math.random() * Math.pow(2, 31));
-  const address = deriveAddress(index);
+  const addresses: AddressCollection = {
+    transparent: deriveTransparentAddress(index),
+    sprout: env.SPROUT_ADDRESS,
+  };
   return {
-    type: type.GENERATE_ADDRESS,
+    type: type.GENERATE_ADDRESSES,
     payload: {
-      address,
+      addresses,
       contributionId,
     },
   };
@@ -19,3 +23,6 @@ export function generateAddress(contributionId: string) {
 //     type: type.ADD_DISCLOSURE,
 //   };
 // }
+
+export type ActionTypes =
+  ReturnType<typeof generateAddresses>;

@@ -1,8 +1,9 @@
-import type from './types';
+import type, { AddressCollection } from './types';
+import { ActionTypes } from './actions';
 
 export interface StoreState {
-  watchAddresses: string[];
-  watchAddressMap: { [contributionId: string]: string };
+  watchAddresses: AddressCollection[];
+  watchAddressMap: { [contributionId: string]: AddressCollection };
 }
 
 const INITIAL_STATE: StoreState = {
@@ -10,19 +11,19 @@ const INITIAL_STATE: StoreState = {
   watchAddressMap: {},
 };
 
-export function reducer(state: StoreState = INITIAL_STATE, action: any): StoreState {
+export function reducer(state: StoreState = INITIAL_STATE, action: ActionTypes): StoreState {
   const { payload } = action;
   switch(action.type) {
-    case type.GENERATE_ADDRESS:
+    case type.GENERATE_ADDRESSES:
       return {
         ...state,
         watchAddresses: [
           ...state.watchAddresses,
-          payload.address,
+          payload.addresses,
         ],
         watchAddressMap: {
           ...state.watchAddressMap,
-          [payload.contributionId]: payload.address,
+          [action.payload.contributionId]: action.payload.addresses,
         },
       };
   }
