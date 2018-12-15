@@ -111,11 +111,9 @@ def auth_user(email, password):
     existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
-
     if not existing_user.check_password(password):
         return {"message": "Invalid password"}, 403
-    else:
-        existing_user.login()
+    existing_user.login()
     return user_schema.dump(existing_user)
 
 

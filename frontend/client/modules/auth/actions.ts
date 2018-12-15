@@ -12,7 +12,7 @@ import { User } from 'types';
 function setSentryScope(user: User) {
   Sentry.configureScope(scope => {
     scope.setUser({
-      id: '' + user.userid,
+      id: user.userid.toString(),
     });
   });
 }
