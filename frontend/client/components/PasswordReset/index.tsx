@@ -1,10 +1,11 @@
 import React from 'react';
-import { Input, Button, Form, Row, Col, Alert } from 'antd';
+import { Button, Form, Alert } from 'antd';
 import qs from 'query-string';
 import { withRouter, RouteComponentProps, Link } from 'react-router-dom';
 import Result from 'ant-design-pro/lib/Result';
 import { resetPassword } from 'api/api';
 import { FormComponentProps } from 'antd/lib/form';
+import PasswordFormItems from 'components/PasswordFormItems';
 import './index.less';
 
 type Props = RouteComponentProps & FormComponentProps;
@@ -25,68 +26,11 @@ class PasswordReset extends React.Component<Props, State> {
   };
 
   render() {
-    const { isResetting, resetSuccess, error, passwordConfirmDirty } = this.state;
-    const { getFieldDecorator, getFieldValue, validateFields } = this.props.form;
+    const { isResetting, resetSuccess, error } = this.state;
 
     const resetForm = (
-      <Form className="PasswordReset-form" onSubmit={this.handleSubmit} layout="vertical">
-        <Row gutter={12}>
-          <Col span={12}>
-            <Form.Item label="New password">
-              {getFieldDecorator('password', {
-                rules: [
-                  { required: true, message: 'Please enter a new password' },
-                  { min: 8, message: 'Please use at least 8 characters' },
-                  {
-                    validator: (_, val, cb) => {
-                      if (val && passwordConfirmDirty) {
-                        validateFields(['passwordConfirm'], { force: true });
-                      }
-                      cb();
-                    },
-                  },
-                ],
-              })(
-                <Input
-                  name="password"
-                  type="password"
-                  placeholder="password"
-                  autoComplete="new-password"
-                />,
-              )}
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Confirm password">
-              {getFieldDecorator('passwordConfirm', {
-                rules: [
-                  { required: true, message: 'Please confirm new password' },
-                  {
-                    validator: (_, val, cb) => {
-                      if (val && val !== getFieldValue('password')) {
-                        cb('Passwords do not match');
-                      } else {
-                        cb();
-                      }
-                    },
-                  },
-                ],
-              })(
-                <Input
-                  autoComplete="off"
-                  name="passwordConfirm"
-                  type="password"
-                  onBlur={e =>
-                    this.setState({
-                      passwordConfirmDirty: passwordConfirmDirty || !!e.target.value,
-                    })
-                  }
-                  placeholder="confirm password"
-                />,
-              )}
-            </Form.Item>
-          </Col>
-        </Row>
+      <Form className="PasswordReset-form" onSubmit={this.handleSubmit}>
+        <PasswordFormItems form={this.props.form} />
         <div className="PasswordReset-form-controls">
           <Button
             type="primary"
@@ -127,6 +71,12 @@ class PasswordReset extends React.Component<Props, State> {
         <h1>Reset Password</h1>
         {resetSuccess ? success : resetForm}
         {error && <Alert type="error" message={error} showIcon closable />}
+        {error && (
+          <div className="PasswordReset-bottom">
+            Having problems?{' '}
+            <Link to="/auth/recover">Request a new password recovery code</Link>.
+          </div>
+        )}
       </div>
     );
   }
