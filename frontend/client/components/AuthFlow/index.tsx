@@ -54,7 +54,7 @@ class AuthFlow extends React.Component<Props, State> {
     },
     RECOVER: {
       title: 'Account Recovery',
-      subtitle: 'Please enter your email below',
+      subtitle: 'Please enter your details below',
       render: () => {
         return <AccountRecovery />;
       },

@@ -1,44 +1,46 @@
 import React from 'react';
 import { Button, Alert, Input } from 'antd';
-import { isValidEmail } from 'utils/validators';
 import { requestUserRecoveryEmail } from 'api/api';
 import './AccountRecovery.less';
 import Result from 'ant-design-pro/lib/Result';
 
-class AccountRecovery extends React.Component {
-  INITIAL_STATE = {
-    email: '',
-    isRecoveryPending: false,
-    isRecoverySuccess: false,
-    recoveryError: '',
-  };
-  state = { ...this.INITIAL_STATE };
+const STATE = {
+  email: '',
+  isRecoveryPending: false,
+  isRecoverySuccess: false,
+  recoveryError: '',
+};
+
+type State = typeof STATE;
+
+class AccountRecovery extends React.Component<{}, State> {
+  state: State = { ...STATE };
   render() {
     const { recoveryError, isRecoveryPending, isRecoverySuccess, email } = this.state;
     return (
       <div className="AccountRecovery">
         <div className="AccountRecovery-container">
           {!isRecoverySuccess && (
-            <>
+            <form onSubmit={this.handleRecover}>
               <Input
                 value={email}
-                placeholder="email"
+                placeholder="email address"
                 onChange={e => this.setState({ email: e.currentTarget.value })}
                 size="large"
                 autoComplete="email"
-                onPressEnter={this.handleRecover}
+                type="email"
+                required={true}
               />
               <Button
+                htmlType="submit"
                 type="primary"
                 size="large"
-                disabled={!this.isValid()}
                 loading={isRecoveryPending}
                 block
-                onClick={this.handleRecover}
               >
                 Send Recovery Email
               </Button>
-            </>
+            </form>
           )}
           {isRecoverySuccess && (
             <Result
@@ -61,18 +63,11 @@ class AccountRecovery extends React.Component {
     );
   }
 
-  private isValid = () => {
-    const { email } = this.state;
-    return isValidEmail(email);
-  };
-
-  private handleRecover = () => {
-    if (!this.isValid()) {
-      return;
-    }
+  private handleRecover = (ev: React.FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
     const { email } = this.state;
     this.setState({
-      ...this.INITIAL_STATE,
+      ...STATE,
       isRecoveryPending: true,
       email,
     });
