@@ -32,25 +32,6 @@ class Role(db.Model, RoleMixin):
     description = db.Column(db.String(255))
 
 
-def is_current_authed_user_id(user_id):
-    return current_user.is_authenticated and \
-        current_user.id == user_id
-
-
-class RolesUsers(db.Model):
-    __tablename__ = 'roles_users'
-    id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'))
-    role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
-
-
-class Role(db.Model, RoleMixin):
-    __tablename__ = 'role'
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
-    description = db.Column(db.String(255))
-
-
 class SocialMedia(db.Model):
     __tablename__ = "social_media"
 
