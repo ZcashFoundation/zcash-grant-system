@@ -1,13 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { Button, Alert, Input } from 'antd';
 import { authActions } from 'modules/auth';
 import { AppState } from 'store/reducers';
 import './SignIn.less';
-import { FNOnPage } from '.';
 
 interface OwnProps {
-  onPage: FNOnPage;
+  matchUrl: string;
 }
 
 interface StateProps {
@@ -32,7 +32,7 @@ type State = typeof STATE;
 class SignIn extends React.Component<Props, State> {
   state: State = { ...STATE };
   render() {
-    const { authUserError, isAuthingUser } = this.props;
+    const { authUserError, isAuthingUser, matchUrl } = this.props;
     const { email, password, isAttemptedAuth } = this.state;
     return (
       <div className="SignIn">
@@ -66,7 +66,7 @@ class SignIn extends React.Component<Props, State> {
             </Button>
             <div className="SignIn-container-bottom">
               Forgot your password?{' '}
-              <a onClick={() => this.props.onPage('RECOVER')}>Recover your account</a>.
+              <Link to={`${matchUrl}/recover`}>Recover your account</Link>.
             </div>
           </form>
         </div>

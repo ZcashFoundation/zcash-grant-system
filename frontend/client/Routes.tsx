@@ -186,18 +186,6 @@ const routeConfigs: RouteConfig[] = [
     },
   },
   {
-    // Sign in / sign up
-    route: {
-      path: '/auth',
-      component: Auth,
-      exact: true,
-    },
-    template: {
-      title: 'Sign in',
-    },
-    onlyLoggedOut: true,
-  },
-  {
     // Sign out
     route: {
       path: '/auth/sign-out',
@@ -207,6 +195,17 @@ const routeConfigs: RouteConfig[] = [
     template: {
       title: 'Signed out',
     },
+  },
+  {
+    // Sign in / sign up / recover (nested routes)
+    route: {
+      path: '/auth',
+      component: Auth,
+    },
+    template: {
+      title: 'Sign in',
+    },
+    onlyLoggedOut: true,
   },
   {
     // Verify email
