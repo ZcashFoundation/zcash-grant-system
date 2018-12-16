@@ -1,8 +1,9 @@
-import datetime
+from datetime import timedelta
+from datetime import datetime
 from grant.extensions import ma, db
 from grant.utils.misc import gen_random_code
 
-RECOVERY_EXPIRATION = datetime.timedelta(hours=1)
+RECOVERY_EXPIRATION = timedelta(hours=1)
 
 
 # verification
@@ -48,10 +49,10 @@ class EmailRecovery(db.Model):
     def __init__(self, user_id: int):
         self.user_id = user_id
         self.code = gen_random_code(32)
-        self.date_created = datetime.datetime.now()
+        self.date_created = datetime.now()
 
     def is_expired(self):
-        time_diff = datetime.datetime.now() - self.date_created
+        time_diff = datetime.now() - self.date_created
         return time_diff > RECOVERY_EXPIRATION
 
 

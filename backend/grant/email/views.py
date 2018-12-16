@@ -27,20 +27,3 @@ def unsubscribe_email(code):
         return {"message": "Not yet implemented"}, 500
     else:
         return {"message": "Invalid email code"}, 400
-
-
-@blueprint.route("/<code>/recover", methods=["POST"])
-@endpoint.api(
-    parameter('password', type=str, required=True),
-)
-def recover_email(code, password):
-    er = EmailRecovery.query.filter_by(code=code).first()
-    if er:
-        if er.is_expired():
-            return {"message": "Reset code expired"}, 401
-        er.user.set_password(password)
-        db.session.delete(er)
-        db.session.commit()
-        return None, 200
-
-    return {"message": "Invalid reset code"}, 400

@@ -100,12 +100,12 @@ export function requestUserRecoveryEmail(email: string): Promise<any> {
   return axios.post(`/api/v1/users/recover`, { email });
 }
 
-export function verifyEmail(code: string): Promise<any> {
-  return axios.post(`/api/v1/email/${code}/verify`);
+export function resetPassword(code: string, password: string): Promise<any> {
+  return axios.post(`/api/v1/users/recover/${code}`, { password });
 }
 
-export function resetPassword(code: string, password: string): Promise<any> {
-  return axios.post(`/api/v1/email/${code}/recover`, { password });
+export function verifyEmail(code: string): Promise<any> {
+  return axios.post(`/api/v1/email/${code}/verify`);
 }
 
 export async function fetchCrowdFundFactoryJSON(): Promise<any> {
