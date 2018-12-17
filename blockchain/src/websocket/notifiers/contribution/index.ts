@@ -7,7 +7,6 @@ import env from "../../../env";
 interface ContributionConfirmationPayload {
   to: string;
   amount: string;
-  balance: string;
   txid: string;
   memo: string;
 }
@@ -25,8 +24,25 @@ export default class ContributionNotifier implements Notifier {
   onNewBlock = (block: BlockWithTransactions) => {
     const state = store.getState();
     const addresses = getWatchAddresses(state);
-    console.log(addresses);
-    console.log(block);
+    const tAddresses = addresses.map(addrs => addrs.transparent);
+    console.info(`Block ${block.height} has ${block.tx.length} transactions`);
+    block.tx.forEach(tx => {
+      tx.vout.forEach(vout => {
+        // Addresses is an array because of multisigs, but we'll never
+        // generate one, so all of our addresses will only have addresses[0]
+        const to = vout.scriptPubKey.addresses[0];
+        if (tAddresses.includes(to)) {
+          console.info(`Transaction found: ${to} +${vout.value}`);
+          this.sendContributionConfirmation({
+            to,
+            amount: vout.valueZat.toString(),
+            txid: tx.txid,
+            // T-address transactions don't have memos
+            memo: '',
+          });
+        }
+      });
+    });
   };
 
   registerSend = (sm: Send) => (this.send = sm);
@@ -35,11 +51,9 @@ export default class ContributionNotifier implements Notifier {
     try {
       const disclosure = await node.z_validatepaymentdisclosure(payload.disclosure);
       if (disclosure.valid && disclosure.paymentAddress === env.SPROUT_ADDRESS) {
-        const balance = await node.z_getbalance(env.SPROUT_ADDRESS);
         this.sendContributionConfirmation({
           to: disclosure.paymentAddress,
           amount: disclosure.value.toString(),
-          balance: balance.toString(),
           txid: disclosure.txid,
           memo: disclosure.memo,
         });

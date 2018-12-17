@@ -11,6 +11,27 @@ export interface BlockChainInfo {
   // Much much more, but not necessary
 }
 
+export interface ScriptPubKey {
+  asm: string;
+  hex: string;
+  reqSigs: number;
+  type: string;
+  addresses: string[];
+}
+
+export interface VIn {
+  sequence: number;
+  coinbase?: string;
+}
+
+export interface VOut {
+  value: number;
+  valueZat: number;
+  n: number;
+  scriptPubKey: ScriptPubKey;
+}
+
+
 export interface Transaction {
   txid: string;
   hex: string;
@@ -21,9 +42,9 @@ export interface Transaction {
   confirmations: number;
   time: number;
   blocktime: number;
-  // TODO: fill me out, what are these?
-  vin: any[];
-  vout: any[];
+  vin: VIn[];
+  vout: VOut[];
+  // TODO: fill me out, what is this?
   vjoinsplit: any[];
 }
 
@@ -35,7 +56,6 @@ export interface Block {
   version: number;
   merkleroot: string;
   finalsaplingroot: string;
-  tx: string[];
   time: number;
   nonce: string;
   solution: string;
@@ -48,8 +68,12 @@ export interface Block {
   nextblockhash?: string;
 }
 
+export interface BlockWithTransactionIds extends Block {
+  tx: string[];
+}
 
-export type BlockWithTransactions = Block & {
+
+export interface BlockWithTransactions extends Block {
   tx: Transaction[];
 }
 
@@ -82,7 +106,7 @@ interface ZCashNode {
   getblockchaininfo: () => Promise<BlockChainInfo>;
   getblockcount: () => Promise<number>;
   getblock: {
-    (numberOrHash: string | number, verbosity?: 1): Promise<Block>;
+    (numberOrHash: string | number, verbosity?: 1): Promise<BlockWithTransactionIds>;
     (numberOrHash: string | number, verbosity: 2): Promise<BlockWithTransactions>;
     (numberOrHash: string | number, verbosity: 0): Promise<string>;
   }
