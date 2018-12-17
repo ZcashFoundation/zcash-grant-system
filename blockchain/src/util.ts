@@ -49,6 +49,6 @@ export function authenticateRequest(req: IncomingMessage) {
 export function deriveTransparentAddress(index: number, network: any) {
   const root = new HDPublicKey(env.BIP32_XPUB);
   const child = root.derive(`m/0/${index}`);
-  const address = new Address(child.publicKey);
+  const address = new Address(child.publicKey, network);
   return address.toString();
 }
