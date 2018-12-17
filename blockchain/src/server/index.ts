@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { Server } from 'http';
+import cors from 'cors';
 import authMiddleware from './middleware/auth';
 import { store, generateAddresses, getAddressesByContributionId } from '../store';
 import env from '../env';
@@ -8,6 +9,7 @@ import env from '../env';
 // Configure server
 const app = express();
 app.set('port', env.REST_SERVER_PORT);
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(authMiddleware);
@@ -15,7 +17,7 @@ app.use(authMiddleware);
 
 
 // Routes
-app.get('/contribution/t-address', (req, res) => {
+app.get('/contribution/addresses', (req, res) => {
   const { contributionId } = req.query;
   let addresses = getAddressesByContributionId(store.getState(), contributionId)
   if (!addresses) {

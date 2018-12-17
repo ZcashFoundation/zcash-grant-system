@@ -17,8 +17,9 @@ const server = http
       response.write(
         html
           .toString()
-          .replace("$$API_SECRET_KEY", env.API_SECRET_KEY || "")
-          .replace("$$PORT", env.WS_PORT || "")
+          .replace(/\$\$API_SECRET_KEY/g, env.API_SECRET_KEY || "")
+          .replace(/\$\$WS_PORT/g, env.WS_PORT || "")
+          .replace(/\$\$REST_PORT/g, env.REST_SERVER_PORT || "")
       );
       response.end();
     });
