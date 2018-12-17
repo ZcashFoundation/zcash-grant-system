@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask_yoloapi import endpoint, parameter
 
-from .models import EmailVerification, db
+from .models import EmailVerification, EmailRecovery, db
 
 
 blueprint = Blueprint("email", __name__, url_prefix="/api/v1/email")
@@ -21,7 +21,7 @@ def verify_email(code):
 
 @blueprint.route("/<code>/unsubscribe", methods=["POST"])
 @endpoint.api()
-def unsubscribe_email():
+def unsubscribe_email(code):
     ev = EmailVerification.query.filter_by(code=code).first()
     if ev:
         return {"message": "Not yet implemented"}, 500

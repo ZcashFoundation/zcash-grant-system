@@ -7,13 +7,13 @@ from ..config import BaseUserConfig
 from ..test_data import test_proposal, test_user
 
 
-class TestAPI(BaseUserConfig):
-    @patch('grant.web3.proposal.validate_contribution_tx', return_value=True)
-    def test_create_proposal_contribution(self, mock_validate_contribution_tx):
+class TestProposalContributionAPI(BaseUserConfig):
+
+    def test_create_proposal_contribution(self):
+        self.login_default_user()
         proposal_res = self.app.post(
             "/api/v1/proposals/drafts",
             data=json.dumps(test_proposal),
-            headers=self.headers,
             content_type='application/json'
         )
         proposal_json = proposal_res.json
@@ -28,7 +28,6 @@ class TestAPI(BaseUserConfig):
         contribution_res = self.app.post(
             "/api/v1/proposals/{}/contributions".format(proposal_id),
             data=json.dumps(contribution),
-            headers=self.headers,
             content_type='application/json'
         )
         res = contribution_res.json
@@ -41,12 +40,11 @@ class TestAPI(BaseUserConfig):
         eq("amount")
         self.assertEqual(proposal_id, res["proposalId"])
 
-    @patch('grant.web3.proposal.validate_contribution_tx', return_value=True)
-    def test_get_proposal_contribution(self, mock_validate_contribution_tx):
+    def test_get_proposal_contribution(self):
+        self.login_default_user()
         proposal_res = self.app.post(
             "/api/v1/proposals/drafts",
             data=json.dumps(test_proposal),
-            headers=self.headers,
             content_type='application/json'
         )
         proposal_json = proposal_res.json
@@ -61,7 +59,6 @@ class TestAPI(BaseUserConfig):
         self.app.post(
             "/api/v1/proposals/{}/contributions".format(proposal_id),
             data=json.dumps(contribution),
-            headers=self.headers,
             content_type='application/json'
         )
 
@@ -78,12 +75,11 @@ class TestAPI(BaseUserConfig):
         eq("amount")
         self.assertEqual(proposal_id, res["proposalId"])
 
-    @patch('grant.web3.proposal.validate_contribution_tx', return_value=True)
-    def test_get_proposal_contributions(self, mock_validate_contribution_tx):
+    def test_get_proposal_contributions(self):
+        self.login_default_user()
         proposal_res = self.app.post(
             "/api/v1/proposals/drafts",
             data=json.dumps(test_proposal),
-            headers=self.headers,
             content_type='application/json'
         )
         proposal_json = proposal_res.json
@@ -98,7 +94,6 @@ class TestAPI(BaseUserConfig):
         self.app.post(
             "/api/v1/proposals/{}/contributions".format(proposal_id),
             data=json.dumps(contribution),
-            headers=self.headers,
             content_type='application/json'
         )
 
