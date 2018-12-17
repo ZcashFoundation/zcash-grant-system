@@ -12,7 +12,7 @@ from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
 from grant.utils.auth import requires_auth, requires_team_member_auth
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email
+from grant.utils.misc import is_email, make_url
 from .models import(
     Proposal,
     proposals_schema,
@@ -69,7 +69,7 @@ def get_proposal_comments(proposal_id):
     parameter('comment', type=str, required=True),
     parameter('parentCommentId', type=int, required=False)
 )
-def post_proposal_comments(proposal_id, comment, parent_comment_id, signed_message, raw_typed_data):
+def post_proposal_comments(proposal_id, comment, parent_comment_id):
     # Make sure proposal exists
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
@@ -277,7 +277,7 @@ def post_proposal_team_invite(proposal_id, address):
             'user': user,
             'inviter': g.current_user,
             'proposal': g.current_proposal,
-            'invite_url': make_url(f'/profile/{user.account_address}' if user else '/auth')
+            'invite_url': make_url(f'/profile/{user.id}' if user else '/auth')
         })
 
     return proposal_team_invite_schema.dump(invite), 201

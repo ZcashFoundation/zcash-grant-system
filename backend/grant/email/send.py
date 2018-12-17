@@ -26,9 +26,18 @@ def team_invite_info(email_args):
     }
 
 
+def recover_info(email_args):
+    return {
+        'subject': 'Grant.io account recovery',
+        'title': 'Grant.io account recovery',
+        'preview': 'Use the link to recover your account.'
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
-    'team_invite': team_invite_info
+    'team_invite': team_invite_info,
+    'recover': recover_info
 }
 
 
