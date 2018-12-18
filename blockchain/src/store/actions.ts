@@ -3,11 +3,10 @@ import { deriveTransparentAddress } from '../util';
 import { getNetwork } from '../node';
 import env from '../env';
 
-export function generateAddresses(contributionId: string) {
+export function generateAddresses(contributionId: number) {
   // 2^31 is the maximum number of BIP32 addresses
-  const index = Math.floor(Math.random() * Math.pow(2, 31));
   const addresses: AddressCollection = {
-    transparent: deriveTransparentAddress(index, getNetwork()),
+    transparent: deriveTransparentAddress(contributionId, getNetwork()),
     sprout: env.SPROUT_ADDRESS,
   };
   return {
@@ -19,17 +18,23 @@ export function generateAddresses(contributionId: string) {
   };
 }
 
-export function addPaymentDisclosure(disclosureHex: string) {
+export function addPaymentDisclosure(contributionId: number, disclosure: string) {
   return {
     type: type.ADD_PAYMENT_DISCLOSURE as type.ADD_PAYMENT_DISCLOSURE,
-    payload: disclosureHex,
+    payload: {
+      contributionId,
+      disclosure,
+    },
   };
 }
 
-export function confirmPaymentDisclosure(disclosureHex: string) {
+export function confirmPaymentDisclosure(contributionId: number, disclosure: string) {
   return {
     type: type.CONFIRM_PAYMENT_DISCLOSURE as type.CONFIRM_PAYMENT_DISCLOSURE,
-    payload: disclosureHex,
+    payload: {
+      contributionId,
+      disclosure,
+    },
   };
 }
 

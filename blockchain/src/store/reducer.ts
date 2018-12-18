@@ -3,15 +3,13 @@ import { ActionTypes } from './actions';
 import { dedupeArray, removeItem } from '../util';
 
 export interface StoreState {
-  watchAddresses: AddressCollection[];
-  watchAddressMap: { [contributionId: string]: AddressCollection };
-  watchDisclosures: string[];
+  watchAddresses: { [contributionId: number]: AddressCollection };
+  watchDisclosures: { [contributionId: number]: string };
 }
 
 const INITIAL_STATE: StoreState = {
-  watchAddresses: [],
-  watchAddressMap: {},
-  watchDisclosures: [],
+  watchAddresses: {},
+  watchDisclosures: {},
 };
 
 export function reducer(state: StoreState = INITIAL_STATE, action: ActionTypes): StoreState {
@@ -19,12 +17,8 @@ export function reducer(state: StoreState = INITIAL_STATE, action: ActionTypes):
     case type.GENERATE_ADDRESSES:
       return {
         ...state,
-        watchAddresses: [
+        watchAddresses: {
           ...state.watchAddresses,
-          action.payload.addresses,
-        ],
-        watchAddressMap: {
-          ...state.watchAddressMap,
           [action.payload.contributionId]: action.payload.addresses,
         },
       };
@@ -32,20 +26,20 @@ export function reducer(state: StoreState = INITIAL_STATE, action: ActionTypes):
     case type.ADD_PAYMENT_DISCLOSURE:
       return {
         ...state,
-        watchDisclosures: dedupeArray([
+        watchDisclosures: {
           ...state.watchDisclosures,
-          action.payload,
-        ]),
+          [action.payload.contributionId]: action.payload.disclosure,
+        },
       };
 
-    case type.CONFIRM_PAYMENT_DISCLOSURE:
+    case type.CONFIRM_PAYMENT_DISCLOSURE: {
+      const watchDisclosures = { ...state.watchDisclosures };
+      delete watchDisclosures[action.payload.contributionId];
       return {
         ...state,
-        watchDisclosures: removeItem(
-          state.watchDisclosures,
-          action.payload,
-        ),
-      }
+        watchDisclosures,
+      };
+    }
   }
   return state;
 }

@@ -15,6 +15,7 @@ interface ContributionConfirmationPayload {
   amount: string;
   txid: string;
   memo: string;
+  contributionId: number;
 }
 
 export default class ContributionNotifier implements Notifier {
@@ -22,34 +23,33 @@ export default class ContributionNotifier implements Notifier {
   private confirmedTxIds: string[] = [];
 
   onNewBlock = (block: BlockWithTransactions) => {
-    const state = store.getState();
-    const addresses = getWatchAddresses(state);
-    const disclosures = getWatchDisclosures(state);
-    const tAddresses = dedupeArray(addresses.map(addrs => addrs.transparent));
-
-    this.checkBlockForTransparentPayments(block, tAddresses);
+    this.checkBlockForTransparentPayments(block);
     this.checkForMemoPayments();
-    disclosures.forEach(d => this.checkDisclosureForPayment(d, block.height));
+    this.checkDisclosuresForPayment(block);
   };
 
   registerSend = (sm: Send) => (this.send = sm);
 
-  private checkBlockForTransparentPayments = (
-    block: BlockWithTransactions,
-    addresses: string[]
-  ) => {
+  private checkBlockForTransparentPayments = (block: BlockWithTransactions) => {
     console.info(`Block ${block.height} has ${block.tx.length} transactions`);
+    const addresses = getWatchAddresses(store.getState());
+    const tAddressIdMap = Object.entries(addresses).reduce((prev, [cid, cAddresses]) => {
+      prev[cAddresses.transparent] = parseInt(cid, 10);
+      return prev;
+    }, {} as { [address: string]: number });
+
     block.tx.forEach(tx => {
       tx.vout.forEach(vout => {
         // Addresses is an array because of multisigs, but we'll never
         // generate one, so all of our addresses will only have addresses[0]
         const to = vout.scriptPubKey.addresses[0];
-        if (addresses.includes(to)) {
-          console.info(`Transaction found: ${to} +${vout.value}`);
+        if (tAddressIdMap[to]) {
+          console.info(`Transaction found for contribution ${tAddressIdMap[to]}, +${vout.value} ZEC`);
           this.sendContributionConfirmation({
             to,
             amount: vout.valueZat.toString(),
             txid: tx.txid,
+            contributionId: tAddressIdMap[to],
             // T-address transactions don't have memos
             memo: '',
           });
@@ -83,6 +83,7 @@ export default class ContributionNotifier implements Notifier {
           amount: toBaseUnit(receipt.amount).toString(),
           txid: receipt.txid,
           memo: decodeHexMemo(receipt.memo),
+          contributionId,
         });
       });
     } catch(err) {
@@ -93,7 +94,18 @@ export default class ContributionNotifier implements Notifier {
     }
   };
 
-  private checkDisclosureForPayment = async (disclosure: string, maxHeight: number) => {
+  private checkDisclosuresForPayment = (block: BlockWithTransactions) => {
+    const disclosures = getWatchDisclosures(store.getState());
+    Object.entries(disclosures).forEach(([cid, disclosure]) => {
+      this.checkDisclosureForPayment(disclosure, parseInt(cid, 10), block.height);
+    });
+  };
+
+  private checkDisclosureForPayment = async (
+    disclosure: string,
+    contributionId: number,
+    maxHeight: number,
+  ) => {
     try {
       const receipt = await node.z_validatepaymentdisclosure(disclosure);
       if (!receipt.valid) {
@@ -112,8 +124,9 @@ export default class ContributionNotifier implements Notifier {
         amount: receipt.value.toString(),
         txid: receipt.txid,
         memo: decodeHexMemo(receipt.memo),
+        contributionId,
       });
-      store.dispatch(confirmPaymentDisclosure(disclosure));
+      store.dispatch(confirmPaymentDisclosure(contributionId, disclosure));
     } catch(err) {
       console.error(
         'Encountered an error while checking disclosure:',
