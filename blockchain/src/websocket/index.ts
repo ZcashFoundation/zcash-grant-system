@@ -48,21 +48,30 @@ export function exit() {
 async function initNode() {
   const info = await node.getblockchaininfo();
   let currentBlock = info.blocks;
+  const minBlockConf = parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
 
   setInterval(async () => {
     const blockHeight = await node.getblockcount();
     if (blockHeight > currentBlock) {
+      if (blockHeight - minBlockConf < 1) {
+        log(`Current height is ${blockHeight}, waiting for ${env.MINIMUM_BLOCK_CONFIRMATIONS} blocks before processing...`);
+        return;
+      }
+
+      const desiredBlock = currentBlock - minBlockConf;
       try {
-        const block = await node.getblock(String(currentBlock + 1), 2);
+        // Verbosity of 2 is full blocks
+        const block = await node.getblock(String(desiredBlock), 2);
+        log(`Processing block #${block.height}...`);
         notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
         currentBlock++;
         consecutiveBlockFailures = 0;
       } catch(err) {
         log(err.response ? err.response.data : err);
-        log(`Failed to fetch block ${currentBlock + 1}`);
+        log(`Failed to fetch block ${desiredBlock}`);
         consecutiveBlockFailures++;
         if (consecutiveBlockFailures >= MAXIMUM_BLOCK_FAILURES) {
-          log('Maximum consecutive failures reached, exiting');
+          log('Maximum consecutive failures reached, exiting!');
           process.exit(1);
         }
         else {

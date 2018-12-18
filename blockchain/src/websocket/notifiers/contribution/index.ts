@@ -31,7 +31,6 @@ export default class ContributionNotifier implements Notifier {
   registerSend = (sm: Send) => (this.send = sm);
 
   private checkBlockForTransparentPayments = (block: BlockWithTransactions) => {
-    console.info(`Block ${block.height} has ${block.tx.length} transactions`);
     const addresses = getWatchAddresses(store.getState());
     const tAddressIdMap = Object.entries(addresses).reduce((prev, [cid, cAddresses]) => {
       prev[cAddresses.transparent] = parseInt(cid, 10);
