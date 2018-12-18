@@ -79,7 +79,7 @@ export interface BlockWithTransactions extends Block {
 
 export interface Receipt {
   txid: string;
-  amount: string;
+  amount: number;
   memo: string;
   change: boolean;
 }

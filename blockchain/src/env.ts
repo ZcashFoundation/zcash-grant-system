@@ -12,6 +12,7 @@ interface CustomEnvironment {
   ZCASH_NODE_URL: string;
   ZCASH_NODE_USERNAME: string;
   ZCASH_NODE_PASSWORD: string;
+  MINIMUM_BLOCK_CONFIRMATIONS: string;
 
   SPROUT_ADDRESS: string;
   SPROUT_VIEWKEY: string;

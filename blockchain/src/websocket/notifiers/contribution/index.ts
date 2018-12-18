@@ -8,7 +8,7 @@ import {
   confirmPaymentDisclosure,
 } from "../../../store";
 import env from "../../../env";
-import { dedupeArray } from "../../../util";
+import { dedupeArray, getContributionIdFromMemo, decodeHexMemo, toBaseUnit } from "../../../util";
 
 interface ContributionConfirmationPayload {
   to: string;
@@ -19,15 +19,16 @@ interface ContributionConfirmationPayload {
 
 export default class ContributionNotifier implements Notifier {
   private send: Send = () => null;
+  private confirmedTxIds: string[] = [];
 
   onNewBlock = (block: BlockWithTransactions) => {
     const state = store.getState();
     const addresses = getWatchAddresses(state);
     const disclosures = getWatchDisclosures(state);
     const tAddresses = dedupeArray(addresses.map(addrs => addrs.transparent));
-    const zAddresses = dedupeArray(addresses.map(addrs => addrs.sprout));
 
     this.checkBlockForTransparentPayments(block, tAddresses);
+    this.checkForMemoPayments();
     disclosures.forEach(d => this.checkDisclosureForPayment(d, block.height));
   };
 
@@ -57,6 +58,41 @@ export default class ContributionNotifier implements Notifier {
     });
   };
 
+
+  private checkForMemoPayments = async () => {
+    try {
+      const received = await node.z_listreceivedbyaddress(
+        env.SPROUT_ADDRESS,
+        parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10),
+      );
+      const newReceived = received.filter(r => !this.confirmedTxIds.includes(r.txid));
+
+      newReceived.forEach(receipt => {
+        this.confirmedTxIds.push(receipt.txid);
+        const contributionId = getContributionIdFromMemo(receipt.memo);
+        if (!contributionId) {
+          console.warn('Sprout address received transaction without memo:\n', {
+            txid: receipt.txid,
+            decodedMemo: decodeHexMemo(receipt.memo)
+          });
+          return;
+        }
+
+        this.sendContributionConfirmation({
+          to: env.SPROUT_ADDRESS,
+          amount: toBaseUnit(receipt.amount).toString(),
+          txid: receipt.txid,
+          memo: decodeHexMemo(receipt.memo),
+        });
+      });
+    } catch(err) {
+      console.error(
+        'Failed to check sprout address for memo payments:\n',
+        err.response ? err.response.data : err,
+      );
+    }
+  };
+
   private checkDisclosureForPayment = async (disclosure: string, maxHeight: number) => {
     try {
       const receipt = await node.z_validatepaymentdisclosure(disclosure);
@@ -75,7 +111,7 @@ export default class ContributionNotifier implements Notifier {
         to: receipt.paymentAddress,
         amount: receipt.value.toString(),
         txid: receipt.txid,
-        memo: receipt.memo,
+        memo: decodeHexMemo(receipt.memo),
       });
       store.dispatch(confirmPaymentDisclosure(disclosure));
     } catch(err) {

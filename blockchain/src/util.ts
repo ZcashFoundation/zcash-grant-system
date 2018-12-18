@@ -60,3 +60,31 @@ export function dedupeArray(arr: any[]) {
 export function removeItem<T>(arr: T[], remove: T) {
   return arr.filter(item => item !== remove);
 }
+
+export function encodeHexMemo(memo: string) {
+  return new Buffer(memo, 'utf8').toString('hex');
+}
+
+export function decodeHexMemo(memoHex: string) {
+  return new Buffer(memoHex, 'hex')
+    .toString()
+    // Remove null bytes from zero padding
+    .replace(/\0.*$/g, '');
+}
+
+export function makeContributionMemo(contributionId: number) {
+  return encodeHexMemo(`Contribution ${contributionId} on Grant.io`);
+}
+
+export function getContributionIdFromMemo(memoHex: string) {
+  const matches = decodeHexMemo(memoHex).match(/Contribution ([0-9]+) on Grant\.io/);
+  if (matches && matches[1]) {
+    return parseInt(matches[1], 10);
+  }
+  return false;
+}
+
+// TODO: Make this more robust
+export function toBaseUnit(unit: number) {
+  return Math.floor(100000000 * unit);
+}
