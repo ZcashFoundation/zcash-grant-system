@@ -52,3 +52,11 @@ export function deriveTransparentAddress(index: number, network: any) {
   const address = new Address(child.publicKey, network);
   return address.toString();
 }
+
+export function dedupeArray(arr: any[]) {
+  return arr.filter((item, index) => arr.indexOf(item) === index);
+}
+
+export function removeItem<T>(arr: T[], remove: T) {
+  return arr.filter(item => item !== remove);
+}

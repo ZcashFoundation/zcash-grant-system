@@ -11,7 +11,7 @@ export function generateAddresses(contributionId: string) {
     sprout: env.SPROUT_ADDRESS,
   };
   return {
-    type: type.GENERATE_ADDRESSES,
+    type: type.GENERATE_ADDRESSES as type.GENERATE_ADDRESSES,
     payload: {
       addresses,
       contributionId,
@@ -19,6 +19,21 @@ export function generateAddresses(contributionId: string) {
   };
 }
 
+export function addPaymentDisclosure(disclosureHex: string) {
+  return {
+    type: type.ADD_PAYMENT_DISCLOSURE as type.ADD_PAYMENT_DISCLOSURE,
+    payload: disclosureHex,
+  };
+}
+
+export function confirmPaymentDisclosure(disclosureHex: string) {
+  return {
+    type: type.CONFIRM_PAYMENT_DISCLOSURE as type.CONFIRM_PAYMENT_DISCLOSURE,
+    payload: disclosureHex,
+  };
+}
 
 export type ActionTypes =
-  ReturnType<typeof generateAddresses>;
+  | ReturnType<typeof generateAddresses>
+  | ReturnType<typeof addPaymentDisclosure>
+  | ReturnType<typeof confirmPaymentDisclosure>;

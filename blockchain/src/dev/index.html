@@ -60,6 +60,8 @@
         flex: 1;
       }
       .panel .content {
+        height: 100%;
+        overflow: auto;
         padding: 6rem 0;
       }
       .panel .content pre {
@@ -218,6 +220,9 @@
           <select id="rest-endpoint" class="form-control">
             <option value="GET /contribution/addresses">
               GET /contribution/addresses
+            </option>
+            <option value="POST /contribution/disclosure">
+              POST /contribution/disclosure
             </option>
           </select>
           <input

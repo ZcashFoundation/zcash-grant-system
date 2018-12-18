@@ -39,9 +39,9 @@ export interface Transaction {
   locktime: number;
   expiryheight: number;
   blockhash: string;
+  blocktime: number;
   confirmations: number;
   time: number;
-  blocktime: number;
   vin: VIn[];
   vout: VOut[];
   // TODO: fill me out, what is this?
@@ -110,6 +110,7 @@ interface ZCashNode {
     (numberOrHash: string | number, verbosity: 2): Promise<BlockWithTransactions>;
     (numberOrHash: string | number, verbosity: 0): Promise<string>;
   }
+  gettransaction: (txid: string) => Promise<Transaction>;
   z_getbalance: (address: string, minConf?: number) => Promise<number>;
   z_getnewaddress: (type?: 'sprout' | 'sapling') => Promise<string>;
   z_listaddresses: () => Promise<string[]>;

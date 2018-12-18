@@ -1,8 +1,14 @@
 import { Send, Message } from "../../index";
 import { Notifier } from "../notifier";
 import node, { BlockWithTransactions } from "../../../node";
-import { store, getWatchAddresses } from "../../../store";
+import {
+  store,
+  getWatchAddresses,
+  getWatchDisclosures,
+  confirmPaymentDisclosure,
+} from "../../../store";
 import env from "../../../env";
+import { dedupeArray } from "../../../util";
 
 interface ContributionConfirmationPayload {
   to: string;
@@ -14,24 +20,30 @@ interface ContributionConfirmationPayload {
 export default class ContributionNotifier implements Notifier {
   private send: Send = () => null;
 
-  receive = (message: Message) => {
-    switch (message.type) {
-      case "contribution:disclosure":
-        return this.handleContributionDisclosure(message.payload);
-    }
-  };
-
   onNewBlock = (block: BlockWithTransactions) => {
     const state = store.getState();
     const addresses = getWatchAddresses(state);
-    const tAddresses = addresses.map(addrs => addrs.transparent);
+    const disclosures = getWatchDisclosures(state);
+    const tAddresses = dedupeArray(addresses.map(addrs => addrs.transparent));
+    const zAddresses = dedupeArray(addresses.map(addrs => addrs.sprout));
+
+    this.checkBlockForTransparentPayments(block, tAddresses);
+    disclosures.forEach(d => this.checkDisclosureForPayment(d, block.height));
+  };
+
+  registerSend = (sm: Send) => (this.send = sm);
+
+  private checkBlockForTransparentPayments = (
+    block: BlockWithTransactions,
+    addresses: string[]
+  ) => {
     console.info(`Block ${block.height} has ${block.tx.length} transactions`);
     block.tx.forEach(tx => {
       tx.vout.forEach(vout => {
         // Addresses is an array because of multisigs, but we'll never
         // generate one, so all of our addresses will only have addresses[0]
         const to = vout.scriptPubKey.addresses[0];
-        if (tAddresses.includes(to)) {
+        if (addresses.includes(to)) {
           console.info(`Transaction found: ${to} +${vout.value}`);
           this.sendContributionConfirmation({
             to,
@@ -45,25 +57,32 @@ export default class ContributionNotifier implements Notifier {
     });
   };
 
-  registerSend = (sm: Send) => (this.send = sm);
-
-  private handleContributionDisclosure = async (payload: any) => {
+  private checkDisclosureForPayment = async (disclosure: string, maxHeight: number) => {
     try {
-      const disclosure = await node.z_validatepaymentdisclosure(payload.disclosure);
-      if (disclosure.valid && disclosure.paymentAddress === env.SPROUT_ADDRESS) {
-        this.sendContributionConfirmation({
-          to: disclosure.paymentAddress,
-          amount: disclosure.value.toString(),
-          txid: disclosure.txid,
-          memo: disclosure.memo,
-        });
+      const receipt = await node.z_validatepaymentdisclosure(disclosure);
+      if (!receipt.valid) {
+        console.warn('Invalid disclosure checked:', receipt);
+        return;
       }
-      else {
-        console.warn('Unattributable payment disclosure provided:');
-        console.warn(JSON.stringify(disclosure, null, 2));
+      const tx = await node.gettransaction(receipt.txid);
+      const block = await node.getblock(tx.blockhash);
+      if (block.height > maxHeight) {
+        console.info(`Validated disclosure, will confirm in ${block.height - maxHeight} block(s)`);
+        return;
       }
+      console.info('Confirming disclosure:', receipt.paymentAddress);
+      this.sendContributionConfirmation({
+        to: receipt.paymentAddress,
+        amount: receipt.value.toString(),
+        txid: receipt.txid,
+        memo: receipt.memo,
+      });
+      store.dispatch(confirmPaymentDisclosure(disclosure));
     } catch(err) {
-      console.error(err.response ? err.response.data : err);
+      console.error(
+        'Encountered an error while checking disclosure:',
+        err.response ? err.response.data : err,
+      );
     }
   };
 
