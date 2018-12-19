@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { authenticate } from '../../util';
 import env from '../../env';
 
 export default function(req: Request, res: Response, next: NextFunction) {
@@ -6,7 +7,7 @@ export default function(req: Request, res: Response, next: NextFunction) {
     res.status(403).json({ error: 'Authorization header is required' });
     return;
   }
-  if (req.headers['authorization'] !== env.API_SECRET_KEY) {
+  if (!authenticate(req.headers['authorization'])) {
     res.status(403).json({ error: 'Authorization header is invalid' });
     return;
   }

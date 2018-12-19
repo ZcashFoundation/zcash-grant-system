@@ -46,6 +46,8 @@ export function authenticateRequest(req: IncomingMessage) {
   return secret ? authenticate(secret) : false;
 }
 
+// TODO: Not fully confident in compatibility with most bip32 wallets,
+// do more work to ensure this is reliable.
 export function deriveTransparentAddress(index: number, network: any) {
   const root = new HDPublicKey(env.BIP32_XPUB);
   const child = root.derive(`m/0/${index}`);
