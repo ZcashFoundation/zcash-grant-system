@@ -68,3 +68,6 @@ Flask-SSLify==0.1.5
 
 # sessions
 Flask-Security==3.0.0
+
+# oauth
+requests-oauthlib==1.0.0

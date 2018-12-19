@@ -8,13 +8,13 @@ from grant.email.models import EmailVerification
 from grant.email.send import send_email
 from grant.extensions import ma, db, security
 from grant.utils.misc import make_url
-from grant.utils.social import get_social_info_from_url
+from grant.utils.social import generate_social_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 
 
 def is_current_authed_user_id(user_id):
     return current_user.is_authenticated and \
-           current_user.id == user_id
+        current_user.id == user_id
 
 
 class RolesUsers(db.Model):
@@ -35,12 +35,13 @@ class SocialMedia(db.Model):
     __tablename__ = "social_media"
 
     id = db.Column(db.Integer(), primary_key=True)
-    # TODO replace this with something proper
-    social_media_link = db.Column(db.String(255), unique=False, nullable=True)
+    service = db.Column(db.String(255), unique=False, nullable=False)
+    username = db.Column(db.String(255), unique=False, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-    def __init__(self, social_media_link, user_id):
-        self.social_media_link = social_media_link
+    def __init__(self, service: str, username: str, user_id):
+        self.service = service.upper()
+        self.username = username.lower()
         self.user_id = user_id
 
 
@@ -181,19 +182,9 @@ class SocialMediaSchema(ma.Schema):
         )
 
     url = ma.Method("get_url")
-    service = ma.Method("get_service")
-    username = ma.Method("get_username")
 
     def get_url(self, obj):
-        return obj.social_media_link
-
-    def get_service(self, obj):
-        info = get_social_info_from_url(obj.social_media_link)
-        return info['service']
-
-    def get_username(self, obj):
-        info = get_social_info_from_url(obj.social_media_link)
-        return info['username']
+        return generate_social_url(obj.service, obj.username)
 
 
 social_media_schema = SocialMediaSchema()

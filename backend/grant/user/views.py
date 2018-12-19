@@ -12,6 +12,7 @@ from grant.proposal.models import (
 )
 from grant.utils.auth import requires_auth, requires_same_user_auth
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
+from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 
@@ -138,6 +139,44 @@ def logout_user():
     return None, 200
 
 
+@blueprint.route("/social/<service>/authurl", methods=["GET"])
+@requires_auth
+@endpoint.api()
+def get_user_social_auth_url(service):
+    try:
+        return {"url": get_social_login_url(service)}
+
+    except VerifySocialException as e:
+        return {"message": str(e)}, 400
+
+
+@blueprint.route("/social/<service>/verify", methods=["POST"])
+@requires_auth
+@endpoint.api(
+    parameter('code', type=str, required=True)
+)
+def verify_user_social(service, code):
+    try:
+        # 1. verify with 3rd party
+        username = verify_social(service, code)
+        # 2. remove existing username/service
+        sm_other_db = SocialMedia.query.filter_by(service=service, username=username).first()
+        if sm_other_db:
+            db.session.delete(sm_other_db)
+        # 3. remove existing for authed user/service
+        sm_self_db = SocialMedia.query.filter_by(service=service, user_id=g.current_user.id).first()
+        if sm_self_db:
+            db.session.delete(sm_self_db)
+        # 4. set this users verified social item
+        sm = SocialMedia(service=service, username=username, user_id=g.current_user.id)
+        db.session.add(sm)
+        db.session.commit()
+        return {"username": username}, 200
+
+    except VerifySocialException as e:
+        return {"message": str(e)}, 400
+
+
 @blueprint.route("/avatar", methods=["POST"])
 @requires_auth
 @endpoint.api(
@@ -180,13 +219,12 @@ def update_user(user_id, display_name, title, social_medias, avatar):
     if title is not None:
         user.title = title
 
+    # only allow deletions here, check for absent items
     db_socials = SocialMedia.query.filter_by(user_id=user.id).all()
-    for db_social in db_socials:
-        db.session.delete(db_social)
-    if social_medias is not None:
-        for social_media in social_medias:
-            sm = SocialMedia(social_media_link=social_media, user_id=user.id)
-            db.session.add(sm)
+    new_socials = list(map(lambda s: s['service'], social_medias))
+    for social in db_socials:
+        if social.service not in new_socials:
+            db.session.delete(social)
 
     db_avatar = Avatar.query.filter_by(user_id=user.id).first()
     if db_avatar:
