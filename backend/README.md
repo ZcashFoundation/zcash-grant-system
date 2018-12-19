@@ -137,3 +137,17 @@ To learn more about this auth service, you can visit the repo [here](https://git
 
 1. create IAM user with programatic access (Access key) and assign that user the policy created above
 1. copy the user's `Access key ID`, `Secret access key`, `bucket name` & `bucket region` to private `.env`, see `.env.example`
+
+## Social Verification (oauth)
+
+github create oauth app: https://github.com/settings/developers
+
+twitter developer account: https://developer.twitter.com/en/apply/user
+
+- for dev set WebsiteURL: http://demo.grant.io
+- Sign in with Twitter: enable
+- for dev set CallbackURL: http://127.0.0.1:3000/callback/twitter
+
+linkedin developer account: https://www.linkedin.com/developer/apps/new
+
+- OAuth 2.0 > Authorized Redirect URLs: http://localhost:3000/callback/linkedin
