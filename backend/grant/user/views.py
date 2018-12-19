@@ -12,6 +12,7 @@ from grant.proposal.models import (
 )
 from grant.utils.auth import requires_auth, requires_same_user_auth
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
+from grant.email.models import EmailRecovery
 
 from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
 
@@ -111,11 +112,9 @@ def auth_user(email, password):
     existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
-
     if not existing_user.check_password(password):
         return {"message": "Invalid password"}, 403
-    else:
-        existing_user.login()
+    existing_user.login()
     return user_schema.dump(existing_user)
 
 
@@ -138,6 +137,35 @@ def update_user_password(current_password, password):
 def logout_user():
     User.logout_current_user()
     return None, 200
+
+
+@blueprint.route("/recover", methods=["POST"])
+@endpoint.api(
+    parameter('email', type=str, required=True)
+)
+def recover_user(email):
+    existing_user = User.get_by_email(email)
+    if not existing_user:
+        return {"message": "No user exists with that email"}, 400
+    existing_user.send_recovery_email()
+    return None, 200
+
+
+@blueprint.route("/recover/<code>", methods=["POST"])
+@endpoint.api(
+    parameter('password', type=str, required=True),
+)
+def recover_email(code, password):
+    er = EmailRecovery.query.filter_by(code=code).first()
+    if er:
+        if er.is_expired():
+            return {"message": "Reset code expired"}, 401
+        er.user.set_password(password)
+        db.session.delete(er)
+        db.session.commit()
+        return None, 200
+
+    return {"message": "Invalid reset code"}, 400
 
 
 @blueprint.route("/avatar", methods=["POST"])

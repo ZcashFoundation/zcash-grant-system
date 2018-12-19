@@ -1,10 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Form, Input, Button, Alert } from 'antd';
+import { FormComponentProps } from 'antd/lib/form';
 import { authActions } from 'modules/auth';
 import { AppState } from 'store/reducers';
+import PasswordFormItems from 'components/PasswordFormItems';
 import './SignUp.less';
-import { FormComponentProps } from 'antd/lib/form';
 
 interface StateProps {
   isCreatingUser: AppState['auth']['isCreatingUser'];
@@ -18,19 +19,14 @@ interface DispatchProps {
 type Props = StateProps & DispatchProps & FormComponentProps;
 
 class SignUp extends React.Component<Props> {
-  state = {
-    passwordConfirmDirty: false,
-  };
-
   render() {
     const { isCreatingUser, createUserError } = this.props;
-    const { passwordConfirmDirty } = this.state;
-    const { getFieldDecorator, validateFields, getFieldValue } = this.props.form;
+    const { getFieldDecorator } = this.props.form;
 
     return (
       <div className="SignUp">
         <div className="SignUp-container">
-          <Form className="SignUp-form" onSubmit={this.handleSubmit} layout="vertical">
+          <Form className="SignUp-form" onSubmit={this.handleSubmit}>
             <Form.Item className="SignUp-form-item" label="Display name">
               {getFieldDecorator('name', {
                 rules: [{ required: true, message: 'Please add a display name' }],
@@ -38,7 +34,6 @@ class SignUp extends React.Component<Props> {
                 <Input
                   name="name"
                   placeholder="Non-unique name that others will see you as"
-                  size="large"
                   autoComplete="name"
                 />,
               )}
@@ -70,75 +65,26 @@ class SignUp extends React.Component<Props> {
               )}
             </Form.Item>
 
-            <Form.Item className="SignUp-form-item" label="Password">
-              {getFieldDecorator('password', {
-                rules: [
-                  { required: true, message: 'Please enter a password' },
-                  { min: 8, message: 'Please use at least 8 characters' },
-                  {
-                    validator: (_, val, cb) => {
-                      if (val && passwordConfirmDirty) {
-                        validateFields(['passwordConfirm'], { force: true });
-                      }
-                      cb();
-                    },
-                  },
-                ],
-              })(
-                <Input
-                  name="password"
-                  type="password"
-                  placeholder="Enter a strong password"
-                  autoComplete="new-password"
-                />,
-              )}
-            </Form.Item>
+            <PasswordFormItems form={this.props.form} />
 
-            <Form.Item className="SignUp-form-item" label="Confirm password">
-              {getFieldDecorator('passwordConfirm', {
-                rules: [
-                  { required: true, message: 'Please confirm your password' },
-                  {
-                    validator: (_, val, cb) => {
-                      if (val && val !== getFieldValue('password')) {
-                        cb('Passwords do not match');
-                      } else {
-                        cb();
-                      }
-                    },
-                  },
-                ],
-              })(
-                <Input
-                  name="passwordConfirm"
-                  type="password"
-                  onBlur={e =>
-                    this.setState({
-                      passwordConfirmDirty: passwordConfirmDirty || !!e.target.value,
-                    })
-                  }
-                  placeholder="Confirm your password"
-                />,
-              )}
-            </Form.Item>
-
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              block
-              loading={isCreatingUser}
-            >
-              Create account
-            </Button>
-
+            <div className="SignUp-form-controls">
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                block
+                loading={isCreatingUser}
+              >
+                Create account
+              </Button>
+            </div>
             {createUserError && (
               <Alert
                 type="error"
                 message={createUserError}
                 showIcon
                 closable
-                style={{ marginTop: '1rem' }}
+                className="SignUp-form-alert"
               />
             )}
           </Form>
