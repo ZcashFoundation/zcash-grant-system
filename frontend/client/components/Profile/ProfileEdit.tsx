@@ -1,32 +1,61 @@
 import React from 'react';
 import lodash from 'lodash';
+import qs from 'query-string';
+import { withRouter, RouteComponentProps, Redirect } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { compose } from 'recompose';
 import axios from 'api/axios';
+import { getSocialAuthUrl, verifySocial } from 'api/api';
+import { usersActions } from 'modules/users';
+import { AppState } from 'store/reducers';
 import { Input, Form, Col, Row, Button, Alert } from 'antd';
-import { SOCIAL_INFO, socialMediaToUrl } from 'utils/social';
+import { SOCIAL_INFO } from 'utils/social';
 import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { getCreateTeamMemberError } from 'modules/create/utils';
 import AvatarEdit from './AvatarEdit';
 import './ProfileEdit.less';
 
-interface Props {
+interface OwnProps {
   user: UserState;
-  onDone(): void;
-  onEdit(user: User): void;
 }
+
+interface StateProps {
+  authUser: AppState['auth']['user'];
+  hasCheckedAuthUser: AppState['auth']['hasCheckedUser'];
+}
+
+interface DispatchProps {
+  fetchUser: typeof usersActions['fetchUser'];
+  updateUser: typeof usersActions['updateUser'];
+}
+
+type Props = OwnProps & StateProps & DispatchProps & RouteComponentProps;
 
 interface State {
   fields: User;
   isChanged: boolean;
   showError: boolean;
+  isDone: boolean;
+  socialVerificationMessage: string;
+  socialVerificationError: string;
+  activeSocialService: SOCIAL_SERVICE | null;
 }
 
-export default class ProfileEdit extends React.PureComponent<Props, State> {
+class ProfileEdit extends React.PureComponent<Props, State> {
   state: State = {
     fields: { ...this.props.user } as User,
     isChanged: false,
     showError: false,
+    isDone: false,
+    socialVerificationError: '',
+    socialVerificationMessage: '',
+    activeSocialService: null,
   };
+
+  componentDidMount() {
+    this.verifySocial();
+  }
 
   componentDidUpdate(prevProps: Props, _: State) {
     if (
@@ -41,15 +70,32 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
       !this.props.user.isUpdating &&
       !this.props.user.updateError
     ) {
-      this.props.onDone();
+      this.handleDone();
     }
   }
 
   render() {
     const { fields } = this.state;
+    const {
+      user,
+      user: { userid },
+    } = this.props;
+    const {
+      socialVerificationMessage,
+      socialVerificationError,
+      activeSocialService,
+    } = this.state;
     const error = getCreateTeamMemberError(fields);
     const isMissingField = !fields.displayName || !fields.title || !fields.emailAddress;
-    const isDisabled = !!error || isMissingField || !this.state.isChanged;
+    const isDisabled =
+      !!error ||
+      isMissingField ||
+      !this.state.isChanged ||
+      !!this.state.activeSocialService;
+
+    if (this.state.isDone) {
+      return <Redirect to={`/profile/${userid}`} />;
+    }
 
     return (
       <>
@@ -101,38 +147,55 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
               <Row gutter={12}>
                 {Object.values(SOCIAL_INFO).map(s => {
                   const field = fields.socialMedias.find(sm => sm.service === s.service);
+                  const loading = s.service === activeSocialService;
                   return (
                     <Col xs={24} sm={12} key={s.service}>
                       <Form.Item>
-                        <Input
-                          placeholder={`${s.name} account`}
-                          autoComplete="off"
-                          value={field ? field.username : ''}
-                          onChange={ev => this.handleSocialChange(ev, s.service)}
-                          addonBefore={s.icon}
-                        />
+                        {field &&
+                          field.username && (
+                            <Button
+                              className="ProfileEdit-socialButton"
+                              type="danger"
+                              onClick={() => this.handleSocialDelete(s.service)}
+                              loading={loading}
+                              block
+                            >
+                              {!loading && s.icon} Remove <b>{field.username}</b> {s.name}{' '}
+                              link
+                            </Button>
+                          )}
+                        {!field && (
+                          <Button
+                            className="ProfileEdit-socialButton"
+                            onClick={() => this.handleSocialAdd(s.service)}
+                            loading={loading}
+                            block
+                          >
+                            {!loading && s.icon}
+                            Add {s.name} account
+                          </Button>
+                        )}
                       </Form.Item>
                     </Col>
                   );
                 })}
               </Row>
+              {socialVerificationError && (
+                <Alert type="error" message={socialVerificationError} closable />
+              )}
+              {socialVerificationMessage && (
+                <Alert type="success" message={socialVerificationMessage} closable />
+              )}
 
               {!isMissingField &&
-                error && (
-                  <Alert
-                    type="error"
-                    message={error}
-                    showIcon
-                    style={{ marginBottom: '0.75rem' }}
-                  />
-                )}
+                error && <Alert type="error" message={error} showIcon />}
 
               <Row>
                 <Button
                   type="primary"
                   htmlType="submit"
                   disabled={isDisabled}
-                  loading={this.props.user.isUpdating}
+                  loading={user.isUpdating}
                 >
                   Save changes
                 </Button>
@@ -142,11 +205,11 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
               </Row>
             </Form>
             {this.state.showError &&
-              this.props.user.updateError && (
+              user.updateError && (
                 <Alert
                   className="ProfileEdit-alert"
                   message={`There was an error attempting to update your profile. (code ${
-                    this.props.user.updateError
+                    user.updateError
                   })`}
                   type="error"
                 />
@@ -158,9 +221,43 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     );
   }
 
+  private verifySocial = () => {
+    const args = qs.parse(this.props.location.search);
+    const { userid } = this.props.user;
+    if (args.code && args.service) {
+      this.setState({ activeSocialService: args.service });
+      verifySocial(args.service, args.code)
+        .then(async res => {
+          // refresh user data
+          await this.props.fetchUser(userid.toString());
+          // update just the socialMedias on state.fields
+          const socialMedias = this.props.user.socialMedias;
+          const fields = {
+            ...this.state.fields,
+            socialMedias,
+          };
+          this.setState({
+            fields,
+            activeSocialService: null,
+            socialVerificationMessage: `
+            Verified ${res.data.username} on ${args.service.toLowerCase()}.
+            `,
+          });
+          // remove search query from url
+          this.props.history.push({ pathname: `/profile/${userid}/edit` });
+        })
+        .catch(e => {
+          this.setState({
+            activeSocialService: null,
+            socialVerificationError: e.message || e.toString(),
+          });
+        });
+    }
+  };
+
   private handleSave = (evt: React.SyntheticEvent<any>) => {
     evt.preventDefault();
-    this.props.onEdit(this.state.fields);
+    this.props.updateUser(this.state.fields);
   };
 
   private handleCancel = () => {
@@ -176,7 +273,7 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
         params: { url: stateAvatar.imageUrl },
       });
     }
-    this.props.onDone();
+    this.handleDone();
   };
 
   private handleChangeField = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,33 +289,31 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
     });
   };
 
-  private handleSocialChange = (
-    ev: React.ChangeEvent<HTMLInputElement>,
-    service: SOCIAL_SERVICE,
-  ) => {
-    const { value } = ev.currentTarget;
+  private handleSocialAdd = (service: SOCIAL_SERVICE) => {
+    this.setState({ activeSocialService: service });
+    getSocialAuthUrl(service)
+      .then(res => {
+        window.location.href = res.data.url;
+      })
+      .catch(e => {
+        this.setState({
+          activeSocialService: null,
+          socialVerificationError: e.message || e.toString(),
+        });
+      });
+  };
 
-    // First remove...
+  private handleSocialDelete = (service: SOCIAL_SERVICE) => {
     const socialMedias = this.state.fields.socialMedias.filter(
       sm => sm.service !== service,
     );
-    if (value) {
-      // Then re-add if there as a value
-      socialMedias.push({
-        service,
-        username: value,
-        url: socialMediaToUrl(service, value),
-      });
-    }
-
     const fields = {
       ...this.state.fields,
       socialMedias,
     };
-    const isChanged = this.isChangedCheck(fields);
     this.setState({
-      isChanged,
       fields,
+      isChanged: this.isChangedCheck(fields),
     });
   };
 
@@ -248,4 +343,24 @@ export default class ProfileEdit extends React.PureComponent<Props, State> {
   private isChangedCheck = (a: User) => {
     return !lodash.isEqual(a, this.props.user);
   };
+
+  private handleDone = () => {
+    this.setState({ isDone: true });
+  };
 }
+
+const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
+  state => ({
+    authUser: state.auth.user,
+    hasCheckedAuthUser: state.auth.hasCheckedUser,
+  }),
+  {
+    fetchUser: usersActions.fetchUser,
+    updateUser: usersActions.updateUser,
+  },
+);
+
+export default compose<Props, OwnProps>(
+  withRouter,
+  withConnect,
+)(ProfileEdit);
