@@ -36,12 +36,7 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
-        dumped_proposal = proposal_schema.dump(proposal)
-        proposal_contract = read_proposal(dumped_proposal['proposal_address'])
-        if not proposal_contract:
-            return {"message": "Proposal retired"}, 404
-        dumped_proposal['crowd_fund'] = proposal_contract
-        return dumped_proposal
+        return proposal_schema.dump(proposal)
     else:
         return {"message": "No proposal matching id"}, 404
 
@@ -150,9 +145,7 @@ def get_proposal_drafts():
     parameter('content', type=str),
     parameter('target', type=str),
     parameter('payoutAddress', type=str),
-    parameter('trustees', type=list),
     parameter('deadlineDuration', type=int),
-    parameter('voteDuration', type=int),
     parameter('milestones', type=list)
 )
 def update_proposal(milestones, proposal_id, **kwargs):
@@ -195,12 +188,9 @@ def delete_proposal_draft(proposal_id):
 
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
 @requires_team_member_auth
-@endpoint.api(
-    parameter('contractAddress', type=str, required=True)
-)
-def publish_proposal(proposal_id, contract_address):
+@endpoint.api()
+def publish_proposal(proposal_id):
     try:
-        g.current_proposal.proposal_address = contract_address
         g.current_proposal.publish()
     except ValidationException as e:
         return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
