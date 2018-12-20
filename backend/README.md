@@ -138,16 +138,30 @@ To learn more about this auth service, you can visit the repo [here](https://git
 1. create IAM user with programatic access (Access key) and assign that user the policy created above
 1. copy the user's `Access key ID`, `Secret access key`, `bucket name` & `bucket region` to private `.env`, see `.env.example`
 
+
 ## Social Verification (oauth)
+These instructions are for `development`, for `production` simply replace all hostnames/ips/ports with the proper production hostname.
 
-github create oauth app: https://github.com/settings/developers
+1. Create Github oauth app https://github.com/settings/developers
+    1. select tab **OAuth Apps** > click **New OAuth App** button
+    1. set **Homepage URL** to `http://localhost:3000`
+    1. set **Authorization callback URL** to `http://localhost:3000/callback/github`
+    1. save **Client ID** and **Client Secret** to `.env` `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET` respectively.
 
-twitter developer account: https://developer.twitter.com/en/apply/user
-
-- for dev set WebsiteURL: http://demo.grant.io
-- Sign in with Twitter: enable
-- for dev set CallbackURL: http://127.0.0.1:3000/callback/twitter
-
-linkedin developer account: https://www.linkedin.com/developer/apps/new
-
-- OAuth 2.0 > Authorized Redirect URLs: http://localhost:3000/callback/linkedin
+1. Create Twitter oauth app https://developer.twitter.com/en/apply/user
+    1. click **Create an App**
+    1. set **Website URL** to a valid URL, such as `http://demo.grant.io`
+    1. check the **Enable Sign in with Twitter** option
+    1. set **Callback URLs** to `http://127.0.0.1:3000/callback/twitter`
+    1. fill out other required fields
+    1. after create, select **Keys and tokens** tab
+    1. save **Consumer API key** and **Consumer API secret key** to `.env` `TWITTER_CLIENT_ID` & `TWITTER_CLIENT_SECRET` respectively.
+    
+1. Create Linkedin oauth app https://www.linkedin.com/developer/apps/new
+    1. set **Website URL** to `http://localhost:3000`
+    1. fill out other necessary fields & submit
+    1. select the **Authentication** tab in app details
+    1. check the **r_basicprofile** box under **Default Application Permissions**
+    1. Under **OAuth 2.0** > **Authorized Redirect URLs** add `http://localhost:3000/callback/linkedin`
+    1. click **update** button
+    1. save **Client ID** and **Client Secret** to `.env` `LINKEDIN_CLIENT_ID` & `LINKEDIN_CLIENT_SECRET` respectively.
