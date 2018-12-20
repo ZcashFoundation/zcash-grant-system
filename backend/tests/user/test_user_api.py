@@ -1,16 +1,17 @@
 import copy
 import json
+from datetime import datetime, timedelta
 
 from animal_case import animalify
 from grant.proposal.models import Proposal
 from grant.user.models import User, user_schema, db
-from mock import patch
+from mock import patch, Mock
 
 from ..config import BaseUserConfig
 from ..test_data import test_team, test_proposal, test_user
 
 
-class TestAPI(BaseUserConfig):
+class TestUserAPI(BaseUserConfig):
     @patch('grant.email.send.send_email')
     def test_create_user(self, mock_send_email):
         mock_send_email.return_value.ok = True
@@ -145,7 +146,6 @@ class TestAPI(BaseUserConfig):
         user_update_resp = self.app.put(
             "/api/v1/users/{}".format(self.user.id),
             data=json.dumps(updated_user),
-            headers=self.headers,
             content_type='application/json'
         )
         self.assert200(user_update_resp, user_update_resp.json)
@@ -165,7 +165,87 @@ class TestAPI(BaseUserConfig):
         user_update_resp = self.app.put(
             "/api/v1/users/{}".format(self.user.id),
             data=json.dumps(updated_user),
-            headers=self.headers,
             content_type='application/json'
         )
         self.assert400(user_update_resp)
+
+    @patch('grant.email.send.send_email')
+    def test_recover_user(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+
+        # 1. request reset email
+        response = self.app.post(
+            "/api/v1/users/recover",
+            data=json.dumps({'email': self.user.email_address}),
+            content_type='application/json'
+        )
+
+        self.assertStatus(response, 200)
+        er = self.user.email_recovery
+        self.assertIsNotNone(er)
+        created_diff = datetime.now() - er.date_created
+        self.assertAlmostEqual(created_diff.seconds, 0)
+        code = er.code
+
+        # 2. reset password
+        new_password = 'n3wp455w3rd'
+        reset_resp = self.app.post(
+            "/api/v1/users/recover/{}".format(code),
+            data=json.dumps({'password': new_password}),
+            content_type='application/json'
+        )
+        self.assertStatus(reset_resp, 200)
+
+        # 3. check new password
+        login_resp = self.login_default_user(new_password)
+        self.assertStatus(login_resp, 200)
+
+    @patch('grant.email.send.send_email')
+    @patch('grant.email.models.datetime')
+    def test_recover_user_code_expired(self, mock_datetime, mock_send_email):
+        mock_send_email.return_value.ok = True
+        code_create_time = datetime(year=2020, month=1, day=1, hour=1)
+        mock_datetime.now.return_value = code_create_time
+
+        # 1. request reset email
+        response = self.app.post(
+            "/api/v1/users/recover",
+            data=json.dumps({'email': self.user.email_address}),
+            content_type='application/json'
+        )
+        self.assertStatus(response, 200)
+        er = self.user.email_recovery
+        self.assertEqual(er.date_created, code_create_time)
+        code = er.code
+
+        # expire (pass time)
+        mock_datetime.now.return_value = code_create_time + timedelta(minutes=61)
+
+        # 2. attempt reset password
+        reset_resp = self.app.post(
+            "/api/v1/users/recover/{}".format(code),
+            data=json.dumps({'password': 'n3wp455w3rd'}),
+            content_type='application/json'
+        )
+        self.assertStatus(reset_resp, 401)
+        self.assertIsNotNone(reset_resp.json['message'])
+
+    def test_recover_user_no_user(self):
+        response = self.app.post(
+            "/api/v1/users/recover",
+            data=json.dumps({'email': 'notinthe@system.com'}),
+            content_type='application/json'
+        )
+
+        self.assertStatus(response, 400)
+        self.assertIsNone(self.user.email_recovery)
+
+    def test_recover_user_no_code(self):
+        new_password = 'n3wp455w3rd'
+        reset_resp = self.app.post(
+            "/api/v1/users/recover/12345",
+            data=json.dumps({'password': 'n3wp455w3rd'}),
+            content_type='application/json'
+        )
+        self.assertStatus(reset_resp, 400)
+        self.assertIsNotNone(reset_resp.json['message'])

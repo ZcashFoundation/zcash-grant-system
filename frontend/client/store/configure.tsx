@@ -8,7 +8,6 @@ import { routerMiddleware } from 'connected-react-router';
 import rootReducer, { AppState, combineInitialState } from './reducers';
 import rootSaga from './sagas';
 import history from './history';
-// import axios from 'api/axios';
 
 const sagaMiddleware = createSagaMiddleware();
 

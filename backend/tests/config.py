@@ -36,14 +36,9 @@ class BaseTestConfig(TestCase):
 
 
 class BaseUserConfig(BaseTestConfig):
-    headers = {
-        "MsgSignature": message["sig"],
-        "RawTypedData": message["data"]
-    }
-
     def setUp(self):
         super(BaseUserConfig, self).setUp()
-        self.user = User.create(
+        self._user = User.create(
             email_address=test_user["emailAddress"],
             password=test_user["password"],
             display_name=test_user["displayName"],
@@ -54,9 +49,8 @@ class BaseUserConfig(BaseTestConfig):
             username=test_user['socialMedias'][0]['username'],
             user_id=self.user.id)
         db.session.add(sm)
-        avatar = Avatar(image_url=test_user["avatar"]["link"], user_id=self.user.id)
+        avatar = Avatar(image_url=test_user["avatar"]["link"], user_id=self._user.id)
         db.session.add(avatar)
-
         self.user_password = test_user["password"]
 
         self.other_user = User.create(
@@ -65,15 +59,20 @@ class BaseUserConfig(BaseTestConfig):
             display_name=test_other_user["displayName"],
             title=test_other_user["title"]
         )
-
         db.session.commit()
+        self._user_id = self._user.id
 
-    def login_default_user(self):
-        self.app.post(
+    # always return fresh (avoid detached instance issues)
+    @property
+    def user(self):
+        return User.query.filter_by(id=self._user_id).first()
+
+    def login_default_user(self, cust_pass=None):
+        return self.app.post(
             "/api/v1/users/auth",
             data=json.dumps({
                 "email": self.user.email_address,
-                "password": self.user_password
+                "password": cust_pass or self.user_password
             }),
             content_type="application/json"
         )
@@ -86,7 +85,7 @@ class BaseUserConfig(BaseTestConfig):
 class BaseProposalCreatorConfig(BaseUserConfig):
     def setUp(self):
         super().setUp()
-        self.proposal = Proposal.create(
+        self._proposal = Proposal.create(
             status="DRAFT",
             title=test_proposal["title"],
             content=test_proposal["content"],
@@ -98,10 +97,21 @@ class BaseProposalCreatorConfig(BaseUserConfig):
             deadline_duration=test_proposal["deadlineDuration"],
             vote_duration=test_proposal["voteDuration"]
         )
-        self.proposal.team.append(self.user)
-        db.session.add(self.proposal)
+        self._proposal.team.append(self.user)
+        db.session.add(self._proposal)
 
-        self.other_proposal = Proposal.create(status="DRAFT")
-        self.other_proposal.team.append(self.other_user)
-        db.session.add(self.other_proposal)
+        self._other_proposal = Proposal.create(status="DRAFT")
+        self._other_proposal.team.append(self.other_user)
+        db.session.add(self._other_proposal)
         db.session.commit()
+        self._proposal_id = self._proposal.id
+        self._other_proposal_id = self._other_proposal.id
+
+    # always return fresh (avoid detached instance issues)
+    @property
+    def proposal(self):
+        return Proposal.query.filter_by(id=self._proposal_id).first()
+
+    @property
+    def other_proposal(self):
+        return Proposal.query.filter_by(id=self._other_proposal_id).first()

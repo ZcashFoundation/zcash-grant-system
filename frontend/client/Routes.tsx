@@ -29,6 +29,7 @@ const Privacy = loadable(() => import('pages/privacy'));
 const Contact = loadable(() => import('pages/contact'));
 const VerifyEmail = loadable(() => import('pages/email-verify'));
 const Callback = loadable(() => import('pages/callback'));
+const RecoverEmail = loadable(() => import('pages/email-recover'));
 
 import 'styles/style.less';
 
@@ -186,18 +187,6 @@ const routeConfigs: RouteConfig[] = [
     },
   },
   {
-    // Sign in / sign up
-    route: {
-      path: '/auth',
-      component: Auth,
-      exact: true,
-    },
-    template: {
-      title: 'Sign in',
-    },
-    onlyLoggedOut: true,
-  },
-  {
     // Sign out
     route: {
       path: '/auth/sign-out',
@@ -209,10 +198,32 @@ const routeConfigs: RouteConfig[] = [
     },
   },
   {
+    // Sign in / sign up / recover (nested routes)
+    route: {
+      path: '/auth',
+      component: Auth,
+    },
+    template: {
+      title: 'Sign in',
+    },
+    onlyLoggedOut: true,
+  },
+  {
     // Verify email
     route: {
       path: '/email/verify',
       component: VerifyEmail,
+      exact: true,
+    },
+    template: {
+      title: 'Verify email',
+    },
+  },
+  {
+    // Recover email
+    route: {
+      path: '/email/recover',
+      component: RecoverEmail,
       exact: true,
     },
     template: {

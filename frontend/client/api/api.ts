@@ -86,12 +86,23 @@ export function checkUserAuth(): Promise<{ data: User }> {
   return axios.get(`/api/v1/users/me`);
 }
 
-export function updateUserPassword(currentPassword: string, password: string) {
+export function updateUserPassword(
+  currentPassword: string,
+  password: string,
+): Promise<any> {
   return axios.put(`/api/v1/users/password`, { currentPassword, password });
 }
 
 export function updateUser(user: User): Promise<{ data: User }> {
   return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
+}
+
+export function requestUserRecoveryEmail(email: string): Promise<any> {
+  return axios.post(`/api/v1/users/recover`, { email });
+}
+
+export function resetPassword(code: string, password: string): Promise<any> {
+  return axios.post(`/api/v1/users/recover/${code}`, { password });
 }
 
 export function verifyEmail(code: string): Promise<any> {
