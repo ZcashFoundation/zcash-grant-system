@@ -289,8 +289,12 @@ class ProfileEdit extends React.PureComponent<Props, State> {
     });
   };
 
-  private handleSocialAdd = (service: SOCIAL_SERVICE) => {
+  private handleSocialAdd = async (service: SOCIAL_SERVICE) => {
     this.setState({ activeSocialService: service });
+    if (this.state.isChanged) {
+      // save any changes first
+      await this.props.updateUser(this.state.fields);
+    }
     getSocialAuthUrl(service)
       .then(res => {
         window.location.href = res.data.url;
