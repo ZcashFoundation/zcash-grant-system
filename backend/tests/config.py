@@ -47,7 +47,7 @@ class BaseUserConfig(BaseTestConfig):
         sm = SocialMedia(
             service=test_user['socialMedias'][0]['service'],
             username=test_user['socialMedias'][0]['username'],
-            user_id=self.user.id)
+            user_id=self._user.id)
         db.session.add(sm)
         avatar = Avatar(image_url=test_user["avatar"]["link"], user_id=self._user.id)
         db.session.add(avatar)
