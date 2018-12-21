@@ -1,19 +1,17 @@
 import React from 'react';
 import { Spin } from 'antd';
-import { CrowdFund } from 'types';
 import AddressRow from 'components/AddressRow';
 import Placeholder from 'components/Placeholder';
 import UnitDisplay from 'components/UnitDisplay';
 
-interface Props {
-  crowdFund: CrowdFund;
-}
-
-const ContributorsBlock = ({ crowdFund }: Props) => {
+const ContributorsBlock = () => {
+  // TODO: Get contributors from proposal
+  console.warn('TODO: Get contributors from proposal for Proposal/Contributors/index.tsx');
+  const proposal = { contributors: [] as any };
   let content;
-  if (crowdFund) {
-    if (crowdFund.contributors.length) {
-      content = crowdFund.contributors.map(contributor => (
+  if (proposal) {
+    if (proposal.contributors.length) {
+      content = proposal.contributors.map((contributor: any) => (
         <AddressRow
           key={contributor.address}
           address={contributor.address}
@@ -38,7 +36,7 @@ const ContributorsBlock = ({ crowdFund }: Props) => {
 
   return (
     <div className="Proposal-top-side-block">
-      {crowdFund.contributors.length ? (
+      {proposal.contributors.length ? (
         <>
           <h1 className="Proposal-top-main-block-title">Contributors</h1>
           <div className="Proposal-top-main-block">{content}</div>

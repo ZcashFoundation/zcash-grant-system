@@ -17,10 +17,8 @@ interface CreateFormErrors {
   team?: string[];
   content?: string;
   payoutAddress?: string;
-  trustees?: string[];
   milestones?: string[];
   deadlineDuration?: string;
-  voteDuration?: string;
 }
 
 export type KeyOfForm = keyof CreateFormErrors;
@@ -32,10 +30,8 @@ export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
   team: 'Team',
   content: 'Details',
   payoutAddress: 'Payout address',
-  trustees: 'Trustees',
   milestones: 'Milestones',
   deadlineDuration: 'Funding deadline',
-  voteDuration: 'Milestone deadline',
 };
 
 const requiredFields = [
@@ -45,9 +41,7 @@ const requiredFields = [
   'target',
   'content',
   'payoutAddress',
-  'trustees',
   'deadlineDuration',
-  'voteDuration',
 ];
 
 export function getCreateErrors(
@@ -55,7 +49,7 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, target, payoutAddress, trustees } = form;
+  const { title, team, milestones, target, payoutAddress } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -90,31 +84,6 @@ export function getCreateErrors(
   // Payout address
   if (!payoutAddress) {
     errors.payoutAddress = 'That doesn’t look like a valid address';
-  }
-
-  // Trustees
-  if (trustees) {
-    let didTrusteeError = false;
-    const trusteeErrors = trustees.map((address, idx) => {
-      if (!address) {
-        return '';
-      }
-
-      let err = '';
-      if (!address) {
-        err = 'That doesn’t look like a valid address';
-      } else if (trustees.indexOf(address) !== idx) {
-        err = 'That address is already a trustee';
-      } else if (payoutAddress === address) {
-        err = 'That address is already a trustee';
-      }
-
-      didTrusteeError = didTrusteeError || !!err;
-      return err;
-    });
-    if (didTrusteeError) {
-      errors.trustees = trusteeErrors;
-    }
   }
 
   // Milestones
@@ -193,10 +162,10 @@ export function proposalToContractData(form: ProposalDraft): any {
   return {
     ethAmount: targetInWei,
     payoutAddress: form.payoutAddress,
-    trusteesAddresses: form.trustees,
+    trusteesAddresses: [],
     milestoneAmounts,
     durationInMinutes: form.deadlineDuration || ONE_DAY * 60,
-    milestoneVotingPeriodInMinutes: form.voteDuration || ONE_DAY * 7,
+    milestoneVotingPeriodInMinutes: ONE_DAY * 7,
     immediateFirstMilestonePayout,
   };
 }
@@ -243,7 +212,7 @@ export function makeProposalPreviewFromDraft(
       amountVotingForRefund: Wei('0'),
       percentVotingForRefund: 0,
       beneficiary: draft.payoutAddress,
-      trustees: draft.trustees,
+      trustees: [],
       deadline: Date.now() + 100000,
       contributors: [],
       milestones: [],

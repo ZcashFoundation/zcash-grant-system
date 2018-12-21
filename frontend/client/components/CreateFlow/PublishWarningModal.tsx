@@ -46,7 +46,7 @@ export default class PublishWarningModal extends React.Component<Props> {
           <p>
             Are you sure you’re ready to publish your proposal? Once you’ve done so, you
             won't be able to change certain fields such as: target amount, payout address,
-            team, trustees, deadline & vote durations.
+            team, & deadline.
           </p>
         </div>
       </Modal>

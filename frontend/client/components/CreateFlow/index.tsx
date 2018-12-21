@@ -10,11 +10,11 @@ import Basics from './Basics';
 import Team from './Team';
 import Details from './Details';
 import Milestones from './Milestones';
-import Governance from './Governance';
+import Payment from './Payment';
 import Review from './Review';
 import Preview from './Preview';
 import Final from './Final';
-import PublishWarningModal from './PubishWarningModal';
+import PublishWarningModal from './PublishWarningModal';
 import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
@@ -29,7 +29,7 @@ export enum CREATE_STEP {
   TEAM = 'TEAM',
   DETAILS = 'DETAILS',
   MILESTONES = 'MILESTONES',
-  GOVERNANCE = 'GOVERNANCE',
+  PAYMENT = 'PAYMENT',
   REVIEW = 'REVIEW',
 }
 
@@ -38,7 +38,7 @@ const STEP_ORDER = [
   CREATE_STEP.TEAM,
   CREATE_STEP.DETAILS,
   CREATE_STEP.MILESTONES,
-  CREATE_STEP.GOVERNANCE,
+  CREATE_STEP.PAYMENT,
   CREATE_STEP.REVIEW,
 ];
 
@@ -82,14 +82,13 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
       'Contributors are more willing to fund proposals with funding spread across multiple deadlines',
     component: Milestones,
   },
-  [CREATE_STEP.GOVERNANCE]: {
-    short: 'Governance',
-    title: 'Choose how you get paid, and who’s in control',
-    subtitle:
-      'Everything here cannot be changed after publishing, so make sure it’s right',
+  [CREATE_STEP.PAYMENT]: {
+    short: 'Payment',
+    title: 'Choose how you get paid',
+    subtitle: 'You’ll only be paid if your funding target is reached',
     help:
-      'Double check everything! This data powers the smart contract, and is immutable once it’s deployed.',
-    component: Governance,
+      'Double check your address, and make sure it’s secure. Once sent, payments are irreversible!',
+    component: Payment,
   },
   [CREATE_STEP.REVIEW]: {
     short: 'Review',
@@ -312,9 +311,9 @@ class CreateFlow extends React.Component<Props, State> {
 
   private fillInExample = () => {
     const { accounts } = this.props;
-    const [payoutAddress, ...trustees] = accounts;
+    const [payoutAddress] = accounts;
 
-    this.updateForm(createExampleProposal(payoutAddress, trustees || []));
+    this.updateForm(createExampleProposal(payoutAddress));
     setTimeout(() => {
       this.setState({
         isExample: true,

@@ -101,7 +101,11 @@ def get_proposals(stage):
             .all()
         )
     else:
-        proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
+        proposals = (
+            Proposal.query.filter_by(status="LIVE")
+            .order_by(Proposal.date_created.desc())
+            .all()
+        )
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
     # except Exception as e:

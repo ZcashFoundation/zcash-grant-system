@@ -18,9 +18,8 @@ const msPaid = { state: PAID, isPaid: true };
 const msActive = { state: ACTIVE, isPaid: false };
 const msRejected = { state: REJECTED, isPaid: false };
 
-const dummyProposal = getProposalWithCrowdFund({});
-const trustee = dummyProposal.crowdFund.beneficiary;
-const contributor = dummyProposal.crowdFund.contributors[0].address;
+const trustee = 'z123';
+const contributor = 'z456';
 
 const refundedProposal = getProposalWithCrowdFund({ amount: 5, funded: 5 });
 refundedProposal.crowdFund.percentVotingForRefund = 100;

@@ -1,8 +1,8 @@
 import React from 'react';
 import moment from 'moment';
+import BN from 'bn.js';
 import { Spin, Form, Input, Button, Icon } from 'antd';
 import { ProposalWithCrowdFund } from 'types';
-import './style.less';
 import classnames from 'classnames';
 import { fromWei } from 'utils/units';
 import { connect } from 'react-redux';
@@ -14,6 +14,7 @@ import UnitDisplay from 'components/UnitDisplay';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
 import MetaMaskRequiredButton from 'components/MetaMaskRequiredButton';
+import './style.less';
 
 interface OwnProps {
   proposal: ProposalWithCrowdFund;
@@ -49,9 +50,10 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       return;
     }
 
-    const { proposal } = this.props;
-    const { crowdFund } = proposal;
-    const remainingTarget = crowdFund.target.sub(crowdFund.funded);
+    // TODO: Get values from proposal
+    const target = new BN(0);
+    const funded = new BN(0);
+    const remainingTarget = target.sub(funded);
     const amount = parseFloat(value);
     let amountError = null;
 
@@ -78,15 +80,22 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
-      const { crowdFund } = proposal;
+      // TODO: Get values from proposal
+      console.warn('TODO: Get real values from proposal for CampaignBlock');
+      const isRaiseGoalReached = false;
+      const deadline = 0;
+      const isFrozen = false;
+      const target = new BN(0);
+      const funded = new BN(0);
+      const percentFunded = 0;
+      const beneficiary = 'z123';
+
       const isFundingOver =
-        crowdFund.isRaiseGoalReached ||
-        crowdFund.deadline < Date.now() ||
-        crowdFund.isFrozen;
+        isRaiseGoalReached ||
+        deadline < Date.now() ||
+        isFrozen;
       const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
-      const remainingEthNum = parseFloat(
-        fromWei(crowdFund.target.sub(crowdFund.funded), 'ether'),
-      );
+      const remainingEthNum = parseFloat(fromWei(target.sub(funded), 'ether'));
 
       content = (
         <React.Fragment>
@@ -110,21 +119,21 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             <div className="ProposalCampaignBlock-info">
               <div className="ProposalCampaignBlock-info-label">Deadline</div>
               <div className="ProposalCampaignBlock-info-value">
-                {moment(crowdFund.deadline).fromNow()}
+                {moment(deadline).fromNow()}
               </div>
             </div>
           )}
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Beneficiary</div>
             <div className="ProposalCampaignBlock-info-value">
-              <ShortAddress address={crowdFund.beneficiary} />
+              <ShortAddress address={beneficiary} />
             </div>
           </div>
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">
-              <UnitDisplay value={crowdFund.funded} /> /{' '}
-              <UnitDisplay value={crowdFund.target} symbol="ETH" />
+              <UnitDisplay value={funded} /> /{' '}
+              <UnitDisplay value={target} symbol="ETH" />
             </div>
           </div>
 
@@ -132,10 +141,10 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             <div
               className={classnames({
                 ['ProposalCampaignBlock-fundingOver']: true,
-                ['is-success']: crowdFund.isRaiseGoalReached,
+                ['is-success']: isRaiseGoalReached,
               })}
             >
-              {crowdFund.isRaiseGoalReached ? (
+              {isRaiseGoalReached ? (
                 <>
                   <Icon type="check-circle-o" />
                   <span>Proposal has been funded</span>
@@ -153,7 +162,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 <div
                   className="ProposalCampaignBlock-bar-inner"
                   style={{
-                    width: `${crowdFund.percentFunded}%`,
+                    width: `${percentFunded}%`,
                   }}
                 />
               </div>

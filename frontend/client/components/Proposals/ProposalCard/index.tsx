@@ -1,5 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
+import BN from 'bn.js';
 import { Progress, Icon } from 'antd';
 import moment from 'moment';
 import { Redirect } from 'react-router-dom';
@@ -21,9 +22,13 @@ export class ProposalCard extends React.Component<ProposalWithCrowdFund> {
       proposalUrlId,
       category,
       dateCreated,
-      crowdFund,
       team,
     } = this.props;
+    // TODO: Real values from proposal
+    console.warn('TODO: Real values for ProposalCard');
+    const target = new BN(0);
+    const funded = new BN(0);
+    const percentFunded = 0;
 
     return (
       <div
@@ -33,21 +38,21 @@ export class ProposalCard extends React.Component<ProposalWithCrowdFund> {
         <h3 className="ProposalCard-title">{title}</h3>
         <div className="ProposalCard-funding">
           <div className="ProposalCard-funding-raised">
-            <UnitDisplay value={crowdFund.funded} symbol="ETH" /> <small>raised</small> of{' '}
-            <UnitDisplay value={crowdFund.target} symbol="ETH" /> goal
+            <UnitDisplay value={funded} symbol="ETH" /> <small>raised</small> of{' '}
+            <UnitDisplay value={target} symbol="ETH" /> goal
           </div>
           <div
             className={classnames({
               ['ProposalCard-funding-percent']: true,
-              ['is-funded']: crowdFund.percentFunded >= 100,
+              ['is-funded']: percentFunded >= 100,
             })}
           >
-            {crowdFund.percentFunded}%
+            {percentFunded}%
           </div>
         </div>
         <Progress
-          percent={crowdFund.percentFunded}
-          status={crowdFund.percentFunded >= 100 ? 'success' : 'active'}
+          percent={percentFunded}
+          status={percentFunded >= 100 ? 'success' : 'active'}
           showInfo={false}
         />
 

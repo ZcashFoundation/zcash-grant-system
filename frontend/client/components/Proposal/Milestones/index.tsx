@@ -4,7 +4,6 @@ import moment from 'moment';
 import { Alert, Steps, Spin } from 'antd';
 import { ProposalWithCrowdFund, MILESTONE_STATE } from 'types';
 import UnitDisplay from 'components/UnitDisplay';
-import MilestoneAction from './MilestoneAction';
 import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
@@ -85,15 +84,9 @@ class ProposalMilestones extends React.Component<Props, State> {
     if (!proposal) {
       return <Spin />;
     }
-    const {
-      milestones,
-      crowdFund,
-      crowdFund: { milestoneVotingPeriod, percentVotingForRefund },
-    } = proposal;
-    const { accounts } = this.props;
+    const { milestones } = proposal;
 
-    const wasRefunded = percentVotingForRefund > 50;
-    const isTrustee = crowdFund.trustees.includes(accounts[0]);
+    const isTrustee = false; // TODO: Replace with being on the team
     const milestoneCount = milestones.length;
 
     const milestoneSteps = milestones.map((milestone, i) => {
@@ -107,9 +100,6 @@ class ProposalMilestones extends React.Component<Props, State> {
       const reward = (
         <UnitDisplay value={milestone.amount} symbol="ETH" displayShortBalance={4} />
       );
-      const approvalPeriod = milestone.isImmediatePayout
-        ? 'Immediate'
-        : moment.duration(milestoneVotingPeriod).humanize();
       const alertStyle = { width: 'fit-content', margin: '0 0 1rem 0' };
 
       const stepProps = {
@@ -173,18 +163,6 @@ class ProposalMilestones extends React.Component<Props, State> {
           break;
       }
 
-      if (wasRefunded) {
-        notification = (
-          <Alert
-            type="error"
-            message={
-              <span>A majority of the funders of this project voted for a refund.</span>
-            }
-            style={alertStyle}
-          />
-        );
-      }
-
       const statuses = (
         <div className="ProposalMilestones-milestone-status">
           {!milestone.isImmediatePayout && (
@@ -194,9 +172,6 @@ class ProposalMilestones extends React.Component<Props, State> {
           )}
           <div>
             Reward: <strong>{reward}</strong>
-          </div>
-          <div>
-            Approval period: <strong>{approvalPeriod}</strong>
           </div>
         </div>
       );
@@ -210,15 +185,6 @@ class ProposalMilestones extends React.Component<Props, State> {
               {notification}
               {milestone.content}
             </div>
-            {this.state.activeMilestoneIdx === i &&
-              !wasRefunded && (
-                <>
-                  <div className="ProposalMilestones-milestone-divider" />
-                  <div className="ProposalMilestones-milestone-action">
-                    <MilestoneAction proposal={proposal} />
-                  </div>
-                </>
-              )}
           </div>
         </div>
       );

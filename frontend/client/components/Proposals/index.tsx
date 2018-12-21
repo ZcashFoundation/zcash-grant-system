@@ -13,35 +13,40 @@ import './style.less';
 
 type ProposalSortFn = (p1: ProposalWithCrowdFund, p2: ProposalWithCrowdFund) => number;
 const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
+  // TODO: Move sorts server side due to pagination
   [PROPOSAL_SORT.NEWEST]: (p1, p2) => p2.dateCreated - p1.dateCreated,
   [PROPOSAL_SORT.OLDEST]: (p1, p2) => p1.dateCreated - p2.dateCreated,
   [PROPOSAL_SORT.LEAST_FUNDED]: (p1, p2) => {
+    // TODO: Fix least funded sort
+    return p1.proposalId - p2.proposalId;
     // First show sub-100% funding
-    const p1Pct = p1.crowdFund.percentFunded;
-    const p2Pct = p2.crowdFund.percentFunded;
-    if (p1Pct < 1 && p2Pct >= 1) {
-      return -1;
-    } else if (p2Pct < 1 && p1Pct >= 1) {
-      return 1;
-    } else if (p1Pct < 1 && p2Pct < 1) {
-      return p1Pct - p2Pct;
-    }
+    // const p1Pct = p1.crowdFund.percentFunded;
+    // const p2Pct = p2.crowdFund.percentFunded;
+    // if (p1Pct < 1 && p2Pct >= 1) {
+    //   return -1;
+    // } else if (p2Pct < 1 && p1Pct >= 1) {
+    //   return 1;
+    // } else if (p1Pct < 1 && p2Pct < 1) {
+    //   return p1Pct - p2Pct;
+    // }
     // Then show most overall funds
-    return p1.crowdFund.funded.cmp(p2.crowdFund.funded);
+    // return p1.crowdFund.funded.cmp(p2.crowdFund.funded);
   },
   [PROPOSAL_SORT.MOST_FUNDED]: (p1, p2) => {
+    // TODO: Fix most funded sort
+    return p2.proposalId - p1.proposalId;
     // First show sub-100% funding
-    const p1Pct = p1.crowdFund.percentFunded;
-    const p2Pct = p2.crowdFund.percentFunded;
-    if (p1Pct < 1 && p2Pct >= 1) {
-      return 1;
-    } else if (p2Pct < 1 && p1Pct >= 1) {
-      return -1;
-    } else if (p1Pct < 1 && p2Pct < 1) {
-      return p2Pct - p1Pct;
-    }
+    // const p1Pct = p1.crowdFund.percentFunded;
+    // const p2Pct = p2.crowdFund.percentFunded;
+    // if (p1Pct < 1 && p2Pct >= 1) {
+    //   return 1;
+    // } else if (p2Pct < 1 && p1Pct >= 1) {
+    //   return -1;
+    // } else if (p1Pct < 1 && p2Pct < 1) {
+    //   return p2Pct - p1Pct;
+    // }
     // Then show most overall funds
-    return p2.crowdFund.funded.cmp(p1.crowdFund.funded);
+    // return p2.crowdFund.funded.cmp(p1.crowdFund.funded);
   },
 };
 

@@ -4,7 +4,7 @@ import { Icon, Form, Input, Button, Popconfirm, message } from 'antd';
 import { User, TeamInvite, ProposalDraft } from 'types';
 import TeamMemberComponent from './TeamMember';
 import { postProposalInvite, deleteProposalInvite } from 'api/api';
-import { isValidAddress, isValidEmail } from 'utils/validators';
+import { isValidEmail } from 'utils/validators';
 import { AppState } from 'store/reducers';
 import './Team.less';
 
@@ -51,10 +51,8 @@ class CreateFlowTeam extends React.Component<Props, State> {
 
   render() {
     const { team, invites, address } = this.state;
-    const inviteError =
-      address && !isValidEmail(address) && !isValidAddress(address)
-        ? 'That doesn’t look like an email address or ETH address'
-        : undefined;
+    const inviteError = address && !isValidEmail(address) &&
+      'That doesn’t look like a valid email address';
     const inviteDisabled = !!inviteError || !address;
     const pendingInvites = invites.filter(inv => inv.accepted === null);
 
@@ -95,7 +93,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
               >
                 <Input
                   className="TeamForm-add-form-field-input"
-                  placeholder="Email address or ETH address"
+                  placeholder="Email address"
                   size="large"
                   value={address}
                   onChange={this.handleChangeInviteAddress}

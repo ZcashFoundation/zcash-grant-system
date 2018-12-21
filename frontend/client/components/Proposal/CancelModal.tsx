@@ -19,15 +19,12 @@ type Props = StateProps & OwnProps;
 
 class CancelModal extends React.Component<Props> {
   componentDidUpdate() {
-    if (this.props.proposal.crowdFund.isFrozen) {
-      this.props.handleClose();
-    }
+    // TODO: Close on success of action
   }
 
   render() {
-    const { proposal, isVisible, isRefundActionPending, refundActionError } = this.props;
-    const hasBeenFunded = proposal.crowdFund.isRaiseGoalReached;
-    const hasContributors = !!proposal.crowdFund.contributors.length;
+    const { isVisible, isRefundActionPending, refundActionError } = this.props;
+    const hasContributors = false; // TODO: Determine if it has contributors from proposal
     const disabled = isRefundActionPending;
 
     return (
@@ -41,20 +38,10 @@ class CancelModal extends React.Component<Props> {
         okButtonProps={{ type: 'danger', loading: disabled }}
         cancelButtonProps={{ disabled }}
       >
-        {hasBeenFunded ? (
-          <p>
-            Are you sure you would like to issue a refund?{' '}
-            <strong>This cannot be undone</strong>. Once you issue a refund, all
-            contributors will be able to receive a refund of the remaining proposal
-            balance.
-          </p>
-        ) : (
-          <p>
-            Are you sure you would like to cancel this proposal?{' '}
-            <strong>This cannot be undone</strong>. Once you cancel it, all contributors
-            will be able to receive refunds.
-          </p>
-        )}
+        <p>
+          Are you sure you would like to cancel this proposal?{' '}
+          <strong>This cannot be undone</strong>.
+        </p>
         <p>
           Canceled proposals cannot be deleted and will still be viewable by contributors
           or anyone with a direct link. However, they will be de-listed everywhere else on
@@ -69,7 +56,7 @@ class CancelModal extends React.Component<Props> {
         {refundActionError && (
           <Alert
             type="error"
-            message={`Failed to ${hasBeenFunded ? 'refund' : 'cancel'} proposal`}
+            message="Failed to cancel proposal"
             description={refundActionError}
             showIcon
           />

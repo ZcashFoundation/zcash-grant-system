@@ -53,9 +53,7 @@ export interface ProposalDraft {
   stage: string;
   target: string;
   payoutAddress: string;
-  trustees: string[];
   deadlineDuration: number;
-  voteDuration: number;
   milestones: CreateMilestone[];
   team: User[];
   invites: TeamInvite[];
