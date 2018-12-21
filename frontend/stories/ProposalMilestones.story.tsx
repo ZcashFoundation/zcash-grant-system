@@ -21,9 +21,6 @@ const msRejected = { state: REJECTED, isPaid: false };
 const trustee = 'z123';
 const contributor = 'z456';
 
-const refundedProposal = getProposalWithCrowdFund({ amount: 5, funded: 5 });
-refundedProposal.crowdFund.percentVotingForRefund = 100;
-
 const geometryCases = [...Array(10).keys()].map(i =>
   getProposalWithCrowdFund({ milestoneCount: i + 1 }),
 );
@@ -119,9 +116,6 @@ const cases: { [index: string]: any } = {
     funded: 5,
     milestoneOverrides: [msPaid, msPaid, msRejected],
   }),
-
-  // refunded
-  ['refunded']: refundedProposal,
 };
 
 const initialStoreStateA = JSON.parse(JSON.stringify(combineInitialState));

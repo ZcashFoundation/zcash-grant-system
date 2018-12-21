@@ -2,7 +2,7 @@ import {
   Contributor,
   Milestone,
   MILESTONE_STATE,
-  ProposalWithCrowdFund,
+  Proposal,
   ProposalMilestone,
 } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
@@ -30,7 +30,6 @@ export function getProposalWithCrowdFund({
   amount = 10,
   funded = 5,
   created = Date.now(),
-  deadline = Date.now() + 1000 * 60 * 60 * 10,
   milestoneOverrides = [],
   contributorOverrides = [],
   milestoneCount = 3,
@@ -145,7 +144,7 @@ export function getProposalWithCrowdFund({
     Object.assign(milestones[idx], mso);
   });
 
-  const proposal: ProposalWithCrowdFund = {
+  const proposal: Proposal = {
     proposalId: 12345,
     proposalUrlId: '12345-crowdfund-title',
     proposalAddress: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
@@ -182,27 +181,6 @@ export function getProposalWithCrowdFund({
       },
     ],
     milestones,
-    crowdFund: {
-      beneficiary: '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
-      trustees: [
-        '0x0c7C6178AD0618Bf289eFd5E1Ff9Ada25fC3bDE7',
-        '0x4bbeEB066eD09B7AEd07bF39EEe0460DFa261520',
-        '0x529104532a9779ea9eae0c1e325b3368e0f8add4',
-      ],
-      contributors,
-      milestones,
-      deadline,
-      milestoneVotingPeriod: 3600000,
-      isFrozen: false,
-      isRaiseGoalReached: amount <= funded,
-      immediateFirstMilestonePayout: true,
-      balance: new BN(0),
-      funded: fundedBn,
-      percentFunded: (funded / amount) * 100,
-      target: amountBn,
-      amountVotingForRefund: new BN(0),
-      percentVotingForRefund: 0,
-    },
   };
 
   const props = {

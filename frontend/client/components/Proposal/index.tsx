@@ -5,7 +5,7 @@ import Markdown from 'components/Markdown';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 import { getProposal } from 'modules/proposals/selectors';
 import { Spin, Tabs, Icon, Dropdown, Menu, Button } from 'antd';
 import CampaignBlock from './CampaignBlock';
@@ -28,7 +28,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  proposal: ProposalWithCrowdFund | null;
+  proposal: Proposal | null;
   account: string | null;
 }
 

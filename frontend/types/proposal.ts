@@ -5,7 +5,6 @@ import {
   ProposalMilestone,
   Update,
   User,
-  Milestone,
   Comment,
 } from 'types';
 
@@ -23,24 +22,6 @@ export interface Contributor {
   refunded: boolean;
   proportionalContribution: string;
   milestoneNoVotes: boolean[];
-}
-
-export interface CrowdFund {
-  immediateFirstMilestonePayout: boolean;
-  balance: Wei;
-  funded: Wei;
-  percentFunded: number;
-  target: Wei;
-  amountVotingForRefund: Wei;
-  percentVotingForRefund: number;
-  beneficiary: string;
-  deadline: number;
-  trustees: string[];
-  contributors: Contributor[];
-  milestones: Milestone[];
-  milestoneVotingPeriod: number;
-  isFrozen: boolean;
-  isRaiseGoalReached: boolean;
 }
 
 export interface ProposalDraft {
@@ -73,22 +54,18 @@ export interface Proposal {
   team: User[];
 }
 
-export interface ProposalWithCrowdFund extends Proposal {
-  crowdFund: CrowdFund;
-}
-
 export interface TeamInviteWithProposal extends TeamInvite {
   proposal: Proposal;
 }
 
 export interface ProposalComments {
-  proposalId: ProposalWithCrowdFund['proposalId'];
+  proposalId: Proposal['proposalId'];
   totalComments: number;
   comments: Comment[];
 }
 
 export interface ProposalUpdates {
-  proposalId: ProposalWithCrowdFund['proposalId'];
+  proposalId: Proposal['proposalId'];
   updates: Update[];
 }
 

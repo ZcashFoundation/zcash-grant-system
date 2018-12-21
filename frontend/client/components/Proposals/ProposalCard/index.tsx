@@ -5,12 +5,12 @@ import { Progress, Icon } from 'antd';
 import moment from 'moment';
 import { Redirect } from 'react-router-dom';
 import { CATEGORY_UI } from 'api/constants';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 import UserAvatar from 'components/UserAvatar';
 import UnitDisplay from 'components/UnitDisplay';
 import './style.less';
 
-export class ProposalCard extends React.Component<ProposalWithCrowdFund> {
+export class ProposalCard extends React.Component<Proposal> {
   state = { redirect: '' };
   render() {
     if (this.state.redirect) {

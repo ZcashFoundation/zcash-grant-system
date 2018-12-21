@@ -1,7 +1,7 @@
 import { ProposalDraft, CreateMilestone } from 'types';
 import { User } from 'types';
 import { getAmountError } from 'utils/validators';
-import { MILESTONE_STATE, ProposalWithCrowdFund } from 'types';
+import { MILESTONE_STATE, Proposal } from 'types';
 import { Wei, toWei } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY } from 'api/constants';
@@ -173,7 +173,7 @@ export function proposalToContractData(form: ProposalDraft): any {
 // This is kind of a disgusting function, sorry.
 export function makeProposalPreviewFromDraft(
   draft: ProposalDraft,
-): ProposalWithCrowdFund {
+): Proposal {
   const target = parseFloat(draft.target);
 
   return {
@@ -203,22 +203,5 @@ export function makeProposalPreviewFromDraft(
       state: MILESTONE_STATE.WAITING,
       stage: MILESTONE_STATE.WAITING,
     })),
-    crowdFund: {
-      immediateFirstMilestonePayout: draft.milestones[0].immediatePayout,
-      balance: Wei('0'),
-      funded: Wei('0'),
-      percentFunded: 0,
-      target: toWei(target, 'ether'),
-      amountVotingForRefund: Wei('0'),
-      percentVotingForRefund: 0,
-      beneficiary: draft.payoutAddress,
-      trustees: [],
-      deadline: Date.now() + 100000,
-      contributors: [],
-      milestones: [],
-      milestoneVotingPeriod: 0,
-      isFrozen: false,
-      isRaiseGoalReached: false,
-    },
   };
 }

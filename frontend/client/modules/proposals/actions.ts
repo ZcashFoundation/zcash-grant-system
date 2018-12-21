@@ -8,7 +8,7 @@ import {
   postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
-import { ProposalWithCrowdFund, Comment } from 'types';
+import { Proposal, Comment } from 'types';
 
 export type TFetchProposals = typeof fetchProposals;
 export function fetchProposals() {
@@ -23,7 +23,7 @@ export function fetchProposals() {
 }
 
 export type TFetchProposal = typeof fetchProposal;
-export function fetchProposal(proposalId: ProposalWithCrowdFund['proposalId']) {
+export function fetchProposal(proposalId: Proposal['proposalId']) {
   return async (dispatch: Dispatch<any>) => {
     return dispatch({
       type: types.PROPOSAL_DATA,
@@ -34,7 +34,7 @@ export function fetchProposal(proposalId: ProposalWithCrowdFund['proposalId']) {
   };
 }
 
-export function fetchProposalComments(proposalId: ProposalWithCrowdFund['proposalId']) {
+export function fetchProposalComments(proposalId: Proposal['proposalId']) {
   return (dispatch: Dispatch<any>) => {
     dispatch({
       type: types.PROPOSAL_COMMENTS,
@@ -43,7 +43,7 @@ export function fetchProposalComments(proposalId: ProposalWithCrowdFund['proposa
   };
 }
 
-export function fetchProposalUpdates(proposalId: ProposalWithCrowdFund['proposalId']) {
+export function fetchProposalUpdates(proposalId: Proposal['proposalId']) {
   return (dispatch: Dispatch<any>) => {
     dispatch({
       type: types.PROPOSAL_UPDATES,
@@ -56,7 +56,7 @@ export function fetchProposalUpdates(proposalId: ProposalWithCrowdFund['proposal
 }
 
 export function postProposalComment(
-  proposalId: ProposalWithCrowdFund['proposalId'],
+  proposalId: Proposal['proposalId'],
   comment: string,
   parentCommentId?: Comment['id'],
 ) {

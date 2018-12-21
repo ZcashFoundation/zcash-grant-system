@@ -1,11 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Modal, Alert } from 'antd';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 import { AppState } from 'store/reducers';
 
 interface OwnProps {
-  proposal: ProposalWithCrowdFund;
+  proposal: Proposal;
   isVisible: boolean;
   handleClose(): void;
 }

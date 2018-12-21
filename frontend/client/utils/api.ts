@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 import { socialMediaToUrl } from 'utils/social';
-import { User, ProposalWithCrowdFund, UserProposal } from 'types';
+import { User, Proposal, UserProposal } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 
@@ -23,7 +23,7 @@ export function formatUserFromGet(user: UserState) {
   return user;
 }
 
-export function formatProposalFromGet(proposal: ProposalWithCrowdFund) {
+export function formatProposalFromGet(proposal: Proposal) {
   proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
   return proposal;
 }

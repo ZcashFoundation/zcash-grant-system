@@ -1,9 +1,9 @@
 import types from './types';
 import { findComment } from 'utils/helpers';
-import { ProposalWithCrowdFund, ProposalComments, ProposalUpdates, Comment } from 'types';
+import { Proposal, ProposalComments, ProposalUpdates, Comment } from 'types';
 
 export interface ProposalState {
-  proposals: ProposalWithCrowdFund[];
+  proposals: Proposal[];
   proposalsError: null | string;
   isFetchingProposals: boolean;
 
@@ -36,11 +36,11 @@ export const INITIAL_STATE: ProposalState = {
   postCommentError: null,
 };
 
-function addProposal(state: ProposalState, payload: ProposalWithCrowdFund) {
+function addProposal(state: ProposalState, payload: Proposal) {
   let proposals = state.proposals;
 
   const existingProposal = state.proposals.find(
-    (p: ProposalWithCrowdFund) => p.proposalId === payload.proposalId,
+    (p: Proposal) => p.proposalId === payload.proposalId,
   );
 
   if (!existingProposal) {
@@ -59,7 +59,7 @@ function addProposal(state: ProposalState, payload: ProposalWithCrowdFund) {
   };
 }
 
-function addProposals(state: ProposalState, payload: ProposalWithCrowdFund[]) {
+function addProposals(state: ProposalState, payload: Proposal[]) {
   return {
     ...state,
     proposals: payload,
@@ -90,7 +90,7 @@ function addUpdates(state: ProposalState, payload: ProposalUpdates) {
 }
 
 interface PostCommentPayload {
-  proposalId: ProposalWithCrowdFund['proposalId'];
+  proposalId: Proposal['proposalId'];
   comment: Comment;
   parentCommentId?: Comment['id'];
 }

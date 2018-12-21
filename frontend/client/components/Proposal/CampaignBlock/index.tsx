@@ -2,7 +2,7 @@ import React from 'react';
 import moment from 'moment';
 import BN from 'bn.js';
 import { Spin, Form, Input, Button, Icon } from 'antd';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 import classnames from 'classnames';
 import { fromWei } from 'utils/units';
 import { connect } from 'react-redux';
@@ -17,7 +17,7 @@ import MetaMaskRequiredButton from 'components/MetaMaskRequiredButton';
 import './style.less';
 
 interface OwnProps {
-  proposal: ProposalWithCrowdFund;
+  proposal: Proposal;
   isPreview?: boolean;
 }
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { proposalActions } from 'modules/proposals';
 import { getProposals } from 'modules/proposals/selectors';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
 import { Input, Divider, Drawer, Icon, Button } from 'antd';
@@ -11,7 +11,7 @@ import ProposalFilters, { Filters } from './Filters';
 import { PROPOSAL_SORT } from 'api/constants';
 import './style.less';
 
-type ProposalSortFn = (p1: ProposalWithCrowdFund, p2: ProposalWithCrowdFund) => number;
+type ProposalSortFn = (p1: Proposal, p2: Proposal) => number;
 const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
   // TODO: Move sorts server side due to pagination
   [PROPOSAL_SORT.NEWEST]: (p1, p2) => p2.dateCreated - p1.dateCreated,
@@ -63,7 +63,7 @@ interface DispatchProps {
 type Props = StateProps & DispatchProps;
 
 interface State {
-  processedProposals: ProposalWithCrowdFund[];
+  processedProposals: Proposal[];
   searchQuery: string;
   sort: PROPOSAL_SORT;
   filters: Filters;
@@ -80,7 +80,7 @@ class Proposals extends React.Component<Props, State> {
   }
 
   // TODO: Move me server side / redux
-  static processProposals(proposals: ProposalWithCrowdFund[], state: State) {
+  static processProposals(proposals: Proposal[], state: State) {
     let processedProposals = [...proposals];
 
     // Categories
