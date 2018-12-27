@@ -34,7 +34,7 @@ export default class AddressInput extends React.Component<Props> {
     };
 
     const inputProps = {
-      placeholder: DONATION.ETH,
+      placeholder: DONATION.ZCASH_SPROUT,
       prefix: value &&
         showIdenticon && (
           <Identicon className="AddressInput-input-identicon" address={value} />

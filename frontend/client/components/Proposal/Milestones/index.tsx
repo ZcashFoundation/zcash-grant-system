@@ -102,7 +102,7 @@ class ProposalMilestones extends React.Component<Props, State> {
       console.warn('TODO: Real milestone amount in Proposal/Milestones/index.tsx');
       const amount = new BN(0);
       const reward = (
-        <UnitDisplay value={amount} symbol="ETH" displayShortBalance={4} />
+        <UnitDisplay value={amount} symbol="ZEC" displayShortBalance={4} />
       );
       const alertStyle = { width: 'fit-content', margin: '0 0 1rem 0' };
 

@@ -38,8 +38,8 @@ export class ProposalCard extends React.Component<Proposal> {
         <h3 className="ProposalCard-title">{title}</h3>
         <div className="ProposalCard-funding">
           <div className="ProposalCard-funding-raised">
-            <UnitDisplay value={funded} symbol="ETH" /> <small>raised</small> of{' '}
-            <UnitDisplay value={target} symbol="ETH" /> goal
+            <UnitDisplay value={funded} symbol="ZEC" /> <small>raised</small> of{' '}
+            <UnitDisplay value={target} symbol="ZEC" /> goal
           </div>
           <div
             className={classnames({

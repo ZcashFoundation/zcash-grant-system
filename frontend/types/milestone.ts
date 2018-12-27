@@ -1,4 +1,4 @@
-import { Wei } from 'utils/units';
+import { Zat } from 'utils/units';
 
 export enum MILESTONE_STATE {
   WAITING = 'WAITING',
@@ -10,8 +10,8 @@ export enum MILESTONE_STATE {
 export interface Milestone {
   index: number;
   state: MILESTONE_STATE;
-  amount: Wei;
-  amountAgainstPayout: Wei;
+  amount: Zat;
+  amountAgainstPayout: Zat;
   percentAgainstPayout: number;
   payoutRequestVoteDeadline: number;
   isPaid: boolean;

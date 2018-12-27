@@ -2,42 +2,18 @@
 import BN from 'bn.js';
 import { stripHexPrefix } from 'utils/formatters';
 
-type UnitKey = keyof typeof Units;
-type Wei = BN;
-type TokenValue = BN;
-type Address = Buffer;
-type Nonce = BN;
-type Data = Buffer;
 
-export const ETH_DECIMAL = 18;
-
+export const ZCASH_DECIMAL = 8;
 export const Units = {
-  wei: '1',
-  kwei: '1000',
-  ada: '1000',
-  femtoether: '1000',
-  mwei: '1000000',
-  babbage: '1000000',
-  picoether: '1000000',
-  gwei: '1000000000',
-  shannon: '1000000000',
-  nanoether: '1000000000',
-  nano: '1000000000',
-  szabo: '1000000000000',
-  microether: '1000000000000',
-  micro: '1000000000000',
-  finney: '1000000000000000',
-  milliether: '1000000000000000',
-  milli: '1000000000000000',
-  ether: '1000000000000000000',
-  kether: '1000000000000000000000',
-  grand: '1000000000000000000000',
-  einstein: '1000000000000000000000',
-  mether: '1000000000000000000000000',
-  gether: '1000000000000000000000000000',
-  tether: '1000000000000000000000000000000',
+  zat: '1',
+  zcash: '100000000',
 };
-const handleValues = (input: string | BN) => {
+
+export type Zat = BN;
+export type UnitKey = keyof typeof Units;
+
+
+export const handleValues = (input: string | BN) => {
   if (typeof input === 'string') {
     return input.startsWith('0x') ? new BN(stripHexPrefix(input), 16) : new BN(input);
   }
@@ -51,20 +27,14 @@ const handleValues = (input: string | BN) => {
   }
 };
 
-const Nonce = (input: string | BN) => handleValues(input);
-
-const Wei = (input: string | BN): Wei => handleValues(input);
-
-const TokenValue = (input: string | BN) => handleValues(input);
-
-const getDecimalFromEtherUnit = (key: UnitKey) => Units[key].length - 1;
+export const Zat = (input: string | BN): Zat => handleValues(input);
 
 const stripRightZeros = (str: string) => {
   const strippedStr = str.replace(/0+$/, '');
   return strippedStr === '' ? null : strippedStr;
 };
 
-const baseToConvertedUnit = (value: string, decimal: number) => {
+export const baseToConvertedUnit = (value: string, decimal: number) => {
   if (decimal === 0) {
     return value;
   }
@@ -83,52 +53,14 @@ const convertedToBaseUnit = (value: string, decimal: number) => {
   return `${integerPart}${paddedFraction}`;
 };
 
-const fromWei = (wei: Wei, unit: UnitKey) => {
-  const decimal = getDecimalFromEtherUnit(unit);
-  return baseToConvertedUnit(wei.toString(), decimal);
+export const fromZat = (zat: Zat) => {
+  return baseToConvertedUnit(zat.toString(), ZCASH_DECIMAL);
 };
 
-const toWei = (value: string | number, unitType: number | UnitKey): Wei => {
+export const toZat = (value: string | number): Zat => {
   value = value.toString();
-  let decimal;
-  if (typeof unitType === 'string') {
-    decimal = getDecimalFromEtherUnit(unitType);
-  } else {
-    decimal = unitType;
-  }
-  const wei = convertedToBaseUnit(value, decimal);
-  return Wei(wei);
+  const zat = convertedToBaseUnit(value, ZCASH_DECIMAL);
+  return Zat(zat);
 };
 
-const fromTokenBase = (value: TokenValue, decimal: number) =>
-  baseToConvertedUnit(value.toString(), decimal);
-
-const toTokenBase = (value: string, decimal: number) =>
-  TokenValue(convertedToBaseUnit(value, decimal));
-
-const convertTokenBase = (value: TokenValue, oldDecimal: number, newDecimal: number) => {
-  if (oldDecimal === newDecimal) {
-    return value;
-  }
-  return toTokenBase(fromTokenBase(value, oldDecimal), newDecimal);
-};
-
-const gasPriceToBase = (price: number) =>
-  toWei(price.toString(), getDecimalFromEtherUnit('gwei'));
-
-export {
-  Data,
-  Address,
-  TokenValue,
-  fromWei,
-  toWei,
-  toTokenBase,
-  fromTokenBase,
-  convertTokenBase,
-  Wei,
-  getDecimalFromEtherUnit,
-  UnitKey,
-  Nonce,
-  handleValues,
-  gasPriceToBase,
-};
+export const getDecimalFromUnitKey = (key: UnitKey) => Units[key].length - 1;

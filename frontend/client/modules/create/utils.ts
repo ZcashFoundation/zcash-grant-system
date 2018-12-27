@@ -2,12 +2,11 @@ import { ProposalDraft, CreateMilestone } from 'types';
 import { User } from 'types';
 import { getAmountError } from 'utils/validators';
 import { MILESTONE_STATE, Proposal } from 'types';
-import { Wei, toWei } from 'utils/units';
+import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 
-// TODO: Raise this limit
-export const TARGET_ETH_LIMIT = 1000;
+export const TARGET_ZEC_LIMIT = 1000;
 
 interface CreateFormErrors {
   title?: string;
@@ -75,7 +74,7 @@ export function getCreateErrors(
   // Amount to raise
   const targetFloat = target ? parseFloat(target) : 0;
   if (target && !Number.isNaN(targetFloat)) {
-    const targetErr = getAmountError(targetFloat, TARGET_ETH_LIMIT);
+    const targetErr = getAmountError(targetFloat, TARGET_ZEC_LIMIT);
     if (targetErr) {
       errors.target = targetErr;
     }
@@ -148,19 +147,19 @@ export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
   return warnings;
 }
 
-function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Wei) {
-  return raiseGoal.divn(100).mul(Wei(milestone.payoutPercent));
+function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Zat) {
+  return raiseGoal.divn(100).mul(Zat(milestone.payoutPercent));
 }
 
 export function proposalToContractData(form: ProposalDraft): any {
-  const targetInWei = toWei(form.target, 'ether');
+  const targetInZat = toZat(form.target);
   const milestoneAmounts = form.milestones.map(m =>
-    milestoneToMilestoneAmount(m, targetInWei),
+    milestoneToMilestoneAmount(m, targetInZat),
   );
   const immediateFirstMilestonePayout = form.milestones[0]!.immediatePayout;
 
   return {
-    ethAmount: targetInWei,
+    ethAmount: targetInZat,
     payoutAddress: form.payoutAddress,
     trusteesAddresses: [],
     milestoneAmounts,
@@ -180,10 +179,14 @@ export function makeProposalPreviewFromDraft(
     proposalId: 0,
     proposalUrlId: '0-title',
     proposalAddress: '0x0',
+    payoutAddress: '0x0',
     dateCreated: Date.now(),
     title: draft.title,
     brief: draft.brief,
     content: draft.content,
+    deadlineDuration: 86400 * 60,
+    target: toZat(0),
+    funded: toZat(0),
     stage: 'preview',
     category: draft.category || PROPOSAL_CATEGORY.DAPP,
     team: draft.team,
@@ -191,8 +194,8 @@ export function makeProposalPreviewFromDraft(
       index: idx,
       title: m.title,
       content: m.content,
-      amount: toWei(target * (parseInt(m.payoutPercent, 10) / 100), 'ether'),
-      amountAgainstPayout: Wei('0'),
+      amount: toZat(target * (parseInt(m.payoutPercent, 10) / 100)),
+      amountAgainstPayout: Zat('0'),
       percentAgainstPayout: 0,
       payoutRequestVoteDeadline: Date.now(),
       dateEstimated: m.dateEstimated,

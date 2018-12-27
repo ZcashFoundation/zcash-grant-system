@@ -4,7 +4,7 @@ import BN from 'bn.js';
 import { Spin, Form, Input, Button, Icon } from 'antd';
 import { Proposal } from 'types';
 import classnames from 'classnames';
-import { fromWei } from 'utils/units';
+import { fromZat } from 'utils/units';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
@@ -60,8 +60,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     if (Number.isNaN(amount)) {
       // They're entering some garbage, they’ll work it out
     } else {
-      const remainingEthNum = parseFloat(fromWei(remainingTarget, 'ether'));
-      amountError = getAmountError(amount, remainingEthNum);
+      const remainingTargetNum = parseFloat(fromZat(remainingTarget));
+      amountError = getAmountError(amount, remainingTargetNum);
     }
 
     this.setState({ amountToRaise: value, amountError });
@@ -95,7 +95,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
         deadline < Date.now() ||
         isFrozen;
       const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
-      const remainingEthNum = parseFloat(fromWei(target.sub(funded), 'ether'));
+      const remainingTargetNum = parseFloat(fromZat(target.sub(funded)));
 
       content = (
         <React.Fragment>
@@ -133,7 +133,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">
               <UnitDisplay value={funded} /> /{' '}
-              <UnitDisplay value={target} symbol="ETH" />
+              <UnitDisplay value={target} symbol="ZEC" />
             </div>
           </div>
 
@@ -175,7 +175,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                         size="large"
                         type="number"
                         placeholder="0.5"
-                        addonAfter="ETH"
+                        addonAfter="ZEC"
                         disabled={true}
                       />
                     </Form.Item>
@@ -193,10 +193,10 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                       value={amountToRaise}
                       placeholder="0.5"
                       min={0}
-                      max={remainingEthNum}
+                      max={remainingTargetNum}
                       step={0.1}
                       onChange={this.handleAmountChange}
-                      addonAfter="ETH"
+                      addonAfter="ZEC"
                       disabled={isPreview}
                     />
                   </Form.Item>

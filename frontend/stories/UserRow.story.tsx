@@ -34,7 +34,7 @@ const cases: Case[] = [
     },
   },
   {
-    disp: 'ETH Address Only User',
+    disp: 'ZEC Address Only User',
     props: {
       user: {
         ...user,
@@ -43,7 +43,7 @@ const cases: Case[] = [
     },
   },
   {
-    disp: 'No Avatar, No ETH Address User',
+    disp: 'No Avatar, No ZEC Address User',
     props: {
       user: {
         ...user,

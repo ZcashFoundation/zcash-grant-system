@@ -23,8 +23,9 @@ export function formatUserFromGet(user: UserState) {
   return user;
 }
 
-export function formatProposalFromGet(proposal: Proposal) {
+export function formatProposalFromGet(proposal: any): Proposal {
   proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
+  // proposal.target = 
   return proposal;
 }
 
