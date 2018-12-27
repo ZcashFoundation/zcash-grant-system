@@ -165,7 +165,7 @@ class ProfileEdit extends React.PureComponent<Props, State> {
                                 {!loading && s.icon} <strong>{field.username}</strong>
                               </div>
                               <div className="ProfileEdit-socialButton-delete">
-                                <Icon type="delete" /> Unlink account?
+                                <Icon type="delete" /> Unlink account
                               </div>
                             </Button>
                           )}
