@@ -20,7 +20,6 @@ export interface ProposalMilestone extends Milestone {
   immediatePayout: boolean;
   dateEstimated: string;
   payoutPercent: string;
-  stage: string;
   title: string;
 }
 
