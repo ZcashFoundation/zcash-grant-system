@@ -236,6 +236,7 @@ class ProposalSchema(ma.Schema):
             "brief",
             "proposal_id",
             "target",
+            "funded",
             "content",
             "comments",
             "updates",
@@ -250,6 +251,7 @@ class ProposalSchema(ma.Schema):
 
     date_created = ma.Method("get_date_created")
     proposal_id = ma.Method("get_proposal_id")
+    funded = ma.Method("get_funded")
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
@@ -263,6 +265,10 @@ class ProposalSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
+
+    def get_funded(self, obj):
+        # TODO: Add up all contributions and return that
+        return "0"
 
 
 proposal_schema = ProposalSchema()

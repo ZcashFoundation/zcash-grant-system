@@ -1,6 +1,5 @@
 import React from 'react';
 import moment from 'moment';
-import BN from 'bn.js';
 import { Spin, Form, Input, Button, Icon } from 'antd';
 import { Proposal } from 'types';
 import classnames from 'classnames';
@@ -9,7 +8,6 @@ import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
-import ShortAddress from 'components/ShortAddress';
 import UnitDisplay from 'components/UnitDisplay';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
@@ -51,8 +49,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     }
 
     // TODO: Get values from proposal
-    const target = new BN(0);
-    const funded = new BN(0);
+    const { target, funded } = this.props.proposal;
     const remainingTarget = target.sub(funded);
     const amount = parseFloat(value);
     let amountError = null;
@@ -80,15 +77,13 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
-      // TODO: Get values from proposal
       console.warn('TODO: Get real values from proposal for CampaignBlock');
-      const isRaiseGoalReached = false;
+      const { target, funded, percentFunded } = proposal;
+      const isRaiseGoalReached = funded.gte(target);
+      // TODO: Get values from proposal
+      console.warn('TODO: Get deadline and isFrozen from proposal data');
       const deadline = 0;
       const isFrozen = false;
-      const target = new BN(0);
-      const funded = new BN(0);
-      const percentFunded = 0;
-      const beneficiary = 'z123';
 
       const isFundingOver =
         isRaiseGoalReached ||
@@ -123,12 +118,6 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               </div>
             </div>
           )}
-          <div className="ProposalCampaignBlock-info">
-            <div className="ProposalCampaignBlock-info-label">Beneficiary</div>
-            <div className="ProposalCampaignBlock-info-value">
-              <ShortAddress address={beneficiary} />
-            </div>
-          </div>
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">

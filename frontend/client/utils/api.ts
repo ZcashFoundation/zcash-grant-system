@@ -3,6 +3,7 @@ import { socialMediaToUrl } from 'utils/social';
 import { User, Proposal, UserProposal } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
+import { toZat } from './units';
 
 export function formatUserForPost(user: User) {
   return {
@@ -25,7 +26,9 @@ export function formatUserFromGet(user: UserState) {
 
 export function formatProposalFromGet(proposal: any): Proposal {
   proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
-  // proposal.target = 
+  proposal.target = toZat(proposal.target);
+  proposal.funded = toZat(proposal.funded);
+  proposal.percentFunded = proposal.funded.div(proposal.target.divn(100)).toNumber();
   return proposal;
 }
 

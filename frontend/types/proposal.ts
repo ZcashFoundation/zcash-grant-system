@@ -47,6 +47,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   proposalUrlId: string;
   target: BN;
   funded: BN;
+  percentFunded: number;
   milestones: ProposalMilestone[];
 }
 
