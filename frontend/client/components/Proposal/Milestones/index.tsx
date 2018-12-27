@@ -98,11 +98,8 @@ class ProposalMilestones extends React.Component<Props, State> {
 
       const className = this.state.step === i ? 'is-active' : 'is-inactive';
       const estimatedDate = moment(milestone.dateEstimated).format('MMMM YYYY');
-      // TODO: Real milestone amount
-      console.warn('TODO: Real milestone amount in Proposal/Milestones/index.tsx');
-      const amount = new BN(0);
       const reward = (
-        <UnitDisplay value={amount} symbol="ZEC" displayShortBalance={4} />
+        <UnitDisplay value={milestone.amount} symbol="ZEC" displayShortBalance={4} />
       );
       const alertStyle = { width: 'fit-content', margin: '0 0 1rem 0' };
 

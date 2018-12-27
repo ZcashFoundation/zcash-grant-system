@@ -77,8 +77,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
-      console.warn('TODO: Get real values from proposal for CampaignBlock');
       const { target, funded, percentFunded } = proposal;
+      console.log('CampaignBlock', proposal);
       const isRaiseGoalReached = funded.gte(target);
       // TODO: Get values from proposal
       console.warn('TODO: Get deadline and isFrozen from proposal data');

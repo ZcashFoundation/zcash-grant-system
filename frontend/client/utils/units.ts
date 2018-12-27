@@ -59,7 +59,9 @@ export const fromZat = (zat: Zat) => {
 
 export const toZat = (value: string | number): Zat => {
   value = value.toString();
+  console.log('Converting', value, 'to zat');
   const zat = convertedToBaseUnit(value, ZCASH_DECIMAL);
+  console.log('It was', zat, 'zat');
   return Zat(zat);
 };
 

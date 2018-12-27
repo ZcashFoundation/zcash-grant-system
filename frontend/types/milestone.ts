@@ -11,9 +11,6 @@ export interface Milestone {
   index: number;
   state: MILESTONE_STATE;
   amount: Zat;
-  amountAgainstPayout: Zat;
-  percentAgainstPayout: number;
-  payoutRequestVoteDeadline: number;
   isPaid: boolean;
   isImmediatePayout: boolean;
 }

@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 import { socialMediaToUrl } from 'utils/social';
-import { User, Proposal, UserProposal } from 'types';
+import { User, Proposal, UserProposal, MILESTONE_STATE } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 import { toZat } from './units';
@@ -24,11 +24,22 @@ export function formatUserFromGet(user: UserState) {
   return user;
 }
 
-export function formatProposalFromGet(proposal: any): Proposal {
+export function formatProposalFromGet(p: any): Proposal {
+  const proposal = { ...p } as Proposal;
   proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
-  proposal.target = toZat(proposal.target);
-  proposal.funded = toZat(proposal.funded);
+  proposal.target = toZat(p.target);
+  proposal.funded = toZat(p.funded);
   proposal.percentFunded = proposal.funded.div(proposal.target.divn(100)).toNumber();
+  proposal.milestones = proposal.milestones.map((m: any, index: number) => {
+    return {
+      ...m,
+      index,
+      amount: proposal.target.mul(new BN(m.payoutPercent)).divn(100),
+      // TODO: Get data from backend
+      state: MILESTONE_STATE.WAITING,
+      isPaid: false,
+    }
+  });
   return proposal;
 }
 
@@ -54,6 +65,16 @@ export function extractProposalIdFromUrl(slug: string) {
 
 // pre-hydration massage (BNify JSONed BNs)
 export function massageSerializedState(state: AppState) {
+  // proposals
+  state.proposal.proposals = state.proposal.proposals.map(p => ({
+    ...p,
+    target: new BN(p.target as any as string, 16),
+    funded: new BN(p.funded as any as string, 16),
+    milestones: p.milestones.map(m => ({
+      ...m,
+      amount: new BN(m.amount as any as string, 16),
+    })),
+  }));
   // users
   const bnUserProp = (p: UserProposal) => {
     p.funded = new BN(p.funded, 16);
