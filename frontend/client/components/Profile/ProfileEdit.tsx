@@ -8,7 +8,7 @@ import axios from 'api/axios';
 import { getSocialAuthUrl, verifySocial } from 'api/api';
 import { usersActions } from 'modules/users';
 import { AppState } from 'store/reducers';
-import { Input, Form, Col, Row, Button, Alert } from 'antd';
+import { Input, Form, Col, Row, Button, Alert, Icon } from 'antd';
 import { SOCIAL_INFO } from 'utils/social';
 import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
@@ -149,30 +149,35 @@ class ProfileEdit extends React.PureComponent<Props, State> {
                   const field = fields.socialMedias.find(sm => sm.service === s.service);
                   const loading = s.service === activeSocialService;
                   return (
-                    <Col xs={24} sm={12} key={s.service}>
+                    <Col xs={24} md={8} key={s.service}>
                       <Form.Item>
                         {field &&
                           field.username && (
                             <Button
-                              className="ProfileEdit-socialButton"
-                              type="danger"
+                              className="ProfileEdit-socialButton is-delete"
+                              type="primary"
+                              ghost
                               onClick={() => this.handleSocialDelete(s.service)}
                               loading={loading}
                               block
                             >
-                              {!loading && s.icon} Remove <b>{field.username}</b> {s.name}{' '}
-                              link
+                              <div className="ProfileEdit-socialButton-text">
+                                {!loading && s.icon} <strong>{field.username}</strong>
+                              </div>
+                              <div className="ProfileEdit-socialButton-delete">
+                                <Icon type="delete" /> Unlink account?
+                              </div>
                             </Button>
                           )}
                         {!field && (
                           <Button
-                            className="ProfileEdit-socialButton"
+                            className="ProfileEdit-socialButton is-add"
                             onClick={() => this.handleSocialAdd(s.service)}
                             loading={loading}
                             block
                           >
                             {!loading && s.icon}
-                            Add {s.name} account
+                            Connect to {s.name}
                           </Button>
                         )}
                       </Form.Item>
