@@ -103,7 +103,7 @@ class CreateReview extends React.Component<Props> {
         ],
       },
       {
-        step: CREATE_STEP.GOVERNANCE,
+        step: CREATE_STEP.PAYMENT,
         name: 'Governance',
         fields: [
           {
@@ -112,27 +112,11 @@ class CreateReview extends React.Component<Props> {
             error: errors.payoutAddress,
           },
           {
-            key: 'trustees',
-            content: form.trustees.map(t => (
-              <div key={t}>
-                <code>{t}</code>
-              </div>
-            )),
-            error: errors.trustees && errors.trustees.join(' '),
-          },
-          {
             key: 'deadlineDuration',
             content: `${Math.floor(
               moment.duration((form.deadlineDuration || 0) * 1000).asDays(),
             )} days`,
             error: errors.deadlineDuration,
-          },
-          {
-            key: 'voteDuration',
-            content: `${Math.floor(
-              moment.duration((form.voteDuration || 0) * 1000).asDays(),
-            )} days`,
-            error: errors.voteDuration,
           },
         ],
       },

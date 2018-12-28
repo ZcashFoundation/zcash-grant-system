@@ -156,12 +156,10 @@ export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDr
   return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }
 
-export function putProposalPublish(
-  proposal: ProposalDraft,
-  contractAddress: string,
-): Promise<{ data: ProposalDraft }> {
-  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`, {
-    contractAddress,
+export async function putProposalPublish(proposal: ProposalDraft): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
   });
 }
 

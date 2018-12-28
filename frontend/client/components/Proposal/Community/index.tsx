@@ -1,9 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 
 interface Props {
-  proposalId: ProposalWithCrowdFund['proposalId'];
+  proposalId: Proposal['proposalId'];
 }
 
 class ProposalCommunity extends React.Component<Props> {

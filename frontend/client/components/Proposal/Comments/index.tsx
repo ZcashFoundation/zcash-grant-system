@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Spin, Button, message } from 'antd';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
 import {
   getProposalComments,
@@ -16,7 +16,7 @@ import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import './style.less';
 
 interface OwnProps {
-  proposalId: ProposalWithCrowdFund['proposalId'];
+  proposalId: Proposal['proposalId'];
 }
 
 interface StateProps {

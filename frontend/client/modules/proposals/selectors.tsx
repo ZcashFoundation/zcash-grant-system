@@ -1,5 +1,5 @@
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund, ProposalComments, ProposalUpdates } from 'types';
+import { Proposal, ProposalComments, ProposalUpdates } from 'types';
 
 export function getProposals(state: AppState) {
   return state.proposal.proposals;
@@ -7,29 +7,29 @@ export function getProposals(state: AppState) {
 
 export function getProposal(
   state: AppState,
-  proposalId: ProposalWithCrowdFund['proposalId'],
-): ProposalWithCrowdFund | null {
+  proposalId: Proposal['proposalId'],
+): Proposal | null {
   return (
     state.proposal.proposals.find(
-      (p: ProposalWithCrowdFund) => p.proposalId === proposalId,
+      (p: Proposal) => p.proposalId === proposalId,
     ) || null
   );
 }
 
 export function getProposalByAddress(
   state: AppState,
-  proposalAddress: ProposalWithCrowdFund['proposalAddress'],
-): ProposalWithCrowdFund | null {
+  proposalAddress: Proposal['proposalAddress'],
+): Proposal | null {
   return (
     state.proposal.proposals.find(
-      (p: ProposalWithCrowdFund) => p.proposalAddress === proposalAddress,
+      (p: Proposal) => p.proposalAddress === proposalAddress,
     ) || null
   );
 }
 
 export function getProposalComments(
   state: AppState,
-  proposalId: ProposalWithCrowdFund['proposalId'],
+  proposalId: Proposal['proposalId'],
 ): ProposalComments['comments'] | null {
   const pc = state.proposal.proposalComments[proposalId];
   return pc ? pc.comments : null;
@@ -37,7 +37,7 @@ export function getProposalComments(
 
 export function getProposalCommentCount(
   state: AppState,
-  proposalId: ProposalWithCrowdFund['proposalId'],
+  proposalId: Proposal['proposalId'],
 ): ProposalComments['totalComments'] | null {
   const pc = state.proposal.proposalComments[proposalId];
   return pc ? pc.totalComments : null;
@@ -53,7 +53,7 @@ export function getCommentsError(state: AppState) {
 
 export function getProposalUpdates(
   state: AppState,
-  proposalId: ProposalWithCrowdFund['proposalId'],
+  proposalId: Proposal['proposalId'],
 ): ProposalUpdates['updates'] | null {
   const pu = state.proposal.proposalUpdates[proposalId];
   return pu ? pu.updates : null;
@@ -61,7 +61,7 @@ export function getProposalUpdates(
 
 export function getProposalUpdateCount(
   state: AppState,
-  proposalId: ProposalWithCrowdFund['proposalId'],
+  proposalId: Proposal['proposalId'],
 ): number | null {
   const pu = state.proposal.proposalUpdates[proposalId];
   return pu ? pu.updates.length : null;

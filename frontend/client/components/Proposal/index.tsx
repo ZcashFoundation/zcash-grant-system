@@ -5,7 +5,7 @@ import Markdown from 'components/Markdown';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund } from 'types';
+import { Proposal } from 'types';
 import { getProposal } from 'modules/proposals/selectors';
 import { Spin, Tabs, Icon, Dropdown, Menu, Button } from 'antd';
 import CampaignBlock from './CampaignBlock';
@@ -13,7 +13,6 @@ import TeamBlock from './TeamBlock';
 import Milestones from './Milestones';
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
-import GovernanceTab from './Governance';
 import ContributorsTab from './Contributors';
 // import CommunityTab from './Community';
 import UpdateModal from './UpdateModal';
@@ -29,7 +28,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  proposal: ProposalWithCrowdFund | null;
+  proposal: Proposal | null;
   account: string | null;
 }
 
@@ -80,7 +79,7 @@ export class ProposalDetail extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposal, isPreview, account } = this.props;
+    const { proposal, isPreview } = this.props;
     const {
       isBodyExpanded,
       isBodyOverflowing,
@@ -93,12 +92,11 @@ export class ProposalDetail extends React.Component<Props, State> {
     if (!proposal) {
       return <Spin />;
     } else {
-      const { crowdFund } = proposal;
-      const isTrustee = !!account && crowdFund.trustees.includes(account);
-      const isContributor = !!crowdFund.contributors.find(c => c.address === account);
-      const hasBeenFunded = crowdFund.isRaiseGoalReached;
-      const isProposalActive = !hasBeenFunded && crowdFund.deadline > Date.now();
-      const canRefund = (hasBeenFunded || isProposalActive) && !crowdFund.isFrozen;
+      const deadline = 0; // TODO: Use actual date for deadline
+      const isTrustee = false; // TODO: determine rework to isAdmin
+      const hasBeenFunded = false; // TODO: deterimne if proposal has reached funding
+      const isProposalActive = !hasBeenFunded && deadline > Date.now();
+      const canCancel = false; // TODO: Allow canceling if proposal hasn't gone live yet
 
       const adminMenu = isTrustee && (
         <Menu>
@@ -110,11 +108,11 @@ export class ProposalDetail extends React.Component<Props, State> {
             Edit proposal
           </Menu.Item>
           <Menu.Item
-            style={{ color: canRefund ? '#e74c3c' : undefined }}
+            style={{ color: canCancel ? '#e74c3c' : undefined }}
             onClick={this.openCancelModal}
-            disabled={!canRefund}
+            disabled={!canCancel}
           >
-            {hasBeenFunded ? 'Refund contributors' : 'Cancel proposal'}
+            Cancel proposal
           </Menu.Item>
         </Menu>
       );
@@ -192,13 +190,8 @@ export class ProposalDetail extends React.Component<Props, State> {
               <Tabs.TabPane tab="Updates" key="updates" disabled={isPreview}>
                 <UpdatesTab proposalId={proposal.proposalId} />
               </Tabs.TabPane>
-              {isContributor && (
-                <Tabs.TabPane tab="Refund" key="refund">
-                  <GovernanceTab proposal={proposal} />
-                </Tabs.TabPane>
-              )}
               <Tabs.TabPane tab="Contributors" key="contributors">
-                <ContributorsTab crowdFund={proposal.crowdFund} />
+                <ContributorsTab />
               </Tabs.TabPane>
             </Tabs>
           )}

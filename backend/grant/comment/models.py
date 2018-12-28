@@ -79,7 +79,6 @@ class UserCommentSchema(ma.Schema):
             "milestones",
             "content",
             "invites",
-            "trustees",
             "updates"
         ]
     )

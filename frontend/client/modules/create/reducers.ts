@@ -1,5 +1,5 @@
 import types from './types';
-import { ProposalDraft } from 'types';
+import { ProposalDraft, Proposal } from 'types';
 
 export interface CreateState {
   drafts: ProposalDraft[] | null;
@@ -20,6 +20,10 @@ export interface CreateState {
 
   isDeletingDraft: boolean;
   deleteDraftError: string | null;
+
+  submittedProposal: Proposal | null;
+  isSubmitting: boolean;
+  submitError: string | null;
 }
 
 export const INITIAL_STATE: CreateState = {
@@ -41,6 +45,10 @@ export const INITIAL_STATE: CreateState = {
 
   isDeletingDraft: false,
   deleteDraftError: null,
+
+  submittedProposal: null,
+  isSubmitting: false,
+  submitError: null,
 };
 
 export default function createReducer(
@@ -48,8 +56,6 @@ export default function createReducer(
   action: any,
 ): CreateState {
   switch (action.type) {
-    case types.CREATE_DRAFT_PENDING:
-
     case types.UPDATE_FORM:
       return {
         ...state,
@@ -156,6 +162,25 @@ export default function createReducer(
         isDeletingDraft: false,
         deleteDraftError: action.payload,
       };
+    
+    case types.SUBMIT_PROPOSAL_PENDING:
+      return {
+        ...state,
+        isSubmitting: true,
+        submitError: null,
+      };
+    case types.SUBMIT_PROPOSAL_FULFILLED:
+      return {
+        ...state,
+        submittedProposal: action.payload,
+        isSubmitting: false,
+      };
+    case types.SUBMIT_PROPOSAL_REJECTED:
+      return {
+        ...state,
+        submitError: action.payload,
+        isSubmitting: false,
+      }
   }
   return state;
 }

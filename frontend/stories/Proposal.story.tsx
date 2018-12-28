@@ -56,6 +56,6 @@ storiesOf('Proposal', module)
   ))
   .add('Contributors', () => (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <Contributors crowdFund={propsFunded.proposal.crowdFund} />
+      <Contributors />
     </div>
   ));

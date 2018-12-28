@@ -6,7 +6,7 @@ import moment from 'moment';
 import Placeholder from 'components/Placeholder';
 import FullUpdate from './FullUpdate';
 import { AppState } from 'store/reducers';
-import { ProposalWithCrowdFund, Update } from 'types';
+import { Proposal, Update } from 'types';
 import { fetchProposalUpdates } from 'modules/proposals/actions';
 import {
   getProposalUpdates,
@@ -16,7 +16,7 @@ import {
 import './style.less';
 
 interface OwnProps {
-  proposalId: ProposalWithCrowdFund['proposalId'];
+  proposalId: Proposal['proposalId'];
 }
 
 interface StateProps {

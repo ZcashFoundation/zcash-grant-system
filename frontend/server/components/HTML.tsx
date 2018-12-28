@@ -36,12 +36,12 @@ const HTML: React.SFC<Props> = ({
         <meta name="msapplication-TileColor" content="#fff" />
         <meta name="theme-color" content="#fff" />
         {/* TODO: import from @fortawesome */}
-        <link
+        {/* <link
           rel="stylesheet"
           href="https://use.fontawesome.com/releases/v5.2.0/css/all.css"
           integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ"
           crossOrigin="anonymous"
-        />
+        /> */}
         {/* Custom link & meta tags from webpack */}
         {linkTags.map((l, idx) => (
           <link key={idx} {...l as any} />
