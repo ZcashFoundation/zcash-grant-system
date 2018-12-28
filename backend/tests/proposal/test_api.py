@@ -66,26 +66,14 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
     def test_publish_proposal_draft(self):
         self.login_default_user()
-        resp = self.app.put(
-            "/api/v1/proposals/{}/publish".format(self.proposal.id),
-            data=json.dumps({"contractAddress": "0x0"}),
-            content_type='application/json'
-        )
+        resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert200(resp)
 
     def test_no_auth_publish_proposal_draft(self):
-        resp = self.app.put(
-            "/api/v1/proposals/{}/publish".format(self.proposal.id),
-            data=json.dumps({"contractAddress": "0x0"}),
-            content_type='application/json'
-        )
+        resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert401(resp)
 
     def test_invalid_proposal_publish_proposal_draft(self):
         self.login_default_user()
-        resp = self.app.put(
-            "/api/v1/proposals/12345/publish",
-            data=json.dumps({"contractAddress": "0x0"}),
-            content_type='application/json'
-        )
+        resp = self.app.put("/api/v1/proposals/12345/publish")
         self.assert404(resp)

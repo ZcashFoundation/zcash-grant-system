@@ -91,9 +91,7 @@ test_proposal = {
     "category": random.choice(CATEGORIES),
     "target": "123.456",
     "payoutAddress": "123",
-    "trustees": ["123"],
-    "deadlineDuration": 100,
-    "voteDuration": 100
+    "deadlineDuration": 100
 }
 
 test_comment_message = {
