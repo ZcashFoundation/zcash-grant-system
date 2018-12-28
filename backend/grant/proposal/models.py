@@ -107,7 +107,7 @@ class Proposal(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
 
-    # Database info
+    # Content info
     status = db.Column(db.String(255), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     brief = db.Column(db.String(255), nullable=False)
@@ -115,13 +115,10 @@ class Proposal(db.Model):
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(255), nullable=False)
 
-    # Contract info
+    # Payment info
     target = db.Column(db.String(255), nullable=False)
     payout_address = db.Column(db.String(255), nullable=False)
-    trustees = db.Column(db.String(1024), nullable=False)
     deadline_duration = db.Column(db.Integer(), nullable=False)
-    vote_duration = db.Column(db.Integer(), nullable=False)
-    proposal_address = db.Column(db.String(255), unique=True, nullable=True)
 
     # Relations
     team = db.relationship("User", secondary=proposal_team)
@@ -140,10 +137,7 @@ class Proposal(db.Model):
             stage: str = '',
             target: str = '0',
             payout_address: str = '',
-            trustees: List[str] = [],
             deadline_duration: int = 5184000,  # 60 days
-            vote_duration: int = 604800,  # 7 days
-            proposal_address: str = None,
             category: str = ''
     ):
         self.date_created = datetime.datetime.now()
@@ -154,10 +148,7 @@ class Proposal(db.Model):
         self.category = category
         self.target = target
         self.payout_address = payout_address
-        self.trustees = ','.join(trustees)
-        self.proposal_address = proposal_address
         self.deadline_duration = deadline_duration
-        self.vote_duration = vote_duration
         self.stage = stage
 
     @staticmethod
@@ -202,9 +193,7 @@ class Proposal(db.Model):
         content: str = '',
         target: str = '0',
         payout_address: str = '',
-        trustees: List[str] = [],
-        deadline_duration: int = 5184000,  # 60 days
-        vote_duration: int = 604800  # 7 days
+        deadline_duration: int = 5184000  # 60 days
     ):
         self.title = title
         self.brief = brief
@@ -212,19 +201,24 @@ class Proposal(db.Model):
         self.content = content
         self.target = target
         self.payout_address = payout_address
-        self.trustees = ','.join(trustees)
         self.deadline_duration = deadline_duration
-        self.vote_duration = vote_duration
         Proposal.validate(vars(self))
 
     def publish(self):
         # Require certain fields
+        # TODO: I'm an idiot, make this a loop.
         if not self.title:
             raise ValidationException("Proposal must have a title")
         if not self.content:
             raise ValidationException("Proposal must have content")
-        if not self.proposal_address:
-            raise ValidationException("Proposal must a contract address")
+        if not self.brief:
+            raise ValidationException("Proposal must have a brief")
+        if not self.category:
+            raise ValidationException("Proposal must have a category")
+        if not self.target:
+            raise ValidationException("Proposal must have a target amount")
+        if not self.payout_address:
+            raise ValidationException("Proposal must have a payout address")
 
         # Then run through regular validation
         Proposal.validate(vars(self))
@@ -241,7 +235,6 @@ class ProposalSchema(ma.Schema):
             "title",
             "brief",
             "proposal_id",
-            "proposal_address",
             "target",
             "content",
             "comments",
@@ -250,16 +243,13 @@ class ProposalSchema(ma.Schema):
             "milestones",
             "category",
             "team",
-            "trustees",
             "payout_address",
             "deadline_duration",
-            "vote_duration",
             "invites"
         )
 
     date_created = ma.Method("get_date_created")
     proposal_id = ma.Method("get_proposal_id")
-    trustees = ma.Method("get_trustees")
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
@@ -273,9 +263,6 @@ class ProposalSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
-
-    def get_trustees(self, obj):
-        return [i for i in obj.trustees.split(',') if i != '']
 
 
 proposal_schema = ProposalSchema()
@@ -389,7 +376,6 @@ class UserProposalSchema(ma.Schema):
         # Fields to expose
         fields = (
             "proposal_id",
-            "proposal_address",
             "title",
             "brief",
             "date_created",

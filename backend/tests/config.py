@@ -90,9 +90,7 @@ class BaseProposalCreatorConfig(BaseUserConfig):
             category=test_proposal["category"],
             target=test_proposal["target"],
             payout_address=test_proposal["payoutAddress"],
-            trustees=test_proposal["trustees"][0],
-            deadline_duration=test_proposal["deadlineDuration"],
-            vote_duration=test_proposal["voteDuration"]
+            deadline_duration=test_proposal["deadlineDuration"]
         )
         self._proposal.team.append(self.user)
         db.session.add(self._proposal)

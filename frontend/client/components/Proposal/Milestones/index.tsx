@@ -1,10 +1,10 @@
 import lodash from 'lodash';
 import React from 'react';
 import moment from 'moment';
+import BN from 'bn.js';
 import { Alert, Steps, Spin } from 'antd';
-import { ProposalWithCrowdFund, MILESTONE_STATE } from 'types';
+import { Proposal, MILESTONE_STATE } from 'types';
 import UnitDisplay from 'components/UnitDisplay';
-import MilestoneAction from './MilestoneAction';
 import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
@@ -27,7 +27,7 @@ const milestoneStateToStepState = {
 };
 
 interface OwnProps {
-  proposal: ProposalWithCrowdFund;
+  proposal: Proposal;
 }
 
 interface StateProps {
@@ -85,15 +85,9 @@ class ProposalMilestones extends React.Component<Props, State> {
     if (!proposal) {
       return <Spin />;
     }
-    const {
-      milestones,
-      crowdFund,
-      crowdFund: { milestoneVotingPeriod, percentVotingForRefund },
-    } = proposal;
-    const { accounts } = this.props;
+    const { milestones } = proposal;
 
-    const wasRefunded = percentVotingForRefund > 50;
-    const isTrustee = crowdFund.trustees.includes(accounts[0]);
+    const isTrustee = false; // TODO: Replace with being on the team
     const milestoneCount = milestones.length;
 
     const milestoneSteps = milestones.map((milestone, i) => {
@@ -104,12 +98,12 @@ class ProposalMilestones extends React.Component<Props, State> {
 
       const className = this.state.step === i ? 'is-active' : 'is-inactive';
       const estimatedDate = moment(milestone.dateEstimated).format('MMMM YYYY');
+      // TODO: Real milestone amount
+      console.warn('TODO: Real milestone amount in Proposal/Milestones/index.tsx');
+      const amount = new BN(0);
       const reward = (
-        <UnitDisplay value={milestone.amount} symbol="ETH" displayShortBalance={4} />
+        <UnitDisplay value={amount} symbol="ETH" displayShortBalance={4} />
       );
-      const approvalPeriod = milestone.isImmediatePayout
-        ? 'Immediate'
-        : moment.duration(milestoneVotingPeriod).humanize();
       const alertStyle = { width: 'fit-content', margin: '0 0 1rem 0' };
 
       const stepProps = {
@@ -173,18 +167,6 @@ class ProposalMilestones extends React.Component<Props, State> {
           break;
       }
 
-      if (wasRefunded) {
-        notification = (
-          <Alert
-            type="error"
-            message={
-              <span>A majority of the funders of this project voted for a refund.</span>
-            }
-            style={alertStyle}
-          />
-        );
-      }
-
       const statuses = (
         <div className="ProposalMilestones-milestone-status">
           {!milestone.isImmediatePayout && (
@@ -195,13 +177,10 @@ class ProposalMilestones extends React.Component<Props, State> {
           <div>
             Reward: <strong>{reward}</strong>
           </div>
-          <div>
-            Approval period: <strong>{approvalPeriod}</strong>
-          </div>
         </div>
       );
 
-      const Content = (
+      const content = (
         <div className="ProposalMilestones-milestone">
           <div className="ProposalMilestones-milestone-body">
             <div className="ProposalMilestones-milestone-description">
@@ -210,19 +189,10 @@ class ProposalMilestones extends React.Component<Props, State> {
               {notification}
               {milestone.content}
             </div>
-            {this.state.activeMilestoneIdx === i &&
-              !wasRefunded && (
-                <>
-                  <div className="ProposalMilestones-milestone-divider" />
-                  <div className="ProposalMilestones-milestone-action">
-                    <MilestoneAction proposal={proposal} />
-                  </div>
-                </>
-              )}
           </div>
         </div>
       );
-      return { key: i, stepProps, Content };
+      return { key: i, stepProps, content };
     });
 
     const stepSize = milestoneCount > 5 ? 'small' : 'default';
@@ -241,7 +211,7 @@ class ProposalMilestones extends React.Component<Props, State> {
             <Steps.Step key={mss.key} {...mss.stepProps} />
           ))}
         </Steps>
-        {milestoneSteps[this.state.step].Content}
+        {milestoneSteps[this.state.step].content}
       </div>
     );
   }
@@ -256,7 +226,7 @@ class ProposalMilestones extends React.Component<Props, State> {
           (m.state === PAID && !m.isPaid) ||
           m.state === REJECTED,
       ) || milestones[0];
-    return activeMilestone.index;
+    return milestones.indexOf(activeMilestone);
   };
 
   private updateDoTitlesOverflow = () => {

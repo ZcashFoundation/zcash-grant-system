@@ -4,49 +4,49 @@ import { Spin, Icon } from 'antd';
 import { Link } from 'react-router-dom';
 import { createActions } from 'modules/create';
 import { AppState } from 'store/reducers';
-import { getProposalByAddress } from 'modules/proposals/selectors';
-import { ProposalWithCrowdFund } from 'types';
 import './Final.less';
 
 interface StateProps {
   form: AppState['create']['form'];
-  createdProposal: ProposalWithCrowdFund | null;
+  submittedProposal: AppState['create']['submittedProposal'];
+  submitError: AppState['create']['submitError'];
 }
 
 interface DispatchProps {
-  createProposal: typeof createActions['createProposal'];
+  submitProposal: typeof createActions['submitProposal'];
 }
 
 type Props = StateProps & DispatchProps;
 
 class CreateFinal extends React.Component<Props> {
   componentDidMount() {
-    this.create();
+    this.submit();
   }
 
   render() {
-    const { createdProposal } = this.props;
+    const { submittedProposal, submitError } = this.props;
     let content;
-    // TODO - handle errors?
-    // if (crowdFundError) {
-    //   content = (
-    //     <div className="CreateFinal-message is-error">
-    //       <Icon type="close-circle" />
-    //       <div className="CreateFinal-message-text">
-    //         Something went wrong during creation: "{crowdFundError}"{' '}
-    //         <a onClick={this.create}>Click here</a> to try again.
-    //       </div>
-    //     </div>
-    //   );
-    // } else
-    if (createdProposal) {
+    if (submitError) {
+      content = (
+        <div className="CreateFinal-message is-error">
+          <Icon type="close-circle" />
+          <div className="CreateFinal-message-text">
+            Something went wrong during creation: "{submitError}"{' '}
+            <a onClick={this.submit}>Click here</a> to try again.
+          </div>
+        </div>
+      );
+    } else
+    if (submittedProposal) {
       content = (
         <div className="CreateFinal-message is-success">
           <Icon type="check-circle" />
           <div className="CreateFinal-message-text">
-            Your proposal is now live and on the blockchain!{' '}
-            <Link to={`/proposals/${createdProposal.proposalUrlId}`}>Click here</Link> to
-            check it out.
+            Your proposal has been submitted!{' '}
+            <Link to={`/proposals/${submittedProposal.proposalUrlId}`}>
+              Click here
+            </Link>
+            {' '}to check it out.
           </div>
         </div>
       );
@@ -54,7 +54,9 @@ class CreateFinal extends React.Component<Props> {
       content = (
         <div className="CreateFinal-loader">
           <Spin size="large" />
-          <div className="CreateFinal-loader-text">Deploying contract...</div>
+          <div className="CreateFinal-loader-text">
+            Submitting your proposal...
+          </div>
         </div>
       );
     }
@@ -62,9 +64,9 @@ class CreateFinal extends React.Component<Props> {
     return <div className="CreateFinal">{content}</div>;
   }
 
-  private create = () => {
+  private submit = () => {
     if (this.props.form) {
-      this.props.createProposal(this.props.form);
+      this.props.submitProposal(this.props.form);
     }
   };
 }
@@ -72,9 +74,10 @@ class CreateFinal extends React.Component<Props> {
 export default connect<StateProps, DispatchProps, {}, AppState>(
   (state: AppState) => ({
     form: state.create.form,
-    createdProposal: getProposalByAddress(state, 'notanaddress'),
+    submittedProposal: state.create.submittedProposal,
+    submitError: state.create.submitError,
   }),
   {
-    createProposal: createActions.createProposal,
+    submitProposal: createActions.submitProposal,
   },
 )(CreateFinal);
