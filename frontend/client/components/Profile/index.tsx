@@ -1,13 +1,20 @@
 import React from 'react';
-import { UsersState } from 'modules/users/reducers';
-import { withRouter, RouteComponentProps, Redirect } from 'react-router-dom';
-import { usersActions } from 'modules/users';
-import { AppState } from 'store/reducers';
+import {
+  withRouter,
+  RouteComponentProps,
+  Redirect,
+  Switch,
+  Route,
+} from 'react-router-dom';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { Spin, Tabs, Badge } from 'antd';
+import { UsersState } from 'modules/users/reducers';
+import { usersActions } from 'modules/users';
+import { AppState } from 'store/reducers';
 import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
+import ProfileEdit from './ProfileEdit';
 import ProfileProposal from './ProfileProposal';
 import ProfileComment from './ProfileComment';
 import ProfileInvite from './ProfileInvite';
@@ -41,7 +48,7 @@ class Profile extends React.Component<Props> {
   }
   render() {
     const userLookupParam = this.props.match.params.id;
-    const { authUser } = this.props;
+    const { authUser, match } = this.props;
     if (!userLookupParam) {
       if (authUser && authUser.userid) {
         return <Redirect to={`/profile/${authUser.userid}`} />;
@@ -76,7 +83,18 @@ class Profile extends React.Component<Props> {
           description={`Join ${user.displayName} in funding the future!`}
           image={user.avatar ? user.avatar.imageUrl : undefined}
         />
-        <ProfileUser user={user} />
+        <Switch>
+          <Route
+            path={`${match.path}`}
+            exact={true}
+            render={() => <ProfileUser user={user} />}
+          />
+          <Route
+            path={`${match.path}/edit`}
+            exact={true}
+            render={() => <ProfileEdit user={user} />}
+          />
+        </Switch>
         <Tabs>
           <Tabs.TabPane tab={TabTitle('Created', createdProposals.length)} key="created">
             <div>

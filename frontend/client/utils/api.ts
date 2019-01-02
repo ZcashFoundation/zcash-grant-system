@@ -1,5 +1,4 @@
 import BN from 'bn.js';
-import { socialMediaToUrl } from 'utils/social';
 import { User, Proposal, UserProposal } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
@@ -8,7 +7,6 @@ export function formatUserForPost(user: User) {
   return {
     ...user,
     avatar: user.avatar ? user.avatar.imageUrl : null,
-    socialMedias: user.socialMedias.map(sm => socialMediaToUrl(sm.service, sm.username)),
   };
 }
 

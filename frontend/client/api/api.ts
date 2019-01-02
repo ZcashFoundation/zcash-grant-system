@@ -7,6 +7,7 @@ import {
   TeamInvite,
   TeamInviteWithProposal,
   Contribution,
+  SOCIAL_SERVICE,
 } from 'types';
 import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
 
@@ -106,6 +107,14 @@ export function resetPassword(code: string, password: string): Promise<any> {
 
 export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
+}
+
+export function getSocialAuthUrl(service: SOCIAL_SERVICE): Promise<any> {
+  return axios.get(`/api/v1/users/social/${service}/authurl`);
+}
+
+export function verifySocial(service: SOCIAL_SERVICE, code: string): Promise<any> {
+  return axios.post(`/api/v1/users/social/${service}/verify`, { code });
 }
 
 export async function fetchCrowdFundFactoryJSON(): Promise<any> {

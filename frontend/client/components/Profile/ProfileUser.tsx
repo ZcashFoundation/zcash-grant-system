@@ -1,14 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { Button } from 'antd';
 import { SocialMedia } from 'types';
-import { usersActions } from 'modules/users';
 import { UserState } from 'modules/users/reducers';
-import ProfileEdit from './ProfileEdit';
 import UserAvatar from 'components/UserAvatar';
 import { SOCIAL_INFO } from 'utils/social';
-import './ProfileUser.less';
 import { AppState } from 'store/reducers';
+import './ProfileUser.less';
 
 interface OwnProps {
   user: UserState;
@@ -18,21 +17,9 @@ interface StateProps {
   authUser: AppState['auth']['user'];
 }
 
-interface DispatchProps {
-  updateUser: typeof usersActions['updateUser'];
-}
-
-interface State {
-  isEditing: boolean;
-}
-
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps;
 
 class ProfileUser extends React.Component<Props> {
-  state: State = {
-    isEditing: false,
-  };
-
   render() {
     const {
       authUser,
@@ -41,16 +28,6 @@ class ProfileUser extends React.Component<Props> {
     } = this.props;
 
     const isSelf = !!authUser && authUser.userid === user.userid;
-
-    if (this.state.isEditing) {
-      return (
-        <ProfileEdit
-          user={user}
-          onDone={() => this.setState({ isEditing: false })}
-          onEdit={this.props.updateUser}
-        />
-      );
-    }
 
     return (
       <div className="ProfileUser">
@@ -77,9 +54,9 @@ class ProfileUser extends React.Component<Props> {
           )}
           {isSelf && (
             <div>
-              <Button onClick={() => this.setState({ isEditing: true })}>
-                Edit profile
-              </Button>
+              <Link to={`/profile/${user.userid}/edit`}>
+                <Button>Edit profile</Button>
+              </Link>
             </div>
           )}
         </div>
@@ -98,13 +75,8 @@ const Social = ({ socialMedia }: { socialMedia: SocialMedia }) => {
   );
 };
 
-const connectedProfileUser = connect<StateProps, DispatchProps, {}, AppState>(
-  state => ({
-    authUser: state.auth.user,
-  }),
-  {
-    updateUser: usersActions.updateUser,
-  },
-)(ProfileUser);
+const connectedProfileUser = connect<StateProps, {}, {}, AppState>(state => ({
+  authUser: state.auth.user,
+}))(ProfileUser);
 
 export default connectedProfileUser;

@@ -55,7 +55,8 @@ test_user = {
     },
     "socialMedias": [
         {
-            "link": 'https://github.com/groot'
+            "service": 'GITHUB',
+            "username": 'groot'
         }
     ],
     "signedMessage": message["sig"],

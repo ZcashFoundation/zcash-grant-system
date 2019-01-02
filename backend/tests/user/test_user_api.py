@@ -31,6 +31,8 @@ class TestUserAPI(BaseUserConfig):
         self.assertEqual(user_db.display_name, test_user["displayName"])
         self.assertEqual(user_db.title, test_user["title"])
         self.assertEqual(user_db.email_address, test_user["emailAddress"])
+        # should not be able to add social
+        self.assertFalse(user_db.social_medias)
 
     def test_get_all_users(self):
         users_get_resp = self.app.get(
@@ -49,7 +51,7 @@ class TestUserAPI(BaseUserConfig):
         self.assertEqual(users_json["avatar"]["imageUrl"], self.user.avatar.image_url)
         self.assertEqual(users_json["socialMedias"][0]["service"], 'GITHUB')
         self.assertEqual(users_json["socialMedias"][0]["username"], 'groot')
-        self.assertEqual(users_json["socialMedias"][0]["url"], self.user.social_medias[0].social_media_link)
+        self.assertEqual(users_json["socialMedias"][0]["url"], 'https://github.com/groot')
         self.assertEqual(users_json["displayName"], self.user.display_name)
 
     def test_user_auth_success(self):
@@ -249,3 +251,44 @@ class TestUserAPI(BaseUserConfig):
         )
         self.assertStatus(reset_resp, 400)
         self.assertIsNotNone(reset_resp.json['message'])
+
+    @patch('grant.user.views.verify_social')
+    def test_user_verify_social(self, mock_verify_social):
+        mock_verify_social.return_value = 'billy'
+        self.login_default_user()
+
+        verify_social_resp = self.app.post(
+            "/api/v1/users/social/GITHUB/verify",
+            data=json.dumps({"code": '12345'}),
+            content_type='application/json'
+        )
+        self.assert200(verify_social_resp)
+        self.assertEqual(verify_social_resp.json["username"], 'billy')
+
+        get_user_resp = self.app.get(
+            "/api/v1/users/{}".format(self.user.id)
+        )
+
+        users_json = get_user_resp.json
+        self.assertEqual(users_json["socialMedias"][0]["service"], 'GITHUB')
+        self.assertEqual(users_json["socialMedias"][0]["username"], 'billy')
+        self.assertEqual(users_json["socialMedias"][0]["url"], 'https://github.com/billy')
+
+    def test_user_verify_social_no_auth(self):
+        verify_social_resp = self.app.post(
+            "/api/v1/users/social/GITHUB/verify",
+            data=json.dumps({"code": '12345'}),
+            content_type='application/json'
+        )
+        self.assert401(verify_social_resp)
+
+    @patch('grant.user.views.get_social_login_url')
+    def test_user_social_authurl(self, mock_get_social_login_url):
+        expected_url = 'https://fake.login?token=12345'
+        mock_get_social_login_url.return_value = expected_url
+        self.login_default_user()
+        social_authurl_resp = self.app.get(
+            "/api/v1/users/social/SERVICE/authurl"
+        )
+        self.assert200(social_authurl_resp)
+        self.assertEqual(social_authurl_resp.json["url"], expected_url)

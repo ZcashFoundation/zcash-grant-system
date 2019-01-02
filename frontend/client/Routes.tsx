@@ -28,6 +28,7 @@ const About = loadable(() => import('pages/about'));
 const Privacy = loadable(() => import('pages/privacy'));
 const Contact = loadable(() => import('pages/contact'));
 const VerifyEmail = loadable(() => import('pages/email-verify'));
+const Callback = loadable(() => import('pages/callback'));
 const RecoverEmail = loadable(() => import('pages/email-recover'));
 
 import 'styles/style.less';
@@ -227,6 +228,16 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Verify email',
+    },
+  },
+  {
+    // oauth callbacks
+    route: {
+      path: '/callback',
+      component: Callback,
+    },
+    template: {
+      title: 'OAuth Callback',
     },
   },
   {
