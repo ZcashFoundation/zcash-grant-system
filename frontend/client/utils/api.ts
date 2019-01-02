@@ -1,6 +1,5 @@
 import BN from 'bn.js';
-import { User, Proposal, CrowdFund, ProposalWithCrowdFund, UserProposal } from 'types';
-import { socialMediaToUrl } from 'utils/social';
+import { User, Proposal, UserProposal } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 
