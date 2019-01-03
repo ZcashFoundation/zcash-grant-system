@@ -156,7 +156,9 @@ export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDr
   return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }
 
-export async function putProposalPublish(proposal: ProposalDraft): Promise<{ data: Proposal }> {
+export async function putProposalPublish(
+  proposal: ProposalDraft,
+): Promise<{ data: Proposal }> {
   return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`).then(res => {
     res.data = formatProposalFromGet(res.data);
     return res;
@@ -210,8 +212,6 @@ export function postProposalComment(payload: {
   proposalId: number;
   parentCommentId?: number;
   comment: string;
-  signedMessage: string;
-  rawTypedData: string;
 }): Promise<{ data: any }> {
   const { proposalId, ...args } = payload;
   return axios.post(`/api/v1/proposals/${proposalId}/comments`, args);
