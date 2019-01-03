@@ -7,6 +7,21 @@ from ..test_data import test_comment, test_reply
 
 
 class TestProposalCommentAPI(BaseUserConfig):
+    def test_unauthorized_create_new_proposal_comment(self):
+        # no login
+        proposal = Proposal(
+            status="LIVE"
+        )
+        db.session.add(proposal)
+        db.session.commit()
+
+        comment_res = self.app.post(
+            "/api/v1/proposals/{}/comments".format(proposal.id),
+            data=json.dumps(test_comment),
+            content_type='application/json'
+        )
+        self.assertStatus(comment_res, 401)
+
     def test_create_new_proposal_comment(self):
         self.login_default_user()
         proposal = Proposal(
