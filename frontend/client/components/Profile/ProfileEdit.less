@@ -1,3 +1,4 @@
+@import '~styles/variables.less';
 @small-query: ~'(max-width: 500px)';
 
 .ProfileEditShade {
@@ -44,7 +45,50 @@
     }
   }
 
+  &-socialButton {
+    position: relative;
+    text-overflow: ellipsis;
+    overflow: hidden;
+
+    &-text,
+    &-delete {
+      transition: transform 200ms ease, opacity 200ms ease;
+    }
+
+    &-delete {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      transform: translate(-50%, -50%) translateY(-3rem);
+      opacity: 0;
+    }
+
+    &:hover {
+      &.is-delete {
+        border-color: @error-color;
+        color: @error-color;
+      }
+      
+      .ProfileEdit-socialButton {
+        &-text {
+          transform: translateY(3rem);
+          opacity: 0;
+        }
+
+        &-delete {
+          transform: translate(-50%, -50%);
+          opacity: 1;
+        }
+      }
+    }
+  }
+
   &-alert {
     margin-top: 1rem;
+  }
+
+  .ant-alert {
+    margin-bottom: 0.75rem;
   }
 }

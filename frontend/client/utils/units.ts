@@ -2,7 +2,6 @@
 import BN from 'bn.js';
 import { stripHexPrefix } from 'utils/formatters';
 
-
 export const ZCASH_DECIMAL = 8;
 export const Units = {
   zat: '1',
@@ -11,7 +10,6 @@ export const Units = {
 
 export type Zat = BN;
 export type UnitKey = keyof typeof Units;
-
 
 export const handleValues = (input: string | BN) => {
   if (typeof input === 'string') {
@@ -59,9 +57,7 @@ export const fromZat = (zat: Zat) => {
 
 export const toZat = (value: string | number): Zat => {
   value = value.toString();
-  console.log('Converting', value, 'to zat');
   const zat = convertedToBaseUnit(value, ZCASH_DECIMAL);
-  console.log('It was', zat, 'zat');
   return Zat(zat);
 };
 

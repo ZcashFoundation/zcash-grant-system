@@ -1,6 +1,5 @@
 import React from 'react';
 import { Icon } from 'antd';
-import keybaseIcon from 'static/images/keybase.svg';
 import { SOCIAL_SERVICE, SocialInfo } from 'types';
 
 const accountNameRegex = '([a-zA-Z0-9-_]*)';
@@ -22,12 +21,6 @@ export const SOCIAL_INFO: { [key in SOCIAL_SERVICE]: SocialInfo } = {
     name: 'LinkedIn',
     format: `https://linkedin.com/in/${accountNameRegex}`,
     icon: <Icon type="linkedin" />,
-  },
-  [SOCIAL_SERVICE.KEYBASE]: {
-    service: SOCIAL_SERVICE.KEYBASE,
-    name: 'KeyBase',
-    format: `https://keybase.io/${accountNameRegex}`,
-    icon: <Icon component={keybaseIcon} />,
   },
 };
 

@@ -78,17 +78,13 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     let content;
     if (proposal) {
       const { target, funded, percentFunded } = proposal;
-      console.log('CampaignBlock', proposal);
       const isRaiseGoalReached = funded.gte(target);
       // TODO: Get values from proposal
       console.warn('TODO: Get deadline and isFrozen from proposal data');
       const deadline = 0;
       const isFrozen = false;
 
-      const isFundingOver =
-        isRaiseGoalReached ||
-        deadline < Date.now() ||
-        isFrozen;
+      const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;
       const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
       const remainingTargetNum = parseFloat(fromZat(target.sub(funded)));
 
@@ -121,8 +117,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">
-              <UnitDisplay value={funded} /> /{' '}
-              <UnitDisplay value={target} symbol="ZEC" />
+              <UnitDisplay value={funded} /> / <UnitDisplay value={target} symbol="ZEC" />
             </div>
           </div>
 

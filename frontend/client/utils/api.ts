@@ -1,5 +1,4 @@
 import BN from 'bn.js';
-import { socialMediaToUrl } from 'utils/social';
 import { User, Proposal, UserProposal, MILESTONE_STATE } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
@@ -9,7 +8,6 @@ export function formatUserForPost(user: User) {
   return {
     ...user,
     avatar: user.avatar ? user.avatar.imageUrl : null,
-    socialMedias: user.socialMedias.map(sm => socialMediaToUrl(sm.service, sm.username)),
   };
 }
 
@@ -38,7 +36,7 @@ export function formatProposalFromGet(p: any): Proposal {
       // TODO: Get data from backend
       state: MILESTONE_STATE.WAITING,
       isPaid: false,
-    }
+    };
   });
   return proposal;
 }
@@ -68,11 +66,11 @@ export function massageSerializedState(state: AppState) {
   // proposals
   state.proposal.proposals = state.proposal.proposals.map(p => ({
     ...p,
-    target: new BN(p.target as any as string, 16),
-    funded: new BN(p.funded as any as string, 16),
+    target: new BN((p.target as any) as string, 16),
+    funded: new BN((p.funded as any) as string, 16),
     milestones: p.milestones.map(m => ({
       ...m,
-      amount: new BN(m.amount as any as string, 16),
+      amount: new BN((m.amount as any) as string, 16),
     })),
   }));
   // users

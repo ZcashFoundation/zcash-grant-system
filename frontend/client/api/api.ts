@@ -7,6 +7,7 @@ import {
   TeamInvite,
   TeamInviteWithProposal,
   Contribution,
+  SOCIAL_SERVICE,
 } from 'types';
 import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
 
@@ -108,6 +109,14 @@ export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
 }
 
+export function getSocialAuthUrl(service: SOCIAL_SERVICE): Promise<any> {
+  return axios.get(`/api/v1/users/social/${service}/authurl`);
+}
+
+export function verifySocial(service: SOCIAL_SERVICE, code: string): Promise<any> {
+  return axios.post(`/api/v1/users/social/${service}/verify`, { code });
+}
+
 export async function fetchCrowdFundFactoryJSON(): Promise<any> {
   const res = await axios.get(process.env.CROWD_FUND_FACTORY_URL as string);
   return res.data;
@@ -147,7 +156,9 @@ export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDr
   return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }
 
-export async function putProposalPublish(proposal: ProposalDraft): Promise<{ data: Proposal }> {
+export async function putProposalPublish(
+  proposal: ProposalDraft,
+): Promise<{ data: Proposal }> {
   return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`).then(res => {
     res.data = formatProposalFromGet(res.data);
     return res;
@@ -201,8 +212,6 @@ export function postProposalComment(payload: {
   proposalId: number;
   parentCommentId?: number;
   comment: string;
-  signedMessage: string;
-  rawTypedData: string;
 }): Promise<{ data: any }> {
   const { proposalId, ...args } = payload;
   return axios.post(`/api/v1/proposals/${proposalId}/comments`, args);

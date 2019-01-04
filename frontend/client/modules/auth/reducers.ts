@@ -1,6 +1,5 @@
 import types from './types';
 import usersTypes from 'modules/users/types';
-// TODO: Use a common User type instead of this
 import { User, AuthSignatureData } from 'types';
 
 export interface AuthState {
@@ -9,6 +8,7 @@ export interface AuthState {
   authUserError: string | null;
 
   isCheckingUser: boolean;
+  hasCheckedUser: boolean;
 
   isCreatingUser: boolean;
   createUserError: string | null;
@@ -28,6 +28,7 @@ export const INITIAL_STATE: AuthState = {
   createUserError: null,
 
   isCheckingUser: false,
+  hasCheckedUser: false,
 
   authSignature: null,
   authSignatureAddress: null,
@@ -70,11 +71,13 @@ export default function createReducer(
         ...state,
         user: action.payload.user,
         isCheckingUser: false,
+        hasCheckedUser: true,
       };
     case types.CHECK_USER_REJECTED:
       return {
         ...state,
         isCheckingUser: false,
+        hasCheckedUser: true,
       };
 
     // update authenticated user when general user updated

@@ -26,7 +26,7 @@ class CreateFlowPreview extends React.Component<Props> {
           banner
         />
         <ProposalDetail
-          account="0x0"
+          user={null}
           proposalId={0}
           fetchProposal={(() => null) as any}
           proposal={proposal}
