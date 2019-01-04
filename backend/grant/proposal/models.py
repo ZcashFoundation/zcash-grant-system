@@ -9,9 +9,11 @@ from grant.utils.exceptions import ValidationException
 
 DRAFT = 'DRAFT'
 PENDING = 'PENDING'
+APPROVED = 'APPROVED'
+REJECTED = 'REJECTED'
 LIVE = 'LIVE'
 DELETED = 'DELETED'
-STATUSES = [DRAFT, PENDING, LIVE, DELETED]
+STATUSES = [DRAFT, PENDING, APPROVED, REJECTED, LIVE, DELETED]
 
 FUNDING_REQUIRED = 'FUNDING_REQUIRED'
 COMPLETED = 'COMPLETED'
@@ -114,6 +116,9 @@ class Proposal(db.Model):
     stage = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(255), nullable=False)
+    date_approved = db.Column(db.DateTime)
+    date_published = db.Column(db.DateTime)
+    reject_reason = db.Column(db.String(255))
 
     # Payment info
     target = db.Column(db.String(255), nullable=False)
@@ -163,6 +168,24 @@ class Proposal(db.Model):
         if category and category not in CATEGORIES:
             raise ValidationException("Category {} not in {}".format(category, CATEGORIES))
 
+    def validate_publishable(self):
+        # Require certain fields
+        # TODO: I'm an idiot, make this a loop.
+        if not self.title:
+            raise ValidationException("Proposal must have a title")
+        if not self.content:
+            raise ValidationException("Proposal must have content")
+        if not self.brief:
+            raise ValidationException("Proposal must have a brief")
+        if not self.category:
+            raise ValidationException("Proposal must have a category")
+        if not self.target:
+            raise ValidationException("Proposal must have a target amount")
+        if not self.payout_address:
+            raise ValidationException("Proposal must have a payout address")
+        # Then run through regular validation
+        Proposal.validate(vars(self))
+
     @staticmethod
     def create(**kwargs):
         Proposal.validate(kwargs)
@@ -204,25 +227,36 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def publish(self):
-        # Require certain fields
-        # TODO: I'm an idiot, make this a loop.
-        if not self.title:
-            raise ValidationException("Proposal must have a title")
-        if not self.content:
-            raise ValidationException("Proposal must have content")
-        if not self.brief:
-            raise ValidationException("Proposal must have a brief")
-        if not self.category:
-            raise ValidationException("Proposal must have a category")
-        if not self.target:
-            raise ValidationException("Proposal must have a target amount")
-        if not self.payout_address:
-            raise ValidationException("Proposal must have a payout address")
+    def submit_for_approval(self):
+        self.validate_publishable()
+        # specific validation
+        if not self.status == DRAFT:
+            raise ValidationException("Proposal status must be {} to submit for approval".format(DRAFT))
 
-        # Then run through regular validation
-        Proposal.validate(vars(self))
-        self.status = 'LIVE'
+        self.status = PENDING
+
+    def approve_pending(self, is_approve, reject_reason=None):
+        self.validate_publishable()
+        # specific validation
+        if not self.status == PENDING:
+            raise ValidationException("Proposal status must be {} to approve or reject".format(PENDING))
+
+        if is_approve:
+            self.status = APPROVED
+        else:
+            if not reject_reason:
+                raise ValidationException("Please provide a reason for rejecting the proposal")
+            self.status = REJECTED
+            self.reject_reason = reject_reason
+
+    def publish(self):
+        self.validate_publishable()
+        # specific validation
+        if not self.status == APPROVED:
+            raise ValidationException("Proposal status must be {}".format(APPROVED))
+
+        self.date_published = datetime.datetime.now()
+        self.status = LIVE
 
 
 class ProposalSchema(ma.Schema):
@@ -231,7 +265,11 @@ class ProposalSchema(ma.Schema):
         # Fields to expose
         fields = (
             "stage",
+            "status",
             "date_created",
+            "date_approved",
+            "date_published",
+            "reject_reason",
             "title",
             "brief",
             "proposal_id",
@@ -249,6 +287,8 @@ class ProposalSchema(ma.Schema):
         )
 
     date_created = ma.Method("get_date_created")
+    date_approved = ma.Method("get_date_approved")
+    date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
 
     comments = ma.Nested("CommentSchema", many=True)
@@ -263,6 +303,12 @@ class ProposalSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
+
+    def get_date_approved(self, obj):
+        return dt_to_unix(obj.date_approved) if obj.date_approved else None
+
+    def get_date_published(self, obj):
+        return dt_to_unix(obj.date_published) if obj.date_published else None
 
 
 proposal_schema = ProposalSchema()

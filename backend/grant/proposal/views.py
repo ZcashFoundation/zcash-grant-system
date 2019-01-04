@@ -190,6 +190,19 @@ def delete_proposal_draft(proposal_id):
     return None, 202
 
 
+@blueprint.route("/<proposal_id>/submit_for_approval", methods=["PUT"])
+@requires_team_member_auth
+@endpoint.api()
+def submit_for_approval_proposal(proposal_id):
+    try:
+        g.current_proposal.submit_for_approval()
+    except ValidationException as e:
+        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+    db.session.add(g.current_proposal)
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
+
+
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
 @requires_team_member_auth
 @endpoint.api()

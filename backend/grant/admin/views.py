@@ -8,7 +8,7 @@ from sqlalchemy import func
 
 from grant.extensions import db
 from grant.user.models import User, users_schema
-from grant.proposal.models import Proposal, proposals_schema
+from grant.proposal.models import Proposal, proposals_schema, proposal_schema
 from grant.comment.models import Comment, comments_schema
 
 
@@ -118,4 +118,21 @@ def get_proposals():
 @endpoint.api()
 @auth_required
 def delete_proposal(id):
+    return {"message": "Not implemented."}, 400
+
+
+@blueprint.route('/proposals/<id>/approve', methods=['PUT'])
+@cross_origin(supports_credentials=True)
+@endpoint.api(
+    parameter('isApprove', type=bool, required=True),
+    parameter('rejectReason', type=str, required=False)
+)
+@auth_required
+def approve_proposal(id, is_approve, reject_reason=None):
+    proposal = Proposal.query.filter_by(id=id).first()
+    if proposal:
+        proposal.approve_pending(is_approve, reject_reason)
+        db.session.commit()
+        return proposal_schema.dump(proposal)
+
     return {"message": "Not implemented."}, 400
