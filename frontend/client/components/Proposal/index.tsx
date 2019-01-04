@@ -29,7 +29,7 @@ interface OwnProps {
 
 interface StateProps {
   proposal: Proposal | null;
-  account: string | null;
+  user: AppState['auth']['user'];
 }
 
 interface DispatchProps {
@@ -79,7 +79,7 @@ export class ProposalDetail extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposal, isPreview } = this.props;
+    const { user, proposal, isPreview } = this.props;
     const {
       isBodyExpanded,
       isBodyOverflowing,
@@ -93,7 +93,9 @@ export class ProposalDetail extends React.Component<Props, State> {
       return <Spin />;
     } else {
       const deadline = 0; // TODO: Use actual date for deadline
-      const isTrustee = false; // TODO: determine rework to isAdmin
+      // TODO: isTrustee - determine rework to isAdmin?
+      // for now: check if authed user in member of proposal team
+      const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
       const hasBeenFunded = false; // TODO: deterimne if proposal has reached funding
       const isProposalActive = !hasBeenFunded && deadline > Date.now();
       const canCancel = false; // TODO: Allow canceling if proposal hasn't gone live yet
@@ -248,7 +250,7 @@ function mapStateToProps(state: AppState, ownProps: OwnProps) {
   console.warn('TODO - new redux user-proposal-role/account');
   return {
     proposal: getProposal(state, ownProps.proposalId),
-    account: 'notarealaccount' || null,
+    user: state.auth.user,
   };
 }
 

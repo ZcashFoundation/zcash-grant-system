@@ -68,8 +68,6 @@ export function postProposalComment(
         proposalId,
         parentCommentId,
         comment,
-        signedMessage: '',
-        rawTypedData: '',
       });
 
       dispatch({
