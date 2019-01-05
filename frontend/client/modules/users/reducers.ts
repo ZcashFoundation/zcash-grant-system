@@ -14,6 +14,7 @@ export interface UserState extends User {
   fetchError: number | null;
   isUpdating: boolean;
   updateError: number | null;
+  pendingProposals: UserProposal[];
   createdProposals: UserProposal[];
   fundedProposals: UserProposal[];
   comments: UserComment[];
@@ -43,6 +44,7 @@ export const INITIAL_USER_STATE: UserState = {
   fetchError: null,
   isUpdating: false,
   updateError: null,
+  pendingProposals: [],
   createdProposals: [],
   fundedProposals: [],
   comments: [],

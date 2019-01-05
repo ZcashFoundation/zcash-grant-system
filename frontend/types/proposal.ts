@@ -1,12 +1,6 @@
 import { Wei } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import {
-  CreateMilestone,
-  ProposalMilestone,
-  Update,
-  User,
-  Comment,
-} from 'types';
+import { CreateMilestone, ProposalMilestone, Update, User, Comment } from 'types';
 
 export interface TeamInvite {
   id: number;
@@ -71,9 +65,23 @@ export interface ProposalUpdates {
 
 export interface UserProposal {
   proposalId: number;
+  status: STATUS;
   title: string;
   brief: string;
+  target: Wei; // TODO - zcashify
+  funded: Wei; // TODO - zcashify
+  dateCreated: number;
+  dateApproved: number;
+  datePublished: number;
   team: User[];
-  funded: Wei;
-  target: Wei;
+}
+
+// NOTE: sync with backend/grant/proposal/models.py STATUSES
+export enum STATUS {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  LIVE = 'LIVE',
+  DELETED = 'DELETED',
 }

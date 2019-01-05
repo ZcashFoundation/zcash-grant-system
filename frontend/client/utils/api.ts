@@ -16,6 +16,7 @@ export function formatUserFromGet(user: UserState) {
     p.target = new BN(p.target);
     return p;
   };
+  user.pendingProposals = user.pendingProposals.map(bnUserProp);
   user.createdProposals = user.createdProposals.map(bnUserProp);
   user.fundedProposals = user.fundedProposals.map(bnUserProp);
   return user;
