@@ -1,10 +1,10 @@
 from functools import wraps
-from flask import Blueprint, g, session
+from flask import Blueprint, g, session, request
 from flask_yoloapi import endpoint, parameter
 from hashlib import sha256
 from uuid import uuid4
 from flask_cors import CORS, cross_origin
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from grant.extensions import db
 from grant.user.models import User, users_schema
@@ -34,7 +34,6 @@ def auth_required(f):
 
 
 @blueprint.route("/checklogin", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 def loggedin():
     if 'username' in session:
@@ -44,7 +43,6 @@ def loggedin():
 
 
 @blueprint.route("/login", methods=["POST"])
-@cross_origin(supports_credentials=True)
 @endpoint.api(
     parameter('username', type=str, required=False),
     parameter('password', type=str, required=False),
@@ -60,7 +58,6 @@ def login(username, password):
 
 
 @blueprint.route("/logout", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 def logout():
     del session['username']
@@ -68,7 +65,6 @@ def logout():
 
 
 @blueprint.route("/stats", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def stats():
@@ -81,7 +77,6 @@ def stats():
 
 
 @blueprint.route('/users/<id>', methods=['DELETE'])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def delete_user(id):
@@ -89,7 +84,6 @@ def delete_user(id):
 
 
 @blueprint.route("/users", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def get_users():
@@ -104,17 +98,20 @@ def get_users():
 
 
 @blueprint.route("/proposals", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def get_proposals():
-    proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
+    # endpoint.api doesn't seem to handle GET query array input
+    status_filters = request.args.getlist('statusFilters[]')
+    or_filter = or_(Proposal.status == v for v in status_filters)
+    proposals = Proposal.query.filter(or_filter) \
+        .order_by(Proposal.date_created.desc()) \
+        .all()
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
 
 
 @blueprint.route('/proposals/<id>', methods=['DELETE'])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def delete_proposal(id):
@@ -122,7 +119,6 @@ def delete_proposal(id):
 
 
 @blueprint.route('/proposals/<id>/approve', methods=['PUT'])
-@cross_origin(supports_credentials=True)
 @endpoint.api(
     parameter('isApprove', type=bool, required=True),
     parameter('rejectReason', type=str, required=False)

@@ -1,6 +1,7 @@
 import { store } from 'react-easy-state';
+import qs from 'query-string';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal } from './types';
+import { User, Proposal, PROPOSAL_STATUS } from './types';
 
 // API
 const api = axios.create({
@@ -41,8 +42,11 @@ async function deleteUser(id: string) {
   return data;
 }
 
-async function fetchProposals() {
-  const { data } = await api.get('/admin/proposals');
+async function fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
+  const { data } = await api.get('/admin/proposals', {
+    params: { statusFilters },
+    // paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
+  });
   return data;
 }
 
@@ -63,6 +67,7 @@ const app = store({
   },
   usersFetched: false,
   users: [] as User[],
+  proposalsFetching: false,
   proposalsFetched: false,
   proposals: [] as Proposal[],
 
@@ -117,17 +122,15 @@ const app = store({
     }
   },
 
-  async fetchProposals() {
+  async fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
+    app.proposalsFetching = true;
     try {
-      app.proposals = await fetchProposals();
+      app.proposals = await fetchProposals(statusFilters);
       app.proposalsFetched = true;
-      // for (const p of app.proposals) {
-      // TODO: partial populate contributorList
-      //   await app.populateProposalContract(p.proposalId);
-      // }
     } catch (e) {
       handleApiError(e);
     }
+    app.proposalsFetching = false;
   },
 
   async deleteProposal(id: number) {
