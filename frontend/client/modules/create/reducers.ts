@@ -24,6 +24,10 @@ export interface CreateState {
   submittedProposal: Proposal | null;
   isSubmitting: boolean;
   submitError: string | null;
+
+  publishedProposal: Proposal | null;
+  isPublishing: boolean;
+  publishError: string | null;
 }
 
 export const INITIAL_STATE: CreateState = {
@@ -49,6 +53,10 @@ export const INITIAL_STATE: CreateState = {
   submittedProposal: null,
   isSubmitting: false,
   submitError: null,
+
+  publishedProposal: null,
+  isPublishing: false,
+  publishError: null,
 };
 
 export default function createReducer(
@@ -162,7 +170,7 @@ export default function createReducer(
         isDeletingDraft: false,
         deleteDraftError: action.payload,
       };
-    
+
     case types.SUBMIT_PROPOSAL_PENDING:
       return {
         ...state,
@@ -180,7 +188,26 @@ export default function createReducer(
         ...state,
         submitError: action.payload,
         isSubmitting: false,
-      }
+      };
+
+    case types.PUBLISH_PROPOSAL_PENDING:
+      return {
+        ...state,
+        isPublishing: true,
+        publishError: null,
+      };
+    case types.PUBLISH_PROPOSAL_FULFILLED:
+      return {
+        ...state,
+        publishedProposal: action.payload,
+        isPublishing: false,
+      };
+    case types.PUBLISH_PROPOSAL_REJECTED:
+      return {
+        ...state,
+        publishError: action.payload,
+        isPublishing: false,
+      };
   }
   return state;
 }

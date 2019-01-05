@@ -2,7 +2,7 @@ import { Dispatch } from 'redux';
 import { ProposalDraft } from 'types';
 // import { AppState } from 'store/reducers';
 import types, { CreateDraftOptions } from './types';
-import { putProposal, putProposalPublish } from 'api/api';
+import { putProposal, putProposalPublish, putProposalSubmitForApproval } from 'api/api';
 
 // type GetState = () => AppState;
 
@@ -50,14 +50,35 @@ export function submitProposal(form: ProposalDraft) {
     dispatch({ type: types.SUBMIT_PROPOSAL_PENDING });
     try {
       await putProposal(form);
-      const res = await putProposalPublish(form);
+      const res = await putProposalSubmitForApproval(form);
       dispatch({
         type: types.SUBMIT_PROPOSAL_FULFILLED,
         payload: res.data,
       });
-    } catch(err) {
+    } catch (err) {
       dispatch({
         type: types.SUBMIT_PROPOSAL_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}
+
+// TODO - remove if not used (depending on design choices)
+export function publishProposal(form: ProposalDraft) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({ type: types.PUBLISH_PROPOSAL_PENDING });
+    try {
+      await putProposal(form);
+      const res = await putProposalPublish(form);
+      dispatch({
+        type: types.PUBLISH_PROPOSAL_FULFILLED,
+        payload: res.data,
+      });
+    } catch (err) {
+      dispatch({
+        type: types.PUBLISH_PROPOSAL_REJECTED,
         payload: err.message || err.toString(),
         error: true,
       });
