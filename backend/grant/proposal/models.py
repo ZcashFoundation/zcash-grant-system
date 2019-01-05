@@ -194,10 +194,12 @@ class Proposal(db.Model):
         )
 
     @staticmethod
-    def get_by_user(user):
+    def get_by_user(user, status=LIVE):
+        print(status)
         return Proposal.query \
             .join(proposal_team) \
             .filter(proposal_team.c.user_id == user.id) \
+            .filter(Proposal.status == status) \
             .all()
 
     @staticmethod
@@ -422,9 +424,14 @@ class UserProposalSchema(ma.Schema):
         # Fields to expose
         fields = (
             "proposal_id",
+            "status",
             "title",
             "brief",
+            "target",
             "date_created",
+            "date_approved",
+            "date_published",
+            "reject_reason",
             "team",
         )
     date_created = ma.Method("get_date_created")

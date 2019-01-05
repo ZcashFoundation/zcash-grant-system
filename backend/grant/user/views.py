@@ -8,9 +8,10 @@ from grant.proposal.models import (
     proposal_team,
     ProposalTeamInvite,
     invites_with_proposal_schema,
-    user_proposals_schema
+    user_proposals_schema,
+    PENDING
 )
-from grant.utils.auth import requires_auth, requires_same_user_auth
+from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.email.models import EmailRecovery
@@ -52,9 +53,10 @@ def get_me():
 @endpoint.api(
     parameter("withProposals", type=bool, required=False),
     parameter("withComments", type=bool, required=False),
-    parameter("withFunded", type=bool, required=False)
+    parameter("withFunded", type=bool, required=False),
+    parameter("withPending", type=bool, required=False)
 )
-def get_user(user_id, with_proposals, with_comments, with_funded):
+def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
@@ -70,6 +72,11 @@ def get_user(user_id, with_proposals, with_comments, with_funded):
             comments = Comment.get_by_user(user)
             comments_dump = user_comments_schema.dump(comments)
             result["comments"] = comments_dump
+        authed_user = get_authed_user()
+        if with_pending and authed_user and authed_user.id == user.id:
+            pending = Proposal.get_by_user(user, PENDING)
+            pending_dump = user_proposals_schema.dump(pending)
+            result["pendingProposals"] = pending_dump
         return result
     else:
         message = "User with id matching {} not found".format(user_id)
