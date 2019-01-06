@@ -19,9 +19,10 @@ example_email_args = {
   },
   'team_invite': {
     'inviter': user,
-    'proposal': proposal
+    'proposal': proposal,
+    'invite_url': 'http://someinviteurl.com',
   },
   'recover': {
     'recover_url': 'http://somerecoveryurl.com',
-  }
+  },
 }
