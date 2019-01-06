@@ -9,6 +9,7 @@ import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
 import UnitDisplay from 'components/UnitDisplay';
+import ContributionModal from 'components/ContributionModal';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
 import MetaMaskRequiredButton from 'components/MetaMaskRequiredButton';
@@ -28,6 +29,7 @@ type Props = OwnProps & StateProps;
 interface State {
   amountToRaise: string;
   amountError: string | null;
+  isContributing: boolean;
 }
 
 export class ProposalCampaignBlock extends React.Component<Props, State> {
@@ -36,52 +38,21 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     this.state = {
       amountToRaise: '',
       amountError: null,
+      isContributing: false,
     };
   }
 
-  handleAmountChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { value } = event.currentTarget;
-    if (!value) {
-      this.setState({ amountToRaise: '', amountError: null });
-      return;
-    }
-
-    // TODO: Get values from proposal
-    const { target, funded } = this.props.proposal;
-    const remainingTarget = target.sub(funded);
-    const amount = parseFloat(value);
-    let amountError = null;
-
-    if (Number.isNaN(amount)) {
-      // They're entering some garbage, they’ll work it out
-    } else {
-      const remainingTargetNum = parseFloat(fromZat(remainingTarget));
-      amountError = getAmountError(amount, remainingTargetNum);
-    }
-
-    this.setState({ amountToRaise: value, amountError });
-  };
-
-  sendTransaction = () => {
-    const { proposal } = this.props;
-    console.warn('TODO - remove, implement or refactor sendTransaction', proposal);
-
-    this.setState({ amountToRaise: '' });
-  };
-
   render() {
     const { proposal, sendLoading, isPreview } = this.props;
-    const { amountToRaise, amountError } = this.state;
+    const { amountToRaise, amountError, isContributing } = this.state;
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
       const { target, funded, percentFunded } = proposal;
       const isRaiseGoalReached = funded.gte(target);
+      const deadline = (proposal.dateCreated + proposal.deadlineDuration) * 1000;
       // TODO: Get values from proposal
-      console.warn('TODO: Get deadline and isFrozen from proposal data');
-      const deadline = 0;
+      console.warn('TODO: Get isFrozen from proposal data');
       const isFrozen = false;
 
       const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;
@@ -185,7 +156,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                     />
                   </Form.Item>
                   <Button
-                    onClick={this.sendTransaction}
+                    onClick={this.openContributionModal}
                     size="large"
                     type="primary"
                     disabled={isDisabled}
@@ -198,6 +169,12 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               </Form>
             </>
           )}
+
+          <ContributionModal
+            isVisible={isContributing}
+            handleClose={this.closeContributionModal}
+            amount={amountToRaise}
+          />
         </React.Fragment>
       );
     } else {
@@ -211,6 +188,34 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       </div>
     );
   }
+
+  private handleAmountChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { value } = event.currentTarget;
+    if (!value) {
+      this.setState({ amountToRaise: '', amountError: null });
+      return;
+    }
+
+    // TODO: Get values from proposal
+    const { target, funded } = this.props.proposal;
+    const remainingTarget = target.sub(funded);
+    const amount = parseFloat(value);
+    let amountError = null;
+
+    if (Number.isNaN(amount)) {
+      // They're entering some garbage, they’ll work it out
+    } else {
+      const remainingTargetNum = parseFloat(fromZat(remainingTarget));
+      amountError = getAmountError(amount, remainingTargetNum);
+    }
+
+    this.setState({ amountToRaise: value, amountError });
+  };
+
+  private openContributionModal = () => this.setState({ isContributing: true });
+  private closeContributionModal = () => this.setState({ isContributing: false });
 }
 
 function mapStateToProps(state: AppState) {

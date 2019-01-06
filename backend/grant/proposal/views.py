@@ -323,22 +323,19 @@ def get_proposal_contribution(proposal_id, contribution_id):
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
 @requires_auth
 @endpoint.api(
-    parameter('txId', type=str, required=True),
-    parameter('fromAddress', type=str, required=True),
     parameter('amount', type=str, required=True)
 )
-def post_proposal_contribution(proposal_id, tx_id, from_address, amount):
+def post_proposal_contribution(proposal_id, amount):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        contribution = ProposalContribution(
-            tx_id=tx_id,
-            proposal_id=proposal_id,
-            user_id=g.current_user.id,
-            from_address=from_address,
-            amount=amount
-        )
-        db.session.add(contribution)
-        db.session.commit()
-        dumped_contribution = proposal_contribution_schema.dump(contribution)
-        return dumped_contribution, 201
-    return {"message": "No proposal matching id"}, 404
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    contribution = ProposalContribution(
+        proposal_id=proposal_id,
+        user_id=g.current_user.id,
+        amount=amount
+    )
+    db.session.add(contribution)
+    db.session.commit()
+    dumped_contribution = proposal_contribution_schema.dump(contribution)
+    return dumped_contribution, 201
