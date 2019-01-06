@@ -1,6 +1,7 @@
 import React from 'react';
 import { view } from 'react-easy-state';
 import { Link } from 'react-router-dom';
+import { Icon } from 'antd';
 import { RouteComponentProps, withRouter } from 'react-router';
 import store from 'src/store';
 import Example from './Example';
@@ -54,7 +55,14 @@ class Emails extends React.Component<Props, State> {
 
     return (
       <div className="Emails">
-        <h1>Emails</h1>
+        <h1>
+          {type && (
+            <Link to="/emails">
+              <Icon type="arrow-left" />
+            </Link>
+          )}
+          Emails
+        </h1>
         {content}
       </div>
     );
