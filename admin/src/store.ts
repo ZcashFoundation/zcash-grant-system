@@ -51,10 +51,8 @@ async function deleteProposal(id: number) {
   return data;
 }
 
-async function getEmailExample(type: string, args: any) {
-  const { data } = await api.post(`/admin/email/example/${type}`, {
-    email_args: args,
-  });
+async function getEmailExample(type: string) {
+  const { data } = await api.get(`/admin/email/example/${type}`);
   return data;
 }
 
@@ -147,9 +145,9 @@ const app = store({
     }
   },
 
-  async getEmailExample(type: string, args?: any) {
+  async getEmailExample(type: string) {
     try {
-      const example = await getEmailExample(type, args);
+      const example = await getEmailExample(type);
       app.emailExamples = {
         ...app.emailExamples,
         [type]: example,
