@@ -8,6 +8,7 @@ import store from './store';
 import Login from 'components/Login';
 import Home from 'components/Home';
 import Users from 'components/Users';
+import Emails from 'components/Emails';
 import Proposals from 'components/Proposals';
 
 import 'styles/style.less';
@@ -29,6 +30,7 @@ class Routes extends React.Component<Props> {
             <Route path="/" exact={true} component={Home} />
             <Route path="/users/:id?" exact={true} component={Users} />
             <Route path="/proposals/:id?" component={Proposals} />
+            <Route path="/emails/:type?" component={Emails} />
           </Switch>
         )}
       </Template>

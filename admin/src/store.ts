@@ -1,6 +1,6 @@
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal } from './types';
+import { User, Proposal, EmailExample } from './types';
 
 // API
 const api = axios.create({
@@ -51,6 +51,13 @@ async function deleteProposal(id: number) {
   return data;
 }
 
+async function getEmailExample(type: string, args: any) {
+  const { data } = await api.post(`/admin/email/example/${type}`, {
+    email_args: args,
+  });
+  return data;
+}
+
 // STORE
 const app = store({
   hasCheckedLogin: false,
@@ -65,6 +72,7 @@ const app = store({
   users: [] as User[],
   proposalsFetched: false,
   proposals: [] as Proposal[],
+  emailExamples: {} as { [type: string]: EmailExample },
 
   removeGeneralError(i: number) {
     app.generalError.splice(i, 1);
@@ -134,6 +142,18 @@ const app = store({
     try {
       await deleteProposal(id);
       app.proposals = app.proposals.filter(p => p.proposalId === id);
+    } catch (e) {
+      handleApiError(e);
+    }
+  },
+
+  async getEmailExample(type: string, args?: any) {
+    try {
+      const example = await getEmailExample(type, args);
+      app.emailExamples = {
+        ...app.emailExamples,
+        [type]: example,
+      };
     } catch (e) {
       handleApiError(e);
     }

@@ -10,6 +10,7 @@ from grant.extensions import db
 from grant.user.models import User, users_schema
 from grant.proposal.models import Proposal, proposals_schema
 from grant.comment.models import Comment, comments_schema
+from grant.email.send import generate_email
 
 
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
@@ -119,3 +120,13 @@ def get_proposals():
 @auth_required
 def delete_proposal(id):
     return {"message": "Not implemented."}, 400
+
+# POST request because email_args is a dict
+@blueprint.route('/email/example/<type>', methods=['POST'])
+@cross_origin(supports_credentials=True)
+@endpoint.api(
+    parameter('email_args', type=dict, required=False)
+)
+@auth_required
+def get_email_example(type, email_args):
+    return generate_email(type, email_args)
