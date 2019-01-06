@@ -1,5 +1,4 @@
 import { store } from 'react-easy-state';
-import qs from 'query-string';
 import axios, { AxiosError } from 'axios';
 import { User, Proposal, PROPOSAL_STATUS } from './types';
 
@@ -37,7 +36,7 @@ async function fetchUsers() {
   return data;
 }
 
-async function deleteUser(id: string) {
+async function deleteUser(id: number | string) {
   const { data } = await api.delete('/admin/users/' + id);
   return data;
 }
@@ -45,13 +44,25 @@ async function deleteUser(id: string) {
 async function fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
   const { data } = await api.get('/admin/proposals', {
     params: { statusFilters },
-    // paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
   });
+  return data;
+}
+
+async function fetchProposalDetail(id: number) {
+  const { data } = await api.get(`/admin/proposals/${id}`);
   return data;
 }
 
 async function deleteProposal(id: number) {
   const { data } = await api.delete('/admin/proposals/' + id);
+  return data;
+}
+
+async function approveProposal(id: number, isApprove: boolean, rejectReason?: string) {
+  const { data } = await api.put(`/admin/proposals/${id}/approve`, {
+    isApprove,
+    rejectReason,
+  });
   return data;
 }
 
@@ -70,9 +81,22 @@ const app = store({
   proposalsFetching: false,
   proposalsFetched: false,
   proposals: [] as Proposal[],
+  proposalDetailFetching: false,
+  proposalDetail: null as null | Proposal,
+  proposalDetailApproving: false,
 
   removeGeneralError(i: number) {
     app.generalError.splice(i, 1);
+  },
+
+  updateProposalInStore(p: Proposal) {
+    const index = app.proposals.findIndex(x => x.proposalId === p.proposalId);
+    if (index > -1) {
+      app.proposals[index] = p;
+    }
+    if (app.proposalDetail && app.proposalDetail.proposalId === p.proposalId) {
+      app.proposalDetail = p;
+    }
   },
 
   async checkLogin() {
@@ -113,10 +137,10 @@ const app = store({
     }
   },
 
-  async deleteUser(id: string) {
+  async deleteUser(id: string | number) {
     try {
       await deleteUser(id);
-      app.users = app.users.filter(u => u.accountAddress !== id && u.emailAddress !== id);
+      app.users = app.users.filter(u => u.userid !== id && u.emailAddress !== id);
     } catch (e) {
       handleApiError(e);
     }
@@ -133,6 +157,16 @@ const app = store({
     app.proposalsFetching = false;
   },
 
+  async fetchProposalDetail(id: number) {
+    app.proposalDetailFetching = true;
+    try {
+      app.proposalDetail = await fetchProposalDetail(id);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailFetching = false;
+  },
+
   async deleteProposal(id: number) {
     try {
       await deleteProposal(id);
@@ -140,6 +174,25 @@ const app = store({
     } catch (e) {
       handleApiError(e);
     }
+  },
+
+  async approveProposal(isApprove: boolean, rejectReason?: string) {
+    if (!app.proposalDetail) {
+      (x => {
+        app.generalError.push(x);
+        console.error(x);
+      })('store.approveProposal(): Expected proposalDetail to be populated!');
+      return;
+    }
+    app.proposalDetailApproving = true;
+    try {
+      const { proposalId } = app.proposalDetail;
+      const res = await approveProposal(proposalId, isApprove, rejectReason);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailApproving = false;
   },
 });
 

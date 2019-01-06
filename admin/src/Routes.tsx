@@ -9,6 +9,7 @@ import Login from 'components/Login';
 import Home from 'components/Home';
 import Users from 'components/Users';
 import Proposals from 'components/Proposals';
+import ProposalDetail from 'components/ProposalDetail';
 
 import 'styles/style.less';
 
@@ -28,7 +29,8 @@ class Routes extends React.Component<Props> {
           <Switch>
             <Route path="/" exact={true} component={Home} />
             <Route path="/users/:id?" exact={true} component={Users} />
-            <Route path="/proposals/:id?" component={Proposals} />
+            <Route path="/proposals/:id" component={ProposalDetail} />
+            <Route path="/proposals" component={Proposals} />
           </Switch>
         )}
       </Template>

@@ -1,29 +1,16 @@
-@controls-height: 80px;
-
 .Proposals {
-  margin-top: @controls-height + 0.5rem;
-
-  h1 {
-    font-size: 1.5rem;
-  }
-
   &-controls {
+    margin-bottom: 0.5rem;
     & > * {
       margin-right: 0.5rem;
     }
-    height: @controls-height;
-    padding: 0.5rem 1rem;
-    margin-left: -1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 216px;
-    z-index: 5;
-    background: white;
+  }
 
-    &-filters {
-      margin: 0.5rem 0;
-    }
+  &-filters {
+    margin-bottom: 0.5rem;
+  }
+
+  &-list {
+    margin-top: 1rem;
   }
 }

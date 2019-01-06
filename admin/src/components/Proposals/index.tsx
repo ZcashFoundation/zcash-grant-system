@@ -3,22 +3,18 @@ import qs from 'query-string';
 import { uniq, without } from 'lodash';
 import { Link } from 'react-router-dom';
 import { view } from 'react-easy-state';
-import { Icon, Button, Dropdown, Menu, Tag } from 'antd';
+import { Icon, Button, Dropdown, Menu, Tag, List } from 'antd';
 import { RouteComponentProps, withRouter } from 'react-router';
 import store from 'src/store';
 import ProposalItem from './ProposalItem';
-import './index.less';
-import { PROPOSAL_STATUS } from 'src/types';
+import { PROPOSAL_STATUS, Proposal } from 'src/types';
+import STATUSES from './STATUSES';
 import { ClickParam } from 'antd/lib/menu';
+import './index.less';
 
-const STATUS_FILTERS = [
-  { id: PROPOSAL_STATUS.APPROVED, display: 'Status: approved' },
-  { id: PROPOSAL_STATUS.DELETED, display: 'Status: deleted' },
-  { id: PROPOSAL_STATUS.DRAFT, display: 'Status: draft' },
-  { id: PROPOSAL_STATUS.LIVE, display: 'Status: live' },
-  { id: PROPOSAL_STATUS.PENDING, display: 'Status: pending' },
-  { id: PROPOSAL_STATUS.REJECTED, display: 'Status: rejected' },
-];
+interface Query {
+  status: PROPOSAL_STATUS[];
+}
 
 type Props = RouteComponentProps<any>;
 
@@ -67,18 +63,10 @@ class ProposalsNaked extends React.Component<Props, State> {
 
     const statusFilterMenu = (
       <Menu onClick={this.handleFilterClick}>
-        {STATUS_FILTERS.map(f => (
-          <Menu.Item key={f.id}>{f.display}</Menu.Item>
+        {STATUSES.map(f => (
+          <Menu.Item key={f.id}>{f.filterDisplay}</Menu.Item>
         ))}
       </Menu>
-    );
-
-    const renderProposals = () => (
-      <>
-        {proposals.length === 0 && <div>no proposals</div>}
-        {proposals.length > 0 &&
-          proposals.map(p => <ProposalItem key={p.proposalId} {...p} />)}
-      </>
     );
 
     return (
@@ -90,17 +78,37 @@ class ProposalsNaked extends React.Component<Props, State> {
             </Button>
           </Dropdown>
           <Button title="refresh" icon="reload" onClick={() => this.fetchProposals()} />
-          <div className="Proposals-controls-filters">
-            Filters: {!statusFilters.length && 'None'}
+        </div>
+        {!!statusFilters.length && (
+          <div className="Proposals-filters">
+            Filters:{' '}
             {statusFilters.map(sf => (
-              <Tag key={sf} onClose={() => this.handleFilterClose(sf)} closable>
+              <Tag
+                key={sf}
+                onClose={() => this.handleFilterClose(sf)}
+                color="blue"
+                closable
+              >
                 status: {sf}
               </Tag>
             ))}
+            {statusFilters.length > 1 && (
+              <Tag key="clear" onClick={this.handleFilterClear}>
+                clear
+              </Tag>
+            )}
           </div>
-        </div>
-        {proposalsFetching && 'Fetching proposals'}
-        {proposalsFetched && !proposalsFetching && renderProposals()}
+        )}
+        {proposalsFetching && 'Fetching proposals...'}
+        {proposalsFetched &&
+          !proposalsFetching && (
+            <List
+              className="Proposals-list"
+              bordered
+              dataSource={proposals}
+              renderItem={(p: Proposal) => <ProposalItem key={p.proposalId} {...p} />}
+            />
+          )}
       </div>
     );
   }
@@ -111,7 +119,7 @@ class ProposalsNaked extends React.Component<Props, State> {
   };
 
   private getParsedQuery = () => {
-    const parsed = qs.parse(this.props.history.location.search);
+    const parsed = qs.parse(this.props.history.location.search) as Query;
     let statusFilters = parsed.status || [];
     // qs.parse returns non-array for single item
     statusFilters = Array.isArray(statusFilters) ? statusFilters : [statusFilters];
@@ -124,29 +132,28 @@ class ProposalsNaked extends React.Component<Props, State> {
     this.setState({ statusFilters });
   };
 
+  private updateHistoryStateAndProposals = (queryStringArgs: Query) => {
+    this.props.history.push(`${this.props.match.url}?${qs.stringify(queryStringArgs)}`);
+    this.setStateFromQueryString();
+    this.fetchProposals();
+  };
+
   private addStatusFilter = (statusFilter: PROPOSAL_STATUS) => {
     const parsed = this.getParsedQuery();
-    // update args
     parsed.status = uniq([statusFilter, ...parsed.status]);
-    // push onto history
-    this.props.history.push(`${this.props.match.url}?${qs.stringify(parsed)}`);
-    // update state with new filter
-    this.setStateFromQueryString();
-    // fetch with new filters
-    this.fetchProposals();
+    this.updateHistoryStateAndProposals(parsed);
   };
 
   private removeStatusFilter = (statusFilter: PROPOSAL_STATUS) => {
     const parsed = this.getParsedQuery();
-    // remove from array
     parsed.status = without(parsed.status, statusFilter);
-    console.log(parsed.status, statusFilter);
-    // push onto history
-    this.props.history.push(`${this.props.match.url}?${qs.stringify(parsed)}`);
-    // update state with new filter
-    this.setStateFromQueryString();
-    // fetch with new filters
-    this.fetchProposals();
+    this.updateHistoryStateAndProposals(parsed);
+  };
+
+  private clearStatusFilters = () => {
+    const parsed = this.getParsedQuery();
+    parsed.status = [];
+    this.updateHistoryStateAndProposals(parsed);
   };
 
   private handleFilterClick = (e: ClickParam) => {
@@ -155,6 +162,10 @@ class ProposalsNaked extends React.Component<Props, State> {
 
   private handleFilterClose = (filter: PROPOSAL_STATUS) => {
     this.removeStatusFilter(filter);
+  };
+
+  private handleFilterClear = () => {
+    this.clearStatusFilters();
   };
 }
 
