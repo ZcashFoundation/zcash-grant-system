@@ -47,12 +47,23 @@ def proposal_rejected(email_args):
         'preview': '{} has been rejected'.format(email_args['proposal'].title),
     }
 
+def contribution_confirmed(email_args):
+    return {
+        'subject': 'Your contribution has been confirmed!',
+        'title': 'Contribution confirmed',
+        'preview': 'Your {} ZEC contribution to {} has been confirmed!'.format(
+            email_args['contribution'].amount,
+            email_args['proposal'].title
+        ),
+    }
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
     'recover': recover_info,
     'proposal_approved': proposal_approved,
     'proposal_rejected': proposal_rejected,
+    'contribution_confirmed': contribution_confirmed,
 }
 
 def generate_email(type, email_args):

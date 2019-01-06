@@ -22,7 +22,7 @@ class Emails extends React.Component<Props, State> {
   componentDidMount() {
     const { type } = this.props.match.params;
     if (type && !store.emailExamples[type]) {
-      this.getEmailExample(type);
+      store.getEmailExample(type);
     }
   }
 
@@ -30,7 +30,7 @@ class Emails extends React.Component<Props, State> {
     const { type } = this.props.match.params;
     const prevType = prevProps.match.params.type;
     if (type && type !== prevType && !store.emailExamples[type]) {
-      this.getEmailExample(type);
+      store.getEmailExample(type);
     }
   }
 
@@ -66,14 +66,6 @@ class Emails extends React.Component<Props, State> {
         {content}
       </div>
     );
-  }
-
-  private getEmailExample(type: string) {
-    const email = EMAILS.find(e => e.id === type);
-    if (!email) {
-      return alert('Invalid email type!');
-    }
-    store.getEmailExample(type, email.args);
   }
 }
 

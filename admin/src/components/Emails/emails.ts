@@ -31,4 +31,9 @@ export default [
     title: 'Proposal rejected',
     description: 'Sent when an admin rejects your submitted proposal',
   },
+  {
+    id: 'contribution_confirmed',
+    title: 'Contribution confirmed',
+    description: 'Sent after a contribution can be confirmed on chain',
+  },
 ] as Email[];
