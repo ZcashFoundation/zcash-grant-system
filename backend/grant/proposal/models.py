@@ -245,6 +245,7 @@ class Proposal(db.Model):
 
         if is_approve:
             self.status = APPROVED
+            self.date_approved = datetime.datetime.now()
         else:
             if not reject_reason:
                 raise ValidationException("Please provide a reason for rejecting the proposal")

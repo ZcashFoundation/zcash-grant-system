@@ -111,6 +111,16 @@ def get_proposals():
     return dumped_proposals
 
 
+@blueprint.route('/proposals/<id>', methods=['GET'])
+@endpoint.api()
+@auth_required
+def get_proposal(id):
+    proposal = Proposal.query.filter(Proposal.id == id).first()
+    if proposal:
+        return proposal_schema.dump(proposal)
+    return {"message": "Could not find proposal with id %s" % id}, 404
+
+
 @blueprint.route('/proposals/<id>', methods=['DELETE'])
 @endpoint.api()
 @auth_required
