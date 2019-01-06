@@ -33,11 +33,26 @@ def recover_info(email_args):
         'preview': 'Use the link to recover your account.'
     }
 
+def proposal_approved(email_args):
+    return {
+        'subject': 'Your proposal has been approved!',
+        'title': 'Your proposal has been approved',
+        'preview': 'Start raising funds for {} now'.format(email_args['proposal'].title),
+    }
+
+def proposal_rejected(email_args):
+    return {
+        'subject': 'Your proposal has been rejected',
+        'title': 'Your proposal has been rejected',
+        'preview': '{} has been rejected'.format(email_args['proposal'].title),
+    }
 
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
-    'recover': recover_info
+    'recover': recover_info,
+    'proposal_approved': proposal_approved,
+    'proposal_rejected': proposal_rejected,
 }
 
 def generate_email(type, email_args):

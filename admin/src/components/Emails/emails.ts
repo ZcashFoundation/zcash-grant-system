@@ -21,4 +21,14 @@ export default [
     title: 'Proposal team invite',
     description: 'Sent when a proposal creator sends an invite to a user',
   },
+  {
+    id: 'proposal_approved',
+    title: 'Proposal approved',
+    description: 'Sent when an admin approves your submitted proposal',
+  },
+  {
+    id: 'proposal_rejected',
+    title: 'Proposal rejected',
+    description: 'Sent when an admin rejects your submitted proposal',
+  },
 ] as Email[];
