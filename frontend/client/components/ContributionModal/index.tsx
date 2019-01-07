@@ -36,6 +36,7 @@ export default class ContributionModal extends React.Component<Props, State> {
               eye on it at the <a>contributions tab on your profile</a>.
             </>
           }
+          style={{ width: '90%' }}
         />
       );
     } else {
@@ -49,6 +50,8 @@ export default class ContributionModal extends React.Component<Props, State> {
         closable={hasSent}
         okText={hasSent ? 'Done' : 'I’ve sent it'}
         onOk={hasSent ? handleClose : this.confirmSend}
+        onCancel={handleClose}
+        centered
       >
         {content}
       </Modal>

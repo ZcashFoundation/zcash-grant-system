@@ -1,14 +1,31 @@
 import React from 'react';
-import { Form, Input, Spin, Button, Icon, message } from 'antd';
+import classnames from 'classnames';
+import { Form, Input, Spin, Button, Icon, Radio, message } from 'antd';
+import { RadioChangeEvent } from 'antd/lib/radio';
 import QRCode from 'qrcode.react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { formatZcashURI, formatZcashCLI } from 'utils/formatters';
-import './PaymentInfo.scss';
+import './PaymentInfo.less';
 
-export default class PaymentInfo extends React.Component {
+type SendType = 'sapling' | 'transparent';
+
+interface State {
+  sendType: SendType;
+}
+
+export default class PaymentInfo extends React.Component<{}, State> {
+  state: State = {
+    sendType: 'sapling',
+  };
+
   render() {
-    const addr = 'z123';
-    const memo = 'memo123';
+    const { sendType } = this.state;
+    const addr = sendType === 'sapling'
+      ? 'ztqYvtzzkSXzZvNhEVMoMxTRZyktg6ZDNB4yUx7UY17r6gTM5wpgMVfM7Ky7W2r9crro5fFtVUkkjkvNdVRiff2oDPboaTG'
+      : 'tmFuUWgfhVUt4Li9nXTjgAQ69dsftDffzNq';
+    const memo = sendType === 'sapling'
+      ? 'memo123'
+      : undefined;
     const amount = 123;
 
     // Construct URI and CLI commands
@@ -21,23 +38,49 @@ export default class PaymentInfo extends React.Component {
           Thank you for contributing! Just send using whichever method works best for you,
           and we'll let you know when your contribution has been confirmed. Need help
           sending?
-          {/* TODO: Help / FAQ page for sending */} <a>Click here</a>.
+          {/* TODO: Help / FAQ page for sending */}
+          {' '}
+          <a>Click here</a>.
         </p>
+
+        <Radio.Group
+          className="PaymentInfo-types"
+          onChange={this.handleChangeSendType}
+          value={sendType}
+        >
+          <Radio.Button value="sapling">
+            Z Address (Private)
+          </Radio.Button>
+          <Radio.Button value="transparent">
+            T Address (Public)
+          </Radio.Button>
+        </Radio.Group>
+
         <div className="PaymentInfo-uri">
           <div className="PaymentInfo-uri-qr">
             {uri ? <QRCode value={uri} /> : <Spin />}
           </div>
           <div className="PaymentInfo-uri-info">
-            <CopyInput label="Payment URI" value={uri} isTextarea />
-            <Button type="ghost" size="large">
+            <CopyInput
+              className="PaymentInfo-uri-info-input"
+              label="Payment URI"
+              value={uri}
+              isTextarea
+            />
+            <Button type="ghost" size="large" href={uri} block>
               Open in Wallet <Icon type="link" />
             </Button>
           </div>
         </div>
+
         <div className="PaymentInfo-fields">
           <div className="PaymentInfo-fields-row">
-            <CopyInput label="Address" value={addr} />
-            {memo && <CopyInput label="memo" value={memo} />}
+            <CopyInput
+              className="PaymentInfo-fields-row-address"
+              label="Address"
+              value={addr}
+            />
+            {memo && <CopyInput label="Memo" value={memo} />}
           </div>
           <div className="PaymentInfo-fields-row">
             <CopyInput
@@ -50,17 +93,30 @@ export default class PaymentInfo extends React.Component {
       </Form>
     );
   }
+
+  handleChangeSendType = (ev: RadioChangeEvent) => {
+    this.setState({ sendType: ev.target.value });
+  };
 }
 
 interface CopyInputProps {
   label: string;
   value: string;
+  className?: string;
   help?: string;
   isTextarea?: boolean;
 }
 
-const CopyInput: React.SFC<CopyInputProps> = ({ label, value, help, isTextarea }) => (
-  <Form.Item label={label} help={help}>
+const CopyInput: React.SFC<CopyInputProps> = ({ label, value, help, className, isTextarea }) => (
+  <Form.Item
+    className={classnames(
+      'CopyInput',
+      className,
+      isTextarea && 'is-textarea',
+    )}
+    label={label}
+    help={help}
+  >
     {isTextarea ? (
       <>
         <Input.TextArea value={value} readOnly rows={3} />
@@ -69,12 +125,12 @@ const CopyInput: React.SFC<CopyInputProps> = ({ label, value, help, isTextarea }
         </CopyToClipboard>
       </>
     ) : (
-      <Input.Group>
+      <>
         <Input value={value} readOnly />
         <CopyToClipboard text={value} onCopy={() => message.success('Copied!', 2)}>
           <Button icon="copy" />
         </CopyToClipboard>
-      </Input.Group>
+      </>
     )}
   </Form.Item>
 );
