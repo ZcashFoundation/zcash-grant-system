@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from 'antd';
 import Result from 'ant-design-pro/lib/Result';
 import { postProposalContribution } from 'api/api';
-import { Contribution } from 'types';
+import { ContributionWithAddresses } from 'types';
 import PaymentInfo from './PaymentInfo';
 
 interface OwnProps {
@@ -16,7 +16,7 @@ type Props = OwnProps;
 
 interface State {
   hasSent: boolean;
-  contribution: Contribution | null;
+  contribution: ContributionWithAddresses | null;
   error: string | null;
 }
 
@@ -69,6 +69,7 @@ export default class ContributionModal extends React.Component<Props, State> {
         title="Make your contribution"
         visible={isVisible}
         closable={hasSent}
+        maskClosable={hasSent}
         okText={hasSent ? 'Done' : 'I’ve sent it'}
         onOk={hasSent ? handleClose : this.confirmSend}
         onCancel={handleClose}
