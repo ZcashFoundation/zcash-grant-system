@@ -33,7 +33,7 @@ class ProposalItemNaked extends React.Component<Proposal> {
       <List.Item key={p.proposalId} className="ProposalItem" actions={actions}>
         <div>
           <h1>
-            {p.title}{' '}
+            {p.title || '(no title)'}{' '}
             <Tooltip title={status.hint}>
               <Tag color={status.tagColor}>{status.tagDisplay}</Tag>
             </Tooltip>

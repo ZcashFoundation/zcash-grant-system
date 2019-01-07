@@ -8,7 +8,7 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import store from 'src/store';
 import ProposalItem from './ProposalItem';
 import { PROPOSAL_STATUS, Proposal } from 'src/types';
-import STATUSES from './STATUSES';
+import STATUSES, { getStatusById } from './STATUSES';
 import { ClickParam } from 'antd/lib/menu';
 import './index.less';
 
@@ -86,7 +86,7 @@ class ProposalsNaked extends React.Component<Props, State> {
               <Tag
                 key={sf}
                 onClose={() => this.handleFilterClose(sf)}
-                color="blue"
+                color={getStatusById(sf).tagColor}
                 closable
               >
                 status: {sf}

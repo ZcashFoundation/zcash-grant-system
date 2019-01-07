@@ -72,9 +72,12 @@ const app = store({
   isLoggedIn: false,
   loginError: '',
   generalError: [] as string[],
+  statsFetched: false,
+  statsFetching: false,
   stats: {
-    userCount: -1,
-    proposalCount: -1,
+    userCount: 0,
+    proposalCount: 0,
+    proposalPendingCount: 0,
   },
   usersFetched: false,
   users: [] as User[],
@@ -121,11 +124,14 @@ const app = store({
   },
 
   async fetchStats() {
+    app.statsFetching = true;
     try {
       app.stats = await fetchStats();
+      app.statsFetched = true;
     } catch (e) {
       handleApiError(e);
     }
+    app.statsFetching = false;
   },
 
   async fetchUsers() {
