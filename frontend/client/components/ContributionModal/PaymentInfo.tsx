@@ -111,7 +111,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
 
 interface CopyInputProps {
   label: string;
-  value: string;
+  value: string | undefined;
   className?: string;
   help?: string;
   isTextarea?: boolean;
@@ -130,14 +130,20 @@ const CopyInput: React.SFC<CopyInputProps> = ({ label, value, help, className, i
     {isTextarea ? (
       <>
         <Input.TextArea value={value} readOnly rows={3} />
-        <CopyToClipboard text={value} onCopy={() => message.success('Copied!', 2)}>
+        <CopyToClipboard
+          text={value || ''}
+          onCopy={() => message.success('Copied!', 2)}
+        >
           <Button icon="copy" />
         </CopyToClipboard>
       </>
     ) : (
       <>
         <Input value={value} readOnly />
-        <CopyToClipboard text={value} onCopy={() => message.success('Copied!', 2)}>
+        <CopyToClipboard
+          text={value || ''}
+          onCopy={() => message.success('Copied!', 2)}
+        >
           <Button icon="copy" />
         </CopyToClipboard>
       </>

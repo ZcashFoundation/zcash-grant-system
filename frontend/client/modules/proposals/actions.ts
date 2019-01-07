@@ -4,7 +4,6 @@ import {
   getProposal,
   getProposalComments,
   getProposalUpdates,
-  postProposalContribution as apiPostProposalContribution,
   postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
@@ -85,19 +84,5 @@ export function postProposalComment(
         error: true,
       });
     }
-  };
-}
-
-export function postProposalContribution(
-  proposalId: number,
-  txId: string,
-  account: string,
-  amount: string,
-) {
-  return async (dispatch: Dispatch<any>) => {
-    await dispatch({
-      type: types.POST_PROPOSAL_CONTRIBUTION,
-      payload: apiPostProposalContribution(proposalId, txId, account, amount),
-    });
   };
 }
