@@ -5,6 +5,7 @@ import ast
 from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
@@ -24,7 +25,11 @@ from .models import(
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
-    db
+    db,
+    DRAFT,
+    PENDING,
+    APPROVED,
+    REJECTED
 )
 import traceback
 
@@ -131,7 +136,7 @@ def make_proposal_draft():
 def get_proposal_drafts():
     proposals = (
         Proposal.query
-        .filter_by(status="DRAFT")
+        .filter(or_(Proposal.status == DRAFT, Proposal.status == REJECTED))
         .join(proposal_team)
         .filter(proposal_team.c.user_id == g.current_user.id)
         .order_by(Proposal.date_created.desc())
@@ -182,9 +187,11 @@ def update_proposal(milestones, proposal_id, **kwargs):
 @blueprint.route("/<proposal_id>", methods=["DELETE"])
 @requires_team_member_auth
 @endpoint.api()
-def delete_proposal_draft(proposal_id):
-    if g.current_proposal.status != 'DRAFT':
-        return {"message": "Cannot delete non-draft proposals"}, 400
+def delete_proposal(proposal_id):
+    deleteable_statuses = [DRAFT, PENDING, APPROVED, REJECTED]
+    status = g.current_proposal.status
+    if status not in deleteable_statuses:
+        return {"message": "Cannot delete proposals with %s status" % status}, 400
     db.session.delete(g.current_proposal)
     db.session.commit()
     return None, 202

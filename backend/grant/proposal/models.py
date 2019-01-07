@@ -1,6 +1,6 @@
 import datetime
 from typing import List
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
@@ -194,12 +194,12 @@ class Proposal(db.Model):
         )
 
     @staticmethod
-    def get_by_user(user, status=LIVE):
-        print(status)
+    def get_by_user(user, statuses=[LIVE]):
+        status_filter = or_(Proposal.status == v for v in statuses)
         return Proposal.query \
             .join(proposal_team) \
             .filter(proposal_team.c.user_id == user.id) \
-            .filter(Proposal.status == status) \
+            .filter(status_filter) \
             .all()
 
     @staticmethod
@@ -231,9 +231,10 @@ class Proposal(db.Model):
 
     def submit_for_approval(self):
         self.validate_publishable()
+        allowed_statuses = [DRAFT, REJECTED]
         # specific validation
-        if not self.status == DRAFT:
-            raise ValidationException("Proposal status must be {} to submit for approval".format(DRAFT))
+        if self.status not in allowed_statuses:
+            raise ValidationException("Proposal status must be {} or {} to submit for approval".format(DRAFT, REJECTED))
 
         self.status = PENDING
 
@@ -246,11 +247,13 @@ class Proposal(db.Model):
         if is_approve:
             self.status = APPROVED
             self.date_approved = datetime.datetime.now()
+            # TODO: send approval email
         else:
             if not reject_reason:
                 raise ValidationException("Please provide a reason for rejecting the proposal")
             self.status = REJECTED
             self.reject_reason = reject_reason
+            # TODO: send rejection email
 
     def publish(self):
         self.validate_publishable()

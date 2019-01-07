@@ -9,7 +9,9 @@ from grant.proposal.models import (
     ProposalTeamInvite,
     invites_with_proposal_schema,
     user_proposals_schema,
-    PENDING
+    PENDING,
+    APPROVED,
+    REJECTED
 )
 from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
@@ -74,7 +76,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
             result["comments"] = comments_dump
         authed_user = get_authed_user()
         if with_pending and authed_user and authed_user.id == user.id:
-            pending = Proposal.get_by_user(user, PENDING)
+            pending = Proposal.get_by_user(user, [PENDING, APPROVED, REJECTED])
             pending_dump = user_proposals_schema.dump(pending)
             result["pendingProposals"] = pending_dump
         return result

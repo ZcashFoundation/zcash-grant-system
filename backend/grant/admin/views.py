@@ -8,7 +8,7 @@ from sqlalchemy import func, or_
 
 from grant.extensions import db
 from grant.user.models import User, users_schema
-from grant.proposal.models import Proposal, proposals_schema, proposal_schema
+from grant.proposal.models import Proposal, proposals_schema, proposal_schema, PENDING
 from grant.comment.models import Comment, comments_schema
 
 
@@ -70,9 +70,13 @@ def logout():
 def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
     proposal_count = db.session.query(func.count(Proposal.id)).scalar()
+    proposal_pending_count = db.session.query(func.count(Proposal.id)) \
+        .filter(Proposal.status == PENDING) \
+        .scalar()
     return {
         "userCount": user_count,
-        "proposalCount": proposal_count
+        "proposalCount": proposal_count,
+        "proposalPendingCount": proposal_pending_count,
     }
 
 
@@ -107,6 +111,7 @@ def get_proposals():
     proposals = Proposal.query.filter(or_filter) \
         .order_by(Proposal.date_created.desc()) \
         .all()
+    # TODO: return partial data for list
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
 
