@@ -11,6 +11,7 @@ import {
 } from '../store';
 import env from '../env';
 import node from '../node';
+import { makeContributionMemo } from '../util';
 
 // Configure server
 const app = express();
@@ -31,7 +32,12 @@ app.get('/contribution/addresses', (req, res) => {
     addresses = action.payload.addresses;
     store.dispatch(action);
   }
-  res.json({ data: addresses });
+  res.json({
+    data: {
+      ...addresses,
+      memo: makeContributionMemo(contributionId),
+    },
+  });
 });
 
 

@@ -172,8 +172,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
           <ContributionModal
             isVisible={isContributing}
-            handleClose={this.closeContributionModal}
+            proposalId={proposal.proposalId}
             amount={amountToRaise}
+            handleClose={this.closeContributionModal}
           />
         </React.Fragment>
       );

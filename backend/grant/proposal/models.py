@@ -1,11 +1,13 @@
 import datetime
 from typing import List
 from sqlalchemy import func
+from sqlalchemy.schema import Sequence
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix
 from grant.utils.exceptions import ValidationException
+from grant.blockchain import blockchainGet
 
 # Proposal states
 DRAFT = 'DRAFT'
@@ -83,7 +85,10 @@ class ProposalUpdate(db.Model):
 class ProposalContribution(db.Model):
     __tablename__ = "proposal_contribution"
 
-    id = db.Column(db.Integer(), primary_key=True)
+    # Manual sequence due to migration
+    # TODO: Remove manual sequence next time we wipe db
+    sequence = Sequence('proposal_contribution_sequence')
+    id = db.Column(db.Integer(), sequence, server_default=sequence.next_value(), primary_key=True)
     date_created = db.Column(db.DateTime, nullable=False)
 
     proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
@@ -103,6 +108,12 @@ class ProposalContribution(db.Model):
         self.amount = amount
         self.date_created = datetime.datetime.now()
         self.status = PENDING
+
+    @staticmethod
+    def getByUserAndProposal(user_id: int, proposal_id: int):
+        return ProposalContribution.query \
+            .filter_by(user_id=user_id, proposal_id=proposal_id) \
+            .first()
 
     def confirm(self, tx_id: str, amount: str):
         self.status = CONFIRMED
@@ -369,14 +380,19 @@ class ProposalContributionSchema(ma.Schema):
             "tx_id",
             "amount",
             "date_created",
+            "addresses",
         )
 
     proposal = ma.Nested("ProposalSchema")
     user = ma.Nested("UserSchema")
     date_created = ma.Method("get_date_created")
+    addresses = ma.Method("get_addresses")
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
+
+    def get_addresses(self, obj):
+        return blockchainGet('/contribution/addresses', { 'contributionId': obj.id })
 
 
 proposal_contribution_schema = ProposalContributionSchema()

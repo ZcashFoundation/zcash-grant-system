@@ -5,32 +5,42 @@ import { RadioChangeEvent } from 'antd/lib/radio';
 import QRCode from 'qrcode.react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { formatZcashURI, formatZcashCLI } from 'utils/formatters';
+import { ContributionWithAddresses } from 'types';
 import './PaymentInfo.less';
 
-type SendType = 'sapling' | 'transparent';
+interface Props {
+  contribution?: ContributionWithAddresses | Falsy;
+}
+
+type SendType = 'sprout' | 'transparent';
 
 interface State {
   sendType: SendType;
 }
 
-export default class PaymentInfo extends React.Component<{}, State> {
+export default class PaymentInfo extends React.Component<Props, State> {
   state: State = {
-    sendType: 'sapling',
+    sendType: 'sprout',
   };
 
   render() {
+    const { contribution } = this.props;
     const { sendType } = this.state;
-    const addr = sendType === 'sapling'
-      ? 'ztqYvtzzkSXzZvNhEVMoMxTRZyktg6ZDNB4yUx7UY17r6gTM5wpgMVfM7Ky7W2r9crro5fFtVUkkjkvNdVRiff2oDPboaTG'
-      : 'tmFuUWgfhVUt4Li9nXTjgAQ69dsftDffzNq';
-    const memo = sendType === 'sapling'
-      ? 'memo123'
-      : undefined;
-    const amount = 123;
+    let address;
+    let memo;
+    let amount;
+    let cli;
+    let uri;
 
-    // Construct URI and CLI commands
-    const cli = formatZcashCLI(addr, amount, memo);
-    const uri = formatZcashURI(addr, amount, memo);
+    if (contribution) {
+      if (sendType !== 'transparent') {
+        memo = contribution.addresses.memo;
+      }
+      address = contribution.addresses[sendType];
+      amount = contribution.amount;
+      cli = formatZcashCLI(address, amount, memo);
+      uri = formatZcashURI(address, amount, memo);
+    }
 
     return (
       <Form className="PaymentInfo" layout="vertical">
@@ -48,7 +58,7 @@ export default class PaymentInfo extends React.Component<{}, State> {
           onChange={this.handleChangeSendType}
           value={sendType}
         >
-          <Radio.Button value="sapling">
+          <Radio.Button value="sprout">
             Z Address (Private)
           </Radio.Button>
           <Radio.Button value="transparent">
@@ -78,7 +88,7 @@ export default class PaymentInfo extends React.Component<{}, State> {
             <CopyInput
               className="PaymentInfo-fields-row-address"
               label="Address"
-              value={addr}
+              value={address}
             />
             {memo && <CopyInput label="Memo" value={memo} />}
           </div>

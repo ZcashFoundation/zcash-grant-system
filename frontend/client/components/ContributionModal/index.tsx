@@ -1,10 +1,13 @@
 import React from 'react';
 import { Modal } from 'antd';
 import Result from 'ant-design-pro/lib/Result';
+import { postProposalContribution } from 'api/api';
+import { Contribution } from 'types';
 import PaymentInfo from './PaymentInfo';
 
 interface OwnProps {
   isVisible: boolean;
+  proposalId: number;
   amount?: string;
   handleClose(): void;
 }
@@ -13,16 +16,30 @@ type Props = OwnProps;
 
 interface State {
   hasSent: boolean;
+  contribution: Contribution | null;
+  error: string | null;
 }
 
 export default class ContributionModal extends React.Component<Props, State> {
   state: State = {
     hasSent: false,
+    contribution: null,
+    error: null,
   };
+
+  componentWillUpdate(nextProps: Props) {
+    const { isVisible, proposalId } = nextProps
+    if (isVisible && this.props.isVisible !== isVisible) {
+      this.fetchAddresses(proposalId);
+    }
+    else if (proposalId !== this.props.proposalId) {
+      this.fetchAddresses(proposalId);
+    }
+  }
 
   render() {
     const { isVisible, handleClose } = this.props;
-    const { hasSent } = this.state;
+    const { hasSent, contribution, error } = this.state;
     let content;
 
     if (hasSent) {
@@ -40,7 +57,11 @@ export default class ContributionModal extends React.Component<Props, State> {
         />
       );
     } else {
-      content = <PaymentInfo />;
+      if (error) {
+        content = error;
+      } else {
+        content = <PaymentInfo contribution={contribution} />;
+      }
     }
 
     return (
@@ -56,6 +77,18 @@ export default class ContributionModal extends React.Component<Props, State> {
         {content}
       </Modal>
     );
+  }
+
+  private async fetchAddresses(proposalId: number) {
+    try {
+      const res = await postProposalContribution(
+        proposalId,
+        this.props.amount || '0',
+      );
+      this.setState({ contribution: res.data });
+    } catch(err) {
+      this.setState({ error: err.message });
+    }
   }
 
   private confirmSend = () => {

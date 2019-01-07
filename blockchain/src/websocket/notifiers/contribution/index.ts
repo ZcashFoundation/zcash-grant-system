@@ -8,7 +8,7 @@ import {
   confirmPaymentDisclosure,
 } from "../../../store";
 import env from "../../../env";
-import { dedupeArray, getContributionIdFromMemo, decodeHexMemo, toBaseUnit } from "../../../util";
+import { getContributionIdFromMemo, decodeHexMemo, toBaseUnit } from "../../../util";
 
 interface ContributionConfirmationPayload {
   to: string;

@@ -330,12 +330,19 @@ def post_proposal_contribution(proposal_id, amount):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    contribution = ProposalContribution(
-        proposal_id=proposal_id,
-        user_id=g.current_user.id,
-        amount=amount
-    )
-    db.session.add(contribution)
-    db.session.commit()
+    code = 200
+    contribution = ProposalContribution \
+        .getByUserAndProposal(g.current_user.id, proposal_id)
+
+    if not contribution:
+        code = 201
+        contribution = ProposalContribution(
+            proposal_id=proposal_id,
+            user_id=g.current_user.id,
+            amount=amount
+        )
+        db.session.add(contribution)
+        db.session.commit()
+
     dumped_contribution = proposal_contribution_schema.dump(contribution)
-    return dumped_contribution, 201
+    return dumped_contribution, code
