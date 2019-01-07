@@ -190,24 +190,25 @@ export default function createReducer(
         isSubmitting: false,
       };
 
-    case types.PUBLISH_PROPOSAL_PENDING:
-      return {
-        ...state,
-        isPublishing: true,
-        publishError: null,
-      };
-    case types.PUBLISH_PROPOSAL_FULFILLED:
-      return {
-        ...state,
-        publishedProposal: action.payload,
-        isPublishing: false,
-      };
-    case types.PUBLISH_PROPOSAL_REJECTED:
-      return {
-        ...state,
-        publishError: action.payload,
-        isPublishing: false,
-      };
+    // TODO - remove if not used (depending on design choices)
+    // case types.PUBLISH_PROPOSAL_PENDING:
+    //   return {
+    //     ...state,
+    //     isPublishing: true,
+    //     publishError: null,
+    //   };
+    // case types.PUBLISH_PROPOSAL_FULFILLED:
+    //   return {
+    //     ...state,
+    //     publishedProposal: action.payload,
+    //     isPublishing: false,
+    //   };
+    // case types.PUBLISH_PROPOSAL_REJECTED:
+    //   return {
+    //     ...state,
+    //     publishError: action.payload,
+    //     isPublishing: false,
+    //   };
   }
   return state;
 }

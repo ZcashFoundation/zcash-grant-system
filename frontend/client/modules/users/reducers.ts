@@ -152,6 +152,12 @@ export default (state = INITIAL_STATE, action: any) => {
         isResponding: false,
         respondError: errorStatus,
       });
+    // proposal delete
+    case types.USER_DELETE_PROPOSAL_FULFILLED:
+      return removePendingProposal(state, payload.userId, payload.proposalId);
+    // proposal publish
+    case types.USER_PUBLISH_PROPOSAL_FULFILLED:
+      return updatePublishedProposal(state, payload.userId, payload.proposal);
     // default
     default:
       return state;
@@ -171,6 +177,32 @@ function updateUserState(
       [id]: lodash.defaults(updates, loaded, state.map[id] || INITIAL_USER_STATE),
     },
   };
+}
+
+function removePendingProposal(
+  state: UsersState,
+  userId: string | number,
+  proposalId: number,
+) {
+  const pendingProposals = state.map[userId].pendingProposals.filter(
+    p => p.proposalId !== proposalId,
+  );
+  const userUpdates = {
+    pendingProposals,
+  };
+  return updateUserState(state, userId, userUpdates);
+}
+
+function updatePublishedProposal(
+  state: UsersState,
+  userId: string | number,
+  proposal: UserProposal,
+) {
+  const withoutPending = removePendingProposal(state, userId, proposal.proposalId);
+  const userUpdates = {
+    createdProposals: [proposal, ...state.map[userId].createdProposals],
+  };
+  return updateUserState(withoutPending, userId, userUpdates);
 }
 
 function updateTeamInvite(

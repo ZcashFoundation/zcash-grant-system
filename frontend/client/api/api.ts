@@ -169,9 +169,9 @@ export async function putProposalSubmitForApproval(
 }
 
 export async function putProposalPublish(
-  proposal: ProposalDraft,
+  proposalId: number,
 ): Promise<{ data: Proposal }> {
-  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`).then(res => {
+  return axios.put(`/api/v1/proposals/${proposalId}/publish`).then(res => {
     res.data = formatProposalFromGet(res.data);
     return res;
   });

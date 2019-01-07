@@ -1,3 +1,4 @@
+@import '~styles/variables.less';
 @small-query: ~'(max-width: 640px)';
 
 .ProfilePending {
@@ -21,7 +22,7 @@
     font-weight: 600;
     color: inherit;
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.1rem;
   }
 
   &-block {
@@ -38,20 +39,30 @@
       }
     }
 
-    &-team {
-      @media @small-query {
-        display: flex;
-        flex-flow: wrap;
-      }
+    &.is-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
 
-      & .UserRow {
-        margin-right: 1rem;
+      & button + button,
+      a + button {
+        margin-left: 0.5rem;
       }
     }
   }
 
-  &-raised {
-    margin-top: 0.6rem;
+  .ant-tag {
+    vertical-align: text-top;
+  }
+
+  &-status {
+    margin-bottom: 0.6rem;
+
+    & q {
+      display: block;
+      margin: 0.5rem;
+      font-style: italic;
+    }
 
     & small {
       opacity: 0.6;

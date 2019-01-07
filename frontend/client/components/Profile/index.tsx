@@ -14,7 +14,7 @@ import { AppState } from 'store/reducers';
 import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
 import ProfileEdit from './ProfileEdit';
-import ProfilePending from './ProfilePending';
+import ProfilePendingList from './ProfilePendingList';
 import ProfileProposal from './ProfileProposal';
 import ProfileComment from './ProfileComment';
 import ProfileInvite from './ProfileInvite';
@@ -115,9 +115,7 @@ class Profile extends React.Component<Props> {
                     subtitle="You do not have any proposals awaiting approval."
                   />
                 )}
-                {pendingProposals.map(p => (
-                  <ProfilePending key={p.proposalId} proposal={p} />
-                ))}
+                <ProfilePendingList proposals={pendingProposals} />
               </div>
             </Tabs.TabPane>
           )}

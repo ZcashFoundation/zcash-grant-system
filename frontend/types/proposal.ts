@@ -32,6 +32,7 @@ export interface ProposalDraft {
   milestones: CreateMilestone[];
   team: User[];
   invites: TeamInvite[];
+  status: STATUS;
 }
 
 export interface Proposal {
@@ -74,6 +75,7 @@ export interface UserProposal {
   dateApproved: number;
   datePublished: number;
   team: User[];
+  rejectReason: string;
 }
 
 // NOTE: sync with backend/grant/proposal/models.py STATUSES
