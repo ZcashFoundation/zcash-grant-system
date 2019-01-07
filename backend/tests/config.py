@@ -53,19 +53,25 @@ class BaseUserConfig(BaseTestConfig):
         db.session.add(avatar)
         self.user_password = test_user["password"]
 
-        self.other_user = User.create(
+        self._other_user = User.create(
             email_address=test_other_user["emailAddress"],
             password=test_other_user["password"],
             display_name=test_other_user["displayName"],
             title=test_other_user["title"]
         )
+        self.other_user_password = test_other_user["password"]
         db.session.commit()
         self._user_id = self._user.id
+        self._other_user_id = self._other_user.id
 
     # always return fresh (avoid detached instance issues)
     @property
     def user(self):
         return User.query.filter_by(id=self._user_id).first()
+
+    @property
+    def other_user(self):
+        return User.query.filter_by(id=self._other_user_id).first()
 
     def login_default_user(self, cust_pass=None):
         return self.app.post(
@@ -73,6 +79,16 @@ class BaseUserConfig(BaseTestConfig):
             data=json.dumps({
                 "email": self.user.email_address,
                 "password": cust_pass or self.user_password
+            }),
+            content_type="application/json"
+        )
+
+    def login_other_user(self):
+        return self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.other_user.email_address,
+                "password": self.other_user_password
             }),
             content_type="application/json"
         )

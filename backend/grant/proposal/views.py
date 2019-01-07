@@ -241,7 +241,7 @@ def get_proposal_update(proposal_id, update_id):
     if proposal:
         update = ProposalUpdate.query.filter_by(proposal_id=proposal.id, id=update_id).first()
         if update:
-            return update
+            return proposal_update_schema.dump(update)
         else:
             return {"message": "No update matching id"}
     else:
