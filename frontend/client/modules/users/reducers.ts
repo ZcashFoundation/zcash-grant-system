@@ -5,22 +5,22 @@ import { User } from 'types';
 
 export interface TeamInviteWithResponse extends TeamInviteWithProposal {
   isResponding: boolean;
-  respondError: number | null;
+  respondError: string | null;
 }
 
 export interface UserState extends User {
   isFetching: boolean;
   hasFetched: boolean;
-  fetchError: number | null;
+  fetchError: string | null;
   isUpdating: boolean;
-  updateError: number | null;
+  updateError: string | null;
   pendingProposals: UserProposal[];
   createdProposals: UserProposal[];
   fundedProposals: UserProposal[];
   comments: UserComment[];
   isFetchingInvites: boolean;
   hasFetchedInvites: boolean;
-  fetchErrorInvites: number | null;
+  fetchErrorInvites: string | null;
   invites: TeamInviteWithResponse[];
 }
 
@@ -62,12 +62,10 @@ export default (state = INITIAL_STATE, action: any) => {
   const { payload } = action;
   const userFetchId = payload && payload.userFetchId;
   const invites = payload && payload.invites;
-  const errorStatus =
-    (payload &&
-      payload.error &&
-      payload.error.response &&
-      payload.error.response.status) ||
-    999;
+  const errorMessage =
+    (payload && payload.error && (payload.error.message || payload.error.toString())) ||
+    null;
+
   switch (action.type) {
     // fetch
     case types.FETCH_USER_PENDING:
@@ -83,7 +81,7 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, userFetchId, {
         isFetching: false,
         hasFetched: true,
-        fetchError: errorStatus,
+        fetchError: errorMessage,
       });
     // update
     case types.UPDATE_USER_PENDING:
@@ -101,7 +99,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.UPDATE_USER_REJECTED:
       return updateUserState(state, payload.user.userid, {
         isUpdating: false,
-        updateError: errorStatus,
+        updateError: errorMessage,
       });
     // invites
     case types.FETCH_USER_INVITES_PENDING:
@@ -119,7 +117,7 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, userFetchId, {
         isFetchingInvites: false,
         hasFetchedInvites: true,
-        fetchErrorInvites: errorStatus,
+        fetchErrorInvites: errorMessage,
       });
     // invites
     case types.FETCH_USER_INVITES_PENDING:
@@ -137,7 +135,7 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, userFetchId, {
         isFetchingInvites: false,
         hasFetchedInvites: true,
-        fetchErrorInvites: errorStatus,
+        fetchErrorInvites: errorMessage,
       });
     // invite response
     case types.RESPOND_TO_INVITE_PENDING:
@@ -150,7 +148,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.RESPOND_TO_INVITE_REJECTED:
       return updateTeamInvite(state, payload.userId, payload.inviteId, {
         isResponding: false,
-        respondError: errorStatus,
+        respondError: errorMessage,
       });
     // proposal delete
     case types.USER_DELETE_PROPOSAL_FULFILLED:
