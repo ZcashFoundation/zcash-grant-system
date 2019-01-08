@@ -45,12 +45,7 @@ export default class PublishWarningModal extends React.Component<Props> {
           )}
           <p>
             Are you sure you're ready to submit your proposal for approval? Once you’ve
-            done so, you won't be able to change certain fields such as: target amount,
-            payout address, team, & deadline.
-            {/* TODO - remove or rework for PUBLISH in addition to SUBMIT for approval, depending on design decisions. */}
-            {/* Are you sure you’re ready to publish your proposal? Once you’ve done so, you
-            won't be able to change certain fields such as: target amount, payout address,
-            team, & deadline. */}
+            done so, you won't be able to edit it.
           </p>
         </div>
       </Modal>
