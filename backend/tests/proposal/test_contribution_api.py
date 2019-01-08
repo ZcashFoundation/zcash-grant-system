@@ -3,13 +3,20 @@ from mock import patch
 
 from grant.proposal.models import Proposal
 from grant.user.models import SocialMedia, Avatar
+from grant.blockchain import blockchain_get
 from ..config import BaseUserConfig
 from ..test_data import test_proposal, test_user
+from ..mocks import mock_request
 
+mock_contribution_addresses = mock_request({
+    'transparent': 't123',
+    'sprout': 'z123',
+    'memo': '123',
+})
 
 class TestProposalContributionAPI(BaseUserConfig):
-
-    def test_create_proposal_contribution(self):
+    @patch('requests.get', side_effect=mock_contribution_addresses)
+    def test_create_proposal_contribution(self, mock_blockchain_get):
         self.login_default_user()
         proposal_res = self.app.post(
             "/api/v1/proposals/drafts",
@@ -20,27 +27,19 @@ class TestProposalContributionAPI(BaseUserConfig):
         proposal_id = proposal_json["proposalId"]
 
         contribution = {
-            "txId": "0x12345",
-            "fromAddress": "0x23456",
             "amount": "1.2345"
         }
 
-        contribution_res = self.app.post(
+        post_res = self.app.post(
             "/api/v1/proposals/{}/contributions".format(proposal_id),
             data=json.dumps(contribution),
             content_type='application/json'
         )
-        res = contribution_res.json
-        exp = contribution
 
-        def eq(k):
-            self.assertEqual(exp[k], res[k])
-        eq("txId")
-        eq("fromAddress")
-        eq("amount")
-        self.assertEqual(proposal_id, res["proposalId"])
+        self.assertStatus(post_res, 201)
 
-    def test_get_proposal_contribution(self):
+    @patch('requests.get', side_effect=mock_contribution_addresses)
+    def test_create_duplicate_contribution(self, mock_blockchain_get):
         self.login_default_user()
         proposal_res = self.app.post(
             "/api/v1/proposals/drafts",
@@ -51,61 +50,51 @@ class TestProposalContributionAPI(BaseUserConfig):
         proposal_id = proposal_json["proposalId"]
 
         contribution = {
-            "txId": "0x12345",
-            "fromAddress": "0x23456",
             "amount": "1.2345"
         }
 
-        self.app.post(
+        post_res = self.app.post(
             "/api/v1/proposals/{}/contributions".format(proposal_id),
             data=json.dumps(contribution),
             content_type='application/json'
         )
+
+        self.assertStatus(post_res, 201)
+
+        dupe_res = self.app.post(
+            "/api/v1/proposals/{}/contributions".format(proposal_id),
+            data=json.dumps(contribution),
+            content_type='application/json'
+        )
+        self.assert200(dupe_res)
+        self.assertEqual(dupe_res.json['id'], post_res.json['id'])
+
+    @patch('requests.get', side_effect=mock_contribution_addresses)
+    def test_get_proposal_contribution(self, mock_blockchain_get):
+        self.login_default_user()
+        proposal_res = self.app.post(
+            "/api/v1/proposals/drafts",
+            data=json.dumps(test_proposal),
+            content_type='application/json'
+        )
+        proposal_json = proposal_res.json
+        proposal_id = proposal_json["proposalId"]
+
+        contribution = {
+            "amount": "1.2345"
+        }
+
+        post_res = self.app.post(
+            "/api/v1/proposals/{}/contributions".format(proposal_id),
+            data=json.dumps(contribution),
+            content_type='application/json'
+        )
+        contribution_id = post_res.json['id']
 
         contribution_res = self.app.get(
-            "/api/v1/proposals/{0}/contributions/{1}".format(proposal_id, contribution["txId"])
-        )
-        res = contribution_res.json
-        exp = contribution
-
-        def eq(k):
-            self.assertEqual(exp[k], res[k])
-        eq("txId")
-        eq("fromAddress")
-        eq("amount")
-        self.assertEqual(proposal_id, res["proposalId"])
-
-    def test_get_proposal_contributions(self):
-        self.login_default_user()
-        proposal_res = self.app.post(
-            "/api/v1/proposals/drafts",
-            data=json.dumps(test_proposal),
-            content_type='application/json'
-        )
-        proposal_json = proposal_res.json
-        proposal_id = proposal_json["proposalId"]
-
-        contribution = {
-            "txId": "0x12345",
-            "fromAddress": "0x23456",
-            "amount": "1.2345"
-        }
-
-        self.app.post(
-            "/api/v1/proposals/{}/contributions".format(proposal_id),
-            data=json.dumps(contribution),
-            content_type='application/json'
+            f'/api/v1/proposals/{proposal_id}/contributions/{contribution_id}'
         )
 
-        contributions_res = self.app.get(
-            "/api/v1/proposals/{0}/contributions".format(proposal_id)
-        )
-        res = contributions_res.json[0]
-        exp = contribution
-
-        def eq(k):
-            self.assertEqual(exp[k], res[k])
-        eq("txId")
-        eq("fromAddress")
-        eq("amount")
-        self.assertEqual(proposal_id, res["proposalId"])
+        contribution = contribution_res.json
+        self.assertEqual(contribution['id'], contribution_id)
+        self.assertEqual(contribution['status'], 'PENDING')

@@ -311,7 +311,7 @@ def get_proposal_contributions(proposal_id):
 def get_proposal_contribution(proposal_id, contribution_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
-        contribution = ProposalContribution.query.filter_by(tx_id=contribution_id).first()
+        contribution = ProposalContribution.query.filter_by(id=contribution_id).first()
         if contribution:
             return proposal_contribution_schema.dump(contribution)
         else:
@@ -332,7 +332,7 @@ def post_proposal_contribution(proposal_id, amount):
 
     code = 200
     contribution = ProposalContribution \
-        .getByUserAndProposal(g.current_user.id, proposal_id)
+        .getExistingContribution(g.current_user.id, proposal_id, amount)
 
     if not contribution:
         code = 201

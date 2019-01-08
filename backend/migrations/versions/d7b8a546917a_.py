@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: a3b15766d9ab
+Revision ID: d7b8a546917a
 Revises: 
-Create Date: 2018-11-26 18:32:35.322687
+Create Date: 2019-01-08 11:58:11.938479
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a3b15766d9ab'
+revision = 'd7b8a546917a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,21 +29,24 @@ def upgrade():
     sa.Column('category', sa.String(length=255), nullable=False),
     sa.Column('target', sa.String(length=255), nullable=False),
     sa.Column('payout_address', sa.String(length=255), nullable=False),
-    sa.Column('trustees', sa.String(length=1024), nullable=False),
     sa.Column('deadline_duration', sa.Integer(), nullable=False),
-    sa.Column('vote_duration', sa.Integer(), nullable=False),
-    sa.Column('proposal_address', sa.String(length=255), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('role',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=80), nullable=True),
+    sa.Column('description', sa.String(length=255), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('proposal_address')
+    sa.UniqueConstraint('name')
     )
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('email_address', sa.String(length=255), nullable=True),
-    sa.Column('account_address', sa.String(length=255), nullable=True),
+    sa.Column('email_address', sa.String(length=255), nullable=False),
+    sa.Column('password', sa.String(length=255), nullable=False),
     sa.Column('display_name', sa.String(length=255), nullable=True),
     sa.Column('title', sa.String(length=255), nullable=True),
+    sa.Column('active', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('account_address'),
     sa.UniqueConstraint('email_address')
     )
     op.create_table('avatar',
@@ -57,11 +60,21 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('date_created', sa.DateTime(), nullable=True),
     sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('parent_comment_id', sa.Integer(), nullable=True),
     sa.Column('proposal_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['parent_comment_id'], ['comment.id'], ),
     sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('email_recovery',
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('code', sa.String(length=255), nullable=False),
+    sa.Column('date_created', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('user_id'),
+    sa.UniqueConstraint('code')
     )
     op.create_table('email_verification',
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -85,21 +98,31 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('proposal_contribution',
-    sa.Column('tx_id', sa.String(length=255), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('date_created', sa.DateTime(), nullable=False),
     sa.Column('proposal_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('from_address', sa.String(length=255), nullable=False),
+    sa.Column('status', sa.String(length=255), nullable=False),
     sa.Column('amount', sa.String(length=255), nullable=False),
+    sa.Column('tx_id', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('tx_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('proposal_team',
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('proposal_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], )
+    )
+    op.create_table('proposal_team_invite',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('date_created', sa.DateTime(), nullable=True),
+    sa.Column('proposal_id', sa.Integer(), nullable=False),
+    sa.Column('address', sa.String(length=255), nullable=False),
+    sa.Column('accepted', sa.Boolean(), nullable=True),
+    sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('proposal_update',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -110,9 +133,18 @@ def upgrade():
     sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('roles_users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('role_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['role_id'], ['role.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('social_media',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('social_media_link', sa.String(length=255), nullable=True),
+    sa.Column('service', sa.String(length=255), nullable=False),
+    sa.Column('username', sa.String(length=255), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -123,13 +155,17 @@ def upgrade():
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('social_media')
+    op.drop_table('roles_users')
     op.drop_table('proposal_update')
+    op.drop_table('proposal_team_invite')
     op.drop_table('proposal_team')
     op.drop_table('proposal_contribution')
     op.drop_table('milestone')
     op.drop_table('email_verification')
+    op.drop_table('email_recovery')
     op.drop_table('comment')
     op.drop_table('avatar')
     op.drop_table('user')
+    op.drop_table('role')
     op.drop_table('proposal')
     # ### end Alembic commands ###
