@@ -10,7 +10,7 @@ from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_auth, requires_team_member_auth
+from grant.utils.auth import requires_auth, requires_team_member_auth, internal_webhook
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url
 from .models import(
@@ -346,3 +346,24 @@ def post_proposal_contribution(proposal_id, amount):
 
     dumped_contribution = proposal_contribution_schema.dump(contribution)
     return dumped_contribution, code
+
+@blueprint.route("/contribution/<contribution_id>/confirm", methods=["POST"])
+@internal_webhook
+@endpoint.api(
+    parameter('to', type=str, required=True),
+    parameter('amount', type=str, required=True),
+    parameter('txid', type=str, required=True),
+)
+def post_contribution_confirmation(contribution_id, to, amount, txid):
+    contribution = contribution = ProposalContribution.query.filter_by(
+        id=contribution_id).first()
+
+    if not contribution:
+        # TODO: Log in sentry
+        print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
+        return {"message": "No contribution matching id"}, 404
+
+    contribution.confirm(tx_id=txid, amount=amount)
+    db.session.add(contribution)
+    db.session.commit()
+    return None, 200
