@@ -7,21 +7,21 @@ import Contributors from 'components/Proposal/Contributors';
 import 'styles/style.less';
 import 'components/Proposal/style.less';
 import 'components/Proposal/Governance/style.less';
-import { getProposalWithCrowdFund } from './props';
+import { generateProposal } from './props';
 
-const propsNoFunding = getProposalWithCrowdFund({
+const propsNoFunding = generateProposal({
   amount: 5,
   funded: 0,
 });
-const propsHalfFunded = getProposalWithCrowdFund({
+const propsHalfFunded = generateProposal({
   amount: 5,
   funded: 2.5,
 });
-const propsFunded = getProposalWithCrowdFund({
+const propsFunded = generateProposal({
   amount: 5,
   funded: 5,
 });
-const propsNotFundedExpired = getProposalWithCrowdFund({
+const propsNotFundedExpired = generateProposal({
   created: Date.now() - 10,
   deadline: Date.now() - 1,
 });

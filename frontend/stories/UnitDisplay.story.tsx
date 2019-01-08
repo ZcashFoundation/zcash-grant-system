@@ -4,30 +4,30 @@ import BN from 'bn.js';
 
 import UnitDisplay from '../client/components/UnitDisplay';
 
-const oneEth = new BN('1000000000000000000');
+const oneZEC = new BN('1000000000000000000');
 
 const cases = [
   {
     disp: 'basic',
-    props: { value: oneEth.mul(new BN(25)), symbol: 'ETH' },
+    props: { value: oneZEC.mul(new BN(25)), symbol: 'ZEC' },
   },
   {
     disp: 'fraction',
-    props: { value: oneEth.div(new BN(3)), symbol: 'ETH' },
+    props: { value: oneZEC.div(new BN(3)), symbol: 'ZEC' },
   },
   {
     disp: 'fraction - displayShortBalance: true',
-    props: { value: oneEth.div(new BN(3)), symbol: 'ETH', displayShortBalance: true },
+    props: { value: oneZEC.div(new BN(3)), symbol: 'ZEC', displayShortBalance: true },
   },
   {
     disp: 'fraction - displayShortBalance: 2',
-    props: { value: oneEth.div(new BN(3)), symbol: 'ETH', displayShortBalance: 2 },
+    props: { value: oneZEC.div(new BN(3)), symbol: 'ZEC', displayShortBalance: 2 },
   },
   {
     disp: 'fraction - displayShortBalance: 4, displayTrailingZeros: false',
     props: {
-      value: oneEth.div(new BN(2)),
-      symbol: 'ETH',
+      value: oneZEC.div(new BN(2)),
+      symbol: 'ZEC',
       displayShortBalance: 4,
       displayTrailingZeroes: false,
     },
@@ -35,21 +35,21 @@ const cases = [
   {
     disp: 'fraction - displayShortBalance: 4, displayTrailingZeros: true',
     props: {
-      value: oneEth.div(new BN(2)),
-      symbol: 'ETH',
+      value: oneZEC.div(new BN(2)),
+      symbol: 'ZEC',
       displayShortBalance: 4,
       displayTrailingZeroes: true,
     },
   },
   {
     disp: 'tiny',
-    props: { value: new BN(1), symbol: 'ETH' },
+    props: { value: new BN(1), symbol: 'ZEC' },
   },
   {
     disp: 'tiny - displayShortBalance: true',
     props: {
       value: new BN(1),
-      symbol: 'ETH',
+      symbol: 'ZEC',
       displayShortBalance: true,
     },
   },
@@ -57,7 +57,7 @@ const cases = [
     disp: 'tiny - displayShortBalance: 2',
     props: {
       value: new BN(1),
-      symbol: 'ETH',
+      symbol: 'ZEC',
       displayShortBalance: 2,
     },
   },

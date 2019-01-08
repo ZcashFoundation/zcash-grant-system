@@ -15,7 +15,9 @@ const ContributorsBlock = () => {
         <AddressRow
           key={contributor.address}
           address={contributor.address}
-          secondary={<UnitDisplay value={contributor.contributionAmount} symbol="ETH" />}
+          secondary={
+            <UnitDisplay value={contributor.contributionAmount} symbol="ZEC" />
+          }
         />
       ));
     } else {

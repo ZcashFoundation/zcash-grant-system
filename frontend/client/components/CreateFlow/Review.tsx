@@ -64,7 +64,7 @@ class CreateReview extends React.Component<Props> {
           },
           {
             key: 'target',
-            content: <div style={{ fontSize: '1.2rem' }}>{form.target} ETH</div>,
+            content: <div style={{ fontSize: '1.2rem' }}>{form.target} ZEC</div>,
             error: errors.target,
           },
         ],

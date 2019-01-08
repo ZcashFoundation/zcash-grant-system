@@ -1,7 +1,6 @@
 import lodash from 'lodash';
 import React from 'react';
 import moment from 'moment';
-import BN from 'bn.js';
 import { Alert, Steps, Spin } from 'antd';
 import { Proposal, MILESTONE_STATE } from 'types';
 import UnitDisplay from 'components/UnitDisplay';
@@ -98,11 +97,8 @@ class ProposalMilestones extends React.Component<Props, State> {
 
       const className = this.state.step === i ? 'is-active' : 'is-inactive';
       const estimatedDate = moment(milestone.dateEstimated).format('MMMM YYYY');
-      // TODO: Real milestone amount
-      console.warn('TODO: Real milestone amount in Proposal/Milestones/index.tsx');
-      const amount = new BN(0);
       const reward = (
-        <UnitDisplay value={amount} symbol="ETH" displayShortBalance={4} />
+        <UnitDisplay value={milestone.amount} symbol="ZEC" displayShortBalance={4} />
       );
       const alertStyle = { width: 'fit-content', margin: '0 0 1rem 0' };
 
@@ -125,9 +121,8 @@ class ProposalMilestones extends React.Component<Props, State> {
                   The team was awarded <strong>{reward}</strong>{' '}
                   {milestone.isImmediatePayout
                     ? 'as an initial payout'
-                    : `on ${moment(milestone.payoutRequestVoteDeadline).format(
-                        'MMM Do, YYYY',
-                      )}`}
+                    // TODO: Add property for payout date on milestones
+                    : `on ${moment().format('MMM Do, YYYY')}`}
                   .
                 </span>
               }
@@ -139,12 +134,10 @@ class ProposalMilestones extends React.Component<Props, State> {
           notification = (
             <Alert
               type="info"
-              message={
-                <span>
-                  Payout vote is in progress! The approval period ends{' '}
-                  {moment(milestone.payoutRequestVoteDeadline).from(new Date())}.
-                </span>
-              }
+              message={`
+                The team has requested a payout for this milestone. It is
+                currently under review.
+              `}
               style={alertStyle}
             />
           );
@@ -155,10 +148,11 @@ class ProposalMilestones extends React.Component<Props, State> {
               type="warning"
               message={
                 <span>
-                  Payout was voted against on{' '}
-                  {moment(milestone.payoutRequestVoteDeadline).format('MMM Do, YYYY')}.
-                  {isTrustee ? ' You ' : ' The team '} can request another payout vote at
-                  any time.
+                  Payout for this milestone was rejected on{' '}
+                  {/* TODO: add property for payout rejection date on milestones */}
+                  {moment().format('MMM Do, YYYY')}.
+                  {isTrustee ? ' You ' : ' The team '} can request another
+                  review for payout at any time.
                 </span>
               }
               style={alertStyle}

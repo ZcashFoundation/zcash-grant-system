@@ -7,7 +7,7 @@ export function getAmountError(amount: number, max: number = Infinity) {
   ) {
     return 'Must be in increments of 0.001';
   } else if (amount > max) {
-    return `Cannot exceed maximum (${max} ETH)`;
+    return `Cannot exceed maximum (${max} ZEC)`;
   }
 
   return null;
