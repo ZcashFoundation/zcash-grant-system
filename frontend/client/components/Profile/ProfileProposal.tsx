@@ -25,9 +25,9 @@ export default class Profile extends React.Component<OwnProps> {
           </Link>
           <div className="ProfileProposal-brief">{brief}</div>
           <div className="ProfileProposal-raised">
-            <UnitDisplay value={funded} symbol="ETH" displayShortBalance={4} />{' '}
+            <UnitDisplay value={funded} symbol="ZEC" displayShortBalance={4} />{' '}
             <small>raised</small> of{' '}
-            <UnitDisplay value={target} symbol="ETH" displayShortBalance={4} /> goal
+            <UnitDisplay value={target} symbol="ZEC" displayShortBalance={4} /> goal
           </div>
         </div>
         <div className="ProfileProposal-block">

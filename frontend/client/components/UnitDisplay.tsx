@@ -1,23 +1,28 @@
 // Adapted from https://github.com/MyCryptoHQ/MyCrypto/blob/develop/common/components/ui/UnitDisplay.tsx
 import React from 'react';
 import {
-  fromTokenBase,
-  getDecimalFromEtherUnit,
+  baseToConvertedUnit,
+  getDecimalFromUnitKey,
   UnitKey,
-  Wei,
-  TokenValue,
+  Zat,
 } from 'utils/units';
 import { formatNumber } from 'utils/formatters';
 
 interface Props {
   /**
-   * @description base value of the token / ether, incase of waiting for API calls, we can return '???'
-   * @type {TokenValue | Wei}
+   * @description base value of the unit
+   * @type {Zat}
    * @memberof Props
    */
-  value: TokenValue | Wei;
+  value: Zat;
   /**
-   * @description Symbol to display to the right of the value, such as 'ETH'
+   * @description Name of the unit to display, defaults to 'zcash'
+   * @type {UnitKey}
+   * @memberof Props
+   */
+  unit?: UnitKey;
+  /**
+   * @description Symbol to display to the right of the value, such as 'ZEC'
    * @type {string}
    * @memberof Props
    */
@@ -32,22 +37,13 @@ interface Props {
   checkOffline?: boolean;
 }
 
-interface EthProps extends Props {
-  unit?: UnitKey;
-}
-interface TokenProps extends Props {
-  decimal: number;
-}
-
-const isTokenUnit = (param: EthProps | TokenProps): param is TokenProps =>
-  !!(param as TokenProps).decimal;
-
-const UnitDisplay: React.SFC<EthProps | TokenProps> = params => {
+const UnitDisplay: React.SFC<Props> = params => {
   const { value, symbol, displayShortBalance, displayTrailingZeroes } = params;
 
-  const convertedValue = isTokenUnit(params)
-    ? fromTokenBase(value, params.decimal)
-    : fromTokenBase(value, getDecimalFromEtherUnit(params.unit || 'ether'));
+  const convertedValue = baseToConvertedUnit(
+    value.toString(),
+    getDecimalFromUnitKey(params.unit || 'zcash'),
+  );
 
   let formattedValue;
 

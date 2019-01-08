@@ -1,6 +1,8 @@
-import { Wei } from 'utils/units';
+import BN from 'bn.js';
+import { Zat } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import { CreateMilestone, ProposalMilestone, Update, User, Comment } from 'types';
+import { CreateMilestone, Update, User, Comment } from 'types';
+import { ProposalMilestone } from './milestone';
 
 export interface TeamInvite {
   id: number;
@@ -11,7 +13,7 @@ export interface TeamInvite {
 
 export interface Contributor {
   address: string;
-  contributionAmount: Wei;
+  contributionAmount: Zat;
   refundVote: boolean;
   refunded: boolean;
   proportionalContribution: string;
@@ -35,18 +37,13 @@ export interface ProposalDraft {
   status: STATUS;
 }
 
-export interface Proposal {
-  proposalId: number;
+export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   proposalAddress: string;
   proposalUrlId: string;
-  dateCreated: number;
-  title: string;
-  brief: string;
-  content: string;
-  stage: string;
-  category: PROPOSAL_CATEGORY;
+  target: BN;
+  funded: BN;
+  percentFunded: number;
   milestones: ProposalMilestone[];
-  team: User[];
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {
@@ -69,8 +66,8 @@ export interface UserProposal {
   status: STATUS;
   title: string;
   brief: string;
-  target: Wei; // TODO - zcashify
-  funded: Wei; // TODO - zcashify
+  funded: BN;
+  target: BN;
   dateCreated: number;
   dateApproved: number;
   datePublished: number;

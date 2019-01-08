@@ -111,7 +111,7 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
             type="number"
             value={target}
             onChange={this.handleInputChange}
-            addonAfter="ETH"
+            addonAfter="ZEC"
           />
         </Form.Item>
       </Form>
