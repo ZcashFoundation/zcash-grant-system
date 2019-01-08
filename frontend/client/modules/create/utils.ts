@@ -1,4 +1,4 @@
-import { ProposalDraft, CreateMilestone } from 'types';
+import { ProposalDraft, CreateMilestone, STATUS } from 'types';
 import { User } from 'types';
 import { getAmountError } from 'utils/validators';
 import { MILESTONE_STATE, Proposal } from 'types';
@@ -170,13 +170,12 @@ export function proposalToContractData(form: ProposalDraft): any {
 }
 
 // This is kind of a disgusting function, sorry.
-export function makeProposalPreviewFromDraft(
-  draft: ProposalDraft,
-): Proposal {
+export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
   const target = parseFloat(draft.target);
 
   return {
     proposalId: 0,
+    status: STATUS.DRAFT,
     proposalUrlId: '0-title',
     proposalAddress: '0x0',
     payoutAddress: '0x0',
