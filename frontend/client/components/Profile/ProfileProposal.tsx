@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { UserProposal } from 'types';
-import BN from 'bn.js';
 import './ProfileProposal.less';
 import UserRow from 'components/UserRow';
 import UnitDisplay from 'components/UnitDisplay';
@@ -12,11 +11,7 @@ interface OwnProps {
 
 export default class Profile extends React.Component<OwnProps> {
   render() {
-    const { title, brief, team, proposalId } = this.props.proposal;
-    // temporary until zcash data is settled
-    console.warn('TODO - Profile/ProfileProposal get real funding data');
-    const target = new BN('50000000000000000000');
-    const funded = new BN('5000000000000000000');
+    const { title, brief, team, proposalId, funded, target } = this.props.proposal;
     return (
       <div className="ProfileProposal">
         <div className="ProfileProposal-block">

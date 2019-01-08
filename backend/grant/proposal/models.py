@@ -438,6 +438,7 @@ class UserProposalSchema(ma.Schema):
             "title",
             "brief",
             "target",
+            "funded",
             "date_created",
             "date_approved",
             "date_published",
@@ -446,6 +447,7 @@ class UserProposalSchema(ma.Schema):
         )
     date_created = ma.Method("get_date_created")
     proposal_id = ma.Method("get_proposal_id")
+    funded = ma.Method("get_funded")
     team = ma.Nested("UserSchema", many=True)
 
     def get_proposal_id(self, obj):
@@ -453,6 +455,10 @@ class UserProposalSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created) * 1000
+
+    def get_funded(self, obj):
+        # TODO: Add up all contributions and return that
+        return "0"
 
 
 user_proposal_schema = UserProposalSchema()
