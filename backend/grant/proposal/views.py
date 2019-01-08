@@ -11,7 +11,7 @@ from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_auth, requires_team_member_auth
+from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url
 from .models import(
@@ -29,7 +29,9 @@ from .models import(
     DRAFT,
     PENDING,
     APPROVED,
-    REJECTED
+    REJECTED,
+    LIVE,
+    DELETED
 )
 import traceback
 
@@ -41,6 +43,13 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
+        if proposal.status != LIVE:
+            if proposal.status == DELETED:
+                return {"message": "Proposal was deleted"}, 404
+            authed_user = get_authed_user()
+            team_ids = list(x.id for x in proposal.team)
+            if not authed_user or authed_user.id not in team_ids:
+                return {"message": "User cannot view this proposal"}, 404
         return proposal_schema.dump(proposal)
     else:
         return {"message": "No proposal matching id"}, 404
@@ -101,13 +110,13 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 def get_proposals(stage):
     if stage:
         proposals = (
-            Proposal.query.filter_by(status="LIVE", stage=stage)
+            Proposal.query.filter_by(status=LIVE, stage=stage)
             .order_by(Proposal.date_created.desc())
             .all()
         )
     else:
         proposals = (
-            Proposal.query.filter_by(status="LIVE")
+            Proposal.query.filter_by(status=LIVE)
             .order_by(Proposal.date_created.desc())
             .all()
         )
