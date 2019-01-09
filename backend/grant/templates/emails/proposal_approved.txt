@@ -1,0 +1,11 @@
+Congratulations on your approval! We look forward to seeing the support your
+proposal receives. To start the fundraising (and the clock) go to the URL
+below and publish your proposal.
+
+{% if args.admin_note %}
+A note from the admin team was attached to your approval:
+
+> {{ args.admin_note }}
+{% endif %}
+
+{{ args.proposal_url }}

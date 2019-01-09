@@ -1,0 +1,91 @@
+.Example {
+  &-section {
+    margin-bottom: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(#000, 0.3);
+
+    &:last-child {
+      border: none;
+    }
+
+    &-title {
+      font-size: 1.2rem;
+    }
+  }
+
+
+  // Values taken directly from gmail, that's why they're weird!
+  &-inbox {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FFF;
+    color: #202124;
+    border: 1px solid rgba(100,121,143,0.122);
+    height: 40px;
+    font-family: Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+
+    &-left {
+      display: flex;
+      width: 270px;
+      padding-left: 18px;
+      padding-right: 32px;
+
+      &-icon {
+        width: 20px;
+        height: 20px;
+        background-position: center;
+        background-size: 20px;
+        opacity: 0.2;
+        margin-right: 10px;
+
+        &.is-checkbox {
+          background-image: url(https://www.gstatic.com/images/icons/material/system/2x/check_box_outline_blank_black_20dp.png);
+        }
+        &.is-favorite {
+          background-image: url(https://www.gstatic.com/images/icons/material/system/2x/star_border_black_20dp.png);
+        }
+      }
+
+      &-sender {
+        font-size: 14px;
+        letter-spacing: 0.2px;
+      }
+    }
+
+    &-subject {
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      strong {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      small {
+        font-size: 14px;
+        color: #5f6368;
+      }
+    }
+
+    &-time {
+      width: 115px;
+      padding-right: 18px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-align: right;
+    }
+  }
+
+  &-text {
+    pre {
+      padding: 1rem;
+      background: #FAFAFA;
+      border: 1px solid #CCC;
+      border-radius: 4px;
+    }
+  }
+}

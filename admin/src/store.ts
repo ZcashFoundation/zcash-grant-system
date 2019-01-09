@@ -1,6 +1,6 @@
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal, PROPOSAL_STATUS } from './types';
+import { User, Proposal, EmailExample, PROPOSAL_STATUS } from './types';
 
 // API
 const api = axios.create({
@@ -66,6 +66,11 @@ async function approveProposal(id: number, isApprove: boolean, rejectReason?: st
   return data;
 }
 
+async function getEmailExample(type: string) {
+  const { data } = await api.get(`/admin/email/example/${type}`);
+  return data;
+}
+
 // STORE
 const app = store({
   hasCheckedLogin: false,
@@ -87,6 +92,7 @@ const app = store({
   proposalDetailFetching: false,
   proposalDetail: null as null | Proposal,
   proposalDetailApproving: false,
+  emailExamples: {} as { [type: string]: EmailExample },
 
   removeGeneralError(i: number) {
     app.generalError.splice(i, 1);
@@ -199,6 +205,18 @@ const app = store({
       handleApiError(e);
     }
     app.proposalDetailApproving = false;
+  },
+  
+  async getEmailExample(type: string) {
+    try {
+      const example = await getEmailExample(type);
+      app.emailExamples = {
+        ...app.emailExamples,
+        [type]: example,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
   },
 });
 

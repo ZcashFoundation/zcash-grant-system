@@ -55,3 +55,13 @@ export interface User {
   proposals: Proposal[];
   comments: Comment[];
 }
+
+export interface EmailExample {
+  info: {
+    subject: string;
+    title: string;
+    preview: string;
+  };
+  html: string;
+  text: string;
+}

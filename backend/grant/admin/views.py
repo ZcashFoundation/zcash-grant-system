@@ -10,6 +10,8 @@ from grant.extensions import db
 from grant.user.models import User, users_schema
 from grant.proposal.models import Proposal, proposals_schema, proposal_schema, PENDING
 from grant.comment.models import Comment, comments_schema
+from grant.email.send import generate_email
+from .example_emails import example_email_args
 
 
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
@@ -147,3 +149,11 @@ def approve_proposal(id, is_approve, reject_reason=None):
         return proposal_schema.dump(proposal)
 
     return {"message": "Not implemented."}, 400
+
+
+@blueprint.route('/email/example/<type>', methods=['GET'])
+@cross_origin(supports_credentials=True)
+@endpoint.api()
+@auth_required
+def get_email_example(type):
+    return generate_email(type, example_email_args.get(type))
