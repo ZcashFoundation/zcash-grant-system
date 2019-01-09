@@ -106,14 +106,20 @@ class ProposalContribution(db.Model):
         self.status = PENDING
 
     @staticmethod
-    def getExistingContribution(user_id: int, proposal_id: int, amount: str):
-        return ProposalContribution.query \
-            .filter_by(user_id=user_id, proposal_id=proposal_id, amount=amount) \
-            .first()
+    def get_existing_contribution(user_id: int, proposal_id: int, amount: str):
+        return ProposalContribution.query.filter_by(
+            user_id=user_id,
+            proposal_id=proposal_id,
+            amount=amount,
+            status=PENDING,
+        ).first()
     
     @staticmethod
     def get_by_userid(user_id):
-        return ProposalContribution.query.filter_by(user_id=user_id).all()
+        return ProposalContribution.query \
+            .filter_by(user_id=user_id) \
+            .order_by(ProposalContribution.date_created.desc()) \
+            .all()
 
     def confirm(self, tx_id: str, amount: str):
         self.status = CONFIRMED

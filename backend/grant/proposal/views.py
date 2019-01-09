@@ -12,7 +12,7 @@ from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
 from grant.utils.auth import requires_auth, requires_team_member_auth, internal_webhook
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email, make_url
+from grant.utils.misc import is_email, make_url, from_zat
 from .models import(
     Proposal,
     proposals_schema,
@@ -332,7 +332,7 @@ def post_proposal_contribution(proposal_id, amount):
 
     code = 200
     contribution = ProposalContribution \
-        .getExistingContribution(g.current_user.id, proposal_id, amount)
+        .get_existing_contribution(g.current_user.id, proposal_id, amount)
 
     if not contribution:
         code = 201
@@ -363,7 +363,10 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
         print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
         return {"message": "No contribution matching id"}, 404
 
-    contribution.confirm(tx_id=txid, amount=amount)
+    # Convert to whole zcash coins from zats
+    zec_amount = str(from_zat(int(amount)))
+
+    contribution.confirm(tx_id=txid, amount=zec_amount)
     db.session.add(contribution)
     db.session.commit()
     return None, 200
