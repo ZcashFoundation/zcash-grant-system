@@ -26,7 +26,7 @@ import './index.less';
 
 interface OwnProps {
   proposalId: number;
-  isPreview: boolean;
+  isPreview?: boolean;
 }
 
 interface StateProps {
