@@ -1,0 +1,12 @@
+Your proposal has unfortunately been rejected. You're free to modify it
+and try submitting again.
+
+{% if args.admin_note %}
+A note from the admin team was attached to your rejection:
+
+> {{ args.admin_note }}
+{% endif %}
+
+Please note that repeated submissions without significant changes or with
+content that doesn't match the platform guidelines may result in a removal
+of your submission privileges.

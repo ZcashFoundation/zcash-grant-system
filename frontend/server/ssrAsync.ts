@@ -15,7 +15,8 @@ const pathActions = [
     action: (match: RegExpMatchArray, store: Store) => {
       const proposalId = extractProposalIdFromUrl(match[1]);
       if (proposalId) {
-        return store.dispatch<any>(fetchProposal(proposalId));
+        // return null for errors (404 most likely)
+        return store.dispatch<any>(fetchProposal(proposalId)).catch(() => null);
       }
     },
   },

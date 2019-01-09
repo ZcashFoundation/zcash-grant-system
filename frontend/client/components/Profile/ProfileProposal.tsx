@@ -11,8 +11,7 @@ interface OwnProps {
 
 export default class Profile extends React.Component<OwnProps> {
   render() {
-    const { title, brief, team, funded, target, proposalId } = this.props.proposal;
-
+    const { title, brief, team, proposalId, funded, target } = this.props.proposal;
     return (
       <div className="ProfileProposal">
         <div className="ProfileProposal-block">

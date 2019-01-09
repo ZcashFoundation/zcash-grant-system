@@ -1,0 +1,71 @@
+@import '~styles/variables.less';
+@small-query: ~'(max-width: 640px)';
+
+.ProfilePending {
+  display: flex;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: none;
+  }
+
+  @media @small-query {
+    flex-direction: column;
+    padding-bottom: 0.6rem;
+  }
+
+  &-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: inherit;
+    display: block;
+    margin-bottom: 0.1rem;
+  }
+
+  &-block {
+    flex: 1 0 0%;
+
+    &:last-child {
+      margin-left: 1.2rem;
+      flex: 0 0 0%;
+      min-width: 15rem;
+
+      @media @small-query {
+        margin-left: 0;
+        margin-top: 0.6rem;
+      }
+    }
+
+    &.is-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+
+      & button + button,
+      a + button {
+        margin-left: 0.5rem;
+      }
+    }
+  }
+
+  .ant-tag {
+    vertical-align: text-top;
+  }
+
+  &-status {
+    margin-bottom: 0.6rem;
+
+    & q {
+      display: block;
+      margin: 0.5rem;
+      font-style: italic;
+    }
+
+    & small {
+      opacity: 0.6;
+    }
+  }
+}

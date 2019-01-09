@@ -5,8 +5,8 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
 import store from 'src/store';
 import { User } from 'src/types';
-import './index.less';
 import Field from 'components/Field';
+import './index.less';
 
 type Props = RouteComponentProps<any>;
 
@@ -16,7 +16,7 @@ class UsersNaked extends React.Component<Props> {
   }
 
   render() {
-    const id = this.props.match.params.id;
+    const id = parseInt(this.props.match.params.id, 10);
     const { users, usersFetched } = store;
 
     if (!usersFetched) {
@@ -24,7 +24,7 @@ class UsersNaked extends React.Component<Props> {
     }
 
     if (id) {
-      const singleUser = users.find(u => u.accountAddress === id);
+      const singleUser = users.find(u => u.userid === id);
       if (singleUser) {
         return (
           <div className="Users">
@@ -102,7 +102,6 @@ class UserItemNaked extends React.Component<User> {
           <Field title="displayName" value={u.displayName} />
           <Field title="title" value={u.title} />
           <Field title="emailAddress" value={u.emailAddress} />
-          <Field title="accountAddress" value={u.accountAddress} />
           <Field title="userid" value={u.userid} />
           <Field
             title="avatar.imageUrl"
@@ -130,7 +129,7 @@ class UserItemNaked extends React.Component<User> {
     );
   }
   private handleDelete = () => {
-    store.deleteUser(this.props.accountAddress);
+    store.deleteUser(this.props.userid);
   };
 }
 const UserItem = view(UserItemNaked);

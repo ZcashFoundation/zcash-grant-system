@@ -1,0 +1,34 @@
+<p style="margin: 0;">
+  Congratulations on your approval! We look forward to seeing the support your
+  proposal receives. To get your campaign started, click below and follow the
+  instructions to publish your proposal.
+</p>
+
+{% if args.admin_note %}
+<p style="margin: 20px 0 0;">
+  A note from the admin team was attached to your approval:
+</p>
+<p style="margin: 10px 0; padding: 20px; background: #F8F8F8;">
+  “{{ args.admin_note }}”
+</p>
+{% endif %}
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td bgcolor="#ffffff" align="center" style="padding: 40px 30px 40px 30px;">
+      <table border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td align="center" style="border-radius: 3px;" bgcolor="#530EEC">
+            <a
+              href="{{ args.proposal_url }}"
+              target="_blank"
+              style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 20px 50px; border-radius: 4px; border: 1px solid #530EEC; display: inline-block;"
+            >
+              Publish your proposal
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

@@ -1,6 +1,6 @@
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal } from './types';
+import { User, Proposal, EmailExample, PROPOSAL_STATUS } from './types';
 
 // API
 const api = axios.create({
@@ -36,18 +36,38 @@ async function fetchUsers() {
   return data;
 }
 
-async function deleteUser(id: string) {
+async function deleteUser(id: number | string) {
   const { data } = await api.delete('/admin/users/' + id);
   return data;
 }
 
-async function fetchProposals() {
-  const { data } = await api.get('/admin/proposals');
+async function fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
+  const { data } = await api.get('/admin/proposals', {
+    params: { statusFilters },
+  });
+  return data;
+}
+
+async function fetchProposalDetail(id: number) {
+  const { data } = await api.get(`/admin/proposals/${id}`);
   return data;
 }
 
 async function deleteProposal(id: number) {
   const { data } = await api.delete('/admin/proposals/' + id);
+  return data;
+}
+
+async function approveProposal(id: number, isApprove: boolean, rejectReason?: string) {
+  const { data } = await api.put(`/admin/proposals/${id}/approve`, {
+    isApprove,
+    rejectReason,
+  });
+  return data;
+}
+
+async function getEmailExample(type: string) {
+  const { data } = await api.get(`/admin/email/example/${type}`);
   return data;
 }
 
@@ -57,17 +77,35 @@ const app = store({
   isLoggedIn: false,
   loginError: '',
   generalError: [] as string[],
+  statsFetched: false,
+  statsFetching: false,
   stats: {
-    userCount: -1,
-    proposalCount: -1,
+    userCount: 0,
+    proposalCount: 0,
+    proposalPendingCount: 0,
   },
   usersFetched: false,
   users: [] as User[],
+  proposalsFetching: false,
   proposalsFetched: false,
   proposals: [] as Proposal[],
+  proposalDetailFetching: false,
+  proposalDetail: null as null | Proposal,
+  proposalDetailApproving: false,
+  emailExamples: {} as { [type: string]: EmailExample },
 
   removeGeneralError(i: number) {
     app.generalError.splice(i, 1);
+  },
+
+  updateProposalInStore(p: Proposal) {
+    const index = app.proposals.findIndex(x => x.proposalId === p.proposalId);
+    if (index > -1) {
+      app.proposals[index] = p;
+    }
+    if (app.proposalDetail && app.proposalDetail.proposalId === p.proposalId) {
+      app.proposalDetail = p;
+    }
   },
 
   async checkLogin() {
@@ -92,11 +130,14 @@ const app = store({
   },
 
   async fetchStats() {
+    app.statsFetching = true;
     try {
       app.stats = await fetchStats();
+      app.statsFetched = true;
     } catch (e) {
       handleApiError(e);
     }
+    app.statsFetching = false;
   },
 
   async fetchUsers() {
@@ -108,32 +149,71 @@ const app = store({
     }
   },
 
-  async deleteUser(id: string) {
+  async deleteUser(id: string | number) {
     try {
       await deleteUser(id);
-      app.users = app.users.filter(u => u.accountAddress !== id && u.emailAddress !== id);
+      app.users = app.users.filter(u => u.userid !== id && u.emailAddress !== id);
     } catch (e) {
       handleApiError(e);
     }
   },
 
-  async fetchProposals() {
+  async fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
+    app.proposalsFetching = true;
     try {
-      app.proposals = await fetchProposals();
+      app.proposals = await fetchProposals(statusFilters);
       app.proposalsFetched = true;
-      // for (const p of app.proposals) {
-      // TODO: partial populate contributorList
-      //   await app.populateProposalContract(p.proposalId);
-      // }
     } catch (e) {
       handleApiError(e);
     }
+    app.proposalsFetching = false;
+  },
+
+  async fetchProposalDetail(id: number) {
+    app.proposalDetailFetching = true;
+    try {
+      app.proposalDetail = await fetchProposalDetail(id);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailFetching = false;
   },
 
   async deleteProposal(id: number) {
     try {
       await deleteProposal(id);
       app.proposals = app.proposals.filter(p => p.proposalId === id);
+    } catch (e) {
+      handleApiError(e);
+    }
+  },
+
+  async approveProposal(isApprove: boolean, rejectReason?: string) {
+    if (!app.proposalDetail) {
+      (x => {
+        app.generalError.push(x);
+        console.error(x);
+      })('store.approveProposal(): Expected proposalDetail to be populated!');
+      return;
+    }
+    app.proposalDetailApproving = true;
+    try {
+      const { proposalId } = app.proposalDetail;
+      const res = await approveProposal(proposalId, isApprove, rejectReason);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailApproving = false;
+  },
+  
+  async getEmailExample(type: string) {
+    try {
+      const example = await getEmailExample(type);
+      app.emailExamples = {
+        ...app.emailExamples,
+        [type]: example,
+      };
     } catch (e) {
       handleApiError(e);
     }

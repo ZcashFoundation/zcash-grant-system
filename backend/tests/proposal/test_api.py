@@ -1,7 +1,7 @@
 import json
 from mock import patch
 
-from grant.proposal.models import Proposal
+from grant.proposal.models import Proposal, APPROVED, PENDING, DRAFT
 from ..config import BaseProposalCreatorConfig
 from ..test_data import test_proposal, test_user
 
@@ -64,16 +64,47 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         )
         self.assert404(resp)
 
-    def test_publish_proposal_draft(self):
+    # /submit_for_approval
+    def test_proposal_draft_submit_for_approval(self):
         self.login_default_user()
+        resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
+        self.assert200(resp)
+
+    def test_no_auth_proposal_draft_submit_for_approval(self):
+        resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
+        self.assert401(resp)
+
+    def test_invalid_proposal_draft_submit_for_approval(self):
+        self.login_default_user()
+        resp = self.app.put("/api/v1/proposals/12345/submit_for_approval")
+        self.assert404(resp)
+
+    def test_invalid_status_proposal_draft_submit_for_approval(self):
+        self.login_default_user()
+        self.proposal.status = PENDING  # should be DRAFT
+        resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
+        self.assert400(resp)
+
+    # /publish
+    def test_publish_proposal_approved(self):
+        self.login_default_user()
+        # submit for approval, then approve
+        self.proposal.submit_for_approval()
+        self.proposal.approve_pending(True)  # admin action
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert200(resp)
 
-    def test_no_auth_publish_proposal_draft(self):
+    def test_no_auth_publish_proposal(self):
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert401(resp)
 
-    def test_invalid_proposal_publish_proposal_draft(self):
+    def test_invalid_proposal_publish_proposal(self):
         self.login_default_user()
         resp = self.app.put("/api/v1/proposals/12345/publish")
         self.assert404(resp)
+
+    def test_invalid_status_proposal_publish_proposal(self):
+        self.login_default_user()
+        self.proposal.status = PENDING  # should be APPROVED
+        resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
+        self.assert400(resp)

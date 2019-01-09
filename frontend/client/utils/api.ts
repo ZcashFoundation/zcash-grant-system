@@ -12,11 +12,14 @@ export function formatUserForPost(user: User) {
 }
 
 export function formatUserFromGet(user: UserState) {
-  const bnUserProp = (p: UserProposal) => {
-    p.funded = new BN(p.funded);
-    p.target = new BN(p.target);
+  const bnUserProp = (p: any) => {
+    p.funded = toZat(p.funded);
+    p.target = toZat(p.target);
     return p;
   };
+  if (user.pendingProposals) {
+    user.pendingProposals = user.pendingProposals.map(bnUserProp);
+  }
   user.createdProposals = user.createdProposals.map(bnUserProp);
   user.fundedProposals = user.fundedProposals.map(bnUserProp);
   return user;
