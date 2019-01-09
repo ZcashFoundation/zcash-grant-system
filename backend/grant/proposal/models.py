@@ -94,6 +94,8 @@ class ProposalContribution(db.Model):
     amount = db.Column(db.String(255), nullable=False)
     tx_id = db.Column(db.String(255))
 
+    user = db.relationship("User")
+
     def __init__(
         self,
         proposal_id: int,
@@ -267,7 +269,6 @@ class ProposalSchema(ma.Schema):
             "content",
             "comments",
             "updates",
-            "contributions",
             "milestones",
             "category",
             "team",
@@ -282,7 +283,6 @@ class ProposalSchema(ma.Schema):
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
-    contributions = ma.Nested("ProposalContributionSchema", many=True, exclude=['proposal'])
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
@@ -398,7 +398,7 @@ class ProposalContributionSchema(ma.Schema):
         )
 
     proposal = ma.Nested("ProposalSchema")
-    user = ma.Nested("UserSchema")
+    user = ma.Nested("UserSchema", exclude=["email_address"])
     date_created = ma.Method("get_date_created")
     addresses = ma.Method("get_addresses")
 
@@ -411,6 +411,8 @@ class ProposalContributionSchema(ma.Schema):
 
 proposal_contribution_schema = ProposalContributionSchema()
 proposal_contributions_schema = ProposalContributionSchema(many=True)
-user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user'])
-user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user'])
+user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 'addresses'])
+user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
+proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
+proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
 

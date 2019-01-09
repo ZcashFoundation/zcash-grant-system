@@ -5,6 +5,7 @@ import {
   Update,
   User,
   Comment,
+  ContributionWithUser,
 } from 'types';
 import { ProposalMilestone } from './milestone';
 
@@ -63,6 +64,12 @@ export interface ProposalComments {
 export interface ProposalUpdates {
   proposalId: Proposal['proposalId'];
   updates: Update[];
+}
+
+export interface ProposalContributions {
+  proposalId: Proposal['proposalId'];
+  top: ContributionWithUser[];
+  latest: ContributionWithUser[];
 }
 
 export interface UserProposal {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Tag, Icon } from 'antd';
+import { Tag } from 'antd';
 import UnitDisplay from 'components/UnitDisplay';
 import { ONE_DAY } from 'utils/time';
 import { UserContribution } from 'types';

@@ -1,5 +1,5 @@
 import { Zat } from 'utils/units';
-import { Proposal } from 'types';
+import { Proposal, User } from 'types';
 
 export interface Contribution {
   id: string;
@@ -15,6 +15,10 @@ export interface ContributionWithAddresses extends Contribution {
     transparent: string;
     memo: string;
   };
+}
+
+export interface ContributionWithUser extends Contribution {
+  user: User;
 }
 
 export interface UserContribution extends Omit<Contribution, 'amount' | 'txId'> {

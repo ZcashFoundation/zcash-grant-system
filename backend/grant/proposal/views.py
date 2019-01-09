@@ -24,6 +24,8 @@ from .models import(
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
+    proposal_proposal_contributions_schema,
+    CONFIRMED,
     db
 )
 import traceback
@@ -299,11 +301,25 @@ def delete_proposal_team_invite(proposal_id, id_or_address):
 @endpoint.api()
 def get_proposal_contributions(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        dumped_proposal = proposal_schema.dump(proposal)
-        return dumped_proposal["contributions"]
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+    
+    top_contributions = ProposalContribution.query \
+        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .order_by(ProposalContribution.amount.desc()) \
+        .limit(5) \
+        .all()
+    latest_contributions = ProposalContribution.query \
+        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .order_by(ProposalContribution.date_created.desc()) \
+        .limit(5) \
+        .all()
+    
+    return {
+        'top': proposal_proposal_contributions_schema.dump(top_contributions),
+        'latest': proposal_proposal_contributions_schema.dump(latest_contributions),
+    }
+        
 
 
 @blueprint.route("/<proposal_id>/contributions/<contribution_id>", methods=["GET"])

@@ -6,9 +6,10 @@ import './style.less';
 
 interface Props {
   user: User;
+  extra?: React.ReactNode;
 }
 
-const UserRow = ({ user }: Props) => (
+const UserRow = ({ user, extra }: Props) => (
   <Link to={`/profile/${user.userid}`} className="UserRow">
     <div className="UserRow-avatar">
       <UserAvatar user={user} className="UserRow-avatar-img" />
@@ -17,6 +18,11 @@ const UserRow = ({ user }: Props) => (
       <div className="UserRow-info-main">{user.displayName}</div>
       <p className="UserRow-info-secondary">{user.title}</p>
     </div>
+    {extra && (
+      <div className="UserRow-extra">
+        {extra}
+      </div>
+    )}
   </Link>
 );
 
