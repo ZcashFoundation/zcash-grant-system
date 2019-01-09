@@ -110,6 +110,10 @@ class ProposalContribution(db.Model):
         return ProposalContribution.query \
             .filter_by(user_id=user_id, proposal_id=proposal_id, amount=amount) \
             .first()
+    
+    @staticmethod
+    def get_by_userid(user_id):
+        return ProposalContribution.query.filter_by(user_id=user_id).all()
 
     def confirm(self, tx_id: str, amount: str):
         self.status = CONFIRMED
@@ -289,7 +293,10 @@ class ProposalSchema(ma.Schema):
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
-
+user_proposal_schema = ProposalSchema(
+    only=["proposal_id", "title", "brief", "funded", "target", "date_created", "team"])
+user_proposals_schema = ProposalSchema(
+    only=["proposal_id", "title", "brief", "funded", "target", "date_created", "team"], many=True)
 
 class ProposalUpdateSchema(ma.Schema):
     class Meta:
@@ -393,30 +400,7 @@ class ProposalContributionSchema(ma.Schema):
 
 
 proposal_contribution_schema = ProposalContributionSchema()
-proposals_contribution_schema = ProposalContributionSchema(many=True)
+proposal_contributions_schema = ProposalContributionSchema(many=True)
+user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user'])
+user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user'])
 
-
-class UserProposalSchema(ma.Schema):
-    class Meta:
-        model = Proposal
-        # Fields to expose
-        fields = (
-            "proposal_id",
-            "title",
-            "brief",
-            "date_created",
-            "team",
-        )
-    date_created = ma.Method("get_date_created")
-    proposal_id = ma.Method("get_proposal_id")
-    team = ma.Nested("UserSchema", many=True)
-
-    def get_proposal_id(self, obj):
-        return obj.id
-
-    def get_date_created(self, obj):
-        return dt_to_unix(obj.date_created) * 1000
-
-
-user_proposal_schema = UserProposalSchema()
-user_proposals_schema = UserProposalSchema(many=True)

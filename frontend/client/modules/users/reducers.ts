@@ -1,7 +1,6 @@
 import lodash from 'lodash';
-import { UserProposal, UserComment, TeamInviteWithProposal } from 'types';
+import { User, UserProposal, UserComment, UserContribution, TeamInviteWithProposal } from 'types';
 import types from './types';
-import { User } from 'types';
 
 export interface TeamInviteWithResponse extends TeamInviteWithProposal {
   isResponding: boolean;
@@ -14,8 +13,8 @@ export interface UserState extends User {
   fetchError: number | null;
   isUpdating: boolean;
   updateError: number | null;
-  createdProposals: UserProposal[];
-  fundedProposals: UserProposal[];
+  proposals: UserProposal[];
+  contributions: UserContribution[];
   comments: UserComment[];
   isFetchingInvites: boolean;
   hasFetchedInvites: boolean;
@@ -43,8 +42,8 @@ export const INITIAL_USER_STATE: UserState = {
   fetchError: null,
   isUpdating: false,
   updateError: null,
-  createdProposals: [],
-  fundedProposals: [],
+  proposals: [],
+  contributions: [],
   comments: [],
   isFetchingInvites: false,
   hasFetchedInvites: false,

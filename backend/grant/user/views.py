@@ -8,6 +8,8 @@ from grant.proposal.models import (
     proposal_team,
     ProposalTeamInvite,
     invites_with_proposal_schema,
+    ProposalContribution,
+    user_proposal_contributions_schema,
     user_proposals_schema
 )
 from grant.utils.auth import requires_auth, requires_same_user_auth
@@ -61,11 +63,11 @@ def get_user(user_id, with_proposals, with_comments, with_funded):
         if with_proposals:
             proposals = Proposal.get_by_user(user)
             proposals_dump = user_proposals_schema.dump(proposals)
-            result["createdProposals"] = proposals_dump
+            result["proposals"] = proposals_dump
         if with_funded:
-            contributions = Proposal.get_by_user_contribution(user)
-            contributions_dump = user_proposals_schema.dump(contributions)
-            result["fundedProposals"] = contributions_dump
+            contributions = ProposalContribution.get_by_userid(user_id)
+            contributions_dump = user_proposal_contributions_schema.dump(contributions)
+            result["contributions"] = contributions_dump
         if with_comments:
             comments = Comment.get_by_user(user)
             comments_dump = user_comments_schema.dump(comments)

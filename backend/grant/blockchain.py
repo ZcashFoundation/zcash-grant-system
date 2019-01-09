@@ -1,7 +1,7 @@
 import requests
 import json
 from tenacity import retry, wait_fixed
-from grant.settings import BLOCKCHAIN_REST_API_URL, BLOCKCHAIN_API_SECRET, BLOCKCHAIN_WS_API_URL
+from grant.settings import BLOCKCHAIN_REST_API_URL, BLOCKCHAIN_API_SECRET
 
 ### REST API ###
 

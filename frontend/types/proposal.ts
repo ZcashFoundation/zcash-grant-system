@@ -1,4 +1,3 @@
-import BN from 'bn.js';
 import { Zat } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import {
@@ -45,8 +44,8 @@ export interface ProposalDraft {
 export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   proposalAddress: string;
   proposalUrlId: string;
-  target: BN;
-  funded: BN;
+  target: Zat;
+  funded: Zat;
   percentFunded: number;
   milestones: ProposalMilestone[];
 }
@@ -71,6 +70,6 @@ export interface UserProposal {
   title: string;
   brief: string;
   team: User[];
-  funded: BN;
-  target: BN;
+  funded: Zat;
+  target: Zat;
 }

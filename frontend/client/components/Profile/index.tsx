@@ -16,6 +16,7 @@ import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
 import ProfileEdit from './ProfileEdit';
 import ProfileProposal from './ProfileProposal';
+import ProfileContribution from './ProfileContribution';
 import ProfileComment from './ProfileComment';
 import ProfileInvite from './ProfileInvite';
 import Placeholder from 'components/Placeholder';
@@ -69,9 +70,9 @@ class Profile extends React.Component<Props> {
       return <Exception code="404" />;
     }
 
-    const { createdProposals, fundedProposals, comments, invites } = user;
-    const noneCreated = createdProposals.length === 0;
-    const noneFunded = fundedProposals.length === 0;
+    const { proposals, contributions, comments, invites } = user;
+    const noneCreated = proposals.length === 0;
+    const noneFunded = contributions.length === 0;
     const noneCommented = comments.length === 0;
     const noneInvites = user.hasFetchedInvites && invites.length === 0;
 
@@ -96,21 +97,21 @@ class Profile extends React.Component<Props> {
           />
         </Switch>
         <Tabs>
-          <Tabs.TabPane tab={TabTitle('Created', createdProposals.length)} key="created">
+          <Tabs.TabPane tab={TabTitle('Created', proposals.length)} key="created">
             <div>
               {noneCreated && (
                 <Placeholder subtitle="Has not created any proposals yet" />
               )}
-              {createdProposals.map(p => (
+              {proposals.map(p => (
                 <ProfileProposal key={p.proposalId} proposal={p} />
               ))}
             </div>
           </Tabs.TabPane>
-          <Tabs.TabPane tab={TabTitle('Funded', fundedProposals.length)} key="funded">
+          <Tabs.TabPane tab={TabTitle('Funded', contributions.length)} key="funded">
             <div>
               {noneFunded && <Placeholder subtitle="Has not funded any proposals yet" />}
-              {fundedProposals.map(p => (
-                <ProfileProposal key={p.proposalId} proposal={p} />
+              {contributions.map(c => (
+                <ProfileContribution key={c.id} contribution={c} />
               ))}
             </div>
           </Tabs.TabPane>
