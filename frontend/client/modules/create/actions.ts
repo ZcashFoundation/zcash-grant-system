@@ -1,10 +1,7 @@
 import { Dispatch } from 'redux';
 import { ProposalDraft } from 'types';
-// import { AppState } from 'store/reducers';
 import types, { CreateDraftOptions } from './types';
 import { putProposal, putProposalSubmitForApproval } from 'api/api';
-
-// type GetState = () => AppState;
 
 export function initializeForm(proposalId: number) {
   return {
@@ -64,24 +61,3 @@ export function submitProposal(form: ProposalDraft) {
     }
   };
 }
-
-// TODO - remove if not used (depending on design choices)
-// export function publishProposal(form: ProposalDraft) {
-//   return async (dispatch: Dispatch<any>) => {
-//     dispatch({ type: types.PUBLISH_PROPOSAL_PENDING });
-//     try {
-//       await putProposal(form);
-//       const res = await putProposalPublish(form.proposalId);
-//       dispatch({
-//         type: types.PUBLISH_PROPOSAL_FULFILLED,
-//         payload: res.data,
-//       });
-//     } catch (err) {
-//       dispatch({
-//         type: types.PUBLISH_PROPOSAL_REJECTED,
-//         payload: err.message || err.toString(),
-//         error: true,
-//       });
-//     }
-//   };
-// }
