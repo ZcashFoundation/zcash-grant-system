@@ -33,39 +33,72 @@ def recover_info(email_args):
         'preview': 'Use the link to recover your account.'
     }
 
+def proposal_approved(email_args):
+    return {
+        'subject': 'Your proposal has been approved!',
+        'title': 'Your proposal has been approved',
+        'preview': 'Start raising funds for {} now'.format(email_args['proposal'].title),
+    }
+
+def proposal_rejected(email_args):
+    return {
+        'subject': 'Your proposal has been rejected',
+        'title': 'Your proposal has been rejected',
+        'preview': '{} has been rejected'.format(email_args['proposal'].title),
+    }
+
+def contribution_confirmed(email_args):
+    return {
+        'subject': 'Your contribution has been confirmed!',
+        'title': 'Contribution confirmed',
+        'preview': 'Your {} ZEC contribution to {} has been confirmed!'.format(
+            email_args['contribution'].amount,
+            email_args['proposal'].title
+        ),
+    }
 
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
-    'recover': recover_info
+    'recover': recover_info,
+    'proposal_approved': proposal_approved,
+    'proposal_rejected': proposal_rejected,
+    'contribution_confirmed': contribution_confirmed,
 }
 
+def generate_email(type, email_args):
+    info = get_info_lookup[type](email_args)
+    body_text = render_template('emails/%s.txt' % (type), args=email_args)
+    body_html = render_template('emails/%s.html' % (type), args=email_args)
+
+    html = render_template('emails/template.html', args={
+        **default_template_args,
+        **info,
+        'body': Markup(body_html),
+    })
+    text = render_template('emails/template.txt', args={
+        **default_template_args,
+        **info,
+        'body': body_text,
+    })
+
+    return {
+        'info': info,
+        'html': html,
+        'text': text
+    }
 
 def send_email(to, type, email_args):
     if current_app and current_app.config.get("TESTING"):
         return
 
     try:
-        info = get_info_lookup[type](email_args)
-        body_text = render_template('emails/%s.txt' % (type), args=email_args)
-        body_html = render_template('emails/%s.html' % (type), args=email_args)
-
-        html = render_template('emails/template.html', args={
-            **default_template_args,
-            **info,
-            'body': Markup(body_html),
-        })
-        text = render_template('emails/template.txt', args={
-            **default_template_args,
-            **info,
-            'body': body_text,
-        })
-
+        email = generate_email(type, email_args)
         res = mail.send_email(
             to_email=to,
-            subject=info['subject'],
-            text=text,
-            html=html,
+            subject=email['info']['subject'],
+            text=email['text'],
+            html=email['html'],
         )
         print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
     except Exception as e:

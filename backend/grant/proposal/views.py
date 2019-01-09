@@ -5,12 +5,13 @@ import ast
 from flask import Blueprint, g
 from flask_yoloapi import endpoint, parameter
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_auth, requires_team_member_auth
+from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url
 from .models import(
@@ -24,7 +25,13 @@ from .models import(
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
-    db
+    db,
+    DRAFT,
+    PENDING,
+    APPROVED,
+    REJECTED,
+    LIVE,
+    DELETED
 )
 import traceback
 
@@ -36,6 +43,13 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
+        if proposal.status != LIVE:
+            if proposal.status == DELETED:
+                return {"message": "Proposal was deleted"}, 404
+            authed_user = get_authed_user()
+            team_ids = list(x.id for x in proposal.team)
+            if not authed_user or authed_user.id not in team_ids:
+                return {"message": "User cannot view this proposal"}, 404
         return proposal_schema.dump(proposal)
     else:
         return {"message": "No proposal matching id"}, 404
@@ -96,13 +110,13 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 def get_proposals(stage):
     if stage:
         proposals = (
-            Proposal.query.filter_by(status="LIVE", stage=stage)
+            Proposal.query.filter_by(status=LIVE, stage=stage)
             .order_by(Proposal.date_created.desc())
             .all()
         )
     else:
         proposals = (
-            Proposal.query.filter_by(status="LIVE")
+            Proposal.query.filter_by(status=LIVE)
             .order_by(Proposal.date_created.desc())
             .all()
         )
@@ -131,7 +145,7 @@ def make_proposal_draft():
 def get_proposal_drafts():
     proposals = (
         Proposal.query
-        .filter_by(status="DRAFT")
+        .filter(or_(Proposal.status == DRAFT, Proposal.status == REJECTED))
         .join(proposal_team)
         .filter(proposal_team.c.user_id == g.current_user.id)
         .order_by(Proposal.date_created.desc())
@@ -182,12 +196,27 @@ def update_proposal(milestones, proposal_id, **kwargs):
 @blueprint.route("/<proposal_id>", methods=["DELETE"])
 @requires_team_member_auth
 @endpoint.api()
-def delete_proposal_draft(proposal_id):
-    if g.current_proposal.status != 'DRAFT':
-        return {"message": "Cannot delete non-draft proposals"}, 400
+def delete_proposal(proposal_id):
+    deleteable_statuses = [DRAFT, PENDING, APPROVED, REJECTED]
+    status = g.current_proposal.status
+    if status not in deleteable_statuses:
+        return {"message": "Cannot delete proposals with %s status" % status}, 400
     db.session.delete(g.current_proposal)
     db.session.commit()
     return None, 202
+
+
+@blueprint.route("/<proposal_id>/submit_for_approval", methods=["PUT"])
+@requires_team_member_auth
+@endpoint.api()
+def submit_for_approval_proposal(proposal_id):
+    try:
+        g.current_proposal.submit_for_approval()
+    except ValidationException as e:
+        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+    db.session.add(g.current_proposal)
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
 
 
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])

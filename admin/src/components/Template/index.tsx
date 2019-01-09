@@ -50,6 +50,12 @@ class Template extends React.Component<Props> {
                 <span className="nav-text">proposals</span>
               </Link>
             </Menu.Item>
+            <Menu.Item key="/emails">
+              <Link to="/emails">
+                <Icon type="mail" />
+                <span className="nav-text">emails</span>
+              </Link>
+            </Menu.Item>
             <Menu.Item key="logout" onClick={store.logout}>
               <Icon type="logout" />
               <span className="nav-text">logout</span>
