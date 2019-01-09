@@ -4,6 +4,7 @@ import {
   MILESTONE_STATE,
   Proposal,
   ProposalMilestone,
+  STATUS,
 } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import BN from 'bn.js';
@@ -97,7 +98,9 @@ export function generateProposal({
     return ts.slice(rand).join('');
   };
 
-  const genMilestone = (overrides: Partial<ProposalMilestone> = {}): ProposalMilestone => {
+  const genMilestone = (
+    overrides: Partial<ProposalMilestone> = {},
+  ): ProposalMilestone => {
     const now = new Date();
     if (overrides.index) {
       const estimate = new Date(now.setMonth(now.getMonth() + overrides.index));
@@ -140,10 +143,12 @@ export function generateProposal({
 
   const proposal: Proposal = {
     proposalId: 12345,
+    status: STATUS.DRAFT,
     proposalUrlId: '12345-crowdfund-title',
     proposalAddress: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
     payoutAddress: 'z123',
     dateCreated: created / 1000,
+    datePublished: created / 1000,
     deadlineDuration: 86400 * 60,
     target: amountBn,
     funded: fundedBn,

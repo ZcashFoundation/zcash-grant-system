@@ -6,6 +6,8 @@ import {
   fetchUserInvites as apiFetchUserInvites,
   putInviteResponse,
   deleteProposalContribution,
+  deleteProposalDraft,
+  putProposalPublish,
 } from 'api/api';
 import { Dispatch } from 'redux';
 import { cleanClone } from 'utils/helpers';
@@ -100,5 +102,27 @@ export function deleteContribution(userId: string | number, contributionId: stri
       userId,
       contributionId,
     },
+  };
+}
+
+export function deletePendingProposal(userId: number, proposalId: number) {
+  return async (dispatch: Dispatch<any>) => {
+    await dispatch({
+      type: types.USER_DELETE_PROPOSAL,
+      payload: deleteProposalDraft(proposalId).then(_ => ({ userId, proposalId })),
+    });
+  };
+}
+
+export function publishPendingProposal(userId: number, proposalId: number) {
+  return async (dispatch: Dispatch<any>) => {
+    await dispatch({
+      type: types.USER_PUBLISH_PROPOSAL,
+      payload: putProposalPublish(proposalId).then(res => ({
+        userId,
+        proposalId,
+        proposal: res.data,
+      })),
+    });
   };
 }

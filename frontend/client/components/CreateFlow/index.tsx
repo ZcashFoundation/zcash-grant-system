@@ -213,11 +213,11 @@ class CreateFlow extends React.Component<Props, State> {
                 </button>
                 <button
                   className="CreateFlow-footer-button is-primary"
-                  key="publish"
+                  key="submit"
                   onClick={this.openPublishWarning}
                   disabled={this.checkFormErrors()}
                 >
-                  Publish
+                  Submit
                 </button>
               </>
             ) : (

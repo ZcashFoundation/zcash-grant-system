@@ -1,1 +1,10 @@
-U invited
+You’ve been invited by {{ args.inviter.display_name }} to join the team for
+{{ args.proposal.title or 'Untitled Project' }}, a project on Grant.io! If
+you want to accept the invitation, continue to the URL below.
+
+{{ args.invite_url }}
+
+{% if not args.user %}
+It looks like you don't yet have a Grant.io account, so you'll need to sign
+up first before you can join the team.
+{% endif %}

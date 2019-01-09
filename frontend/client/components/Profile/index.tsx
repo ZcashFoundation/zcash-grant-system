@@ -9,12 +9,12 @@ import {
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { Spin, Tabs, Badge } from 'antd';
-import { UsersState } from 'modules/users/reducers';
 import { usersActions } from 'modules/users';
 import { AppState } from 'store/reducers';
 import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
 import ProfileEdit from './ProfileEdit';
+import ProfilePendingList from './ProfilePendingList';
 import ProfileProposal from './ProfileProposal';
 import ProfileContribution from './ProfileContribution';
 import ProfileComment from './ProfileComment';
@@ -24,7 +24,7 @@ import Exception from 'pages/exception';
 import './style.less';
 
 interface StateProps {
-  usersMap: UsersState['map'];
+  usersMap: AppState['users']['map'];
   authUser: AppState['auth']['user'];
 }
 
@@ -70,7 +70,8 @@ class Profile extends React.Component<Props> {
       return <Exception code="404" />;
     }
 
-    const { proposals, contributions, comments, invites } = user;
+    const { proposals, pendingProposals, contributions, comments, invites } = user;
+    const nonePending = pendingProposals.length === 0;
     const noneCreated = proposals.length === 0;
     const noneFunded = contributions.length === 0;
     const noneCommented = comments.length === 0;
@@ -97,6 +98,22 @@ class Profile extends React.Component<Props> {
           />
         </Switch>
         <Tabs>
+          {isAuthedUser && (
+            <Tabs.TabPane
+              tab={TabTitle('Pending', pendingProposals.length)}
+              key="pending"
+            >
+              <div>
+                {nonePending && (
+                  <Placeholder
+                    title="No pending proposals"
+                    subtitle="You do not have any proposals awaiting approval."
+                  />
+                )}
+                <ProfilePendingList proposals={pendingProposals} />
+              </div>
+            </Tabs.TabPane>
+          )}
           <Tabs.TabPane tab={TabTitle('Created', proposals.length)} key="created">
             <div>
               {noneCreated && (

@@ -4,21 +4,22 @@ import types from './types';
 
 export interface TeamInviteWithResponse extends TeamInviteWithProposal {
   isResponding: boolean;
-  respondError: number | null;
+  respondError: string | null;
 }
 
 export interface UserState extends User {
   isFetching: boolean;
   hasFetched: boolean;
-  fetchError: number | null;
+  fetchError: string | null;
   isUpdating: boolean;
-  updateError: number | null;
+  updateError: string | null;
+  pendingProposals: UserProposal[];
   proposals: UserProposal[];
   contributions: UserContribution[];
   comments: UserComment[];
   isFetchingInvites: boolean;
   hasFetchedInvites: boolean;
-  fetchErrorInvites: number | null;
+  fetchErrorInvites: string | null;
   invites: TeamInviteWithResponse[];
 }
 
@@ -42,6 +43,7 @@ export const INITIAL_USER_STATE: UserState = {
   fetchError: null,
   isUpdating: false,
   updateError: null,
+  pendingProposals: [],
   proposals: [],
   contributions: [],
   comments: [],
@@ -59,12 +61,10 @@ export default (state = INITIAL_STATE, action: any) => {
   const { payload } = action;
   const userFetchId = payload && payload.userFetchId;
   const invites = payload && payload.invites;
-  const errorStatus =
-    (payload &&
-      payload.error &&
-      payload.error.response &&
-      payload.error.response.status) ||
-    999;
+  const errorMessage =
+    (payload && payload.error && (payload.error.message || payload.error.toString())) ||
+    null;
+
   switch (action.type) {
     // fetch
     case types.FETCH_USER_PENDING:
@@ -80,7 +80,7 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, userFetchId, {
         isFetching: false,
         hasFetched: true,
-        fetchError: errorStatus,
+        fetchError: errorMessage,
       });
     // update
     case types.UPDATE_USER_PENDING:
@@ -98,7 +98,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.UPDATE_USER_REJECTED:
       return updateUserState(state, payload.user.userid, {
         isUpdating: false,
-        updateError: errorStatus,
+        updateError: errorMessage,
       });
     // invites
     case types.FETCH_USER_INVITES_PENDING:
@@ -116,7 +116,7 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, userFetchId, {
         isFetchingInvites: false,
         hasFetchedInvites: true,
-        fetchErrorInvites: errorStatus,
+        fetchErrorInvites: errorMessage,
       });
     // invites
     case types.FETCH_USER_INVITES_PENDING:
@@ -134,7 +134,7 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, userFetchId, {
         isFetchingInvites: false,
         hasFetchedInvites: true,
-        fetchErrorInvites: errorStatus,
+        fetchErrorInvites: errorMessage,
       });
     // invite response
     case types.RESPOND_TO_INVITE_PENDING:
@@ -147,7 +147,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.RESPOND_TO_INVITE_REJECTED:
       return updateTeamInvite(state, payload.userId, payload.inviteId, {
         isResponding: false,
-        respondError: errorStatus,
+        respondError: errorMessage,
       });
     // delete contribution
     case types.DELETE_CONTRIBUTION:
@@ -156,6 +156,12 @@ export default (state = INITIAL_STATE, action: any) => {
           c => c.id !== payload.contributionId
         ),
       });
+    // proposal delete
+    case types.USER_DELETE_PROPOSAL_FULFILLED:
+      return removePendingProposal(state, payload.userId, payload.proposalId);
+    // proposal publish
+    case types.USER_PUBLISH_PROPOSAL_FULFILLED:
+      return updatePublishedProposal(state, payload.userId, payload.proposal);
     // default
     default:
       return state;
@@ -175,6 +181,32 @@ function updateUserState(
       [id]: lodash.defaults(updates, loaded, state.map[id] || INITIAL_USER_STATE),
     },
   };
+}
+
+function removePendingProposal(
+  state: UsersState,
+  userId: string | number,
+  proposalId: number,
+) {
+  const pendingProposals = state.map[userId].pendingProposals.filter(
+    p => p.proposalId !== proposalId,
+  );
+  const userUpdates = {
+    pendingProposals,
+  };
+  return updateUserState(state, userId, userUpdates);
+}
+
+function updatePublishedProposal(
+  state: UsersState,
+  userId: string | number,
+  proposal: UserProposal,
+) {
+  const withoutPending = removePendingProposal(state, userId, proposal.proposalId);
+  const userUpdates = {
+    proposals: [proposal, ...state.map[userId].proposals],
+  };
+  return updateUserState(withoutPending, userId, userUpdates);
 }
 
 function updateTeamInvite(

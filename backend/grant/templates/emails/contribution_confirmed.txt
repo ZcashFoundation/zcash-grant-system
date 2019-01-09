@@ -1,0 +1,7 @@
+Your {{ args.contribution.amount }} ZEC contribution has been confirmed!
+{{ args.proposal.title}} has been updated to reflect your funding, and your
+account will now show your contribution. You can view your transaction here:
+
+{{ args.tx_explorer_url }}
+
+Thank you for your help in improving the ZCash ecosystem.

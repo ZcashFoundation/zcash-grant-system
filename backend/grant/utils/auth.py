@@ -12,6 +12,10 @@ from ..proposal.models import Proposal
 from ..user.models import User
 
 
+def get_authed_user():
+    return current_user if current_user.is_authenticated else None
+
+
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):

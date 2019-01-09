@@ -52,6 +52,7 @@ export function getUser(address: string): Promise<{ data: User }> {
         withProposals: true,
         withComments: true,
         withFunded: true,
+        withPending: true,
       },
     })
     .then(res => {
@@ -160,10 +161,21 @@ export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDr
   return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }
 
-export async function putProposalPublish(
+export async function putProposalSubmitForApproval(
   proposal: ProposalDraft,
 ): Promise<{ data: Proposal }> {
-  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish`).then(res => {
+  return axios
+    .put(`/api/v1/proposals/${proposal.proposalId}/submit_for_approval`)
+    .then(res => {
+      res.data = formatProposalFromGet(res.data);
+      return res;
+    });
+}
+
+export async function putProposalPublish(
+  proposalId: number,
+): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposalId}/publish`).then(res => {
     res.data = formatProposalFromGet(res.data);
     return res;
   });
