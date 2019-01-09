@@ -6,8 +6,8 @@ import {
   Update,
   TeamInvite,
   TeamInviteWithProposal,
-  Contribution,
   SOCIAL_SERVICE,
+  ContributionWithAddresses,
 } from 'types';
 import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
 
@@ -209,13 +209,9 @@ export function putInviteResponse(
 
 export function postProposalContribution(
   proposalId: number,
-  txId: string,
-  fromAddress: string,
   amount: string,
-): Promise<{ data: Contribution }> {
+): Promise<{ data: ContributionWithAddresses }> {
   return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
-    txId,
-    fromAddress,
     amount,
   });
 }

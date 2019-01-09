@@ -6,7 +6,9 @@ from grant.comment.models import Comment
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix
 from grant.utils.exceptions import ValidationException
+from grant.blockchain import blockchain_get
 
+# Proposal states
 DRAFT = 'DRAFT'
 PENDING = 'PENDING'
 APPROVED = 'APPROVED'
@@ -15,10 +17,12 @@ LIVE = 'LIVE'
 DELETED = 'DELETED'
 STATUSES = [DRAFT, PENDING, APPROVED, REJECTED, LIVE, DELETED]
 
+# Funding stages
 FUNDING_REQUIRED = 'FUNDING_REQUIRED'
 COMPLETED = 'COMPLETED'
 PROPOSAL_STAGES = [FUNDING_REQUIRED, COMPLETED]
 
+# Proposal categories
 DAPP = "DAPP"
 DEV_TOOL = "DEV_TOOL"
 CORE_DEV = "CORE_DEV"
@@ -27,6 +31,9 @@ DOCUMENTATION = "DOCUMENTATION"
 ACCESSIBILITY = "ACCESSIBILITY"
 CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
 
+# Contribution states
+# PENDING = 'PENDING'
+CONFIRMED = 'CONFIRMED'
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -79,28 +86,37 @@ class ProposalUpdate(db.Model):
 class ProposalContribution(db.Model):
     __tablename__ = "proposal_contribution"
 
-    tx_id = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime, nullable=False)
 
     proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    from_address = db.Column(db.String(255), nullable=False)
-    amount = db.Column(db.String(255), nullable=False)  # in eth
+    status = db.Column(db.String(255), nullable=False)
+    amount = db.Column(db.String(255), nullable=False)
+    tx_id = db.Column(db.String(255))
 
     def __init__(
         self,
-        tx_id: str,
         proposal_id: int,
         user_id: int,
-        from_address: str,
         amount: str
     ):
-        self.tx_id = tx_id
         self.proposal_id = proposal_id
         self.user_id = user_id
-        self.from_address = from_address
         self.amount = amount
         self.date_created = datetime.datetime.now()
+        self.status = PENDING
+
+    @staticmethod
+    def getExistingContribution(user_id: int, proposal_id: int, amount: str):
+        return ProposalContribution.query \
+            .filter_by(user_id=user_id, proposal_id=proposal_id, amount=amount) \
+            .first()
+
+    def confirm(self, tx_id: str, amount: str):
+        self.status = CONFIRMED
+        self.tx_id = tx_id
+        self.amount = amount
 
 
 class Proposal(db.Model):
@@ -301,7 +317,7 @@ class ProposalSchema(ma.Schema):
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
-    contributions = ma.Nested("ProposalContributionSchema", many=True)
+    contributions = ma.Nested("ProposalContributionSchema", many=True, exclude=['proposal'])
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
@@ -407,21 +423,25 @@ class ProposalContributionSchema(ma.Schema):
         # Fields to expose
         fields = (
             "id",
+            "proposal",
+            "user",
+            "status",
             "tx_id",
-            "proposal_id",
-            "user_id",
-            "from_address",
             "amount",
             "date_created",
+            "addresses",
         )
-    id = ma.Method("get_id")
-    date_created = ma.Method("get_date_created")
 
-    def get_id(self, obj):
-        return obj.tx_id
+    proposal = ma.Nested("ProposalSchema")
+    user = ma.Nested("UserSchema")
+    date_created = ma.Method("get_date_created")
+    addresses = ma.Method("get_addresses")
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
+
+    def get_addresses(self, obj):
+        return blockchain_get('/contribution/addresses', { 'contributionId': obj.id })
 
 
 proposal_contribution_schema = ProposalContributionSchema()

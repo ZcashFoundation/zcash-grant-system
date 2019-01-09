@@ -1,3 +1,5 @@
+import qs from 'query-string';
+
 export function stripHexPrefix(value: string) {
   return value.replace('0x', '');
 }
@@ -60,4 +62,26 @@ export function formatNumber(num: string, digits?: number): string {
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
   return parts.join('.');
+}
+
+export function formatZcashURI(address: string, amount?: string | number, memo?: string) {
+  const params: any = {};
+  if (amount) {
+    params.amount = amount;
+  }
+  if (memo) {
+    params.memo = memo;
+  }
+  return `zcash:${address}?${qs.stringify(params)}`;
+}
+
+export function formatZcashCLI(address: string, amount?: string | number, memo?: string) {
+  const tx: any = { address };
+  if (amount) {
+    tx.amount = parseFloat(amount.toString());
+  }
+  if (memo) {
+    tx.memo = memo;
+  }
+  return `zcash-cli z_sendmany YOUR_ADDRESS '${JSON.stringify([tx])}'`;
 }
