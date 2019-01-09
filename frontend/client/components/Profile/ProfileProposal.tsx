@@ -11,8 +11,7 @@ interface OwnProps {
 
 export default class Profile extends React.Component<OwnProps> {
   render() {
-    const { title, brief, team, funded, target, proposalId } = this.props.proposal;
-
+    const { title, brief, team, proposalId, funded, target } = this.props.proposal;
     return (
       <div className="ProfileProposal">
         <div className="ProfileProposal-block">
@@ -21,9 +20,9 @@ export default class Profile extends React.Component<OwnProps> {
           </Link>
           <div className="ProfileProposal-brief">{brief}</div>
           <div className="ProfileProposal-raised">
-            <UnitDisplay value={funded} symbol="ETH" displayShortBalance={4} />{' '}
+            <UnitDisplay value={funded} symbol="ZEC" displayShortBalance={4} />{' '}
             <small>raised</small> of{' '}
-            <UnitDisplay value={target} symbol="ETH" displayShortBalance={4} /> goal
+            <UnitDisplay value={target} symbol="ZEC" displayShortBalance={4} /> goal
           </div>
         </div>
         <div className="ProfileProposal-block">

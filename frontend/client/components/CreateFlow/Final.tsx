@@ -36,27 +36,30 @@ class CreateFinal extends React.Component<Props> {
           </div>
         </div>
       );
-    } else
-    if (submittedProposal) {
+    } else if (submittedProposal) {
       content = (
         <div className="CreateFinal-message is-success">
           <Icon type="check-circle" />
           <div className="CreateFinal-message-text">
+            Your proposal has been submitted! Check your{' '}
+            <Link to={`/profile`}>profile's</Link> pending proposals tab to check it's
+            status.
+          </div>
+          {/* TODO - remove or rework depending on design choices */}
+          {/* <div className="CreateFinal-message-text">
             Your proposal has been submitted!{' '}
             <Link to={`/proposals/${submittedProposal.proposalUrlId}`}>
               Click here
             </Link>
             {' '}to check it out.
-          </div>
+          </div> */}
         </div>
       );
     } else {
       content = (
         <div className="CreateFinal-loader">
           <Spin size="large" />
-          <div className="CreateFinal-loader-text">
-            Submitting your proposal...
-          </div>
+          <div className="CreateFinal-loader-text">Submitting your proposal...</div>
         </div>
       );
     }

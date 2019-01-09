@@ -1,6 +1,5 @@
 import React from 'react';
 import classnames from 'classnames';
-import BN from 'bn.js';
 import { Progress, Icon } from 'antd';
 import moment from 'moment';
 import { Redirect } from 'react-router-dom';
@@ -23,12 +22,10 @@ export class ProposalCard extends React.Component<Proposal> {
       category,
       dateCreated,
       team,
+      target,
+      funded,
+      percentFunded,
     } = this.props;
-    // TODO: Real values from proposal
-    console.warn('TODO: Real values for ProposalCard');
-    const target = new BN(0);
-    const funded = new BN(0);
-    const percentFunded = 0;
 
     return (
       <div
@@ -38,8 +35,8 @@ export class ProposalCard extends React.Component<Proposal> {
         <h3 className="ProposalCard-title">{title}</h3>
         <div className="ProposalCard-funding">
           <div className="ProposalCard-funding-raised">
-            <UnitDisplay value={funded} symbol="ETH" /> <small>raised</small> of{' '}
-            <UnitDisplay value={target} symbol="ETH" /> goal
+            <UnitDisplay value={funded} symbol="ZEC" /> <small>raised</small> of{' '}
+            <UnitDisplay value={target} symbol="ZEC" /> goal
           </div>
           <div
             className={classnames({

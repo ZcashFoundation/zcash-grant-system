@@ -4,11 +4,12 @@ import {
   MILESTONE_STATE,
   Proposal,
   ProposalMilestone,
+  STATUS,
 } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import BN from 'bn.js';
 
-const oneEth = new BN('1000000000000000000');
+const oneZec = new BN('100000000');
 
 export function getGovernanceMilestonesProps({
   isContributor = true,
@@ -26,7 +27,7 @@ export function getGovernanceMilestonesProps({
   };
 }
 
-export function getProposalWithCrowdFund({
+export function generateProposal({
   amount = 10,
   funded = 5,
   created = Date.now(),
@@ -42,8 +43,9 @@ export function getProposalWithCrowdFund({
   contributorOverrides?: Array<Partial<Contributor>>;
   milestoneCount?: number;
 }) {
-  const amountBn = oneEth.mul(new BN(amount));
-  const fundedBn = oneEth.mul(new BN(funded));
+  const amountBn = oneZec.mul(new BN(amount));
+  const fundedBn = oneZec.mul(new BN(funded));
+  const percentFunded = amount / funded;
 
   let contributors = [
     {
@@ -96,34 +98,29 @@ export function getProposalWithCrowdFund({
     return ts.slice(rand).join('');
   };
 
-  const genMilestone = (overrides: Partial<ProposalMilestone> = {}) => {
+  const genMilestone = (
+    overrides: Partial<ProposalMilestone> = {},
+  ): ProposalMilestone => {
     const now = new Date();
     if (overrides.index) {
       const estimate = new Date(now.setMonth(now.getMonth() + overrides.index));
       overrides.dateEstimated = estimate.toISOString();
     }
 
-    return Object.assign(
-      {
-        title: 'Milestone A',
-        body: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
-             tempor incididunt ut labore et dolore magna aliqua.`,
-        content: '',
-        dateEstimated: '2018-10-01T00:00:00+00:00',
-        immediatePayout: true,
-        index: 0,
-        state: MILESTONE_STATE.WAITING,
-        amount: amountBn,
-        amountAgainstPayout: new BN(0),
-        percentAgainstPayout: 0,
-        payoutRequestVoteDeadline: 0,
-        isPaid: false,
-        isImmediatePayout: true,
-        payoutPercent: '33',
-        stage: 'NOT_REQUESTED',
-      },
-      overrides,
-    );
+    const defaults: ProposalMilestone = {
+      title: 'Milestone A',
+      content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
+           tempor incididunt ut labore et dolore magna aliqua.`,
+      dateEstimated: '2018-10-01T00:00:00+00:00',
+      immediatePayout: true,
+      index: 0,
+      state: MILESTONE_STATE.WAITING,
+      amount: amountBn,
+      isPaid: false,
+      isImmediatePayout: true,
+      payoutPercent: '33',
+    };
+    return { ...defaults, ...overrides };
   };
 
   const milestones = [...Array(milestoneCount).keys()].map(i => {
@@ -146,9 +143,16 @@ export function getProposalWithCrowdFund({
 
   const proposal: Proposal = {
     proposalId: 12345,
+    status: STATUS.DRAFT,
     proposalUrlId: '12345-crowdfund-title',
     proposalAddress: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
+    payoutAddress: 'z123',
     dateCreated: created / 1000,
+    datePublished: created / 1000,
+    deadlineDuration: 86400 * 60,
+    target: amountBn,
+    funded: fundedBn,
+    percentFunded,
     title: 'Crowdfund Title',
     brief: 'A cool test crowdfund',
     content: 'body',

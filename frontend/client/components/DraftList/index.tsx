@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { List, Button, Divider, Spin, Popconfirm, message } from 'antd';
 import Placeholder from 'components/Placeholder';
-import { ProposalDraft } from 'types';
+import { ProposalDraft, STATUS } from 'types';
 import { fetchDrafts, createDraft, deleteDraft } from 'modules/create/actions';
 import { AppState } from 'store/reducers';
 import './style.less';
@@ -96,7 +96,12 @@ class DraftList extends React.Component<Props, State> {
               <Spin tip="deleting..." spinning={deletingId === d.proposalId}>
                 <List.Item actions={actions}>
                   <List.Item.Meta
-                    title={d.title || <em>Untitled proposal</em>}
+                    title={
+                      <>
+                        {d.title || <em>Untitled proposal</em>}
+                        {d.status === STATUS.REJECTED && <em> (rejected)</em>}
+                      </>
+                    }
                     description={d.brief || <em>No description</em>}
                   />
                 </List.Item>

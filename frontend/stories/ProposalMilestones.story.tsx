@@ -11,7 +11,7 @@ const { WAITING, ACTIVE, PAID, REJECTED } = MILESTONE_STATE;
 import 'styles/style.less';
 import 'components/Proposal/style.less';
 import 'components/Proposal/Governance/style.less';
-import { getProposalWithCrowdFund } from './props';
+import { generateProposal } from './props';
 
 const msWaiting = { state: WAITING, isPaid: false };
 const msPaid = { state: PAID, isPaid: true };
@@ -22,96 +22,96 @@ const trustee = 'z123';
 const contributor = 'z456';
 
 const geometryCases = [...Array(10).keys()].map(i =>
-  getProposalWithCrowdFund({ milestoneCount: i + 1 }),
+  generateProposal({ milestoneCount: i + 1 }),
 );
 
 const cases: { [index: string]: any } = {
   // trustee - first
-  ['not funded']: getProposalWithCrowdFund({
+  ['not funded']: generateProposal({
     amount: 5,
     funded: 0,
   }),
-  ['first - waiting']: getProposalWithCrowdFund({
+  ['first - waiting']: generateProposal({
     amount: 5,
     funded: 5,
   }),
-  ['first - not paid']: getProposalWithCrowdFund({
+  ['first - not paid']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [
-      { state: PAID, isPaid: false, payoutRequestVoteDeadline: Date.now() },
+      { state: PAID, isPaid: false },
       msWaiting,
       msWaiting,
     ],
   }),
 
   // trustee - second
-  ['second - waiting']: getProposalWithCrowdFund({
+  ['second - waiting']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [msPaid, msWaiting, msWaiting],
   }),
-  ['second - active']: getProposalWithCrowdFund({
+  ['second - active']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [msPaid, msActive, msWaiting],
   }),
-  ['second - not paid']: getProposalWithCrowdFund({
+  ['second - not paid']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [
       msPaid,
-      { state: PAID, isPaid: false, payoutRequestVoteDeadline: Date.now() },
+      { state: PAID, isPaid: false },
       msWaiting,
     ],
   }),
-  ['second - no vote']: getProposalWithCrowdFund({
+  ['second - no vote']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [
       msPaid,
-      { state: ACTIVE, isPaid: false, percentAgainstPayout: 33 },
+      { state: ACTIVE, isPaid: false },
       msWaiting,
     ],
     contributorOverrides: [{ milestoneNoVotes: [false, true, false] }],
   }),
-  ['second - rejected']: getProposalWithCrowdFund({
+  ['second - rejected']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [msPaid, msRejected, msWaiting],
   }),
 
   // trustee - third
-  ['final - waiting']: getProposalWithCrowdFund({
+  ['final - waiting']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [msPaid, msPaid, msWaiting],
   }),
-  ['final - active']: getProposalWithCrowdFund({
+  ['final - active']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [msPaid, msPaid, msActive],
   }),
-  ['final - not paid']: getProposalWithCrowdFund({
+  ['final - not paid']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [
       msPaid,
       msPaid,
-      { state: PAID, isPaid: false, payoutRequestVoteDeadline: Date.now() },
+      { state: PAID, isPaid: false },
     ],
   }),
-  ['final - no vote']: getProposalWithCrowdFund({
+  ['final - no vote']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [
       msPaid,
       msPaid,
-      { state: ACTIVE, isPaid: false, percentAgainstPayout: 33 },
+      { state: ACTIVE, isPaid: false },
     ],
     contributorOverrides: [{ milestoneNoVotes: [false, true, false] }],
   }),
-  ['final - rejected']: getProposalWithCrowdFund({
+  ['final - rejected']: generateProposal({
     amount: 5,
     funded: 5,
     milestoneOverrides: [msPaid, msPaid, msRejected],

@@ -40,7 +40,7 @@ export default class CreateFlowPayment extends React.Component<Props, State> {
           <Input
             size="large"
             name="payoutAddress"
-            placeholder={DONATION.ETH}
+            placeholder={DONATION.ZCASH_SPROUT}
             type="text"
             value={payoutAddress}
             onChange={this.handleInputChange}

@@ -64,7 +64,7 @@ class Example extends React.Component<ExampleProps, ExampleState> {
   constructor(props: ExampleProps) {
     super(props);
     this.state = {
-      value: props.defaultValue !== undefined ? props.defaultValue : DONATION.ETH,
+      value: props.defaultValue !== undefined ? props.defaultValue : DONATION.ZCASH_SPROUT,
     };
   }
 

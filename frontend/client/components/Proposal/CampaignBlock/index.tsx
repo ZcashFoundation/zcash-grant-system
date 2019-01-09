@@ -1,15 +1,13 @@
 import React from 'react';
 import moment from 'moment';
-import BN from 'bn.js';
 import { Spin, Form, Input, Button, Icon } from 'antd';
-import { Proposal } from 'types';
+import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
-import { fromWei } from 'utils/units';
+import { fromZat } from 'utils/units';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
-import ShortAddress from 'components/ShortAddress';
 import UnitDisplay from 'components/UnitDisplay';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
@@ -51,8 +49,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     }
 
     // TODO: Get values from proposal
-    const target = new BN(0);
-    const funded = new BN(0);
+    const { target, funded } = this.props.proposal;
     const remainingTarget = target.sub(funded);
     const amount = parseFloat(value);
     let amountError = null;
@@ -60,8 +57,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     if (Number.isNaN(amount)) {
       // They're entering some garbage, they’ll work it out
     } else {
-      const remainingEthNum = parseFloat(fromWei(remainingTarget, 'ether'));
-      amountError = getAmountError(amount, remainingEthNum);
+      const remainingTargetNum = parseFloat(fromZat(remainingTarget));
+      amountError = getAmountError(amount, remainingTargetNum);
     }
 
     this.setState({ amountToRaise: value, amountError });
@@ -80,31 +77,28 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
+      const { target, funded, percentFunded } = proposal;
+      const isRaiseGoalReached = funded.gte(target);
       // TODO: Get values from proposal
-      console.warn('TODO: Get real values from proposal for CampaignBlock');
-      const isRaiseGoalReached = false;
+      console.warn('TODO: Get deadline and isFrozen from proposal data');
       const deadline = 0;
       const isFrozen = false;
-      const target = new BN(0);
-      const funded = new BN(0);
-      const percentFunded = 0;
-      const beneficiary = 'z123';
+      const isLive = proposal.status === STATUS.LIVE;
 
-      const isFundingOver =
-        isRaiseGoalReached ||
-        deadline < Date.now() ||
-        isFrozen;
+      const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;
       const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
-      const remainingEthNum = parseFloat(fromWei(target.sub(funded), 'ether'));
+      const remainingTargetNum = parseFloat(fromZat(target.sub(funded)));
 
       content = (
         <React.Fragment>
-          <div className="ProposalCampaignBlock-info">
-            <div className="ProposalCampaignBlock-info-label">Started</div>
-            <div className="ProposalCampaignBlock-info-value">
-              {moment(proposal.dateCreated * 1000).fromNow()}
+          {isLive && (
+            <div className="ProposalCampaignBlock-info">
+              <div className="ProposalCampaignBlock-info-label">Started</div>
+              <div className="ProposalCampaignBlock-info-value">
+                {moment(proposal.datePublished * 1000).fromNow()}
+              </div>
             </div>
-          </div>
+          )}
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Category</div>
             <div className="ProposalCampaignBlock-info-value">
@@ -124,16 +118,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             </div>
           )}
           <div className="ProposalCampaignBlock-info">
-            <div className="ProposalCampaignBlock-info-label">Beneficiary</div>
-            <div className="ProposalCampaignBlock-info-value">
-              <ShortAddress address={beneficiary} />
-            </div>
-          </div>
-          <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">
-              <UnitDisplay value={funded} /> /{' '}
-              <UnitDisplay value={target} symbol="ETH" />
+              <UnitDisplay value={funded} /> / <UnitDisplay value={target} symbol="ZEC" />
             </div>
           </div>
 
@@ -175,7 +162,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                         size="large"
                         type="number"
                         placeholder="0.5"
-                        addonAfter="ETH"
+                        addonAfter="ZEC"
                         disabled={true}
                       />
                     </Form.Item>
@@ -193,10 +180,10 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                       value={amountToRaise}
                       placeholder="0.5"
                       min={0}
-                      max={remainingEthNum}
+                      max={remainingTargetNum}
                       step={0.1}
                       onChange={this.handleAmountChange}
-                      addonAfter="ETH"
+                      addonAfter="ZEC"
                       disabled={isPreview}
                     />
                   </Form.Item>
