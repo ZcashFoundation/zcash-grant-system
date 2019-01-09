@@ -44,6 +44,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   funded: BN;
   percentFunded: number;
   milestones: ProposalMilestone[];
+  datePublished: number;
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {

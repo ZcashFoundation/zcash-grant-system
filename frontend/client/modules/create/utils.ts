@@ -180,6 +180,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
     proposalAddress: '0x0',
     payoutAddress: '0x0',
     dateCreated: Date.now(),
+    datePublished: Date.now(),
     title: draft.title,
     brief: draft.brief,
     content: draft.content,

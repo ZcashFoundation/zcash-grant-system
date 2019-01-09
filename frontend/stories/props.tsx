@@ -148,6 +148,7 @@ export function generateProposal({
     proposalAddress: '0x033fDc6C01DC2385118C7bAAB88093e22B8F0710',
     payoutAddress: 'z123',
     dateCreated: created / 1000,
+    datePublished: created / 1000,
     deadlineDuration: 86400 * 60,
     target: amountBn,
     funded: fundedBn,
