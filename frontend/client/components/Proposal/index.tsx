@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { compose } from 'recompose';
 import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
 import Markdown from 'components/Markdown';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
-import { Proposal } from 'types';
+import { Proposal, STATUS } from 'types';
 import { getProposal } from 'modules/proposals/selectors';
-import { Spin, Tabs, Icon, Dropdown, Menu, Button } from 'antd';
+import { Spin, Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
+import { AlertProps } from 'antd/lib/alert';
 import CampaignBlock from './CampaignBlock';
 import TeamBlock from './TeamBlock';
 import Milestones from './Milestones';
@@ -20,7 +22,7 @@ import CancelModal from './CancelModal';
 import classnames from 'classnames';
 import { withRouter } from 'react-router';
 import SocialShare from 'components/SocialShare';
-import './style.less';
+import './index.less';
 
 interface OwnProps {
   proposalId: number;
@@ -56,9 +58,10 @@ export class ProposalDetail extends React.Component<Props, State> {
   };
 
   componentDidMount() {
-    if (!this.props.proposal) {
-      this.props.fetchProposal(this.props.proposalId);
-    } else {
+    // always refresh from server
+    this.props.fetchProposal(this.props.proposalId);
+
+    if (this.props.proposal) {
       this.checkBodyOverflow();
     }
     if (typeof window !== 'undefined') {
@@ -91,37 +94,85 @@ export class ProposalDetail extends React.Component<Props, State> {
 
     if (!proposal) {
       return <Spin />;
-    } else {
-      const deadline = 0; // TODO: Use actual date for deadline
-      // TODO: isTrustee - determine rework to isAdmin?
-      // for now: check if authed user in member of proposal team
-      const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
-      const hasBeenFunded = false; // TODO: deterimne if proposal has reached funding
-      const isProposalActive = !hasBeenFunded && deadline > Date.now();
-      const canCancel = false; // TODO: Allow canceling if proposal hasn't gone live yet
+    }
 
-      const adminMenu = isTrustee && (
-        <Menu>
-          <Menu.Item onClick={this.openUpdateModal}>Post an Update</Menu.Item>
-          <Menu.Item
-            onClick={() => alert('Sorry, not yet implemented!')}
-            disabled={!isProposalActive}
-          >
-            Edit proposal
-          </Menu.Item>
-          <Menu.Item
-            style={{ color: canCancel ? '#e74c3c' : undefined }}
-            onClick={this.openCancelModal}
-            disabled={!canCancel}
-          >
-            Cancel proposal
-          </Menu.Item>
-        </Menu>
-      );
+    const deadline = 0; // TODO: Use actual date for deadline
+    // TODO: isTrustee - determine rework to isAdmin?
+    // for now: check if authed user in member of proposal team
+    const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
+    const hasBeenFunded = false; // TODO: deterimne if proposal has reached funding
+    const isProposalActive = !hasBeenFunded && deadline > Date.now();
+    const canCancel = false; // TODO: Allow canceling if proposal hasn't gone live yet
+    const isLive = proposal.status === STATUS.LIVE;
 
-      return (
-        <div className="Proposal">
-          <div className="Proposal-top">
+    const adminMenu = (
+      <Menu>
+        <Menu.Item disabled={!isLive} onClick={this.openUpdateModal}>
+          Post an Update
+        </Menu.Item>
+        <Menu.Item
+          onClick={() => alert('Sorry, not yet implemented!')}
+          disabled={!isProposalActive}
+        >
+          Edit proposal
+        </Menu.Item>
+        <Menu.Item
+          style={{ color: canCancel ? '#e74c3c' : undefined }}
+          onClick={this.openCancelModal}
+          disabled={!canCancel}
+        >
+          Cancel proposal
+        </Menu.Item>
+      </Menu>
+    );
+
+    // BANNER
+    const statusBanner = {
+      [STATUS.PENDING]: {
+        blurb: (
+          <>
+            Your proposal is being reviewed and is only visible to the team. You will get
+            an email when it is complete.
+          </>
+        ),
+        type: 'warning',
+      },
+      [STATUS.APPROVED]: {
+        blurb: (
+          <>
+            Your proposal has been approved! It is currently only visible to the team.
+            Visit your <Link to="/profile">profile - pending</Link> tab to publish.
+          </>
+        ),
+        type: 'success',
+      },
+      [STATUS.REJECTED]: {
+        blurb: (
+          <>
+            Your proposal was rejected and is only visible to the team. Visit your{' '}
+            <Link to="/profile">profile - pending</Link> tab for more information.
+          </>
+        ),
+        type: 'error',
+      },
+    } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
+    let banner = statusBanner[proposal.status];
+    if (isPreview) {
+      banner = {
+        blurb: 'This is a preview of your proposal. It has not yet been published.',
+        type: 'info',
+      };
+    }
+
+    return (
+      <div className="Proposal">
+        {banner && (
+          <div className="Proposal-banner">
+            <Alert type={banner.type} message={banner.blurb} showIcon={false} banner />
+          </div>
+        )}
+        <div className="Proposal-top">
+          {isLive && (
             <div className="Proposal-top-social">
               <SocialShare
                 url={(typeof window !== 'undefined' && window.location.href) || ''}
@@ -131,34 +182,36 @@ export class ProposalDetail extends React.Component<Props, State> {
                 } needs funding on Grant.io! Come help make this proposal a reality by funding it.`}
               />
             </div>
-            <div className="Proposal-top-main">
-              <h1 className="Proposal-top-main-title">
-                {proposal ? proposal.title : <span>&nbsp;</span>}
-              </h1>
-              <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
-                <div
-                  id={bodyId}
-                  className={classnames({
-                    ['Proposal-top-main-block-bodyText']: true,
-                    ['is-expanded']: isBodyExpanded,
-                  })}
-                >
-                  {proposal ? (
-                    <Markdown source={proposal.content} />
-                  ) : (
-                    <Spin size="large" />
-                  )}
-                </div>
-                {showExpand && (
-                  <button
-                    className="Proposal-top-main-block-bodyExpand"
-                    onClick={this.expandBody}
-                  >
-                    Read more <Icon type="arrow-down" style={{ fontSize: '0.7rem' }} />
-                  </button>
+          )}
+          <div className="Proposal-top-main">
+            <h1 className="Proposal-top-main-title">
+              {proposal ? proposal.title : <span>&nbsp;</span>}
+            </h1>
+            <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
+              <div
+                id={bodyId}
+                className={classnames({
+                  ['Proposal-top-main-block-bodyText']: true,
+                  ['is-expanded']: isBodyExpanded,
+                })}
+              >
+                {proposal ? (
+                  <Markdown source={proposal.content} />
+                ) : (
+                  <Spin size="large" />
                 )}
               </div>
-              {isTrustee && (
+              {showExpand && (
+                <button
+                  className="Proposal-top-main-block-bodyExpand"
+                  onClick={this.expandBody}
+                >
+                  Read more <Icon type="arrow-down" style={{ fontSize: '0.7rem' }} />
+                </button>
+              )}
+            </div>
+            {isLive &&
+              isTrustee && (
                 <div className="Proposal-top-main-menu">
                   <Dropdown
                     overlay={adminMenu}
@@ -172,48 +225,46 @@ export class ProposalDetail extends React.Component<Props, State> {
                   </Dropdown>
                 </div>
               )}
-            </div>
-            <div className="Proposal-top-side">
-              <CampaignBlock proposal={proposal} isPreview={isPreview} />
-              <TeamBlock proposal={proposal} />
-            </div>
           </div>
-
-          {proposal && (
-            <Tabs>
-              <Tabs.TabPane tab="Milestones" key="milestones">
-                <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
-                  <Milestones proposal={proposal} />
-                </div>
-              </Tabs.TabPane>
-              <Tabs.TabPane tab="Discussion" key="discussions" disabled={isPreview}>
-                <CommentsTab proposalId={proposal.proposalId} />
-              </Tabs.TabPane>
-              <Tabs.TabPane tab="Updates" key="updates" disabled={isPreview}>
-                <UpdatesTab proposalId={proposal.proposalId} />
-              </Tabs.TabPane>
-              <Tabs.TabPane tab="Contributors" key="contributors">
-                <ContributorsTab />
-              </Tabs.TabPane>
-            </Tabs>
-          )}
-          {isTrustee && (
-            <>
-              <UpdateModal
-                proposalId={proposal.proposalId}
-                isVisible={isUpdateOpen}
-                handleClose={this.closeUpdateModal}
-              />
-              <CancelModal
-                proposal={proposal}
-                isVisible={isCancelOpen}
-                handleClose={this.closeCancelModal}
-              />
-            </>
-          )}
+          <div className="Proposal-top-side">
+            <CampaignBlock proposal={proposal} isPreview={!isLive} />
+            <TeamBlock proposal={proposal} />
+          </div>
         </div>
-      );
-    }
+
+        <Tabs>
+          <Tabs.TabPane tab="Milestones" key="milestones">
+            <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
+              <Milestones proposal={proposal} />
+            </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Discussion" key="discussions" disabled={!isLive}>
+            <CommentsTab proposalId={proposal.proposalId} />
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
+            <UpdatesTab proposalId={proposal.proposalId} />
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
+            <ContributorsTab />
+          </Tabs.TabPane>
+        </Tabs>
+
+        {isTrustee && (
+          <>
+            <UpdateModal
+              proposalId={proposal.proposalId}
+              isVisible={isUpdateOpen}
+              handleClose={this.closeUpdateModal}
+            />
+            <CancelModal
+              proposal={proposal}
+              isVisible={isCancelOpen}
+              handleClose={this.closeCancelModal}
+            />
+          </>
+        )}
+      </div>
+    );
   }
 
   private expandBody = () => {

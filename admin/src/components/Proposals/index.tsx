@@ -1,34 +1,40 @@
 import React from 'react';
-import { view } from 'react-easy-state';
-import { Icon, Button, Popover } from 'antd';
-import { RouteComponentProps, withRouter } from 'react-router';
-import Showdown from 'showdown';
-import moment from 'moment';
-import store from 'src/store';
-import { Proposal } from 'src/types';
-import './index.less';
-import Field from 'components/Field';
+import qs from 'query-string';
+import { uniq, without } from 'lodash';
 import { Link } from 'react-router-dom';
+import { view } from 'react-easy-state';
+import { Icon, Button, Dropdown, Menu, Tag, List } from 'antd';
+import { RouteComponentProps, withRouter } from 'react-router';
+import store from 'src/store';
+import ProposalItem from './ProposalItem';
+import { PROPOSAL_STATUS, Proposal } from 'src/types';
+import STATUSES, { getStatusById } from './STATUSES';
+import { ClickParam } from 'antd/lib/menu';
+import './index.less';
 
-const showdownConverter = new Showdown.Converter({
-  simplifiedAutoLink: true,
-  tables: true,
-  strikethrough: true,
-  disableForced4SpacesIndentedSublists: true,
-  openLinksInNewWindow: true,
-  excludeTrailingPunctuationFromURLs: true,
-});
+interface Query {
+  status: PROPOSAL_STATUS[];
+}
 
 type Props = RouteComponentProps<any>;
 
-class ProposalsNaked extends React.Component<Props> {
+const STATE = {
+  statusFilters: [] as PROPOSAL_STATUS[],
+};
+
+type State = typeof STATE;
+
+class ProposalsNaked extends React.Component<Props, State> {
+  state = STATE;
   componentDidMount() {
-    store.fetchProposals();
+    this.setStateFromQueryString();
+    this.fetchProposals();
   }
 
   render() {
     const id = Number(this.props.match.params.id);
-    const { proposals, proposalsFetched } = store;
+    const { proposals, proposalsFetching, proposalsFetched } = store;
+    const { statusFilters } = this.state;
 
     if (!proposalsFetched) {
       return 'loading proposals...';
@@ -55,141 +61,113 @@ class ProposalsNaked extends React.Component<Props> {
       }
     }
 
+    const statusFilterMenu = (
+      <Menu onClick={this.handleFilterClick}>
+        {STATUSES.map(f => (
+          <Menu.Item key={f.id}>{f.filterDisplay}</Menu.Item>
+        ))}
+      </Menu>
+    );
+
     return (
       <div className="Proposals">
         <div className="Proposals-controls">
-          <Button title="refresh" icon="reload" onClick={() => store.fetchProposals()} />
+          <Dropdown overlay={statusFilterMenu} trigger={['click']}>
+            <Button>
+              Filter <Icon type="down" />
+            </Button>
+          </Dropdown>
+          <Button title="refresh" icon="reload" onClick={() => this.fetchProposals()} />
         </div>
-        {proposals.length === 0 && <div>no proposals</div>}
-        {proposals.length > 0 &&
-          proposals.map(p => <ProposalItem key={p.proposalId} {...p} />)}
-      </div>
-    );
-  }
-}
-
-// tslint:disable-next-line:max-classes-per-file
-class ProposalItemNaked extends React.Component<Proposal> {
-  state = {
-    showDelete: false,
-  };
-  render() {
-    const p = this.props;
-    const body = showdownConverter.makeHtml(p.content);
-    return (
-      <div key={p.proposalId} className="Proposals-proposal">
-        <div>
-          <div className="Proposals-proposal-controls">
-            <Popover
-              content={
-                <div>
-                  <Button type="primary" onClick={this.handleDelete}>
-                    delete {p.title}
-                  </Button>{' '}
-                  <Button onClick={() => this.setState({ showDelete: false })}>
-                    cancel
-                  </Button>
-                </div>
-              }
-              title="Permanently delete proposal?"
-              trigger="click"
-              visible={this.state.showDelete}
-              onVisibleChange={showDelete => this.setState({ showDelete })}
-            >
-              <Button icon="delete" shape="circle" size="small" title="delete" />
-            </Popover>
-            {/* TODO: implement disable payments on BE */}
-            <Button
-              icon="dollar"
-              shape="circle"
-              size="small"
-              title={false ? 'allow payments' : 'disable payments'}
-              type={false ? 'danger' : 'default'}
-              disabled={true}
-            />
+        {!!statusFilters.length && (
+          <div className="Proposals-filters">
+            Filters:{' '}
+            {statusFilters.map(sf => (
+              <Tag
+                key={sf}
+                onClose={() => this.handleFilterClose(sf)}
+                color={getStatusById(sf).tagColor}
+                closable
+              >
+                status: {sf}
+              </Tag>
+            ))}
+            {statusFilters.length > 1 && (
+              <Tag key="clear" onClick={this.handleFilterClear}>
+                clear
+              </Tag>
+            )}
           </div>
-          <b>{p.title}</b> [{p.proposalId}]{p.proposalAddress}{' '}
-          <Field title="category" value={p.category} />
-          <Field title="dateCreated" value={p.dateCreated * 1000} isTime={true} />
-          <Field title="stage" value={p.stage} />
-          <Field
-            title={`team (${p.team.length})`}
-            value={
-              <div>
-                {p.team.map(u => (
-                  <div key={u.userid}>
-                    {u.displayName} (
-                    <Link to={`/users/${u.accountAddress}`}>{u.accountAddress}</Link>)
-                  </div>
-                ))}
-              </div>
-            }
-          />
-          <Field
-            title={`comments (${p.comments.length})`}
-            value={<div>TODO: comments</div>}
-          />
-          <Field
-            title={`body (${body.length}chr)`}
-            value={
-              <div
-                className="Proposals-proposal-body"
-                dangerouslySetInnerHTML={{ __html: body }}
-              />
-            }
-          />
-          <Field
-            title={`milestones (${p.milestones.length})`}
-            value={
-              <div className="Proposals-proposal-milestones">
-                {p.milestones.map((ms, idx) => (
-                  <div key={idx}>
-                    <div>
-                      <b>
-                        {idx}. {ms.title}
-                      </b>
-                      <span>(title)</span>
-                    </div>
-                    <div>
-                      {moment(ms.dateCreated).format('YYYY/MM/DD h:mm a')}
-                      <span>(dateCreated)</span>
-                    </div>
-                    <div>
-                      {moment(ms.dateEstimated).format('YYYY/MM/DD h:mm a')}
-                      <span>(dateEstimated)</span>
-                    </div>
-                    <div>
-                      {ms.stage}
-                      <span>(stage)</span>
-                    </div>
-                    <div>
-                      {JSON.stringify(ms.immediatePayout)}
-                      <span>(immediatePayout)</span>
-                    </div>
-                    <div>
-                      {ms.payoutPercent}
-                      <span>(payoutPercent)</span>
-                    </div>
-                    <div>
-                      {ms.content}
-                      <span>(body)</span>
-                    </div>
-                    {/* <small>content</small>
-                    <div>{ms.content}</div> */}
-                  </div>
-                ))}
-              </div>
-            }
-          />
-        </div>
+        )}
+        {proposalsFetching && 'Fetching proposals...'}
+        {proposalsFetched &&
+          !proposalsFetching && (
+            <List
+              className="Proposals-list"
+              bordered
+              dataSource={proposals}
+              renderItem={(p: Proposal) => <ProposalItem key={p.proposalId} {...p} />}
+            />
+          )}
       </div>
     );
   }
-  private handleDelete = () => {
-    store.deleteProposal(this.props.proposalId);
+
+  private fetchProposals = () => {
+    const statusFilters = this.getParsedQuery().status;
+    store.fetchProposals(statusFilters);
+  };
+
+  private getParsedQuery = () => {
+    const parsed = qs.parse(this.props.history.location.search) as Query;
+    let statusFilters = parsed.status || [];
+    // qs.parse returns non-array for single item
+    statusFilters = Array.isArray(statusFilters) ? statusFilters : [statusFilters];
+    parsed.status = statusFilters;
+    return parsed;
+  };
+
+  private setStateFromQueryString = () => {
+    const statusFilters = this.getParsedQuery().status;
+    this.setState({ statusFilters });
+  };
+
+  private updateHistoryStateAndProposals = (queryStringArgs: Query) => {
+    this.props.history.push(`${this.props.match.url}?${qs.stringify(queryStringArgs)}`);
+    this.setStateFromQueryString();
+    this.fetchProposals();
+  };
+
+  private addStatusFilter = (statusFilter: PROPOSAL_STATUS) => {
+    const parsed = this.getParsedQuery();
+    parsed.status = uniq([statusFilter, ...parsed.status]);
+    this.updateHistoryStateAndProposals(parsed);
+  };
+
+  private removeStatusFilter = (statusFilter: PROPOSAL_STATUS) => {
+    const parsed = this.getParsedQuery();
+    parsed.status = without(parsed.status, statusFilter);
+    this.updateHistoryStateAndProposals(parsed);
+  };
+
+  private clearStatusFilters = () => {
+    const parsed = this.getParsedQuery();
+    parsed.status = [];
+    this.updateHistoryStateAndProposals(parsed);
+  };
+
+  private handleFilterClick = (e: ClickParam) => {
+    this.addStatusFilter(e.key as PROPOSAL_STATUS);
+  };
+
+  private handleFilterClose = (filter: PROPOSAL_STATUS) => {
+    this.removeStatusFilter(filter);
+  };
+
+  private handleFilterClear = () => {
+    this.clearStatusFilters();
   };
 }
-const ProposalItem = view(ProposalItemNaked);
 
 const Proposals = withRouter(view(ProposalsNaked));
 export default Proposals;

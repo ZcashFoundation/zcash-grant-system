@@ -11,10 +11,23 @@ export interface Milestone {
   stage: string;
   title: string;
 }
+// NOTE: sync with backend/grant/proposal/models.py STATUSES
+export enum PROPOSAL_STATUS {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  LIVE = 'LIVE',
+  DELETED = 'DELETED',
+}
 export interface Proposal {
   proposalId: number;
+  brief: string;
+  status: PROPOSAL_STATUS;
   proposalAddress: string;
   dateCreated: number;
+  dateApproved: number;
+  datePublished: number;
   title: string;
   content: string;
   stage: string;
@@ -23,6 +36,8 @@ export interface Proposal {
   team: User[];
   comments: Comment[];
   contractStatus: string;
+  target: string;
+  rejectReason: string;
 }
 export interface Comment {
   commentId: string;

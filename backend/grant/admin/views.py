@@ -1,14 +1,14 @@
 from functools import wraps
-from flask import Blueprint, g, session
+from flask import Blueprint, g, session, request
 from flask_yoloapi import endpoint, parameter
 from hashlib import sha256
 from uuid import uuid4
 from flask_cors import CORS, cross_origin
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from grant.extensions import db
 from grant.user.models import User, users_schema
-from grant.proposal.models import Proposal, proposals_schema
+from grant.proposal.models import Proposal, proposals_schema, proposal_schema, PENDING
 from grant.comment.models import Comment, comments_schema
 
 
@@ -34,7 +34,6 @@ def auth_required(f):
 
 
 @blueprint.route("/checklogin", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 def loggedin():
     if 'username' in session:
@@ -44,7 +43,6 @@ def loggedin():
 
 
 @blueprint.route("/login", methods=["POST"])
-@cross_origin(supports_credentials=True)
 @endpoint.api(
     parameter('username', type=str, required=False),
     parameter('password', type=str, required=False),
@@ -60,7 +58,6 @@ def login(username, password):
 
 
 @blueprint.route("/logout", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 def logout():
     del session['username']
@@ -68,20 +65,22 @@ def logout():
 
 
 @blueprint.route("/stats", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
     proposal_count = db.session.query(func.count(Proposal.id)).scalar()
+    proposal_pending_count = db.session.query(func.count(Proposal.id)) \
+        .filter(Proposal.status == PENDING) \
+        .scalar()
     return {
         "userCount": user_count,
-        "proposalCount": proposal_count
+        "proposalCount": proposal_count,
+        "proposalPendingCount": proposal_pending_count,
     }
 
 
 @blueprint.route('/users/<id>', methods=['DELETE'])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def delete_user(id):
@@ -89,7 +88,6 @@ def delete_user(id):
 
 
 @blueprint.route("/users", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def get_users():
@@ -104,18 +102,48 @@ def get_users():
 
 
 @blueprint.route("/proposals", methods=["GET"])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def get_proposals():
-    proposals = Proposal.query.order_by(Proposal.date_created.desc()).all()
+    # endpoint.api doesn't seem to handle GET query array input
+    status_filters = request.args.getlist('statusFilters[]')
+    or_filter = or_(Proposal.status == v for v in status_filters)
+    proposals = Proposal.query.filter(or_filter) \
+        .order_by(Proposal.date_created.desc()) \
+        .all()
+    # TODO: return partial data for list
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
 
 
+@blueprint.route('/proposals/<id>', methods=['GET'])
+@endpoint.api()
+@auth_required
+def get_proposal(id):
+    proposal = Proposal.query.filter(Proposal.id == id).first()
+    if proposal:
+        return proposal_schema.dump(proposal)
+    return {"message": "Could not find proposal with id %s" % id}, 404
+
+
 @blueprint.route('/proposals/<id>', methods=['DELETE'])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
 @auth_required
 def delete_proposal(id):
+    return {"message": "Not implemented."}, 400
+
+
+@blueprint.route('/proposals/<id>/approve', methods=['PUT'])
+@endpoint.api(
+    parameter('isApprove', type=bool, required=True),
+    parameter('rejectReason', type=str, required=False)
+)
+@auth_required
+def approve_proposal(id, is_approve, reject_reason=None):
+    proposal = Proposal.query.filter_by(id=id).first()
+    if proposal:
+        proposal.approve_pending(is_approve, reject_reason)
+        db.session.commit()
+        return proposal_schema.dump(proposal)
+
     return {"message": "Not implemented."}, 400

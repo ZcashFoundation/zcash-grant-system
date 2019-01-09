@@ -1,10 +1,7 @@
 import { Dispatch } from 'redux';
 import { ProposalDraft } from 'types';
-// import { AppState } from 'store/reducers';
 import types, { CreateDraftOptions } from './types';
-import { putProposal, putProposalPublish } from 'api/api';
-
-// type GetState = () => AppState;
+import { putProposal, putProposalSubmitForApproval } from 'api/api';
 
 export function initializeForm(proposalId: number) {
   return {
@@ -50,12 +47,12 @@ export function submitProposal(form: ProposalDraft) {
     dispatch({ type: types.SUBMIT_PROPOSAL_PENDING });
     try {
       await putProposal(form);
-      const res = await putProposalPublish(form);
+      const res = await putProposalSubmitForApproval(form);
       dispatch({
         type: types.SUBMIT_PROPOSAL_FULFILLED,
         payload: res.data,
       });
-    } catch(err) {
+    } catch (err) {
       dispatch({
         type: types.SUBMIT_PROPOSAL_REJECTED,
         payload: err.message || err.toString(),

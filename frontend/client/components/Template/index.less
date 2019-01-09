@@ -9,7 +9,7 @@
     display: flex;
     justify-content: center;
     flex: 1;
-    padding: 0 2.5rem;
+    padding: 0 @template-space-sides;
 
     .is-fullscreen & {
       padding: 0;
@@ -19,8 +19,8 @@
       width: 100%;
       max-width: @max-content-width;
       margin: 0 auto;
-      padding-top: 2.5rem;
-      padding-bottom: 2.5rem;
+      padding-top: @template-space-top;
+      padding-bottom: @template-space-top;
       min-height: 280px;
 
       .is-fullscreen & {
@@ -28,7 +28,7 @@
         padding-bottom: 0;
         max-width: none;
       }
-      
+
       .is-centered & {
         align-self: center;
       }

@@ -1,12 +1,7 @@
 import BN from 'bn.js';
 import { Zat } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import {
-  CreateMilestone,
-  Update,
-  User,
-  Comment,
-} from 'types';
+import { CreateMilestone, Update, User, Comment } from 'types';
 import { ProposalMilestone } from './milestone';
 
 export interface TeamInvite {
@@ -39,8 +34,8 @@ export interface ProposalDraft {
   milestones: CreateMilestone[];
   team: User[];
   invites: TeamInvite[];
+  status: STATUS;
 }
-
 
 export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   proposalAddress: string;
@@ -49,6 +44,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   funded: BN;
   percentFunded: number;
   milestones: ProposalMilestone[];
+  datePublished: number;
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {
@@ -68,9 +64,24 @@ export interface ProposalUpdates {
 
 export interface UserProposal {
   proposalId: number;
+  status: STATUS;
   title: string;
   brief: string;
-  team: User[];
   funded: BN;
   target: BN;
+  dateCreated: number;
+  dateApproved: number;
+  datePublished: number;
+  team: User[];
+  rejectReason: string;
+}
+
+// NOTE: sync with backend/grant/proposal/models.py STATUSES
+export enum STATUS {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  LIVE = 'LIVE',
+  DELETED = 'DELETED',
 }

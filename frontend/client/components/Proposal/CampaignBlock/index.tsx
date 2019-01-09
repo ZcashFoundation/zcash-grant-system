@@ -1,7 +1,7 @@
 import React from 'react';
 import moment from 'moment';
 import { Spin, Form, Input, Button, Icon } from 'antd';
-import { Proposal } from 'types';
+import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { fromZat } from 'utils/units';
 import { connect } from 'react-redux';
@@ -83,6 +83,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       console.warn('TODO: Get deadline and isFrozen from proposal data');
       const deadline = 0;
       const isFrozen = false;
+      const isLive = proposal.status === STATUS.LIVE;
 
       const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;
       const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
@@ -90,12 +91,14 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
       content = (
         <React.Fragment>
-          <div className="ProposalCampaignBlock-info">
-            <div className="ProposalCampaignBlock-info-label">Started</div>
-            <div className="ProposalCampaignBlock-info-value">
-              {moment(proposal.dateCreated * 1000).fromNow()}
+          {isLive && (
+            <div className="ProposalCampaignBlock-info">
+              <div className="ProposalCampaignBlock-info-label">Started</div>
+              <div className="ProposalCampaignBlock-info-value">
+                {moment(proposal.datePublished * 1000).fromNow()}
+              </div>
             </div>
-          </div>
+          )}
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Category</div>
             <div className="ProposalCampaignBlock-info-value">
