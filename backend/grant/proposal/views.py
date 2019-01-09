@@ -25,6 +25,7 @@ from .models import (
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
+    proposal_proposal_contributions_schema,
     db,
     DRAFT,
     PENDING,
