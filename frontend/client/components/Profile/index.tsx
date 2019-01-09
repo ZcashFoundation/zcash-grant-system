@@ -21,7 +21,9 @@ import ProfileComment from './ProfileComment';
 import ProfileInvite from './ProfileInvite';
 import Placeholder from 'components/Placeholder';
 import Exception from 'pages/exception';
+import ContributionModal from 'components/ContributionModal';
 import './style.less';
+import { UserContribution } from 'types';
 
 interface StateProps {
   usersMap: AppState['users']['map'];
@@ -35,7 +37,15 @@ interface DispatchProps {
 
 type Props = RouteComponentProps<any> & StateProps & DispatchProps;
 
-class Profile extends React.Component<Props> {
+interface State {
+  activeContribution: UserContribution | null;
+}
+
+class Profile extends React.Component<Props, State> {
+  state: State = {
+    activeContribution: null,
+  };
+
   componentDidMount() {
     this.fetchData();
   }
@@ -50,6 +60,8 @@ class Profile extends React.Component<Props> {
   render() {
     const userLookupParam = this.props.match.params.id;
     const { authUser, match } = this.props;
+    const { activeContribution } = this.state;
+
     if (!userLookupParam) {
       if (authUser && authUser.userid) {
         return <Redirect to={`/profile/${authUser.userid}`} />;
@@ -128,7 +140,12 @@ class Profile extends React.Component<Props> {
             <div>
               {noneFunded && <Placeholder subtitle="Has not funded any proposals yet" />}
               {contributions.map(c => (
-                <ProfileContribution key={c.id} userId={user.userid} contribution={c} />
+                <ProfileContribution
+                  key={c.id}
+                  userId={user.userid}
+                  contribution={c}
+                  showSendInstructions={this.openContributionModal}
+                />
               ))}
             </div>
           </Tabs.TabPane>
@@ -160,9 +177,20 @@ class Profile extends React.Component<Props> {
             </Tabs.TabPane>
           )}
         </Tabs>
+
+        <ContributionModal
+          isVisible={!!activeContribution}
+          proposalId={
+            activeContribution ? activeContribution.proposal.proposalId : undefined
+          }
+          contributionId={activeContribution ? activeContribution.id : undefined}
+          hasNoButtons
+          handleClose={this.closeContributionModal}
+        />
       </div>
     );
   }
+
   private fetchData() {
     const { match } = this.props;
     const userLookupId = match.params.id;
@@ -171,6 +199,9 @@ class Profile extends React.Component<Props> {
       this.props.fetchUserInvites(userLookupId);
     }
   }
+
+  private openContributionModal = (c: UserContribution) => this.setState({ activeContribution: c });
+  private closeContributionModal = () => this.setState({ activeContribution: null });
 }
 
 const TabTitle = (disp: string, count: number) => (

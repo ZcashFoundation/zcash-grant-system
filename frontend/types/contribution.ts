@@ -2,7 +2,7 @@ import { Zat } from 'utils/units';
 import { Proposal, User } from 'types';
 
 export interface Contribution {
-  id: string;
+  id: number;
   txId: string;
   amount: string;
   dateCreated: number;

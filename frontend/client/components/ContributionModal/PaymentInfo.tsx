@@ -67,8 +67,13 @@ export default class PaymentInfo extends React.Component<Props, State> {
         </Radio.Group>
 
         <div className="PaymentInfo-uri">
-          <div className="PaymentInfo-uri-qr">
-            {uri ? <QRCode value={uri} /> : <Spin />}
+          <div className={
+            classnames('PaymentInfo-uri-qr', !uri && 'is-loading')
+          }>
+            <span style={{ opacity: uri ? 1 : 0 }}>
+              <QRCode value={uri || ''} />
+            </span>
+            {!uri && <Spin size="large" />}
           </div>
           <div className="PaymentInfo-uri-info">
             <CopyInput

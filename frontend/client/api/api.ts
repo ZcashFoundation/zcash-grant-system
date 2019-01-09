@@ -220,6 +220,7 @@ export function postProposalContribution(
   });
 }
 
+
 export function postProposalComment(payload: {
   proposalId: number;
   parentCommentId?: number;
@@ -231,4 +232,11 @@ export function postProposalComment(payload: {
 
 export function deleteProposalContribution(contributionId: string | number) {
   return axios.delete(`/api/v1/proposals/contribution/${contributionId}`);
+}
+
+export function getProposalContribution(
+  proposalId: number,
+  contributionId: number,
+): Promise<{ data: ContributionWithAddresses }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
 }

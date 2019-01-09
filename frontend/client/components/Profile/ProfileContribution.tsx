@@ -12,6 +12,7 @@ import './ProfileContribution.less';
 interface OwnProps {
   userId: number;
   contribution: UserContribution;
+  showSendInstructions(contribution: UserContribution): void;
 }
 
 interface DispatchProps {
@@ -30,7 +31,6 @@ class ProfileContribution extends React.Component<Props> {
     let tag;
     let actions: React.ReactNode;
     if (isConfirmed) {
-      // TODO: Link to block explorer
       actions = (
         <a
           href={formatTxExplorerUrl(contribution.txId as string)}
@@ -50,12 +50,15 @@ class ProfileContribution extends React.Component<Props> {
         >
           <a>Delete</a>
         </Popconfirm>
-        <a>Contact support</a>
+        <Link to="/support">Contact support</Link>
       </>;
     } else {
       tag = <Tag color="orange">Pending</Tag>;
-      // TODO: Show ContributionModal
-      actions = <a>View instructions</a>;
+      actions = (
+        <a onClick={() => this.props.showSendInstructions(contribution)}>
+          View send instructions
+        </a>
+      );
     }
 
     return (
