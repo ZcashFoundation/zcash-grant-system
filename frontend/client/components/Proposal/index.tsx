@@ -26,6 +26,7 @@ import './index.less';
 
 interface OwnProps {
   proposalId: number;
+  isPreview: boolean;
 }
 
 interface StateProps {
@@ -81,7 +82,7 @@ export class ProposalDetail extends React.Component<Props, State> {
   }
 
   render() {
-    const { user, proposal } = this.props;
+    const { user, proposal, isPreview } = this.props;
     const {
       isBodyExpanded,
       isBodyOverflowing,
@@ -125,48 +126,49 @@ export class ProposalDetail extends React.Component<Props, State> {
       </Menu>
     );
 
-    const statusNotifications = {
+    // BANNER
+    const statusBanner = {
       [STATUS.PENDING]: {
-        title: 'Pending Review',
         blurb: (
-          <>This proposal is being reviewed. You will get an email when it is complete.</>
+          <>
+            Your proposal is being reviewed and is only visible to the team. You will get
+            an email when it is complete.
+          </>
         ),
         type: 'warning',
       },
       [STATUS.APPROVED]: {
-        title: 'Approved',
         blurb: (
           <>
-            This proposal has been approved! Visit your{' '}
-            <Link to="/profile">profile - pending</Link> tab to publish.
+            Your proposal has been approved! It is currently only visible to the team.
+            Visit your <Link to="/profile">profile - pending</Link> tab to publish.
           </>
         ),
         type: 'success',
       },
       [STATUS.REJECTED]: {
-        title: 'Rejected',
         blurb: (
           <>
-            This proposal was rejected during the review process. Visit your{' '}
+            Your proposal was rejected and is only visible to the team. Visit your{' '}
             <Link to="/profile">profile - pending</Link> tab for more information.
           </>
         ),
         type: 'error',
       },
-    } as {
-      [key in STATUS]: { title: string; blurb: ReactNode; type: AlertProps['type'] }
-    };
-    const statusNotification = statusNotifications[proposal.status];
+    } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
+    let banner = statusBanner[proposal.status];
+    if (isPreview) {
+      banner = {
+        blurb: 'This is a preview of your proposal. It has not yet been published.',
+        type: 'info',
+      };
+    }
 
     return (
       <div className="Proposal">
-        {statusNotification && (
-          <div className="Proposal-statusNotification">
-            <Alert
-              type={statusNotification.type}
-              message={statusNotification.title}
-              description={statusNotification.blurb}
-            />
+        {banner && (
+          <div className="Proposal-banner">
+            <Alert type={banner.type} message={banner.blurb} showIcon={false} banner />
           </div>
         )}
         <div className="Proposal-top">

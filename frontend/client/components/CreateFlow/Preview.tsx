@@ -1,10 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Alert } from 'antd';
 import { ProposalDetail } from 'components/Proposal';
 import { AppState } from 'store/reducers';
 import { makeProposalPreviewFromDraft } from 'modules/create/utils';
 import { ProposalDraft } from 'types';
+import './Preview.less';
 
 interface StateProps {
   form: ProposalDraft;
@@ -17,21 +17,15 @@ class CreateFlowPreview extends React.Component<Props> {
     const { form } = this.props;
     const proposal = makeProposalPreviewFromDraft(form);
     return (
-      <>
-        <Alert
-          style={{ margin: '-1rem 0 2rem', textAlign: 'center' }}
-          message="This is a preview of your proposal. It has not yet been published."
-          type="info"
-          showIcon={false}
-          banner
-        />
+      <div className="Preview">
         <ProposalDetail
           user={null}
           proposalId={0}
           fetchProposal={(() => null) as any}
           proposal={proposal}
+          isPreview
         />
-      </>
+      </div>
     );
   }
 }
