@@ -1,6 +1,7 @@
 import datetime
 from typing import List
 from sqlalchemy import func
+from functools import reduce
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
@@ -293,8 +294,11 @@ class ProposalSchema(ma.Schema):
         return dt_to_unix(obj.date_created)
 
     def get_funded(self, obj):
-        # TODO: Add up all contributions and return that
-        return "0"
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=obj.id, status=CONFIRMED) \
+            .all()
+        funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        return str(funded)
 
 
 proposal_schema = ProposalSchema()

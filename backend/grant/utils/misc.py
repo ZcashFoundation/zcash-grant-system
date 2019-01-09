@@ -34,5 +34,5 @@ def is_email(email: str):
 def from_zat(zat: int):
   return zat / 100000000
 
-def to_zat(zec: int):
+def to_zat(zec: float):
   return zec * 100000000
