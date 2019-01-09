@@ -21,6 +21,9 @@ export interface ProposalState {
 
   isPostCommentPending: boolean;
   postCommentError: null | string;
+
+  isDeletingContribution: boolean;
+  deleteContributionError: null | string;
 }
 
 export const INITIAL_STATE: ProposalState = {
@@ -42,6 +45,9 @@ export const INITIAL_STATE: ProposalState = {
 
   isPostCommentPending: false,
   postCommentError: null,
+
+  isDeletingContribution: false,
+  deleteContributionError: null,
 };
 
 function addProposal(state: ProposalState, payload: Proposal) {

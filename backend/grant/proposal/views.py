@@ -26,6 +26,7 @@ from .models import(
     proposal_team_invite_schema,
     proposal_proposal_contributions_schema,
     CONFIRMED,
+    DELETED,
     db
 )
 import traceback
@@ -363,6 +364,8 @@ def post_proposal_contribution(proposal_id, amount):
     dumped_contribution = proposal_contribution_schema.dump(contribution)
     return dumped_contribution, code
 
+
+# Can't use <proposal_id> since webhook doesn't know proposal id
 @blueprint.route("/contribution/<contribution_id>/confirm", methods=["POST"])
 @internal_webhook
 @endpoint.api(
@@ -386,3 +389,23 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     db.session.add(contribution)
     db.session.commit()
     return None, 200
+
+@blueprint.route("/contribution/<contribution_id>", methods=["DELETE"])
+@requires_auth
+@endpoint.api()
+def delete_proposal_contribution(contribution_id):
+    contribution = contribution = ProposalContribution.query.filter_by(
+        id=contribution_id).first()
+    if not contribution:
+        return {"message": "No contribution matching id"}, 404
+
+    if contribution.status == CONFIRMED:
+        return {"message": "Cannot delete confirmed contributions"}, 400
+
+    if contribution.user_id != g.current_user.id:
+        return {"message": "Must be the user of the contribution to delete it"}, 403
+
+    contribution.status = DELETED
+    db.session.add(contribution)
+    db.session.commit()
+    return None, 202

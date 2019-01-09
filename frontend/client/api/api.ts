@@ -216,3 +216,7 @@ export function postProposalComment(payload: {
   const { proposalId, ...args } = payload;
   return axios.post(`/api/v1/proposals/${proposalId}/comments`, args);
 }
+
+export function deleteProposalContribution(contributionId: string | number) {
+  return axios.delete(`/api/v1/proposals/contribution/${contributionId}`);
+}

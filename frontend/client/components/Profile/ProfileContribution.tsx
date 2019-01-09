@@ -1,32 +1,55 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Tag } from 'antd';
+import { Tag, Popconfirm } from 'antd';
 import UnitDisplay from 'components/UnitDisplay';
 import { ONE_DAY } from 'utils/time';
+import { formatTxExplorerUrl } from 'utils/formatters';
+import { deleteContribution } from 'modules/users/actions';
 import { UserContribution } from 'types';
 import './ProfileContribution.less';
 
-interface Props {
+interface OwnProps {
+  userId: number;
   contribution: UserContribution;
 }
 
-export default class ProfileContribution extends React.Component<Props> {
+interface DispatchProps {
+  deleteContribution: typeof deleteContribution;
+}
+
+type Props = OwnProps & DispatchProps;
+
+class ProfileContribution extends React.Component<Props> {
   render() {
     const { contribution } = this.props;
     const { proposal } = contribution;
     const isConfirmed = contribution.status === 'CONFIRMED';
-    const isExpired = !isConfirmed && contribution.dateCreated < Date.now() - ONE_DAY;
+    const isExpired = !isConfirmed && contribution.dateCreated < Date.now() / 1000 - ONE_DAY;
 
     let tag;
     let actions: React.ReactNode;
     if (isConfirmed) {
       // TODO: Link to block explorer
-      actions = <a>View transaction</a>;
+      actions = (
+        <a
+          href={formatTxExplorerUrl(contribution.txId as string)}
+          target="_blank"
+          rel="noopener nofollow"
+        >
+          View transaction
+        </a>
+      );
     } else if (isExpired) {
       tag = <Tag color="red">Expired</Tag>;
-      // TODO: Link to support & implement remove contribution
+      // TODO: Link to support
       actions = <>
-        <a>Delete</a>
+        <Popconfirm
+          title="Are you sure?"
+          onConfirm={this.deleteContribution}
+        >
+          <a>Delete</a>
+        </Popconfirm>
         <a>Contact support</a>
       </>;
     } else {
@@ -57,4 +80,12 @@ export default class ProfileContribution extends React.Component<Props> {
       </div>
     );
   }
+
+  private deleteContribution = () => {
+    this.props.deleteContribution(this.props.userId, this.props.contribution.id);
+  };
 }
+
+export default connect<{}, DispatchProps, OwnProps, {}>(undefined, {
+  deleteContribution,
+})(ProfileContribution);

@@ -120,7 +120,8 @@ class ProposalContribution(db.Model):
     @staticmethod
     def get_by_userid(user_id):
         return ProposalContribution.query \
-            .filter_by(user_id=user_id) \
+            .filter(ProposalContribution.user_id == user_id) \
+            .filter(ProposalContribution.status != DELETED) \
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
 

@@ -111,7 +111,7 @@ class Profile extends React.Component<Props> {
             <div>
               {noneFunded && <Placeholder subtitle="Has not funded any proposals yet" />}
               {contributions.map(c => (
-                <ProfileContribution key={c.id} contribution={c} />
+                <ProfileContribution key={c.id} userId={user.userid} contribution={c} />
               ))}
             </div>
           </Tabs.TabPane>

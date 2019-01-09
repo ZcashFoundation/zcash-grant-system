@@ -149,6 +149,13 @@ export default (state = INITIAL_STATE, action: any) => {
         isResponding: false,
         respondError: errorStatus,
       });
+    // delete contribution
+    case types.DELETE_CONTRIBUTION:
+      return updateUserState(state, payload.userId, {
+        contributions: state.map[payload.userId].contributions.filter(
+          c => c.id !== payload.contributionId
+        ),
+      });
     // default
     default:
       return state;

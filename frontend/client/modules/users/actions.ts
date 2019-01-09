@@ -5,6 +5,7 @@ import {
   updateUser as apiUpdateUser,
   fetchUserInvites as apiFetchUserInvites,
   putInviteResponse,
+  deleteProposalContribution,
 } from 'api/api';
 import { Dispatch } from 'redux';
 import { cleanClone } from 'utils/helpers';
@@ -87,5 +88,17 @@ export function respondToInvite(
         payload: { userId, inviteId, error },
       });
     }
+  };
+}
+
+export function deleteContribution(userId: string | number, contributionId: string | number) {
+  // Fire and forget
+  deleteProposalContribution(contributionId);
+  return {
+    type: types.DELETE_CONTRIBUTION,
+    payload: {
+      userId,
+      contributionId,
+    },
   };
 }
