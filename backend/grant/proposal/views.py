@@ -11,10 +11,10 @@ from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user
+from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email, make_url
-from .models import(
+from grant.utils.misc import is_email, make_url, from_zat
+from .models import (
     Proposal,
     proposals_schema,
     proposal_schema,
@@ -25,13 +25,15 @@ from .models import(
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
+    proposal_proposal_contributions_schema,
     db,
     DRAFT,
     PENDING,
     APPROVED,
     REJECTED,
     LIVE,
-    DELETED
+    DELETED,
+    CONFIRMED,
 )
 import traceback
 
@@ -328,11 +330,25 @@ def delete_proposal_team_invite(proposal_id, id_or_address):
 @endpoint.api()
 def get_proposal_contributions(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        dumped_proposal = proposal_schema.dump(proposal)
-        return dumped_proposal["contributions"]
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+    
+    top_contributions = ProposalContribution.query \
+        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .order_by(ProposalContribution.amount.desc()) \
+        .limit(5) \
+        .all()
+    latest_contributions = ProposalContribution.query \
+        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .order_by(ProposalContribution.date_created.desc()) \
+        .limit(5) \
+        .all()
+    
+    return {
+        'top': proposal_proposal_contributions_schema.dump(top_contributions),
+        'latest': proposal_proposal_contributions_schema.dump(latest_contributions),
+    }
+        
 
 
 @blueprint.route("/<proposal_id>/contributions/<contribution_id>", methods=["GET"])
@@ -361,7 +377,7 @@ def post_proposal_contribution(proposal_id, amount):
 
     code = 200
     contribution = ProposalContribution \
-        .getExistingContribution(g.current_user.id, proposal_id, amount)
+        .get_existing_contribution(g.current_user.id, proposal_id, amount)
 
     if not contribution:
         code = 201
@@ -375,3 +391,49 @@ def post_proposal_contribution(proposal_id, amount):
 
     dumped_contribution = proposal_contribution_schema.dump(contribution)
     return dumped_contribution, code
+
+
+# Can't use <proposal_id> since webhook doesn't know proposal id
+@blueprint.route("/contribution/<contribution_id>/confirm", methods=["POST"])
+@internal_webhook
+@endpoint.api(
+    parameter('to', type=str, required=True),
+    parameter('amount', type=str, required=True),
+    parameter('txid', type=str, required=True),
+)
+def post_contribution_confirmation(contribution_id, to, amount, txid):
+    contribution = contribution = ProposalContribution.query.filter_by(
+        id=contribution_id).first()
+
+    if not contribution:
+        # TODO: Log in sentry
+        print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
+        return {"message": "No contribution matching id"}, 404
+
+    # Convert to whole zcash coins from zats
+    zec_amount = str(from_zat(int(amount)))
+
+    contribution.confirm(tx_id=txid, amount=zec_amount)
+    db.session.add(contribution)
+    db.session.commit()
+    return None, 200
+
+@blueprint.route("/contribution/<contribution_id>", methods=["DELETE"])
+@requires_auth
+@endpoint.api()
+def delete_proposal_contribution(contribution_id):
+    contribution = contribution = ProposalContribution.query.filter_by(
+        id=contribution_id).first()
+    if not contribution:
+        return {"message": "No contribution matching id"}, 404
+
+    if contribution.status == CONFIRMED:
+        return {"message": "Cannot delete confirmed contributions"}, 400
+
+    if contribution.user_id != g.current_user.id:
+        return {"message": "Must be the user of the contribution to delete it"}, 403
+
+    contribution.status = DELETED
+    db.session.add(contribution)
+    db.session.commit()
+    return None, 202

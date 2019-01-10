@@ -85,3 +85,7 @@ export function formatZcashCLI(address: string, amount?: string | number, memo?:
   }
   return `zcash-cli z_sendmany YOUR_ADDRESS '${JSON.stringify([tx])}'`;
 }
+
+export function formatTxExplorerUrl(txid: string) {
+  return `https://explorer.zcha.in/transactions/${txid}`;
+}

@@ -1,4 +1,4 @@
-import { Send, Message } from "../../index";
+import { Send } from "../../index";
 import { Notifier } from "../notifier";
 import node, { BlockWithTransactions } from "../../../node";
 import {
@@ -43,7 +43,6 @@ export default class ContributionNotifier implements Notifier {
         // generate one, so all of our addresses will only have addresses[0]
         const to = vout.scriptPubKey.addresses[0];
         if (tAddressIdMap[to]) {
-          console.info(`Transaction found for contribution ${tAddressIdMap[to]}, +${vout.value} ZEC`);
           this.sendContributionConfirmation({
             to,
             amount: vout.valueZat.toString(),
@@ -67,10 +66,11 @@ export default class ContributionNotifier implements Notifier {
       const newReceived = received.filter(r => !this.confirmedTxIds.includes(r.txid));
 
       newReceived.forEach(receipt => {
+        console.info(`Received new tx ${receipt.txid}`);
         this.confirmedTxIds.push(receipt.txid);
         const contributionId = getContributionIdFromMemo(receipt.memo);
         if (!contributionId) {
-          console.warn('Sprout address received transaction without memo:\n', {
+          console.warn(`Sprout address ${env.SPROUT_ADDRESS} received transaction with invalid memo:\n`, {
             txid: receipt.txid,
             decodedMemo: decodeHexMemo(receipt.memo)
           });
@@ -134,10 +134,8 @@ export default class ContributionNotifier implements Notifier {
     }
   };
 
-  private sendContributionConfirmation = (payload: ContributionConfirmationPayload) => {
-    this.send({
-      payload,
-      type: 'contribution:confirmation',
-    });
+  private sendContributionConfirmation = (p: ContributionConfirmationPayload) => {
+    console.info(`Contribution confirmed for contribution ${p.contributionId}, +${p.amount} ZEC`);
+    this.send(`/proposals/contribution/${p.contributionId}/confirm`, 'POST', p);
   };
 }

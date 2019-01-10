@@ -1,5 +1,5 @@
 import { AppState } from 'store/reducers';
-import { Proposal, ProposalComments, ProposalUpdates } from 'types';
+import { Proposal, ProposalComments, ProposalUpdates, ProposalContributions } from 'types';
 
 export function getProposals(state: AppState) {
   return state.proposal.proposals;
@@ -73,4 +73,20 @@ export function getIsFetchingUpdates(state: AppState) {
 
 export function getUpdatesError(state: AppState) {
   return state.proposal.updatesError;
+}
+
+export function getProposalContributions(
+  state: AppState,
+  proposalId: Proposal['proposalId'],
+): Omit<ProposalContributions, 'proposalId'> | null {
+  const pc = state.proposal.proposalContributions[proposalId];
+  return pc ? { top: pc.top, latest: pc.latest } : null;
+}
+
+export function getIsFetchingContributions(state: AppState) {
+  return state.proposal.isFetchingContributions;
+}
+
+export function getFetchContributionsError(state: AppState) {
+  return state.proposal.fetchContributionsError;
 }

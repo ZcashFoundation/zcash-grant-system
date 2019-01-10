@@ -1,0 +1,46 @@
+@import '~styles/variables.less';
+
+.ProposalContributors {
+  display: flex;
+
+  @media @mobile-query {
+    flex-direction: column;
+  }
+
+  &-block {
+    flex: 1;
+    padding: 1.5rem;
+    margin: 1rem;
+    background: #FFF;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1),
+                0 1px 1px rgba(0, 0, 0, 0.1);
+
+    &:first-child {
+      margin-left: 0;      
+    }
+    &:last-child {
+      margin-right: 0;
+    }
+
+    @media @mobile-query {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    &-title {
+      margin-top: -0.6rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    &-contributor {
+      margin-bottom: 1rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+@small-query: ~'(max-width: 640px)';
+
+.ProfileContribution {
+  display: flex;
+  align-items: center;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: none;
+  }
+
+  @media @small-query {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: 0.6rem;
+  }
+
+  &-info {
+    flex: 1;
+
+    &-title {
+      display: flex;
+      align-items: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: inherit;
+      margin-bottom: 0.5rem;
+
+      .ant-tag {
+        margin-left: 0.3rem;
+      }
+    }
+  }
+
+  &-state {
+    margin-left: 1.2rem;
+    min-width: 15rem;
+    text-align: right;
+  
+    @media @small-query {
+      margin-left: 0;
+      margin-top: 0.6rem;
+      text-align: left;
+    }
+
+    &-amount {
+      margin-bottom: 0.25rem;
+      font-size: 1rem;
+
+      // UnitDisplay symbol
+      > span {
+        font-size: 1.1rem;
+
+        > span {
+          font-weight: normal;
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    &-actions {
+      font-size: 0.7rem;
+
+      > * {
+        &:after {
+          content: '·';
+          display: inline-block;
+          padding: 0 0.3rem;
+        }
+
+        &:last-child:after {
+          display: none;
+        }
+      }
+    }
+  }
+}

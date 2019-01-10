@@ -1,6 +1,7 @@
 import { randomBytes, createHmac } from "crypto";
 import { IncomingMessage } from "http";
 import { HDPublicKey, Address } from "zcash-bitcore-lib";
+import { parse } from 'url';
 import env from "./env";
 
 function sha256(input: string) {
@@ -14,36 +15,12 @@ export function generateApiKey() {
   return { key, hash };
 }
 
-export function getIpFromRequest(req: IncomingMessage) {
-  const xffHeader = req.headers["x-forwarded-for"];
-  if (xffHeader && typeof xffHeader === "string") {
-    return xffHeader.split(/\s*,\s*/)[0];
-  }
-  return req.connection.remoteAddress;
-}
-
-export function getAuthFromRequest(req: IncomingMessage) {
-  const swpHeader = req.headers["sec-websocket-protocol"];
-  if (swpHeader && typeof swpHeader === "string") {
-    return swpHeader;
-  }
-  return undefined;
-}
-
 export function authenticate(secret: string) {
   const hash = env.API_SECRET_HASH;
   if (!hash) {
     throw Error("API_SECRET_HASH environment variable required.");
   }
   return hash === sha256(secret);
-}
-
-export function authenticateRequest(req: IncomingMessage) {
-  const secret = getAuthFromRequest(req);
-  if (!secret) {
-    console.log(`Client must set 'sec-websocket-protocal' header with secret.`);
-  }
-  return secret ? authenticate(secret) : false;
 }
 
 // TODO: Not fully confident in compatibility with most bip32 wallets,

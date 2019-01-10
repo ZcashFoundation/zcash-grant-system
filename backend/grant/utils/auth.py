@@ -7,7 +7,7 @@ from flask_security.core import current_user
 from flask import request, g, jsonify
 import sentry_sdk
 
-from grant.settings import SECRET_KEY
+from grant.settings import SECRET_KEY, BLOCKCHAIN_API_SECRET
 from ..proposal.models import Proposal
 from ..user.models import User
 
@@ -67,3 +67,16 @@ def requires_team_member_auth(f):
         return f(*args, **kwargs)
 
     return requires_auth(decorated)
+
+def internal_webhook(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        secret = request.headers.get('authorization')
+        if not secret:
+            print('Internal webhook missing "Authorization" header')
+            return jsonify(message="Invalid 'Authorization' header"), 403
+        if BLOCKCHAIN_API_SECRET not in secret:
+            print(f'Internal webhook provided invalid "Authorization" header: {secret}')
+            return jsonify(message="Invalid 'Authorization' header"), 403
+        return f(*args, **kwargs)
+    return decorated

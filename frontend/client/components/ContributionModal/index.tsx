@@ -1,14 +1,16 @@
 import React from 'react';
 import { Modal } from 'antd';
 import Result from 'ant-design-pro/lib/Result';
-import { postProposalContribution } from 'api/api';
+import { postProposalContribution, getProposalContribution } from 'api/api';
 import { ContributionWithAddresses } from 'types';
 import PaymentInfo from './PaymentInfo';
 
 interface OwnProps {
   isVisible: boolean;
-  proposalId: number;
+  proposalId?: number;
+  contributionId?: number;
   amount?: string;
+  hasNoButtons?: boolean;
   handleClose(): void;
 }
 
@@ -28,17 +30,21 @@ export default class ContributionModal extends React.Component<Props, State> {
   };
 
   componentWillUpdate(nextProps: Props) {
-    const { isVisible, proposalId } = nextProps
-    if (isVisible && this.props.isVisible !== isVisible) {
-      this.fetchAddresses(proposalId);
+    const { isVisible, proposalId, contributionId } = nextProps;
+    // When modal is opened and proposalId is provided or changed
+    if (isVisible && proposalId) {
+      if (
+        this.props.isVisible !== isVisible ||
+        proposalId !== this.props.proposalId
+      ) {
+        this.fetchAddresses(proposalId, contributionId);
+      }
     }
-    else if (proposalId !== this.props.proposalId) {
-      this.fetchAddresses(proposalId);
-    }
+    
   }
 
   render() {
-    const { isVisible, handleClose } = this.props;
+    const { isVisible, handleClose, hasNoButtons } = this.props;
     const { hasSent, contribution, error } = this.state;
     let content;
 
@@ -68,11 +74,12 @@ export default class ContributionModal extends React.Component<Props, State> {
       <Modal
         title="Make your contribution"
         visible={isVisible}
-        closable={hasSent}
-        maskClosable={hasSent}
+        closable={hasSent || hasNoButtons}
+        maskClosable={hasSent || hasNoButtons}
         okText={hasSent ? 'Done' : 'I’ve sent it'}
         onOk={hasSent ? handleClose : this.confirmSend}
         onCancel={handleClose}
+        footer={hasNoButtons ? '' : undefined}
         centered
       >
         {content}
@@ -80,12 +87,20 @@ export default class ContributionModal extends React.Component<Props, State> {
     );
   }
 
-  private async fetchAddresses(proposalId: number) {
+  private async fetchAddresses(
+    proposalId: number,
+    contributionId?: number,
+  ) {
     try {
-      const res = await postProposalContribution(
-        proposalId,
-        this.props.amount || '0',
-      );
+      let res;
+      if (contributionId) {
+        res = await getProposalContribution(proposalId, contributionId);
+      } else {
+        res = await postProposalContribution(
+          proposalId,
+          this.props.amount || '0',
+        );
+      }
       this.setState({ contribution: res.data });
     } catch(err) {
       this.setState({ error: err.message });

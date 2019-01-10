@@ -19,6 +19,7 @@
     border-bottom: 1px solid rgba(#000, 0.06);
 
     &-qr {
+      position: relative;
       padding: 0.5rem;
       margin-right: 1rem;
       border-radius: 4px;
@@ -27,6 +28,16 @@
 
       canvas {
         display: block;
+      }
+      &.is-loading canvas {
+        opacity: 0;
+      }
+
+      .ant-spin {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
       }
     }
 

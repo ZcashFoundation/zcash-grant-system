@@ -16,7 +16,6 @@ import Milestones from './Milestones';
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
 import ContributorsTab from './Contributors';
-// import CommunityTab from './Community';
 import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
 import classnames from 'classnames';
@@ -244,8 +243,8 @@ export class ProposalDetail extends React.Component<Props, State> {
           <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
             <UpdatesTab proposalId={proposal.proposalId} />
           </Tabs.TabPane>
-          <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
-            <ContributorsTab />
+          <Tabs.TabPane tab="Contributors" key="contributors">
+            <ContributorsTab proposalId={proposal.proposalId} />
           </Tabs.TabPane>
         </Tabs>
 
