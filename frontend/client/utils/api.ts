@@ -22,7 +22,6 @@ export function formatUserFromGet(user: UserState) {
   }
   user.proposals = user.proposals.map(bnUserProp);
   user.contributions = user.contributions.map(c => {
-    console.log(c.amount);
     c.amount = toZat(c.amount as any as string);
     return c;
   });
