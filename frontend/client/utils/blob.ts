@@ -1,4 +1,4 @@
-export function getBase64(img: Blob, callback: (base64: string) => void) {
+export function getBase64(img: Blob | File, callback: (base64: string) => void) {
   const reader = new FileReader();
   reader.addEventListener('load', () => callback(reader.result as string));
   reader.readAsDataURL(img);
