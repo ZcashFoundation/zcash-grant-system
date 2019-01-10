@@ -8,6 +8,7 @@
     "dev": "cross-env NODE_ENV=development BACKEND_URL=http://localhost:5000 webpack-dev-server",
     "lint": "tslint --project ./tsconfig.json --config ./tslint.json -e \"**/build/**\"",
     "start": "NODE_ENV=production node ./server.js",
+    "heroku-postbuild": "yarn build",
     "tsc": "tsc"
   },
   "husky": {
