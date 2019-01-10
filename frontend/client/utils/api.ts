@@ -20,8 +20,11 @@ export function formatUserFromGet(user: UserState) {
   if (user.pendingProposals) {
     user.pendingProposals = user.pendingProposals.map(bnUserProp);
   }
-  user.createdProposals = user.createdProposals.map(bnUserProp);
-  user.fundedProposals = user.fundedProposals.map(bnUserProp);
+  user.proposals = user.proposals.map(bnUserProp);
+  user.contributions = user.contributions.map(c => {
+    c.amount = toZat(c.amount as any as string);
+    return c;
+  });
   return user;
 }
 
@@ -30,17 +33,21 @@ export function formatProposalFromGet(p: any): Proposal {
   proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
   proposal.target = toZat(p.target);
   proposal.funded = toZat(p.funded);
-  proposal.percentFunded = proposal.funded.div(proposal.target.divn(100)).toNumber();
-  proposal.milestones = proposal.milestones.map((m: any, index: number) => {
-    return {
-      ...m,
-      index,
-      amount: proposal.target.mul(new BN(m.payoutPercent)).divn(100),
-      // TODO: Get data from backend
-      state: MILESTONE_STATE.WAITING,
-      isPaid: false,
-    };
-  });
+  proposal.percentFunded = proposal.target.isZero()
+    ? 0
+    : proposal.funded.div(proposal.target.divn(100)).toNumber();
+  if (proposal.milestones) {
+    proposal.milestones = proposal.milestones.map((m: any, index: number) => {
+      return {
+        ...m,
+        index,
+        amount: proposal.target.mul(new BN(m.payoutPercent)).divn(100),
+        // TODO: Get data from backend
+        state: MILESTONE_STATE.WAITING,
+        isPaid: false,
+      };
+    });
+  }
   return proposal;
 }
 
@@ -83,10 +90,14 @@ export function massageSerializedState(state: AppState) {
     return p;
   };
   Object.values(state.users.map).forEach(user => {
-    user.createdProposals.forEach(bnUserProp);
-    user.fundedProposals.forEach(bnUserProp);
-    user.comments.forEach(c => {
+    user.proposals = user.proposals.map(bnUserProp);
+    user.contributions = user.contributions.map(c => {
+      c.amount = new BN(c.amount, 16);
+      return c;
+    });
+    user.comments = user.comments.map(c => {
       c.proposal = bnUserProp(c.proposal);
+      return c;
     });
   });
 

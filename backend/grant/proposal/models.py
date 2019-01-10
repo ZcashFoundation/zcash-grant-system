@@ -1,6 +1,7 @@
 import datetime
 from typing import List
 from sqlalchemy import func, or_
+from functools import reduce
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
@@ -95,6 +96,8 @@ class ProposalContribution(db.Model):
     amount = db.Column(db.String(255), nullable=False)
     tx_id = db.Column(db.String(255))
 
+    user = db.relationship("User")
+
     def __init__(
         self,
         proposal_id: int,
@@ -108,10 +111,21 @@ class ProposalContribution(db.Model):
         self.status = PENDING
 
     @staticmethod
-    def getExistingContribution(user_id: int, proposal_id: int, amount: str):
+    def get_existing_contribution(user_id: int, proposal_id: int, amount: str):
+        return ProposalContribution.query.filter_by(
+            user_id=user_id,
+            proposal_id=proposal_id,
+            amount=amount,
+            status=PENDING,
+        ).first()
+    
+    @staticmethod
+    def get_by_userid(user_id):
         return ProposalContribution.query \
-            .filter_by(user_id=user_id, proposal_id=proposal_id, amount=amount) \
-            .first()
+            .filter(ProposalContribution.user_id == user_id) \
+            .filter(ProposalContribution.status != DELETED) \
+            .order_by(ProposalContribution.date_created.desc()) \
+            .all()
 
     def confirm(self, tx_id: str, amount: str):
         self.status = CONFIRMED
@@ -300,7 +314,6 @@ class ProposalSchema(ma.Schema):
             "content",
             "comments",
             "updates",
-            "contributions",
             "milestones",
             "category",
             "team",
@@ -317,7 +330,6 @@ class ProposalSchema(ma.Schema):
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
-    contributions = ma.Nested("ProposalContributionSchema", many=True, exclude=['proposal'])
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
@@ -335,13 +347,30 @@ class ProposalSchema(ma.Schema):
         return dt_to_unix(obj.date_published) if obj.date_published else None
 
     def get_funded(self, obj):
-        # TODO: Add up all contributions and return that
-        return "0"
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=obj.id, status=CONFIRMED) \
+            .all()
+        funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        return str(funded)
 
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
-
+user_fields = [
+    "proposal_id",
+    "status",
+    "title",
+    "brief",
+    "target",
+    "funded",
+    "date_created",
+    "date_approved",
+    "date_published",
+    "reject_reason",
+    "team",
+]
+user_proposal_schema = ProposalSchema(only=user_fields)
+user_proposals_schema = ProposalSchema(many=True, only=user_fields)
 
 class ProposalUpdateSchema(ma.Schema):
     class Meta:
@@ -433,7 +462,7 @@ class ProposalContributionSchema(ma.Schema):
         )
 
     proposal = ma.Nested("ProposalSchema")
-    user = ma.Nested("UserSchema")
+    user = ma.Nested("UserSchema", exclude=["email_address"])
     date_created = ma.Method("get_date_created")
     addresses = ma.Method("get_addresses")
 
@@ -445,41 +474,9 @@ class ProposalContributionSchema(ma.Schema):
 
 
 proposal_contribution_schema = ProposalContributionSchema()
-proposals_contribution_schema = ProposalContributionSchema(many=True)
+proposal_contributions_schema = ProposalContributionSchema(many=True)
+user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 'addresses'])
+user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
+proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
+proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
 
-
-class UserProposalSchema(ma.Schema):
-    class Meta:
-        model = Proposal
-        # Fields to expose
-        fields = (
-            "proposal_id",
-            "status",
-            "title",
-            "brief",
-            "target",
-            "funded",
-            "date_created",
-            "date_approved",
-            "date_published",
-            "reject_reason",
-            "team",
-        )
-    date_created = ma.Method("get_date_created")
-    proposal_id = ma.Method("get_proposal_id")
-    funded = ma.Method("get_funded")
-    team = ma.Nested("UserSchema", many=True)
-
-    def get_proposal_id(self, obj):
-        return obj.id
-
-    def get_date_created(self, obj):
-        return dt_to_unix(obj.date_created) * 1000
-
-    def get_funded(self, obj):
-        # TODO: Add up all contributions and return that
-        return "0"
-
-
-user_proposal_schema = UserProposalSchema()
-user_proposals_schema = UserProposalSchema(many=True)

@@ -30,3 +30,9 @@ def make_url(path: str):
 
 def is_email(email: str):
   return bool(re.match(r"[^@]+@[^@]+\.[^@]+", email))
+
+def from_zat(zat: int):
+  return zat / 100000000
+
+def to_zat(zec: float):
+  return zec * 100000000

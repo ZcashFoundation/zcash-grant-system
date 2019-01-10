@@ -3,6 +3,7 @@
 .UserRow {
   position: relative;
   display: flex;
+  align-items: center;
   height: @height;
   margin-bottom: 1rem;
   color: inherit;
@@ -40,9 +41,16 @@
       font-size: 0.9rem;
       opacity: 0.7;
       min-width: 0;
+      margin: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+  }
+
+  &-extra {
+    text-align: right;
+    margin-left: 1rem;
+    font-weight: bold;
   }
 }

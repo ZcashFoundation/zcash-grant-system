@@ -1,6 +1,6 @@
 import types from './types';
 import { findComment } from 'utils/helpers';
-import { Proposal, ProposalComments, ProposalUpdates, Comment } from 'types';
+import { Proposal, ProposalComments, ProposalUpdates, Comment, ProposalContributions } from 'types';
 
 export interface ProposalState {
   proposals: Proposal[];
@@ -15,8 +15,15 @@ export interface ProposalState {
   updatesError: null | string;
   isFetchingUpdates: boolean;
 
+  proposalContributions: { [id: string]: ProposalContributions };
+  fetchContributionsError: null | string;
+  isFetchingContributions: boolean;
+
   isPostCommentPending: boolean;
   postCommentError: null | string;
+
+  isDeletingContribution: boolean;
+  deleteContributionError: null | string;
 }
 
 export const INITIAL_STATE: ProposalState = {
@@ -32,8 +39,15 @@ export const INITIAL_STATE: ProposalState = {
   updatesError: null,
   isFetchingUpdates: false,
 
+  proposalContributions: {},
+  fetchContributionsError: null,
+  isFetchingContributions: false,
+
   isPostCommentPending: false,
   postCommentError: null,
+
+  isDeletingContribution: false,
+  deleteContributionError: null,
 };
 
 function addProposal(state: ProposalState, payload: Proposal) {
@@ -86,6 +100,17 @@ function addUpdates(state: ProposalState, payload: ProposalUpdates) {
       [payload.proposalId]: payload,
     },
     isFetchingUpdates: false,
+  };
+}
+
+function addContributions(state: ProposalState, payload: ProposalContributions) {
+  return {
+    ...state,
+    proposalContributions: {
+      ...state.proposalContributions,
+      [payload.proposalId]: payload,
+    },
+    isFetchingContributions: false,
   };
 }
 
@@ -182,6 +207,22 @@ export default (state = INITIAL_STATE, action: any) => {
         // TODO: Get action to send real error
         updatesError: 'Failed to fetch updates',
         isFetchingUpdates: false,
+      };
+
+    case types.PROPOSAL_CONTRIBUTIONS_PENDING:
+      return {
+        ...state,
+        fetchContributionsError: null,
+        isFetchingContributions: true,
+      };
+    case types.PROPOSAL_CONTRIBUTIONS_FULFILLED:
+      return addContributions(state, payload);
+    case types.PROPOSAL_CONTRIBUTIONS_REJECTED:
+      return {
+        ...state,
+        // TODO: Get action to send real error
+        fetchContributionsError: 'Failed to fetch updates',
+        isFetchingContributions: false,
       };
 
     case types.POST_PROPOSAL_COMMENT_PENDING:

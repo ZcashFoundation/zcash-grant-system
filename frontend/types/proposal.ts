@@ -1,7 +1,6 @@
-import BN from 'bn.js';
 import { Zat } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
-import { CreateMilestone, Update, User, Comment } from 'types';
+import { CreateMilestone, Update, User, Comment, ContributionWithUser } from 'types';
 import { ProposalMilestone } from './milestone';
 
 export interface TeamInvite {
@@ -40,8 +39,8 @@ export interface ProposalDraft {
 export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   proposalAddress: string;
   proposalUrlId: string;
-  target: BN;
-  funded: BN;
+  target: Zat;
+  funded: Zat;
   percentFunded: number;
   milestones: ProposalMilestone[];
   datePublished: number;
@@ -62,13 +61,19 @@ export interface ProposalUpdates {
   updates: Update[];
 }
 
+export interface ProposalContributions {
+  proposalId: Proposal['proposalId'];
+  top: ContributionWithUser[];
+  latest: ContributionWithUser[];
+}
+
 export interface UserProposal {
   proposalId: number;
   status: STATUS;
   title: string;
   brief: string;
-  funded: BN;
-  target: BN;
+  funded: Zat;
+  target: Zat;
   dateCreated: number;
   dateApproved: number;
   datePublished: number;

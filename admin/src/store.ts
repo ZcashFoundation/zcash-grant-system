@@ -206,7 +206,7 @@ const app = store({
     }
     app.proposalDetailApproving = false;
   },
-  
+
   async getEmailExample(type: string) {
     try {
       const example = await getEmailExample(type);
