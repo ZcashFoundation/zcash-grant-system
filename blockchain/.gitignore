@@ -63,3 +63,6 @@ typings/
 # zcash
 .zcash/regtest
 .zcash/export
+
+# Output
+dist

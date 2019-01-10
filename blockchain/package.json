@@ -12,7 +12,9 @@
     "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/dev/index.ts",
     "genkey": "yarn run ts-node src/bin/genkey.ts",
     "genaddress": "yarn run ts-node src/bin/genaddress.ts",
-    "test": "yarn ts-mocha --no-colors src/**/*.spec.ts"
+    "test": "yarn ts-mocha --no-colors src/**/*.spec.ts",
+    "heroku-postbuild": "yarn build",
+    "start": "node ./dist/index.js"
   },
   "devDependencies": {
     "@types/body-parser": "1.17.0",
