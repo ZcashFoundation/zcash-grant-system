@@ -103,3 +103,5 @@ def send_email(to, type, email_args):
         print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
     except Exception as e:
         print('An error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        if hasattr(e, 'body'):
+            print(e.body)
