@@ -7,7 +7,7 @@ interface CustomEnvironment {
   API_SECRET_KEY: string;
 
   WEBHOOK_URL: string;
-  REST_SERVER_PORT: string;
+  PORT: string;
 
   ZCASH_NODE_URL: string;
   ZCASH_NODE_USERNAME: string;
