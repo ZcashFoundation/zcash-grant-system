@@ -21,7 +21,16 @@ from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarExceptio
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.email.models import EmailRecovery
 
-from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
+from .models import (
+    User,
+    UserSettings,
+    SocialMedia,
+    Avatar,
+    users_schema,
+    user_schema,
+    user_settings_schema,
+    db
+)
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -313,3 +322,10 @@ def respond_to_invite(user_id, invite_id, response):
 
     db.session.commit()
     return None, 200
+
+
+@blueprint.route("/<user_id>/settings", methods=["GET"])
+@requires_same_user_auth
+@endpoint.api()
+def get_user_settings(user_id):
+    return user_settings_schema.dump(g.current_user.settings)
