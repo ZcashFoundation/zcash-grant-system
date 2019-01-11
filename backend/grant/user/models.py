@@ -71,6 +71,12 @@ class UserSettings(db.Model):
         self.email_subscriptions = get_default_email_subscriptions()
         self.user_id = user_id
 
+    def unsubscribe_emails(self):
+        es = self.email_subscriptions
+        for k in es:
+            es[k] = False
+        self.email_subscriptions = es
+
 
 class Avatar(db.Model):
     __tablename__ = "avatar"

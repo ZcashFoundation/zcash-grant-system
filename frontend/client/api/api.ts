@@ -126,6 +126,10 @@ export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
 }
 
+export function unsubscribeEmail(code: string): Promise<any> {
+  return axios.post(`/api/v1/email/${code}/unsubscribe`);
+}
+
 export function getSocialAuthUrl(service: SOCIAL_SERVICE): Promise<any> {
   return axios.get(`/api/v1/users/social/${service}/authurl`);
 }
