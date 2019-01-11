@@ -7,58 +7,63 @@ import {
 
 type ESKey = keyof EmailSubscriptions;
 export const EMAIL_SUBSCRIPTIONS: { [key in ESKey]: EmailSubscriptionInfo } = {
+  // GENERAL
+  myCommentReply: {
+    description: 'your comment responses',
+    category: EMAIL_SUBSCRIPTION_CATEGORY.GENERAL,
+    value: false,
+  },
+
+  // FUNDED
   fundedProposalCanceled: {
-    description: 'A proposal you have funded gets canceled',
+    description: 'gets canceled',
     category: EMAIL_SUBSCRIPTION_CATEGORY.FUNDED,
     value: false,
   },
   fundedProposalContribution: {
-    description: 'Your proposal contribution is confirmed',
+    description: 'your contribution is confirmed',
     category: EMAIL_SUBSCRIPTION_CATEGORY.FUNDED,
     value: false,
   },
   fundedProposalFunded: {
-    description: 'A proposal you have contributed to gets full funding',
+    description: 'gets full funding',
     category: EMAIL_SUBSCRIPTION_CATEGORY.FUNDED,
     value: false,
   },
   fundedProposalPayoutRequest: {
-    description: 'There is a payout request for a proposal you have funded',
+    description: 'has a payout request',
     category: EMAIL_SUBSCRIPTION_CATEGORY.FUNDED,
     value: false,
   },
   fundedProposalUpdate: {
-    description: 'An update is posted on a proposal you have contributed to',
+    description: 'has an update',
     category: EMAIL_SUBSCRIPTION_CATEGORY.FUNDED,
     value: false,
   },
-  myCommentReply: {
-    description: 'A comment you have made gets a response',
-    category: EMAIL_SUBSCRIPTION_CATEGORY.GENERAL,
-    value: false,
-  },
+
+  // MY PROPOSAL
   myProposalApproval: {
-    description: 'Your proposal is approved or rejected',
+    description: 'is approved or rejected',
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },
   myProposalComment: {
-    description: 'Your proposal is commented on',
+    description: 'is commented on',
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },
   myProposalContribution: {
-    description: 'Your proposal gets a contribution',
+    description: 'gets a contribution',
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },
   myProposalFunded: {
-    description: 'Your proposal gets fully funded',
+    description: 'gets fully funded',
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },
   myProposalRefund: {
-    description: 'Your proposal gets refunded',
+    description: 'gets refunded',
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },

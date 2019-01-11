@@ -54,7 +54,7 @@ class EmailSubscriptionsForm extends React.Component<Props, {}> {
                 onChange={this.handleCheckAll}
                 checked={isAllChecked}
               >
-                {isAllChecked ? 'Uncheck all' : 'Check all'}
+                <b>{isAllChecked ? 'uncheck all' : 'check all'}</b>
               </Checkbox>
             </Form.Item>
           </div>
