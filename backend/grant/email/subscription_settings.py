@@ -1,54 +1,103 @@
+from enum import Enum
 from grant.utils.exceptions import ValidationException
 
-# this list defines the order of the user_settings.email_subscriptions bitmask
-# always add new to the end or it will mess up current settings
-EMAIL_SUBSCRIPTIONS = [
-    'my_comment_reply',  # user got a reply to their comment
-    'my_proposal_approval',  # approved/rejected
-    'my_proposal_contribution',  # receives contribution
-    'my_proposal_funded',  # funded or expired
-    'my_proposal_refund',  # refunded
-    'my_proposal_comment',  # comments posted
-    'funded_proposal_funded',  # funded or expired
-    'funded_proposal_canceled',  # proposal canceled
-    'funded_proposal_update',  # update posted
-    'funded_proposal_payout_request',  # milestone payment req
-]
+
+# NOTE: custom migration required if order or bit changes meaning
+class EmailSubscription(Enum):
+    MY_COMMENT_REPLY = {
+        'bit': 0,
+        'key': 'my_comment_reply'
+    }
+    MY_PROPOSAL_APPROVAL = {
+        'bit': 1,
+        'key': 'my_proposal_approval'
+    }
+    MY_PROPOSAL_CONTRIBUTION = {
+        'bit': 2,
+        'key': 'my_proposal_contribution'
+    }
+    MY_PROPOSAL_FUNDED = {
+        'bit': 3,
+        'key': 'my_proposal_funded'
+    }
+    MY_PROPOSAL_REFUND = {
+        'bit': 4,
+        'key': 'my_proposal_refund'
+    }
+    MY_PROPOSAL_COMMENT = {
+        'bit': 5,
+        'key': 'my_proposal_comment'
+    }
+    FUNDED_PROPOSAL_CONTRIBUTION = {
+        'bit': 6,
+        'key': 'funded_proposal_contribution'
+    }
+    FUNDED_PROPOSAL_FUNDED = {
+        'bit': 7,
+        'key': 'funded_proposal_funded'
+    }
+    FUNDED_PROPOSAL_CANCELED = {
+        'bit': 8,
+        'key': 'funded_proposal_canceled'
+    }
+    FUNDED_PROPOSAL_UPDATE = {
+        'bit': 9,
+        'key': 'funded_proposal_update'
+    }
+    FUNDED_PROPOSAL_PAYOUT_REQUEST = {
+        'bit': 10,
+        'key': 'funded_proposal_payout_request'
+    }
+
+
+def is_email_sub_key(k: str):
+    for s in EmailSubscription:
+        if s.value['key'] == k:
+            return True
+    return False
 
 
 def get_default_email_subscriptions():
     settings = {}
-    for k in EMAIL_SUBSCRIPTIONS:
-        settings[k] = True
+    for s in EmailSubscription:
+        settings[s.value['key']] = True
     return settings
 
 
 def validate_email_subscriptions(subs: dict):
     for k in subs:
-        if k not in EMAIL_SUBSCRIPTIONS:
+        if not is_email_sub_key(k):
             raise ValidationException('Invalid email_subcriptions key: {}'.format(k))
 
 
 def email_subscriptions_to_dict(bits: int):
     settings = {}
-    for i, k in enumerate(EMAIL_SUBSCRIPTIONS):
-        settings[k] = get_bitmap(bits, i)
+    for s in EmailSubscription:
+        settings[s.value['key']] = get_bitmap_state(bits, s.value['bit'])
     return settings
 
 
 def email_subscriptions_to_bits(subs: dict):
     validate_email_subscriptions(subs)
     settings = 0
-    for i, k in enumerate(EMAIL_SUBSCRIPTIONS):
-        settings = set_bitmap(settings, i, subs[k])
+    for s in EmailSubscription:
+        sk = s.value['key']
+        si = s.value['bit']
+        if sk not in subs:
+            raise ValidationException('Missing email_subscriptions key: {}'.format(sk))
+        settings = set_bitmap_state(settings, si, subs[sk])
     return settings
 
 
-def get_bitmap(bitmap, nth):
+def is_subscribed(user_subs: dict, sub: EmailSubscription):
+    return user_subs[sub.value['key']]
+
+
+def get_bitmap_state(bitmap: int, nth: int):
     return bitmap & (1 << nth) > 0
 
 
-def set_bitmap(bitmap, nth, is_on):
+def set_bitmap_state(bitmap: int, nth: int, is_on: bool):
     if is_on:
         bitmap |= (1 << nth)
     else:
