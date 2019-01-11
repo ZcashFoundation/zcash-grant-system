@@ -3,6 +3,7 @@ from flask_security.core import current_user
 from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
 from sqlalchemy.ext.hybrid import hybrid_property
 
+from grant.utils.exceptions import ValidationException
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification, EmailRecovery
 from grant.email.send import send_email
@@ -10,6 +11,11 @@ from grant.extensions import ma, db, security
 from grant.utils.misc import make_url
 from grant.utils.social import generate_social_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
+from grant.email.subscription_settings import (
+    get_default_email_subscriptions,
+    email_subscriptions_to_bits,
+    email_subscriptions_to_dict
+)
 
 
 def is_current_authed_user_id(user_id):
@@ -42,6 +48,27 @@ class SocialMedia(db.Model):
     def __init__(self, service: str, username: str, user_id):
         self.service = service.upper()
         self.username = username.lower()
+        self.user_id = user_id
+
+
+class UserSettings(db.Model):
+    __tablename__ = "user_settings"
+
+    id = db.Column(db.Integer(), primary_key=True)
+    _email_subscriptions = db.Column("email_subscriptions", db.Integer, default=0)  # bitmask
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user = db.relationship("User", back_populates="settings")
+
+    @hybrid_property
+    def email_subscriptions(self):
+        return email_subscriptions_to_dict(self._email_subscriptions)
+
+    @email_subscriptions.setter
+    def email_subscriptions(self, subs):
+        self._email_subscriptions = email_subscriptions_to_bits(subs)
+
+    def __init__(self, user_id):
+        self.email_subscriptions = get_default_email_subscriptions()
         self.user_id = user_id
 
 
@@ -79,6 +106,8 @@ class User(db.Model, UserMixin):
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
+    settings = db.relationship(UserSettings, uselist=False, back_populates="user",
+                               lazy=True, cascade="all, delete-orphan")
     email_verification = db.relationship(EmailVerification, uselist=False,
                                          back_populates="user", lazy=True, cascade="all, delete-orphan")
     email_recovery = db.relationship(EmailRecovery, uselist=False, back_populates="user",
@@ -111,6 +140,10 @@ class User(db.Model, UserMixin):
             title=title
         )
         security.datastore.commit()
+
+        # user settings
+        us = UserSettings(user_id=user.id)
+        db.session.add(us)
 
         # Setup & send email verification
         ev = EmailVerification(user_id=user.id)
@@ -213,3 +246,13 @@ class AvatarSchema(ma.Schema):
 
 avatar_schema = AvatarSchema()
 avatar_schemas = AvatarSchema(many=True)
+
+
+class UserSettingsSchema(ma.Schema):
+    class Meta:
+        model = UserSettings
+        fields = ("email_subscriptions",)
+
+
+user_settings_schema = UserSettingsSchema()
+user_settings_schemas = UserSettingsSchema(many=True)
