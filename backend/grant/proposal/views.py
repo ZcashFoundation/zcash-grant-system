@@ -303,7 +303,7 @@ def post_proposal_team_invite(proposal_id, address):
             'inviter': g.current_user,
             'proposal': g.current_proposal,
             'invite_url': make_url(
-                f'/profile/{user.id}?tab=invitations' if user else '/auth')
+                f'/profile/{user.id}?tab=invites' if user else '/auth')
         })
 
     return proposal_team_invite_schema.dump(invite), 201
