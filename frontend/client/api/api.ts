@@ -8,6 +8,7 @@ import {
   TeamInviteWithProposal,
   SOCIAL_SERVICE,
   ContributionWithAddresses,
+  EmailSubscriptions,
 } from 'types';
 import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
 
@@ -100,6 +101,17 @@ export function updateUserPassword(
 
 export function updateUser(user: User): Promise<{ data: User }> {
   return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
+}
+
+export function getUserSettings(userId: string | number): Promise<any> {
+  return axios.get(`/api/v1/users/${userId}/settings`);
+}
+
+export function updateUserSettings(
+  userId: string | number,
+  emailSubscriptions?: EmailSubscriptions,
+): Promise<any> {
+  return axios.put(`/api/v1/users/${userId}/settings`, { emailSubscriptions });
 }
 
 export function requestUserRecoveryEmail(email: string): Promise<any> {
@@ -219,7 +231,6 @@ export function postProposalContribution(
     amount,
   });
 }
-
 
 export function postProposalComment(payload: {
   proposalId: number;
