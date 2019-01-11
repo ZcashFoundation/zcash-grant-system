@@ -49,7 +49,6 @@ class LinkableTabs extends React.Component<Props, State> {
 
   render() {
     const { defaultActiveKey } = this.state;
-    console.log(defaultActiveKey);
     return <Tabs {...this.props} defaultActiveKey={defaultActiveKey} />;
   }
 

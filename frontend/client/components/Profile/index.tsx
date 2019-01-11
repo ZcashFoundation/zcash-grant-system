@@ -59,15 +59,15 @@ class Profile extends React.Component<Props, State> {
     }
   }
   render() {
-    const userLookupParam = this.props.match.params.id;
-    const { authUser, match } = this.props;
+    const { authUser, match, location } = this.props;
     const { activeContribution } = this.state;
+    const userLookupParam = match.params.id;
 
     if (!userLookupParam) {
       if (authUser && authUser.userid) {
-        return <Redirect to={`/profile/${authUser.userid}`} />;
+        return <Redirect to={{ ...location, pathname: `/profile/${authUser.userid}` }} />;
       } else {
-        return <Redirect to="auth" />;
+        return <Redirect to={{ ...location, pathname: '/auth' }} />;
       }
     }
 
