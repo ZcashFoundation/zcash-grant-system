@@ -104,6 +104,7 @@ def send_email(to, type, email_args):
         return
 
     info = get_info_lookup[type](email_args)
+
     if 'subscription' in info and 'user' in email_args:
         user = email_args['user']
         sub = info['subscription']
@@ -112,7 +113,7 @@ def send_email(to, type, email_args):
             return
 
     try:
-        email = generate_email(type, email_args)
+        email = generate_email(type, email_args, info)
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
 
         mail = Mail(
