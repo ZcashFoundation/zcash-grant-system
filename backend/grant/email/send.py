@@ -1,6 +1,7 @@
 from flask import render_template, Markup, current_app
 
 from grant.extensions import mail
+from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
     'home_url': 'https://grant.io',
@@ -33,19 +34,24 @@ def recover_info(email_args):
         'preview': 'Use the link to recover your account.'
     }
 
+
 def proposal_approved(email_args):
     return {
         'subject': 'Your proposal has been approved!',
         'title': 'Your proposal has been approved',
         'preview': 'Start raising funds for {} now'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
+
 
 def proposal_rejected(email_args):
     return {
         'subject': 'Your proposal has been rejected',
         'title': 'Your proposal has been rejected',
         'preview': '{} has been rejected'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
+
 
 def contribution_confirmed(email_args):
     return {
@@ -57,6 +63,7 @@ def contribution_confirmed(email_args):
         ),
     }
 
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -66,8 +73,8 @@ get_info_lookup = {
     'contribution_confirmed': contribution_confirmed,
 }
 
-def generate_email(type, email_args):
-    info = get_info_lookup[type](email_args)
+
+def generate_email(type, email_args, info):
     body_text = render_template('emails/%s.txt' % (type), args=email_args)
     body_html = render_template('emails/%s.html' % (type), args=email_args)
 
@@ -88,12 +95,21 @@ def generate_email(type, email_args):
         'text': text
     }
 
+
 def send_email(to, type, email_args):
     if current_app and current_app.config.get("TESTING"):
         return
 
+    info = get_info_lookup[type](email_args)
+    if 'subscription' in info and 'user' in email_args:
+        user = email_args['user']
+        sub = info['subscription']
+        if not is_subscribed(user.settings.email_subscriptions, sub):
+            print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
+            return
+
     try:
-        email = generate_email(type, email_args)
+        email = generate_email(type, email_args, info)
         res = mail.send_email(
             to_email=to,
             subject=email['info']['subject'],

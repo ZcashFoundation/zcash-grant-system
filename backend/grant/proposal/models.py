@@ -5,9 +5,11 @@ from functools import reduce
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
-from grant.utils.misc import dt_to_unix
+from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.exceptions import ValidationException
 from grant.blockchain import blockchain_get
+from grant.email.send import send_email
+
 
 # Proposal states
 DRAFT = 'DRAFT'
@@ -118,7 +120,7 @@ class ProposalContribution(db.Model):
             amount=amount,
             status=PENDING,
         ).first()
-    
+
     @staticmethod
     def get_by_userid(user_id):
         return ProposalContribution.query \
@@ -264,7 +266,7 @@ class Proposal(db.Model):
         allowed_statuses = [DRAFT, REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
-            raise ValidationException("Proposal status must be {} or {} to submit for approval".format(DRAFT, REJECTED))
+            raise ValidationException(f"Proposal status must be {DRAFT} or {REJECTED} to submit for approval")
 
         self.status = PENDING
 
@@ -272,24 +274,36 @@ class Proposal(db.Model):
         self.validate_publishable()
         # specific validation
         if not self.status == PENDING:
-            raise ValidationException("Proposal status must be {} to approve or reject".format(PENDING))
+            raise ValidationException(f"Proposal status must be {PENDING} to approve or reject")
 
         if is_approve:
             self.status = APPROVED
             self.date_approved = datetime.datetime.now()
-            # TODO: send approval email
+            for t in self.team:
+                send_email(t.email_address, 'proposal_approved', {
+                    'user': t,
+                    'proposal': self,
+                    'proposal_url': make_url(f'/proposals/{self.id}'),
+                    'admin_note': 'Congratulations! Your proposal has been approved.'
+                })
         else:
             if not reject_reason:
                 raise ValidationException("Please provide a reason for rejecting the proposal")
             self.status = REJECTED
             self.reject_reason = reject_reason
-            # TODO: send rejection email
+            for t in self.team:
+                send_email(t.email_address, 'proposal_rejected', {
+                    'user': t,
+                    'proposal': self,
+                    'proposal_url': make_url(f'/proposals/{self.id}'),
+                    'admin_note': reject_reason
+                })
 
     def publish(self):
         self.validate_publishable()
         # specific validation
         if not self.status == APPROVED:
-            raise ValidationException("Proposal status must be {}".format(APPROVED))
+            raise ValidationException(f"Proposal status must be {APPROVED}")
 
         self.date_published = datetime.datetime.now()
         self.status = LIVE
@@ -371,6 +385,7 @@ user_fields = [
 ]
 user_proposal_schema = ProposalSchema(only=user_fields)
 user_proposals_schema = ProposalSchema(many=True, only=user_fields)
+
 
 class ProposalUpdateSchema(ma.Schema):
     class Meta:
@@ -470,7 +485,7 @@ class ProposalContributionSchema(ma.Schema):
         return dt_to_unix(obj.date_created)
 
     def get_addresses(self, obj):
-        return blockchain_get('/contribution/addresses', { 'contributionId': obj.id })
+        return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
 
 
 proposal_contribution_schema = ProposalContributionSchema()
@@ -479,4 +494,3 @@ user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 
 user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
 proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
 proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
-
