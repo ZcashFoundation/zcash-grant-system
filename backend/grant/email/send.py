@@ -1,6 +1,9 @@
 from flask import render_template, Markup, current_app
 
-from grant.extensions import mail
+import sendgrid
+from sendgrid.helpers.mail import Email, Mail, Content
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM
+from python_http_client import HTTPError
 from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
@@ -109,13 +112,21 @@ def send_email(to, type, email_args):
             return
 
     try:
-        email = generate_email(type, email_args, info)
-        res = mail.send_email(
-            to_email=to,
+        email = generate_email(type, email_args)
+        sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
+
+        mail = Mail(
+            from_email=Email(SENDGRID_DEFAULT_FROM),
+            to_email=Email(to),
             subject=email['info']['subject'],
-            text=email['text'],
-            html=email['html'],
         )
+        mail.add_content(Content('text/plain', email['text']))
+        mail.add_content(Content('text/html', email['html']))
+
+        res = sg.client.mail.send.post(request_body=mail.get())
         print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+    except HTTPError as e:
+        print('An HTTP error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        print(e.body)
     except Exception as e:
-        print('An error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        print('An unknown error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
