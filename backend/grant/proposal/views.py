@@ -421,11 +421,26 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     db.session.add(contribution)
     db.session.commit()
 
+    # Send to the user
     send_email(contribution.user.email_address, 'contribution_confirmed', {
         'contribution': contribution,
         'proposal': contribution.proposal,
         'tx_explorer_url': f'https://explorer.zcha.in/transactions/{txid}',
     })
+
+    # Send to the full proposal gang
+    for member in contribution.proposal.team:
+        send_email(member.email_address, 'proposal_contribution', {
+            'proposal': contribution.proposal,
+            'contribution': contribution,
+            'contributor': contribution.user,
+            'funded': contribution.proposal.get_amount_funded(),
+            'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
+            'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+        })
+
+    # TODO: Once we have a task queuer in place, queue emails to everyone
+    # on funding target reached.
 
     return None, 200
 
