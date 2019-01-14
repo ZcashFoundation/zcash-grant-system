@@ -2,7 +2,6 @@ from functools import wraps
 from hashlib import sha256
 from flask import session
 
-import grant.settings as settings
 from grant.settings import SECRET_KEY, ADMIN_PASS_HASH
 
 
