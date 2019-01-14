@@ -52,6 +52,13 @@ example_email_args = {
         'proposal_url': 'http://someproposal.com',
         'contributor_url': 'http://someuser.com',
     },
+    'proposal_comment': {
+        'author': user,
+        'proposal': proposal,
+        'preview': 'Blah blah blah blah blah...',
+        'comment_url': 'http://somecomment.com',
+        'author_url': 'http://someuser.com',
+    },
     'contribution_confirmed': {
         'proposal': proposal,
         'contribution': contribution,
@@ -59,6 +66,7 @@ example_email_args = {
     },
     'comment_reply': {
         'author': user,
+        'proposal': proposal,
         'preview': 'Blah blah blah blah blah...',
         'comment_url': 'http://somecomment.com',
         'author_url': 'http://someuser.com',

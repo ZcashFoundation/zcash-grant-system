@@ -37,6 +37,12 @@ export default [
     description: 'Sent when an a user contributes and it’s been confirmed on-chain',
   },
   {
+    id: 'proposal_comment',
+    title: 'Proposal comment',
+    description:
+      'Sent if someone makes a top-level comment on your proposal. Replies don’t send an email.',
+  },
+  {
     id: 'contribution_confirmed',
     title: 'Contribution confirmed',
     description: 'Sent after a contribution can be confirmed on chain',

@@ -1,4 +1,4 @@
-You just received a reply from {{ args.author.display_name }}:
+You just received a reply from {{ args.author.display_name }} on {{ args.proposal.title }}:
 
 > {{ args.preview }}
 

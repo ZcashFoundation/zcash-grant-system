@@ -104,12 +104,21 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     db.session.commit()
     dumped_comment = comment_schema.dump(comment)
 
-    # TODO: Email proposal team
-
+    # TODO: Email proposal team if top-level comment
+    if not parent:
+        for member in proposal.team:
+            send_email(member.email_address, 'proposal_comment', {
+                'author': g.current_user,
+                'proposal': proposal,
+                'preview': comment.make_preview(),
+                'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
+                'author_url': make_url(f'/profile/{comment.author.id}'),
+            })
     # Email parent comment creator, if it's not themselves
     if parent and parent.author.id != comment.author.id:
         send_email(parent.author.email_address, 'comment_reply', {
             'author': g.current_user,
+            'proposal': proposal,
             'preview': comment.make_preview(),
             'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
             'author_url': make_url(f'/profile/{comment.author.id}'),

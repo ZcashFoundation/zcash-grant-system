@@ -67,6 +67,16 @@ def proposal_contribution(email_args):
         'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
     }
 
+def proposal_comment(email_args):
+    return {
+        'subject': 'New comment from {}'.format(email_args['author'].display_name),
+        'title': 'You got a comment',
+        'preview': '{} has added a comment to your proposal {}'.format(
+            email_args['author'].display_name,
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.MY_PROPOSAL_COMMENT,
+    }
 
 def contribution_confirmed(email_args):
     return {
@@ -94,6 +104,7 @@ get_info_lookup = {
     'proposal_approved': proposal_approved,
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,
+    'proposal_comment': proposal_comment,
     'contribution_confirmed': contribution_confirmed,
     'comment_reply': comment_reply,
 }
