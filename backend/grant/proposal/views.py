@@ -402,7 +402,7 @@ def post_proposal_contribution(proposal_id, amount):
     parameter('txid', type=str, required=True),
 )
 def post_contribution_confirmation(contribution_id, to, amount, txid):
-    contribution = contribution = ProposalContribution.query.filter_by(
+    contribution = ProposalContribution.query.filter_by(
         id=contribution_id).first()
 
     if not contribution:
@@ -410,12 +410,23 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
         print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
         return {"message": "No contribution matching id"}, 404
 
+    if contribution.status == CONFIRMED:
+        # Duplicates can happen, just return ok
+        return None, 200
+
     # Convert to whole zcash coins from zats
     zec_amount = str(from_zat(int(amount)))
 
     contribution.confirm(tx_id=txid, amount=zec_amount)
     db.session.add(contribution)
     db.session.commit()
+
+    send_email(contribution.user.email_address, 'contribution_confirmed', {
+        'contribution': contribution,
+        'proposal': contribution.proposal,
+        'tx_explorer_url': f'https://explorer.zcha.in/transactions/{txid}',
+    })
+
     return None, 200
 
 @blueprint.route("/contribution/<contribution_id>", methods=["DELETE"])
