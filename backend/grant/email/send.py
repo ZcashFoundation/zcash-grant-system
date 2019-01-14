@@ -78,6 +78,14 @@ def contribution_confirmed(email_args):
         ),
     }
 
+def comment_reply(email_args):
+    return {
+        'subject': 'New reply from {}'.format(email_args['author'].display_name),
+        'title': 'You got a reply',
+        'preview': '{} has replied to a comment you posted'.format(email_args['author'].display_name),
+        'subscription': EmailSubscription.MY_COMMENT_REPLY,
+    }
+
 
 get_info_lookup = {
     'signup': signup_info,
@@ -87,6 +95,7 @@ get_info_lookup = {
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,
     'contribution_confirmed': contribution_confirmed,
+    'comment_reply': comment_reply,
 }
 
 

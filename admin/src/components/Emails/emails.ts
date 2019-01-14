@@ -41,4 +41,9 @@ export default [
     title: 'Contribution confirmed',
     description: 'Sent after a contribution can be confirmed on chain',
   },
+  {
+    id: 'comment_reply',
+    title: 'Comment reply',
+    description: 'Sent if someone makes a direct reply to your comment',
+  },
 ] as Email[];

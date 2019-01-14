@@ -87,6 +87,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         return {"message": "No proposal matching id"}, 404
 
     # Make sure the parent comment exists
+    parent = None
     if parent_comment_id:
         parent = Comment.query.filter_by(id=parent_comment_id).first()
         if not parent:
@@ -102,6 +103,18 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     db.session.add(comment)
     db.session.commit()
     dumped_comment = comment_schema.dump(comment)
+
+    # TODO: Email proposal team
+
+    # Email parent comment creator, if it's not themselves
+    if parent and parent.author.id != comment.author.id:
+        send_email(parent.author.email_address, 'comment_reply', {
+            'author': g.current_user,
+            'preview': comment.make_preview(),
+            'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
+            'author_url': make_url(f'/profile/{comment.author.id}'),
+        })
+
     return dumped_comment, 201
 
 

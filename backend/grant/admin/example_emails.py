@@ -57,4 +57,10 @@ example_email_args = {
         'contribution': contribution,
         'tx_explorer_url': 'http://someblockexplorer.com/tx/271857129857192579125',
     },
+    'comment_reply': {
+        'author': user,
+        'preview': 'Blah blah blah blah blah...',
+        'comment_url': 'http://somecomment.com',
+        'author_url': 'http://someuser.com',
+    },
 }
