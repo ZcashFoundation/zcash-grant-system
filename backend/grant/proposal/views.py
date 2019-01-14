@@ -13,7 +13,7 @@ from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email, make_url, from_zat
+from grant.utils.misc import is_email, make_url, from_zat, make_preview
 from .models import (
     Proposal,
     proposals_schema,
@@ -105,12 +105,13 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     dumped_comment = comment_schema.dump(comment)
 
     # TODO: Email proposal team if top-level comment
+    preview = make_preview(comment.content, 60)
     if not parent:
         for member in proposal.team:
             send_email(member.email_address, 'proposal_comment', {
                 'author': g.current_user,
                 'proposal': proposal,
-                'preview': comment.make_preview(),
+                'preview': preview,
                 'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
                 'author_url': make_url(f'/profile/{comment.author.id}'),
             })
@@ -119,7 +120,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         send_email(parent.author.email_address, 'comment_reply', {
             'author': g.current_user,
             'proposal': proposal,
-            'preview': comment.make_preview(),
+            'preview': preview,
             'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
             'author_url': make_url(f'/profile/{comment.author.id}'),
         })
@@ -295,6 +296,17 @@ def post_proposal_update(proposal_id, title, content):
     )
     db.session.add(update)
     db.session.commit()
+
+    # Send email to all contributors (even if contribution failed)
+    preview = make_preview(update.content, 200)
+    contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
+    for c in contributions:
+        send_email(c.user.email_address, 'contribution_update', {
+            'proposal': g.current_proposal,
+            'proposal_update': update,
+            'preview': preview,
+            'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
+        })
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201

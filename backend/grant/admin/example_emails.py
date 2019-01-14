@@ -18,9 +18,16 @@ class FakeContribution(object):
     proposal_id = 123
     user_id = 123
 
+class FakeUpdate(object):
+    id = 123
+    title = 'Example update'
+    content = 'Example example example example\n\nExample example example example'
+    proposal_id = 123
+
 user = FakeUser()
 proposal = FakeProposal()
 contribution = FakeContribution()
+update = FakeUpdate()
 
 example_email_args = {
     'signup': {
@@ -63,6 +70,12 @@ example_email_args = {
         'proposal': proposal,
         'contribution': contribution,
         'tx_explorer_url': 'http://someblockexplorer.com/tx/271857129857192579125',
+    },
+    'contribution_update': {
+        'proposal': proposal,
+        'proposal_update': update,
+        'preview': 'Blah blah blah blah blah blah blah blah blah blah blah blah blah blah...',
+        'update_url': 'http://someupdate.com',
     },
     'comment_reply': {
         'author': user,

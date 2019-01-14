@@ -48,6 +48,11 @@ export default [
     description: 'Sent after a contribution can be confirmed on chain',
   },
   {
+    id: 'contribution_update',
+    title: 'Contributed proposal update',
+    description: 'Sent when a proposal you contributed to posts an update',
+  },
+  {
     id: 'comment_reply',
     title: 'Comment reply',
     description: 'Sent if someone makes a direct reply to your comment',

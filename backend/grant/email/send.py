@@ -86,6 +86,18 @@ def contribution_confirmed(email_args):
             email_args['contribution'].amount,
             email_args['proposal'].title
         ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_CONTRIBUTION,
+    }
+
+def contribution_update(email_args):
+    return {
+        'subject': 'The {} team posted an update'.format(email_args['proposal'].title),
+        'title': 'New update',
+        'preview': 'The {} team has posted a new update entitled "{}"'.format(
+            email_args['proposal'].title,
+            email_args['proposal_update'].title,
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_UPDATE,
     }
 
 def comment_reply(email_args):
@@ -106,6 +118,7 @@ get_info_lookup = {
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
     'contribution_confirmed': contribution_confirmed,
+    'contribution_update': contribution_update,
     'comment_reply': comment_reply,
 }
 

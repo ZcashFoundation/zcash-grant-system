@@ -33,17 +33,6 @@ class Comment(db.Model):
             .filter(Comment.user_id == user.id) \
             .order_by(Comment.date_created.desc()) \
             .all()
-    
-    def make_preview(self):
-        # Truncate to first line only, max 60 chars. Add ellipsis if truncated.
-        truncated = False
-        preview = self.content.split('\n', 1)[0]
-        if len(preview) != len(self.content):
-            truncated = True
-        if len(preview) > 60:
-            preview = preview[:57]
-            truncated = True
-        return self.content + '...' if truncated else self.content
 
 
 class CommentSchema(ma.Schema):
