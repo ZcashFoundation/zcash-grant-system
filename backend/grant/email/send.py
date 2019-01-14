@@ -55,6 +55,18 @@ def proposal_rejected(email_args):
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 
+def proposal_contribution(email_args):
+    return {
+        'subject': 'You just got a contribution!',
+        'title': 'You just got a contribution',
+        'preview': '{} just contributed {} to your proposal {}'.format(
+            email_args['contributor'].display_name,
+            email_args['contribution'].amount,
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
+    }
+
 
 def contribution_confirmed(email_args):
     return {
@@ -73,11 +85,13 @@ get_info_lookup = {
     'recover': recover_info,
     'proposal_approved': proposal_approved,
     'proposal_rejected': proposal_rejected,
+    'proposal_contribution': proposal_contribution,
     'contribution_confirmed': contribution_confirmed,
 }
 
 
-def generate_email(type, email_args, info):
+def generate_email(type, email_args):
+    info = get_info_lookup[type](email_args)
     body_text = render_template('emails/%s.txt' % (type), args=email_args)
     body_html = render_template('emails/%s.html' % (type), args=email_args)
 
@@ -113,7 +127,7 @@ def send_email(to, type, email_args):
             return
 
     try:
-        email = generate_email(type, email_args, info)
+        email = generate_email(type, email_args)
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
 
         mail = Mail(

@@ -10,10 +10,11 @@ class FakeProposal(object):
     title = 'Example proposal'
     brief = 'This is an example proposal'
     content = 'Example example example example'
+    target = "100"
 
 class FakeContribution(object):
     id = 123
-    amount = '123'
+    amount = '12.5'
     proposal_id = 123
     user_id = 123
 
@@ -42,6 +43,14 @@ example_email_args = {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
         'admin_note': 'We think that you’ve asked for too much money for the project you’ve proposed, and for such an inexperienced team. Feel free to change your target amount, or elaborate on why you need so much money, and try applying again.',
+    },
+    'proposal_contribution': {
+        'proposal': proposal,
+        'contribution': contribution,
+        'contributor': user,
+        'funded': '50',
+        'proposal_url': 'http://someproposal.com',
+        'contributor_url': 'http://someuser.com',
     },
     'contribution_confirmed': {
         'proposal': proposal,

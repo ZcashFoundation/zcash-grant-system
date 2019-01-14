@@ -32,6 +32,11 @@ export default [
     description: 'Sent when an admin rejects your submitted proposal',
   },
   {
+    id: 'proposal_contribution',
+    title: 'Proposal received contribution',
+    description: 'Sent when an a user contributes and it’s been confirmed on-chain',
+  },
+  {
     id: 'contribution_confirmed',
     title: 'Contribution confirmed',
     description: 'Sent after a contribution can be confirmed on chain',
