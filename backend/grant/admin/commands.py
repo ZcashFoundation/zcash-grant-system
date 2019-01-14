@@ -17,5 +17,5 @@ def gen_admin_auth():
         print('using default SECRET_KEY for salt')
         salt = SECRET_KEY
     password = getpass.getpass('Admin Password:')
-    pass_hash = generate_admin_password_hash(password)
+    pass_hash = generate_admin_password_hash(password, salt)
     print(f'Please set environment variable\n\n\tADMIN_PASS_HASH={pass_hash}\n')

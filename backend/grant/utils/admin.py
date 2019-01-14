@@ -13,8 +13,8 @@ admin_auth = {
 }
 
 
-def generate_admin_password_hash(password):
-    pass_salt = ('%s%s' % (password, admin_auth['salt'])).encode('utf-8')
+def generate_admin_password_hash(password, salt=admin_auth['salt']):
+    pass_salt = ('%s%s' % (password, salt)).encode('utf-8')
     pass_hash = sha256(pass_salt).hexdigest()
     return pass_hash
 
