@@ -14,7 +14,7 @@ mock_admin_auth = {
 
 
 class TestAdminAPI(BaseProposalCreatorConfig):
-    @patch.dict('grant.admin.views.admin_auth', mock_admin_auth)
+    @patch.dict('grant.utils.admin.admin_auth', mock_admin_auth)
     def login_admin(self):
         return self.app.post(
             "/api/v1/admin/login",
