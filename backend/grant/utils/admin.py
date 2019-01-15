@@ -12,7 +12,9 @@ admin_auth = {
 }
 
 
-def generate_admin_password_hash(password, salt=admin_auth['salt']):
+def generate_admin_password_hash(password, salt=None):
+    if not salt:
+        salt = admin_auth['salt']  # do this in body to catch testing patch
     pass_salt = ('%s%s' % (password, salt)).encode('utf-8')
     pass_hash = sha256(pass_salt).hexdigest()
     return pass_hash
