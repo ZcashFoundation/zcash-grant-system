@@ -19,7 +19,7 @@ class ProposalItemNaked extends React.Component<Proposal> {
     const deleteAction = (
       <Popconfirm
         onConfirm={this.handleDelete}
-        title="Permanently delete proposal?"
+        title="Are you sure?"
         okText="delete"
         cancelText="cancel"
       >
