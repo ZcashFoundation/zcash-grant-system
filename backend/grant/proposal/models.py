@@ -308,6 +308,13 @@ class Proposal(db.Model):
         self.date_published = datetime.datetime.now()
         self.status = LIVE
 
+    def get_amount_funded(self):
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=CONFIRMED) \
+            .all()
+        funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        return str(funded)
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -361,11 +368,7 @@ class ProposalSchema(ma.Schema):
         return dt_to_unix(obj.date_published) if obj.date_published else None
 
     def get_funded(self, obj):
-        contributions = ProposalContribution.query \
-            .filter_by(proposal_id=obj.id, status=CONFIRMED) \
-            .all()
-        funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
-        return str(funded)
+        return obj.get_amount_funded()
 
 
 proposal_schema = ProposalSchema()

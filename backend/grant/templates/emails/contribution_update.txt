@@ -1,0 +1,2 @@
+A proposal you follow, "{{ args.proposal.title }}", has posted an update.
+Go here to view it in full: {{ args.update_url }}
