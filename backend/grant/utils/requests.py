@@ -22,6 +22,6 @@ def blockchain_post(path, data = None):
     res = requests.post(
         f'{BLOCKCHAIN_REST_API_URL}{path}',
         headers={ 'authorization': BLOCKCHAIN_API_SECRET },
-        data=json.dumps(data),
+        json=data,
     )
     return handle_res(res)

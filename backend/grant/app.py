@@ -7,9 +7,10 @@ from flask_security import SQLAlchemyUserDatastore
 from sentry_sdk.integrations.flask import FlaskIntegration
 import sentry_sdk
 
-from grant import commands, proposal, user, comment, milestone, admin, email
+from grant import commands, proposal, user, comment, milestone, admin, email, blockchain
 from grant.extensions import bcrypt, migrate, db, ma, security
 from grant.settings import SENTRY_RELEASE, ENV
+from grant.blockchain.bootstrap import send_bootstrap_data
 
 
 def create_app(config_objects=["grant.settings"]):
@@ -53,6 +54,7 @@ def register_blueprints(app):
     app.register_blueprint(milestone.views.blueprint)
     app.register_blueprint(admin.views.blueprint)
     app.register_blueprint(email.views.blueprint)
+    app.register_blueprint(blockchain.views.blueprint)
 
 
 def register_shellcontext(app):

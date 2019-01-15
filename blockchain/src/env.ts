@@ -18,6 +18,9 @@ interface CustomEnvironment {
   SPROUT_VIEWKEY: string;
   BIP32_XPUB: string;
   BIP44_ACCOUNT: string;
+
+  MAINNET_START_BLOCK: string;
+  TESTNET_START_BLOCK: string;
 }
 
 export default process.env as any as CustomEnvironment;

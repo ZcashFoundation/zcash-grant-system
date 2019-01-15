@@ -5,12 +5,13 @@ import cors from 'cors';
 import authMiddleware from './middleware/auth';
 import {
   store,
+  setStartingBlockHeight,
   generateAddresses,
   getAddressesByContributionId,
   addPaymentDisclosure,
 } from '../store';
 import env from '../env';
-import node from '../node';
+import node, { getBootstrapBlockHeight } from '../node';
 import { makeContributionMemo } from '../util';
 
 // Configure server
@@ -24,6 +25,33 @@ app.use(authMiddleware);
 
 
 // Routes
+app.post('/bootstrap', async (req, res) => {
+  const { pendingContributions, latestTxId } = req.body;
+  const info = await node.getblockchaininfo();
+  const startHeight = await getBootstrapBlockHeight(latestTxId);
+
+  console.info('Bootstrapping watcher!');
+  console.info(' * Start height:', startHeight);
+  console.info(' * Current height:', info.blocks);
+  console.info(' * Number of pending contributions:', pendingContributions.length);
+  console.info('Generating addresses to watch for each contribution...');
+
+  // Running generate address on each will add each contribution to redux state
+  pendingContributions.forEach((c: any) => {
+    store.dispatch(generateAddresses(c.id));
+  });
+  console.info(`Done! Generated ${pendingContributions.length} addresses.`);
+  store.dispatch(setStartingBlockHeight(startHeight));
+
+  // Send back some basic info about where the chain is at
+  res.json({
+    data: {
+      startHeight,
+      currentHeight: info.blocks,
+    },
+  });
+});
+
 app.get('/contribution/addresses', (req, res) => {
   const { contributionId } = req.query;
   let addresses = getAddressesByContributionId(store.getState(), contributionId)

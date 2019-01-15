@@ -5,8 +5,8 @@ import { initNode } from './node';
 async function start() {
   console.log("============== Starting services ==============");
   await initNode();
-  await Webhooks.start();
   await RestServer.start();
+  await Webhooks.start();
   console.log("===============================================");
 }
 
