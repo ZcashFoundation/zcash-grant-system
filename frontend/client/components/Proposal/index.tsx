@@ -3,6 +3,7 @@ import { compose } from 'recompose';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import Markdown from 'components/Markdown';
+import LinkableTabs from 'components/LinkableTabs';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
@@ -140,7 +141,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal has been approved! It is currently only visible to the team.
-            Visit your <Link to="/profile">profile - pending</Link> tab to publish.
+            Visit your <Link to="/profile?tab=pending">profile's pending tab</Link> to publish.
           </>
         ),
         type: 'success',
@@ -149,7 +150,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal was rejected and is only visible to the team. Visit your{' '}
-            <Link to="/profile">profile - pending</Link> tab for more information.
+            <Link to="/profile?tab=pending">profile's pending tab</Link> for more information.
           </>
         ),
         type: 'error',
@@ -231,7 +232,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           </div>
         </div>
 
-        <Tabs>
+        <LinkableTabs scrollToTabs>
           <Tabs.TabPane tab="Milestones" key="milestones">
             <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
               <Milestones proposal={proposal} />
@@ -246,7 +247,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           <Tabs.TabPane tab="Contributors" key="contributors">
             <ContributorsTab proposalId={proposal.proposalId} />
           </Tabs.TabPane>
-        </Tabs>
+        </LinkableTabs>
 
         {isTrustee && (
           <>
