@@ -196,19 +196,22 @@ const ReviewMilestones = ({
 const ReviewTeam: React.SFC<{
   team: ProposalDraft['team'];
   invites: ProposalDraft['invites'];
-}> = ({ team, invites }) => (
-  <div className="ReviewTeam">
-    {team.map((u, idx) => (
-      <div className="ReviewTeam-member" key={idx}>
-        <UserAvatar className="ReviewTeam-member-avatar" user={u} />
-        <div className="ReviewTeam-member-info">
-          <div className="ReviewTeam-member-info-name">{u.displayName}</div>
-          <div className="ReviewTeam-member-info-title">{u.title}</div>
+}> = ({ team, invites }) => {
+  const pendingInvites = invites.filter(inv => inv.accepted === null).length;
+  return (
+    <div className="ReviewTeam">
+      {team.map((u, idx) => (
+        <div className="ReviewTeam-member" key={idx}>
+          <UserAvatar className="ReviewTeam-member-avatar" user={u} />
+          <div className="ReviewTeam-member-info">
+            <div className="ReviewTeam-member-info-name">{u.displayName}</div>
+            <div className="ReviewTeam-member-info-title">{u.title}</div>
+          </div>
         </div>
-      </div>
-    ))}
-    {!!invites.filter(inv => inv.accepted === null).length && (
-      <div className="ReviewTeam-invites">+ {invites.length} invite(s) pending</div>
-    )}
-  </div>
-);
+      ))}
+      {!!pendingInvites && (
+        <div className="ReviewTeam-invites">+ {pendingInvites} invite(s) pending</div>
+      )}
+    </div>
+  );
+};
