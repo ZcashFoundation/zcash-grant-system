@@ -7,9 +7,6 @@ import { User } from 'src/types';
 import './UserItem.less';
 
 class UserItemNaked extends React.Component<User> {
-  state = {
-    showDelete: false,
-  };
   render() {
     const p = this.props;
 
