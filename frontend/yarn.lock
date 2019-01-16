@@ -1985,6 +1985,13 @@
   dependencies:
     "@types/react" "*"
 
+"@types/qrcode.react@^0.8.1":
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/@types/qrcode.react/-/qrcode.react-0.8.1.tgz#7efeb1d01d8e6dddcdf07fbec0724aaf0fa5c984"
+  integrity sha512-OpMOBjWIMTnC1sdLcFgif/cXZYiPQGUN2yDaxC2EmZaAmElxehE+toMzPZvUJVXNyFXFdmYSDRWsjKtTTnqqAQ==
+  dependencies:
+    "@types/react" "*"
+
 "@types/query-string@6.1.0":
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/@types/query-string/-/query-string-6.1.0.tgz#5f721f9503bdf517d474c66cf4423da5dd2d5698"
@@ -1992,6 +1999,13 @@
 "@types/range-parser@*":
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.2.tgz#fa8e1ad1d474688a757140c91de6dace6f4abc8d"
+
+"@types/react-copy-to-clipboard@^4.2.6":
+  version "4.2.6"
+  resolved "https://registry.yarnpkg.com/@types/react-copy-to-clipboard/-/react-copy-to-clipboard-4.2.6.tgz#d1374550dec803f17f26ec71b62783c5737bfc02"
+  integrity sha512-v4/yLsuPf8GSFuTy9fA1ABpL5uuy04vwW7qs+cfxSe1UU/M/KK95rF3N3GRseismoK9tA28SvpwVsAg/GWoF3A==
+  dependencies:
+    "@types/react" "*"
 
 "@types/react-cropper@^0.10.3":
   version "0.10.3"
@@ -11794,9 +11808,22 @@ q@^1.1.2:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/q/-/q-1.5.1.tgz#7e32f75b41381291d04611f1bf14109ac00651d7"
 
+qr.js@0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/qr.js/-/qr.js-0.0.0.tgz#cace86386f59a0db8050fa90d9b6b0e88a1e364f"
+  integrity sha1-ys6GOG9ZoNuAUPqQ2baw6IoeNk8=
+
 qrcode-terminal@^0.12.0:
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/qrcode-terminal/-/qrcode-terminal-0.12.0.tgz#bb5b699ef7f9f0505092a3748be4464fe71b5819"
+
+qrcode.react@^0.9.2:
+  version "0.9.2"
+  resolved "https://registry.yarnpkg.com/qrcode.react/-/qrcode.react-0.9.2.tgz#52f9d55db38bc2d75d63b685ca266b7d6286575b"
+  integrity sha512-opV0IA4w84qMaZg3hhgmktDs1xjfx3K7RAOzdvmKgkLdhmtv95AYGZmlG0s3NIAZ1qXCK4AyPJayLd3sa6p/RA==
+  dependencies:
+    prop-types "^15.6.0"
+    qr.js "0.0.0"
 
 qs@6.5.1, qs@~6.5.1:
   version "6.5.1"
@@ -12305,6 +12332,7 @@ react-container-query@^0.11.0:
 react-copy-to-clipboard@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/react-copy-to-clipboard/-/react-copy-to-clipboard-5.0.1.tgz#8eae107bb400be73132ed3b6a7b4fb156090208e"
+  integrity sha512-ELKq31/E3zjFs5rDWNCfFL4NvNFQvGRoJdAKReD/rUPA+xxiLPQmZBZBvy2vgH7V0GE9isIQpT9WXbwIVErYdA==
   dependencies:
     copy-to-clipboard "^3"
     prop-types "^15.5.8"

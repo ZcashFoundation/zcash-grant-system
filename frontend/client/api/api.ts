@@ -6,8 +6,9 @@ import {
   Update,
   TeamInvite,
   TeamInviteWithProposal,
-  Contribution,
   SOCIAL_SERVICE,
+  ContributionWithAddresses,
+  EmailSubscriptions,
 } from 'types';
 import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
 
@@ -31,6 +32,10 @@ export function getProposalComments(proposalId: number | string) {
 
 export function getProposalUpdates(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/updates`);
+}
+
+export function getProposalContributions(proposalId: number | string) {
+  return axios.get(`/api/v1/proposals/${proposalId}/contributions`);
 }
 
 export function postProposal(payload: ProposalDraft) {
@@ -98,6 +103,17 @@ export function updateUser(user: User): Promise<{ data: User }> {
   return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
 }
 
+export function getUserSettings(userId: string | number): Promise<any> {
+  return axios.get(`/api/v1/users/${userId}/settings`);
+}
+
+export function updateUserSettings(
+  userId: string | number,
+  emailSubscriptions?: EmailSubscriptions,
+): Promise<any> {
+  return axios.put(`/api/v1/users/${userId}/settings`, { emailSubscriptions });
+}
+
 export function requestUserRecoveryEmail(email: string): Promise<any> {
   return axios.post(`/api/v1/users/recover`, { email });
 }
@@ -108,6 +124,10 @@ export function resetPassword(code: string, password: string): Promise<any> {
 
 export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
+}
+
+export function unsubscribeEmail(code: string): Promise<any> {
+  return axios.post(`/api/v1/email/${code}/unsubscribe`);
 }
 
 export function getSocialAuthUrl(service: SOCIAL_SERVICE): Promise<any> {
@@ -209,13 +229,9 @@ export function putInviteResponse(
 
 export function postProposalContribution(
   proposalId: number,
-  txId: string,
-  fromAddress: string,
   amount: string,
-): Promise<{ data: Contribution }> {
+): Promise<{ data: ContributionWithAddresses }> {
   return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
-    txId,
-    fromAddress,
     amount,
   });
 }
@@ -227,4 +243,15 @@ export function postProposalComment(payload: {
 }): Promise<{ data: any }> {
   const { proposalId, ...args } = payload;
   return axios.post(`/api/v1/proposals/${proposalId}/comments`, args);
+}
+
+export function deleteProposalContribution(contributionId: string | number) {
+  return axios.delete(`/api/v1/proposals/contribution/${contributionId}`);
+}
+
+export function getProposalContribution(
+  proposalId: number,
+  contributionId: number,
+): Promise<{ data: ContributionWithAddresses }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
 }

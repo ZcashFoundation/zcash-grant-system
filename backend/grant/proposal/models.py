@@ -1,12 +1,17 @@
 import datetime
 from typing import List
 from sqlalchemy import func, or_
+from functools import reduce
 
 from grant.comment.models import Comment
 from grant.extensions import ma, db
-from grant.utils.misc import dt_to_unix
+from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.exceptions import ValidationException
+from grant.blockchain import blockchain_get
+from grant.email.send import send_email
 
+
+# Proposal states
 DRAFT = 'DRAFT'
 PENDING = 'PENDING'
 APPROVED = 'APPROVED'
@@ -15,10 +20,12 @@ LIVE = 'LIVE'
 DELETED = 'DELETED'
 STATUSES = [DRAFT, PENDING, APPROVED, REJECTED, LIVE, DELETED]
 
+# Funding stages
 FUNDING_REQUIRED = 'FUNDING_REQUIRED'
 COMPLETED = 'COMPLETED'
 PROPOSAL_STAGES = [FUNDING_REQUIRED, COMPLETED]
 
+# Proposal categories
 DAPP = "DAPP"
 DEV_TOOL = "DEV_TOOL"
 CORE_DEV = "CORE_DEV"
@@ -27,6 +34,9 @@ DOCUMENTATION = "DOCUMENTATION"
 ACCESSIBILITY = "ACCESSIBILITY"
 CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
 
+# Contribution states
+# PENDING = 'PENDING'
+CONFIRMED = 'CONFIRMED'
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -79,28 +89,50 @@ class ProposalUpdate(db.Model):
 class ProposalContribution(db.Model):
     __tablename__ = "proposal_contribution"
 
-    tx_id = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime, nullable=False)
 
     proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    from_address = db.Column(db.String(255), nullable=False)
-    amount = db.Column(db.String(255), nullable=False)  # in eth
+    status = db.Column(db.String(255), nullable=False)
+    amount = db.Column(db.String(255), nullable=False)
+    tx_id = db.Column(db.String(255))
+
+    user = db.relationship("User")
 
     def __init__(
         self,
-        tx_id: str,
         proposal_id: int,
         user_id: int,
-        from_address: str,
         amount: str
     ):
-        self.tx_id = tx_id
         self.proposal_id = proposal_id
         self.user_id = user_id
-        self.from_address = from_address
         self.amount = amount
         self.date_created = datetime.datetime.now()
+        self.status = PENDING
+
+    @staticmethod
+    def get_existing_contribution(user_id: int, proposal_id: int, amount: str):
+        return ProposalContribution.query.filter_by(
+            user_id=user_id,
+            proposal_id=proposal_id,
+            amount=amount,
+            status=PENDING,
+        ).first()
+
+    @staticmethod
+    def get_by_userid(user_id):
+        return ProposalContribution.query \
+            .filter(ProposalContribution.user_id == user_id) \
+            .filter(ProposalContribution.status != DELETED) \
+            .order_by(ProposalContribution.date_created.desc()) \
+            .all()
+
+    def confirm(self, tx_id: str, amount: str):
+        self.status = CONFIRMED
+        self.tx_id = tx_id
+        self.amount = amount
 
 
 class Proposal(db.Model):
@@ -234,7 +266,7 @@ class Proposal(db.Model):
         allowed_statuses = [DRAFT, REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
-            raise ValidationException("Proposal status must be {} or {} to submit for approval".format(DRAFT, REJECTED))
+            raise ValidationException(f"Proposal status must be {DRAFT} or {REJECTED} to submit for approval")
 
         self.status = PENDING
 
@@ -242,27 +274,46 @@ class Proposal(db.Model):
         self.validate_publishable()
         # specific validation
         if not self.status == PENDING:
-            raise ValidationException("Proposal status must be {} to approve or reject".format(PENDING))
+            raise ValidationException(f"Proposal status must be {PENDING} to approve or reject")
 
         if is_approve:
             self.status = APPROVED
             self.date_approved = datetime.datetime.now()
-            # TODO: send approval email
+            for t in self.team:
+                send_email(t.email_address, 'proposal_approved', {
+                    'user': t,
+                    'proposal': self,
+                    'proposal_url': make_url(f'/proposals/{self.id}'),
+                    'admin_note': 'Congratulations! Your proposal has been approved.'
+                })
         else:
             if not reject_reason:
                 raise ValidationException("Please provide a reason for rejecting the proposal")
             self.status = REJECTED
             self.reject_reason = reject_reason
-            # TODO: send rejection email
+            for t in self.team:
+                send_email(t.email_address, 'proposal_rejected', {
+                    'user': t,
+                    'proposal': self,
+                    'proposal_url': make_url(f'/proposals/{self.id}'),
+                    'admin_note': reject_reason
+                })
 
     def publish(self):
         self.validate_publishable()
         # specific validation
         if not self.status == APPROVED:
-            raise ValidationException("Proposal status must be {}".format(APPROVED))
+            raise ValidationException(f"Proposal status must be {APPROVED}")
 
         self.date_published = datetime.datetime.now()
         self.status = LIVE
+
+    def get_amount_funded(self):
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=CONFIRMED) \
+            .all()
+        funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        return str(funded)
 
 
 class ProposalSchema(ma.Schema):
@@ -284,7 +335,6 @@ class ProposalSchema(ma.Schema):
             "content",
             "comments",
             "updates",
-            "contributions",
             "milestones",
             "category",
             "team",
@@ -301,7 +351,6 @@ class ProposalSchema(ma.Schema):
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
-    contributions = ma.Nested("ProposalContributionSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
@@ -319,12 +368,26 @@ class ProposalSchema(ma.Schema):
         return dt_to_unix(obj.date_published) if obj.date_published else None
 
     def get_funded(self, obj):
-        # TODO: Add up all contributions and return that
-        return "0"
+        return obj.get_amount_funded()
 
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
+user_fields = [
+    "proposal_id",
+    "status",
+    "title",
+    "brief",
+    "target",
+    "funded",
+    "date_created",
+    "date_approved",
+    "date_published",
+    "reject_reason",
+    "team",
+]
+user_proposal_schema = ProposalSchema(only=user_fields)
+user_proposals_schema = ProposalSchema(many=True, only=user_fields)
 
 
 class ProposalUpdateSchema(ma.Schema):
@@ -407,59 +470,30 @@ class ProposalContributionSchema(ma.Schema):
         # Fields to expose
         fields = (
             "id",
+            "proposal",
+            "user",
+            "status",
             "tx_id",
-            "proposal_id",
-            "user_id",
-            "from_address",
             "amount",
             "date_created",
+            "addresses",
         )
-    id = ma.Method("get_id")
-    date_created = ma.Method("get_date_created")
 
-    def get_id(self, obj):
-        return obj.tx_id
+    proposal = ma.Nested("ProposalSchema")
+    user = ma.Nested("UserSchema", exclude=["email_address"])
+    date_created = ma.Method("get_date_created")
+    addresses = ma.Method("get_addresses")
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
 
+    def get_addresses(self, obj):
+        return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+
 
 proposal_contribution_schema = ProposalContributionSchema()
-proposals_contribution_schema = ProposalContributionSchema(many=True)
-
-
-class UserProposalSchema(ma.Schema):
-    class Meta:
-        model = Proposal
-        # Fields to expose
-        fields = (
-            "proposal_id",
-            "status",
-            "title",
-            "brief",
-            "target",
-            "funded",
-            "date_created",
-            "date_approved",
-            "date_published",
-            "reject_reason",
-            "team",
-        )
-    date_created = ma.Method("get_date_created")
-    proposal_id = ma.Method("get_proposal_id")
-    funded = ma.Method("get_funded")
-    team = ma.Nested("UserSchema", many=True)
-
-    def get_proposal_id(self, obj):
-        return obj.id
-
-    def get_date_created(self, obj):
-        return dt_to_unix(obj.date_created) * 1000
-
-    def get_funded(self, obj):
-        # TODO: Add up all contributions and return that
-        return "0"
-
-
-user_proposal_schema = UserProposalSchema()
-user_proposals_schema = UserProposalSchema(many=True)
+proposal_contributions_schema = ProposalContributionSchema(many=True)
+user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 'addresses'])
+user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
+proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
+proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])

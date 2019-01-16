@@ -11,10 +11,11 @@ import {
 } from '../store';
 import env from '../env';
 import node from '../node';
+import { makeContributionMemo } from '../util';
 
 // Configure server
 const app = express();
-app.set('port', env.REST_SERVER_PORT);
+app.set('port', env.PORT);
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -31,7 +32,12 @@ app.get('/contribution/addresses', (req, res) => {
     addresses = action.payload.addresses;
     store.dispatch(action);
   }
-  res.json({ data: addresses });
+  res.json({
+    data: {
+      ...addresses,
+      memo: makeContributionMemo(contributionId),
+    },
+  });
 });
 
 
@@ -72,8 +78,8 @@ let server: Server;
 
 export function start() {
   return new Promise(resolve => {
-    server = app.listen(env.REST_SERVER_PORT, () => {
-      console.log(`REST server started on port ${env.REST_SERVER_PORT}`);
+    server = app.listen(env.PORT, () => {
+      console.log(`REST server started on port ${env.PORT}`);
       resolve();
     });
   });

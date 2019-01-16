@@ -17,8 +17,7 @@ http.createServer(function(request, response) {
       html
         .toString()
         .replace(/\$\$API_SECRET_KEY/g, env.API_SECRET_KEY || "")
-        .replace(/\$\$WS_PORT/g, env.WS_PORT || "")
-        .replace(/\$\$REST_PORT/g, env.REST_SERVER_PORT || "")
+        .replace(/\$\$REST_PORT/g, env.PORT || "")
     );
     response.end();
   });

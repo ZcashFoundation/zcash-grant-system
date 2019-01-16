@@ -1,5 +1,6 @@
 from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
+from animal_case import keys_to_snake_case
 
 from grant.comment.models import Comment, user_comments_schema
 from grant.proposal.models import (
@@ -8,17 +9,30 @@ from grant.proposal.models import (
     proposal_team,
     ProposalTeamInvite,
     invites_with_proposal_schema,
+    ProposalContribution,
+    user_proposal_contributions_schema,
     user_proposals_schema,
     PENDING,
     APPROVED,
-    REJECTED
+    REJECTED,
+    CONFIRMED
 )
+from grant.utils.exceptions import ValidationException
 from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.email.models import EmailRecovery
 
-from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
+from .models import (
+    User,
+    UserSettings,
+    SocialMedia,
+    Avatar,
+    users_schema,
+    user_schema,
+    user_settings_schema,
+    db
+)
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -62,19 +76,21 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
+        authed_user = get_authed_user()
         if with_proposals:
             proposals = Proposal.get_by_user(user)
             proposals_dump = user_proposals_schema.dump(proposals)
-            result["createdProposals"] = proposals_dump
+            result["proposals"] = proposals_dump
         if with_funded:
-            contributions = Proposal.get_by_user_contribution(user)
-            contributions_dump = user_proposals_schema.dump(contributions)
-            result["fundedProposals"] = contributions_dump
+            contributions = ProposalContribution.get_by_userid(user_id)
+            if not authed_user or user.id != authed_user.id:
+                contributions = [c for c in contributions if c.status == CONFIRMED]
+            contributions_dump = user_proposal_contributions_schema.dump(contributions)
+            result["contributions"] = contributions_dump
         if with_comments:
             comments = Comment.get_by_user(user)
             comments_dump = user_comments_schema.dump(comments)
             result["comments"] = comments_dump
-        authed_user = get_authed_user()
         if with_pending and authed_user and authed_user.id == user.id:
             pending = Proposal.get_by_user(user, [PENDING, APPROVED, REJECTED])
             pending_dump = user_proposals_schema.dump(pending)
@@ -308,3 +324,26 @@ def respond_to_invite(user_id, invite_id, response):
 
     db.session.commit()
     return None, 200
+
+
+@blueprint.route("/<user_id>/settings", methods=["GET"])
+@requires_same_user_auth
+@endpoint.api()
+def get_user_settings(user_id):
+    return user_settings_schema.dump(g.current_user.settings)
+
+
+@blueprint.route("/<user_id>/settings", methods=["PUT"])
+@requires_same_user_auth
+@endpoint.api(
+    parameter('emailSubscriptions', type=dict)
+)
+def set_user_settings(user_id, email_subscriptions):
+    try:
+        if email_subscriptions:
+            email_subscriptions = keys_to_snake_case(email_subscriptions)
+            g.current_user.settings.email_subscriptions = email_subscriptions
+    except ValidationException as e:
+        return {"message": str(e)}, 400
+    db.session.commit()
+    return user_settings_schema.dump(g.current_user.settings)

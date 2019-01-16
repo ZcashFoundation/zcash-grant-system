@@ -11,10 +11,10 @@ from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.milestone.models import Milestone
 from grant.user.models import User, SocialMedia, Avatar
 from grant.email.send import send_email
-from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user
+from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email, make_url
-from .models import(
+from grant.utils.misc import is_email, make_url, from_zat, make_preview
+from .models import (
     Proposal,
     proposals_schema,
     proposal_schema,
@@ -25,13 +25,15 @@ from .models import(
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
+    proposal_proposal_contributions_schema,
     db,
     DRAFT,
     PENDING,
     APPROVED,
     REJECTED,
     LIVE,
-    DELETED
+    DELETED,
+    CONFIRMED,
 )
 import traceback
 
@@ -85,6 +87,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         return {"message": "No proposal matching id"}, 404
 
     # Make sure the parent comment exists
+    parent = None
     if parent_comment_id:
         parent = Comment.query.filter_by(id=parent_comment_id).first()
         if not parent:
@@ -100,6 +103,28 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     db.session.add(comment)
     db.session.commit()
     dumped_comment = comment_schema.dump(comment)
+
+    # TODO: Email proposal team if top-level comment
+    preview = make_preview(comment.content, 60)
+    if not parent:
+        for member in proposal.team:
+            send_email(member.email_address, 'proposal_comment', {
+                'author': g.current_user,
+                'proposal': proposal,
+                'preview': preview,
+                'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
+                'author_url': make_url(f'/profile/{comment.author.id}'),
+            })
+    # Email parent comment creator, if it's not themselves
+    if parent and parent.author.id != comment.author.id:
+        send_email(parent.author.email_address, 'comment_reply', {
+            'author': g.current_user,
+            'proposal': proposal,
+            'preview': preview,
+            'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
+            'author_url': make_url(f'/profile/{comment.author.id}'),
+        })
+
     return dumped_comment, 201
 
 
@@ -272,6 +297,17 @@ def post_proposal_update(proposal_id, title, content):
     db.session.add(update)
     db.session.commit()
 
+    # Send email to all contributors (even if contribution failed)
+    preview = make_preview(update.content, 200)
+    contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
+    for c in contributions:
+        send_email(c.user.email_address, 'contribution_update', {
+            'proposal': g.current_proposal,
+            'proposal_update': update,
+            'preview': preview,
+            'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
+        })
+
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
 
@@ -300,7 +336,8 @@ def post_proposal_team_invite(proposal_id, address):
             'user': user,
             'inviter': g.current_user,
             'proposal': g.current_proposal,
-            'invite_url': make_url(f'/profile/{user.id}' if user else '/auth')
+            'invite_url': make_url(
+                f'/profile/{user.id}?tab=invites' if user else '/auth')
         })
 
     return proposal_team_invite_schema.dump(invite), 201
@@ -328,11 +365,25 @@ def delete_proposal_team_invite(proposal_id, id_or_address):
 @endpoint.api()
 def get_proposal_contributions(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        dumped_proposal = proposal_schema.dump(proposal)
-        return dumped_proposal["contributions"]
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+    
+    top_contributions = ProposalContribution.query \
+        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .order_by(ProposalContribution.amount.desc()) \
+        .limit(5) \
+        .all()
+    latest_contributions = ProposalContribution.query \
+        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .order_by(ProposalContribution.date_created.desc()) \
+        .limit(5) \
+        .all()
+    
+    return {
+        'top': proposal_proposal_contributions_schema.dump(top_contributions),
+        'latest': proposal_proposal_contributions_schema.dump(latest_contributions),
+    }
+        
 
 
 @blueprint.route("/<proposal_id>/contributions/<contribution_id>", methods=["GET"])
@@ -340,7 +391,7 @@ def get_proposal_contributions(proposal_id):
 def get_proposal_contribution(proposal_id, contribution_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
-        contribution = ProposalContribution.query.filter_by(tx_id=contribution_id).first()
+        contribution = ProposalContribution.query.filter_by(id=contribution_id).first()
         if contribution:
             return proposal_contribution_schema.dump(contribution)
         else:
@@ -352,22 +403,98 @@ def get_proposal_contribution(proposal_id, contribution_id):
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
 @requires_auth
 @endpoint.api(
-    parameter('txId', type=str, required=True),
-    parameter('fromAddress', type=str, required=True),
     parameter('amount', type=str, required=True)
 )
-def post_proposal_contribution(proposal_id, tx_id, from_address, amount):
+def post_proposal_contribution(proposal_id, amount):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    code = 200
+    contribution = ProposalContribution \
+        .get_existing_contribution(g.current_user.id, proposal_id, amount)
+
+    if not contribution:
+        code = 201
         contribution = ProposalContribution(
-            tx_id=tx_id,
             proposal_id=proposal_id,
             user_id=g.current_user.id,
-            from_address=from_address,
             amount=amount
         )
         db.session.add(contribution)
         db.session.commit()
-        dumped_contribution = proposal_contribution_schema.dump(contribution)
-        return dumped_contribution, 201
-    return {"message": "No proposal matching id"}, 404
+
+    dumped_contribution = proposal_contribution_schema.dump(contribution)
+    return dumped_contribution, code
+
+
+# Can't use <proposal_id> since webhook doesn't know proposal id
+@blueprint.route("/contribution/<contribution_id>/confirm", methods=["POST"])
+@internal_webhook
+@endpoint.api(
+    parameter('to', type=str, required=True),
+    parameter('amount', type=str, required=True),
+    parameter('txid', type=str, required=True),
+)
+def post_contribution_confirmation(contribution_id, to, amount, txid):
+    contribution = ProposalContribution.query.filter_by(
+        id=contribution_id).first()
+
+    if not contribution:
+        # TODO: Log in sentry
+        print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
+        return {"message": "No contribution matching id"}, 404
+
+    if contribution.status == CONFIRMED:
+        # Duplicates can happen, just return ok
+        return None, 200
+
+    # Convert to whole zcash coins from zats
+    zec_amount = str(from_zat(int(amount)))
+
+    contribution.confirm(tx_id=txid, amount=zec_amount)
+    db.session.add(contribution)
+    db.session.commit()
+
+    # Send to the user
+    send_email(contribution.user.email_address, 'contribution_confirmed', {
+        'contribution': contribution,
+        'proposal': contribution.proposal,
+        'tx_explorer_url': f'https://explorer.zcha.in/transactions/{txid}',
+    })
+
+    # Send to the full proposal gang
+    for member in contribution.proposal.team:
+        send_email(member.email_address, 'proposal_contribution', {
+            'proposal': contribution.proposal,
+            'contribution': contribution,
+            'contributor': contribution.user,
+            'funded': contribution.proposal.get_amount_funded(),
+            'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
+            'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+        })
+
+    # TODO: Once we have a task queuer in place, queue emails to everyone
+    # on funding target reached.
+
+    return None, 200
+
+@blueprint.route("/contribution/<contribution_id>", methods=["DELETE"])
+@requires_auth
+@endpoint.api()
+def delete_proposal_contribution(contribution_id):
+    contribution = contribution = ProposalContribution.query.filter_by(
+        id=contribution_id).first()
+    if not contribution:
+        return {"message": "No contribution matching id"}, 404
+
+    if contribution.status == CONFIRMED:
+        return {"message": "Cannot delete confirmed contributions"}, 400
+
+    if contribution.user_id != g.current_user.id:
+        return {"message": "Must be the user of the contribution to delete it"}, 403
+
+    contribution.status = DELETED
+    db.session.add(contribution)
+    db.session.commit()
+    return None, 202

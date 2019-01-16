@@ -19,32 +19,6 @@ describe('util', () => {
     });
   });
 
-  describe('getIpFromRequest', () => {
-    const ip = '127.0.0.1';
-
-    it('Should get the IP from the first x-forwarded-for if available', () => {
-      const req = {
-        headers: {
-          'x-forwarded-for': `${ip}, 0.0.0.0`,
-        },
-        connection: {
-          remoteAddress: '0.0.0.0',
-        },
-      };
-      assert.equal(util.getIpFromRequest(req as any), ip);
-    });
-
-    it('Otherwise should get the IP from req.connection.remoteAddress', () => {
-      const req = {
-        headers: {},
-        connection: {
-          remoteAddress: ip,
-        }
-      };
-      assert.equal(util.getIpFromRequest(req as any), ip);
-    });
-  });
-
   describe('authenticate', () => {
     const key = util.generateApiKey();
     let oldHash: any;

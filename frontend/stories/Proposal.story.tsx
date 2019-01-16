@@ -2,7 +2,6 @@ import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 
 import { ProposalCampaignBlock } from 'components/Proposal/CampaignBlock';
-import Contributors from 'components/Proposal/Contributors';
 
 import 'styles/style.less';
 import 'components/Proposal/style.less';
@@ -52,10 +51,5 @@ storiesOf('Proposal', module)
   .add('CampaignBlock - wide', () => (
     <div style={{ display: 'flex', flexWrap: 'wrap' }}>
       <CampaignBlocks style={{ margin: '0 12px' }} />
-    </div>
-  ))
-  .add('Contributors', () => (
-    <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <Contributors />
     </div>
   ));

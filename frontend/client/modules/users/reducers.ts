@@ -1,7 +1,6 @@
 import lodash from 'lodash';
-import { UserProposal, UserComment, TeamInviteWithProposal } from 'types';
+import { User, UserProposal, UserComment, UserContribution, TeamInviteWithProposal } from 'types';
 import types from './types';
-import { User } from 'types';
 
 export interface TeamInviteWithResponse extends TeamInviteWithProposal {
   isResponding: boolean;
@@ -15,8 +14,8 @@ export interface UserState extends User {
   isUpdating: boolean;
   updateError: string | null;
   pendingProposals: UserProposal[];
-  createdProposals: UserProposal[];
-  fundedProposals: UserProposal[];
+  proposals: UserProposal[];
+  contributions: UserContribution[];
   comments: UserComment[];
   isFetchingInvites: boolean;
   hasFetchedInvites: boolean;
@@ -45,8 +44,8 @@ export const INITIAL_USER_STATE: UserState = {
   isUpdating: false,
   updateError: null,
   pendingProposals: [],
-  createdProposals: [],
-  fundedProposals: [],
+  proposals: [],
+  contributions: [],
   comments: [],
   isFetchingInvites: false,
   hasFetchedInvites: false,
@@ -150,6 +149,13 @@ export default (state = INITIAL_STATE, action: any) => {
         isResponding: false,
         respondError: errorMessage,
       });
+    // delete contribution
+    case types.DELETE_CONTRIBUTION:
+      return updateUserState(state, payload.userId, {
+        contributions: state.map[payload.userId].contributions.filter(
+          c => c.id !== payload.contributionId
+        ),
+      });
     // proposal delete
     case types.USER_DELETE_PROPOSAL_FULFILLED:
       return removePendingProposal(state, payload.userId, payload.proposalId);
@@ -198,7 +204,7 @@ function updatePublishedProposal(
 ) {
   const withoutPending = removePendingProposal(state, userId, proposal.proposalId);
   const userUpdates = {
-    createdProposals: [proposal, ...state.map[userId].createdProposals],
+    proposals: [proposal, ...state.map[userId].proposals],
   };
   return updateUserState(withoutPending, userId, userUpdates);
 }

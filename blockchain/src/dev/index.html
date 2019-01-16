@@ -148,63 +148,63 @@
         </form>
       </div>
       <script>
-        let socket = null;
+        // let socket = null;
 
-        const addMessage = (type, payload) => {
-          $("#ws-responses").prepend(`
-            <div class="message ${type}">
-              <div class="message-info">
-                ${type} at ${new Date().toLocaleTimeString()}
-              </div>
-              <pre>${JSON.stringify(payload, null, 2)}</pre>
-            </div>
-          `);
-        };
+        // const addMessage = (type, payload) => {
+        //   $("#ws-responses").prepend(`
+        //     <div class="message ${type}">
+        //       <div class="message-info">
+        //         ${type} at ${new Date().toLocaleTimeString()}
+        //       </div>
+        //       <pre>${JSON.stringify(payload, null, 2)}</pre>
+        //     </div>
+        //   `);
+        // };
 
-        const createWebSocket = () => {
-          socket = new WebSocket("ws://localhost:$$WS_PORT", "$$API_SECRET_KEY");
-          $("#ws-payload").prop('disabled', false);
-          socket.addEventListener("open", function(event) {
-            $(".when-connected").show();
-            $(".when-disconnected").hide();
-          });
-          socket.addEventListener("close", function(event) {
-            $(".when-connected").hide();
-            $(".when-disconnected").show();
-          });
-          socket.addEventListener("message", function(event) {
-            const json = JSON.parse(event.data);
-            console.log("Message from server ", event.data);
-            addMessage('received', json);
-          });
-        };
+        // const createWebSocket = () => {
+        //   socket = new WebSocket("ws://localhost:$$WS_PORT", "$$API_SECRET_KEY");
+        //   $("#ws-payload").prop('disabled', false);
+        //   socket.addEventListener("open", function(event) {
+        //     $(".when-connected").show();
+        //     $(".when-disconnected").hide();
+        //   });
+        //   socket.addEventListener("close", function(event) {
+        //     $(".when-connected").hide();
+        //     $(".when-disconnected").show();
+        //   });
+        //   socket.addEventListener("message", function(event) {
+        //     const json = JSON.parse(event.data);
+        //     console.log("Message from server ", event.data);
+        //     addMessage('received', json);
+        //   });
+        // };
 
-        $("#ws-controls").on('submit', (ev) => {
-          ev.preventDefault();
-          const type = $("#ws-type").val();
-          const payload = $("#ws-payload").val();
-          try {
-            const message = {
-              type: type,
-              payload: JSON.parse(payload),
-            };
-            socket.send(JSON.stringify(message));
-            console.log("Sending message to server:", message);
-            addMessage('sent', message);
-          } catch(err) {
-            alert('Error: ' + err.message);
-          }
-        });
+        // $("#ws-controls").on('submit', (ev) => {
+        //   ev.preventDefault();
+        //   const type = $("#ws-type").val();
+        //   const payload = $("#ws-payload").val();
+        //   try {
+        //     const message = {
+        //       type: type,
+        //       payload: JSON.parse(payload),
+        //     };
+        //     socket.send(JSON.stringify(message));
+        //     console.log("Sending message to server:", message);
+        //     addMessage('sent', message);
+        //   } catch(err) {
+        //     alert('Error: ' + err.message);
+        //   }
+        // });
 
-        $("#ws-close").click(() => {
-          socket.close();
-        });
+        // $("#ws-close").click(() => {
+        //   socket.close();
+        // });
 
-        $("#ws-open").click(() => {
-          socket && socket.close();
-          createWebSocket();
-        });
-        createWebSocket();
+        // $("#ws-open").click(() => {
+        //   socket && socket.close();
+        //   createWebSocket();
+        // });
+        // createWebSocket();
       </script>
 
 

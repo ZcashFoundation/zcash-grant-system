@@ -49,13 +49,7 @@ export default class AvatarEdit extends React.PureComponent<Props, State> {
         {' '}
         <div className="AvatarEdit-avatar">
           <UserAvatar className="AvatarEdit-avatar-img" user={user} />
-          <Upload
-            name="avatar"
-            showUploadList={false}
-            action={this.handleLoad}
-            beforeUpload={this.beforeLoad}
-            onChange={this.handleLoadChange}
-          >
+          <Upload name="avatar" showUploadList={false} beforeUpload={this.beforeLoad}>
             <Button className="AvatarEdit-avatar-change">
               <Icon
                 className="AvatarEdit-avatar-change-icon"
@@ -122,17 +116,8 @@ export default class AvatarEdit extends React.PureComponent<Props, State> {
     });
   };
 
-  private handleLoadChange = (info: any) => {
-    if (info.file.status === 'done') {
-      getBase64(info.file.originFileObj, newAvatarUrl =>
-        this.setState({
-          newAvatarUrl,
-        }),
-      );
-    }
-  };
-
   private beforeLoad = (file: UploadFile) => {
+    // validate file
     this.setState({ loadError: '' });
     const isTypeOk = !!FILE_TYPES.find(t => t === file.type);
     if (!isTypeOk) {
@@ -144,12 +129,19 @@ export default class AvatarEdit extends React.PureComponent<Props, State> {
         loadError: `File size must be less than ${FILE_MAX_LOAD_MB}MB`,
       });
     }
-    return isTypeOk && isSizeOk;
-  };
 
-  private handleLoad = () => {
-    this.setState({ showModal: true });
-    return Promise.resolve();
+    // load base64 for cropper to consume, show cropper modal
+    if (isTypeOk && isSizeOk) {
+      getBase64((file as any) as File, newAvatarUrl =>
+        this.setState({
+          showModal: true,
+          newAvatarUrl,
+        }),
+      );
+    }
+
+    // return false so Upload doesn't attempt to upload
+    return false;
   };
 
   private handleUpload = () => {

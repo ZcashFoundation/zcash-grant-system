@@ -4,7 +4,7 @@ import {
   getProposal,
   getProposalComments,
   getProposalUpdates,
-  postProposalContribution as apiPostProposalContribution,
+  getProposalContributions,
   postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
@@ -55,6 +55,18 @@ export function fetchProposalUpdates(proposalId: Proposal['proposalId']) {
   };
 }
 
+export function fetchProposalContributions(proposalId: Proposal['proposalId']) {
+  return (dispatch: Dispatch<any>) => {
+    dispatch({
+      type: types.PROPOSAL_CONTRIBUTIONS,
+      payload: getProposalContributions(proposalId).then(res => ({
+        proposalId,
+        ...res.data,
+      })),
+    });
+  };
+}
+
 export function postProposalComment(
   proposalId: Proposal['proposalId'],
   comment: string,
@@ -85,19 +97,5 @@ export function postProposalComment(
         error: true,
       });
     }
-  };
-}
-
-export function postProposalContribution(
-  proposalId: number,
-  txId: string,
-  account: string,
-  amount: string,
-) {
-  return async (dispatch: Dispatch<any>) => {
-    await dispatch({
-      type: types.POST_PROPOSAL_CONTRIBUTION,
-      payload: apiPostProposalContribution(proposalId, txId, account, amount),
-    });
   };
 }

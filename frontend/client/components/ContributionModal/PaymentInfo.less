@@ -1,0 +1,113 @@
+@import '~styles/variables.less';
+
+.PaymentInfo {
+  &-text {
+    margin-top: -0.25rem;
+    font-size: 0.95rem;
+  }
+
+  &-types {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+
+  &-uri {
+    display: flex;
+    padding-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(#000, 0.06);
+
+    &-qr {
+      position: relative;
+      padding: 0.5rem;
+      margin-right: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(#000, 0.1),
+                  0 1px 4px rgba(#000, 0.2);
+
+      canvas {
+        display: block;
+      }
+      &.is-loading canvas {
+        opacity: 0;
+      }
+
+      .ant-spin {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    &-info {
+      flex: 1;
+    }
+  }
+
+  &-fields {
+    &-row {
+      display: flex;
+
+      > * {
+        flex: 1;
+        margin-right: 0.75rem;
+
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+
+      &-address {
+        min-width: 300px;
+      }
+    }
+  }
+
+  // Ant overrides
+  input[readonly],
+  textarea[readonly] {
+    background: rgba(#000, 0.05);
+  }
+}
+
+.CopyInput {
+  &.ant-form-item {
+    margin-bottom: 0.2rem;
+  }
+
+  .ant-form-item-label {
+    padding-bottom: 0.3rem;
+
+    label {
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+  }
+
+  .ant-form-item-children {
+    display: flex;
+
+    .ant-input {
+      font-family: @code-family;
+      font-size: 0.8rem;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      word-break: break-all;
+    }
+
+    .ant-btn {
+      height: auto;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      border-left: none;
+    }
+  }
+
+  .ant-form-explain {
+    margin-top: 0.3rem;
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+}

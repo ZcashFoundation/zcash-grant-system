@@ -1,0 +1,6 @@
+Your proposal "{{ args.proposal.title }}" just got a
+{{ args.contribution.amount }} ZEC contribution from
+{{ args.contributor.display_name }}. Your proposal is now at {{ args.funded }} / {{ args.proposal.target }} ZEC.
+
+See {{ args.contributor.display_name }}'s profile: {{ args.contributor_url }}
+View your proposal: {{ args.proposal_url }}

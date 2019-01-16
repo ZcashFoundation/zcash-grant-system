@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../util';
-import env from '../../env';
 
 export default function(req: Request, res: Response, next: NextFunction) {
   if (!req.headers['authorization']) {

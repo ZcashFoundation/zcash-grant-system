@@ -6,3 +6,4 @@ export * from './milestone';
 export * from './update';
 export * from './proposal';
 export * from './api';
+export * from './email';
