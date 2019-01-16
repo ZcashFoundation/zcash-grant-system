@@ -24,6 +24,8 @@ def verify_email(code):
 def unsubscribe_email(code):
     ev = EmailVerification.query.filter_by(code=code).first()
     if ev:
-        return {"message": "Not yet implemented"}, 500
+        ev.user.settings.unsubscribe_emails()
+        db.session.commit()
+        return {"message": "Unsubscribed from all emails"}, 200
     else:
         return {"message": "Invalid email code"}, 400

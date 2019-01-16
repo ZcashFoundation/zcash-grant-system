@@ -8,7 +8,6 @@ import './ChangePassword.less';
 type Props = FormComponentProps;
 
 const STATE = {
-  passwordConfirmDirty: false,
   passwordChangePending: false,
   passwordChangeSuccess: false,
   passwordChangeError: '',

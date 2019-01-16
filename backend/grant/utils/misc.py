@@ -36,3 +36,19 @@ def from_zat(zat: int):
 
 def to_zat(zec: float):
   return zec * 100000000
+
+def make_preview(content: str, max_length: int):
+  truncated = False
+
+  # Show only the first line. Add ellipsis if there are more than two lines,
+  # even if first line isn't truncated.
+  preview = content.split('\n', 1)[0]
+  if len(preview) != len(content):
+      truncated = True
+
+  # Truncate to max length
+  if len(preview) > max_length:
+      preview = preview[:max_length - 3]
+      truncated = True
+
+  return content + '...' if truncated else content

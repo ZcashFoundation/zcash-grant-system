@@ -5,6 +5,7 @@ import './index.less';
 import { Tabs } from 'antd';
 import LinkableTabs from 'components/LinkableTabs';
 import ChangePassword from './ChangePassword';
+import EmailSubscriptions from './EmailSubscriptions';
 
 const { TabPane } = Tabs;
 
@@ -25,6 +26,9 @@ class Settings extends React.Component<Props> {
         <LinkableTabs defaultActiveKey="password" tabPosition="top">
           <TabPane tab="Change Password" key="password">
             <ChangePassword />
+          </TabPane>
+          <TabPane tab="Email Notifications" key="emails">
+            <EmailSubscriptions />
           </TabPane>
         </LinkableTabs>
       </div>
