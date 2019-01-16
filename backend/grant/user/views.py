@@ -1,5 +1,6 @@
 from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
+from animal_case import keys_to_snake_case
 
 from grant.comment.models import Comment, user_comments_schema
 from grant.proposal.models import (
@@ -16,12 +17,22 @@ from grant.proposal.models import (
     REJECTED,
     CONFIRMED
 )
+from grant.utils.exceptions import ValidationException
 from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.email.models import EmailRecovery
 
-from .models import User, SocialMedia, Avatar, users_schema, user_schema, db
+from .models import (
+    User,
+    UserSettings,
+    SocialMedia,
+    Avatar,
+    users_schema,
+    user_schema,
+    user_settings_schema,
+    db
+)
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -313,3 +324,26 @@ def respond_to_invite(user_id, invite_id, response):
 
     db.session.commit()
     return None, 200
+
+
+@blueprint.route("/<user_id>/settings", methods=["GET"])
+@requires_same_user_auth
+@endpoint.api()
+def get_user_settings(user_id):
+    return user_settings_schema.dump(g.current_user.settings)
+
+
+@blueprint.route("/<user_id>/settings", methods=["PUT"])
+@requires_same_user_auth
+@endpoint.api(
+    parameter('emailSubscriptions', type=dict)
+)
+def set_user_settings(user_id, email_subscriptions):
+    try:
+        if email_subscriptions:
+            email_subscriptions = keys_to_snake_case(email_subscriptions)
+            g.current_user.settings.email_subscriptions = email_subscriptions
+    except ValidationException as e:
+        return {"message": str(e)}, 400
+    db.session.commit()
+    return user_settings_schema.dump(g.current_user.settings)
