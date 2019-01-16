@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Modal } from 'antd';
 import Result from 'ant-design-pro/lib/Result';
 import { postProposalContribution, getProposalContribution } from 'api/api';
@@ -56,7 +57,8 @@ export default class ContributionModal extends React.Component<Props, State> {
           description={
             <>
               Your contribution should be confirmed in about 20 minutes. You can keep an
-              eye on it at the <a>contributions tab on your profile</a>.
+              eye on it at the{' '}
+              <Link to="/profile?tab=funded">funded tab on your profile</Link>.
             </>
           }
           style={{ width: '90%' }}

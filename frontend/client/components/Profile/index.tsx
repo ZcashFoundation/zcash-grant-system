@@ -22,6 +22,7 @@ import ProfileInvite from './ProfileInvite';
 import Placeholder from 'components/Placeholder';
 import Exception from 'pages/exception';
 import ContributionModal from 'components/ContributionModal';
+import LinkableTabs from 'components/LinkableTabs';
 import './style.less';
 import { UserContribution } from 'types';
 
@@ -58,15 +59,15 @@ class Profile extends React.Component<Props, State> {
     }
   }
   render() {
-    const userLookupParam = this.props.match.params.id;
-    const { authUser, match } = this.props;
+    const { authUser, match, location } = this.props;
     const { activeContribution } = this.state;
+    const userLookupParam = match.params.id;
 
     if (!userLookupParam) {
       if (authUser && authUser.userid) {
-        return <Redirect to={`/profile/${authUser.userid}`} />;
+        return <Redirect to={{ ...location, pathname: `/profile/${authUser.userid}` }} />;
       } else {
-        return <Redirect to="auth" />;
+        return <Redirect to={{ ...location, pathname: '/auth' }} />;
       }
     }
 
@@ -109,7 +110,7 @@ class Profile extends React.Component<Props, State> {
             render={() => <ProfileEdit user={user} />}
           />
         </Switch>
-        <Tabs>
+        <LinkableTabs>
           {isAuthedUser && (
             <Tabs.TabPane
               tab={TabTitle('Pending', pendingProposals.length)}
@@ -176,7 +177,7 @@ class Profile extends React.Component<Props, State> {
               </div>
             </Tabs.TabPane>
           )}
-        </Tabs>
+        </LinkableTabs>
 
         <ContributionModal
           isVisible={!!activeContribution}
