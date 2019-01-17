@@ -24,16 +24,19 @@ const DEFAULTS = {
 
 type CustomEnvironment = typeof DEFAULTS;
 
-Object.entries(DEFAULTS).forEach(([k, v]) => {
-  if (!process.env[k]) {
-    const defVal = (DEFAULTS as any)[k];
-    if (defVal) {
-      console.log(`Using default environment variable ${k}="${defVal}"`);
-      process.env[k] = defVal;
-    } else {
-      throw new Error(`Missing required environment variable ${k}`);
+// ignore when testing
+if (process.env.NODE_ENV !== "test") {
+  Object.entries(DEFAULTS).forEach(([k, v]) => {
+    if (!process.env[k]) {
+      const defVal = (DEFAULTS as any)[k];
+      if (defVal) {
+        console.log(`Using default environment variable ${k}="${defVal}"`);
+        process.env[k] = defVal;
+      } else {
+        throw new Error(`Missing required environment variable ${k}`);
+      }
     }
-  }
-});
+  });
+}
 
 export default (process.env as any) as CustomEnvironment;
