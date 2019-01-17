@@ -1,0 +1,42 @@
+.UserDetail {
+  h1 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+
+    & > * + * {
+      margin-left: 0.5rem;
+    }
+  }
+
+  &-comment {
+    color: black;
+    margin-left: 1rem;
+  }
+
+  &-deet {
+    position: relative;
+    margin-bottom: 0.9rem;
+
+    & > div {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    & > span {
+      font-size: 0.7rem;
+      position: absolute;
+      bottom: -0.7rem;
+    }
+  }
+
+  & .ant-card,
+  .ant-alert,
+  .ant-collapse {
+    margin-bottom: 16px;
+
+    button + button {
+      margin-left: 0.5rem;
+    }
+  }
+}
