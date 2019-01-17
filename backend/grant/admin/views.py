@@ -1,12 +1,12 @@
 from functools import wraps
-from flask import Blueprint, g, session, request
+from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from hashlib import sha256
 from uuid import uuid4
-from flask_cors import CORS, cross_origin
 from sqlalchemy import func, or_
 
 from grant.extensions import db
+from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.user.models import User, users_schema, user_schema
 from grant.proposal.models import (
     Proposal,
@@ -24,31 +24,10 @@ from .example_emails import example_email_args
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
 
 
-admin_auth = {
-    "username": "admin",
-    "password": "79994491a17ec1d817fb0330303ea88880835961fbab1d12329f5d720602fbb3",
-    "salt": "ad01deb1ccba4d0e8b831ed3d1e82c10"
-}
-
-
-def auth_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'username' in session:
-            return f(*args, **kwargs)
-        else:
-            return {"message": "Authentication required"}, 401
-
-    return decorated
-
-
 @blueprint.route("/checklogin", methods=["GET"])
 @endpoint.api()
 def loggedin():
-    if 'username' in session:
-        return {"isLoggedIn": True}
-    if 'username' not in session:
-        return {"isLoggedIn": False}
+    return {"isLoggedIn": admin_is_authed()}
 
 
 @blueprint.route("/login", methods=["POST"])
@@ -57,10 +36,7 @@ def loggedin():
     parameter('password', type=str, required=False),
 )
 def login(username, password):
-    pass_salt = ('%s%s' % (password, admin_auth['salt'])).encode('utf-8')
-    pass_hash = sha256(pass_salt).hexdigest()
-    if username == admin_auth['username'] and pass_hash == admin_auth['password']:
-        session['username'] = username
+    if admin_login(username, password):
         return {"isLoggedIn": True}
     else:
         return {"message": "Username or password incorrect."}, 401
@@ -69,13 +45,13 @@ def login(username, password):
 @blueprint.route("/logout", methods=["GET"])
 @endpoint.api()
 def logout():
-    del session['username']
+    admin_logout()
     return {"isLoggedIn": False}
 
 
 @blueprint.route("/stats", methods=["GET"])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
     proposal_count = db.session.query(func.count(Proposal.id)).scalar()
@@ -94,14 +70,14 @@ def stats():
 
 @blueprint.route('/users/<id>', methods=['DELETE'])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def delete_user(id):
     return {"message": "Not implemented."}, 400
 
 
 @blueprint.route("/users", methods=["GET"])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def get_users():
     users = User.query.all()
     result = users_schema.dump(users)
@@ -110,7 +86,7 @@ def get_users():
 
 @blueprint.route('/users/<id>', methods=['GET'])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def get_user(id):
     user_db = User.query.filter(User.id == id).first()
     if user_db:
@@ -131,7 +107,7 @@ def get_user(id):
 
 @blueprint.route("/proposals", methods=["GET"])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def get_proposals():
     # endpoint.api doesn't seem to handle GET query array input
     status_filters = request.args.getlist('statusFilters[]')
@@ -146,7 +122,7 @@ def get_proposals():
 
 @blueprint.route('/proposals/<id>', methods=['GET'])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def get_proposal(id):
     proposal = Proposal.query.filter(Proposal.id == id).first()
     if proposal:
@@ -156,7 +132,7 @@ def get_proposal(id):
 
 @blueprint.route('/proposals/<id>', methods=['DELETE'])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
@@ -166,7 +142,7 @@ def delete_proposal(id):
     parameter('isApprove', type=bool, required=True),
     parameter('rejectReason', type=str, required=False)
 )
-@auth_required
+@admin_auth_required
 def approve_proposal(id, is_approve, reject_reason=None):
     proposal = Proposal.query.filter_by(id=id).first()
     if proposal:
@@ -181,9 +157,8 @@ def approve_proposal(id, is_approve, reject_reason=None):
 
 
 @blueprint.route('/email/example/<type>', methods=['GET'])
-@cross_origin(supports_credentials=True)
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def get_email_example(type):
     email = generate_email(type, example_email_args.get(type))
     if email['info'].get('subscription'):

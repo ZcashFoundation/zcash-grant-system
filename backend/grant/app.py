@@ -74,3 +74,4 @@ def register_commands(app):
 
     app.cli.add_command(proposal.commands.create_proposal)
     app.cli.add_command(user.commands.delete_user)
+    app.cli.add_command(admin.commands.gen_admin_auth)

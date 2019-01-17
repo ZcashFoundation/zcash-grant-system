@@ -1,6 +1,7 @@
 import json
 from mock import patch
 
+from grant.utils.admin import generate_admin_password_hash
 from grant.proposal.models import Proposal, APPROVED, REJECTED, PENDING, DRAFT
 from ..config import BaseProposalCreatorConfig
 from ..test_data import test_proposal, test_user
@@ -14,7 +15,7 @@ mock_admin_auth = {
 
 
 class TestAdminAPI(BaseProposalCreatorConfig):
-    @patch.dict('grant.admin.views.admin_auth', mock_admin_auth)
+    @patch.dict('grant.utils.admin.admin_auth', mock_admin_auth)
     def login_admin(self):
         return self.app.post(
             "/api/v1/admin/login",
@@ -23,6 +24,21 @@ class TestAdminAPI(BaseProposalCreatorConfig):
                 "password": plaintext_mock_password
             }
         )
+
+    @patch.dict('grant.utils.admin.admin_auth', mock_admin_auth)
+    def test_generate_password_hash(self):
+        # default salt
+        res = generate_admin_password_hash(plaintext_mock_password)
+        self.assertEqual(res, mock_admin_auth['password'])
+        # specific salt
+        res = generate_admin_password_hash(plaintext_mock_password, mock_admin_auth['salt'])
+        self.assertEqual(res, mock_admin_auth['password'])
+        # bad salt
+        res = generate_admin_password_hash(plaintext_mock_password, 'badsalt')
+        self.assertNotEqual(res, mock_admin_auth['password'])
+        # bad pass
+        res = generate_admin_password_hash('badpassword', mock_admin_auth['salt'])
+        self.assertNotEqual(res, mock_admin_auth['password'])
 
     def test_login(self):
         resp = self.login_admin()
