@@ -30,6 +30,7 @@ const Contact = loadable(() => import('pages/contact'));
 const VerifyEmail = loadable(() => import('pages/email-verify'));
 const Callback = loadable(() => import('pages/callback'));
 const RecoverEmail = loadable(() => import('pages/email-recover'));
+const UnsubscribeEmail = loadable(() => import('pages/email-unsubscribe'));
 
 import 'styles/style.less';
 
@@ -227,7 +228,18 @@ const routeConfigs: RouteConfig[] = [
       exact: true,
     },
     template: {
-      title: 'Verify email',
+      title: 'Recover email',
+    },
+  },
+  {
+    // Unsubscribe email
+    route: {
+      path: '/email/unsubscribe',
+      component: UnsubscribeEmail,
+      exact: true,
+    },
+    template: {
+      title: 'Unsubscribe email',
     },
   },
   {

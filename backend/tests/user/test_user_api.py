@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from animal_case import animalify
 from grant.proposal.models import Proposal
 from grant.user.models import User, user_schema, db
+from grant.email.subscription_settings import get_default_email_subscriptions
 from mock import patch, Mock
 
 from ..config import BaseUserConfig
@@ -79,12 +80,7 @@ class TestUserAPI(BaseUserConfig):
         print(login_resp.headers)
         # should have session cookie now
         me_resp = self.app.get(
-            "/api/v1/users/me",
-            data=json.dumps({
-                "email": self.user.email_address,
-                "password": self.user_password
-            }),
-            content_type="application/json"
+            "/api/v1/users/me"
         )
         print(me_resp.headers)
         self.assert200(me_resp)
@@ -92,12 +88,6 @@ class TestUserAPI(BaseUserConfig):
     def test_user_auth_required_fail(self):
         me_resp = self.app.get(
             "/api/v1/users/me",
-            data=json.dumps({
-                "email": self.user.email_address,
-                "password": self.user_password
-            }),
-
-            content_type="application/json"
         )
         print(me_resp.json)
         print(me_resp.headers)
@@ -292,3 +282,50 @@ class TestUserAPI(BaseUserConfig):
         )
         self.assert200(social_authurl_resp)
         self.assertEqual(social_authurl_resp.json["url"], expected_url)
+
+    def test_get_user_settings_auth_required(self):
+        resp = self.app.get(
+            "/api/v1/users/{}/settings".format(self.user.id)
+        )
+        self.assert401(resp)
+
+    def test_get_user_settings(self):
+        self.login_default_user()
+        resp = self.app.get(
+            "/api/v1/users/{}/settings".format(self.user.id)
+        )
+        self.assert200(resp)
+        self.assertIsNotNone(resp.json['emailSubscriptions'])
+
+    def test_put_user_settings_auth_required(self):
+        resp = self.app.put(
+            "/api/v1/users/{}/settings".format(self.user.id),
+            data=json.dumps({'emailSubscriptions': {}}),
+            content_type='application/json'
+        )
+        self.assert401(resp)
+
+    def test_put_user_settings_email_subscriptions(self):
+        self.login_default_user()
+        subs = animalify(get_default_email_subscriptions())
+        subs['myCommentReply'] = False
+        resp = self.app.put(
+            "/api/v1/users/{}/settings".format(self.user.id),
+            data=json.dumps({'emailSubscriptions': subs}),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+        self.assertIsNotNone(resp.json['emailSubscriptions'])
+        self.maxDiff = None
+        self.assertEquals(resp.json['emailSubscriptions'], subs)
+
+    def test_put_user_settings_email_subscriptions_bad_key(self):
+        self.login_default_user()
+        subs = animalify(get_default_email_subscriptions())
+        subs['badKey'] = False
+        resp = self.app.put(
+            "/api/v1/users/{}/settings".format(self.user.id),
+            data=json.dumps({'emailSubscriptions': subs}),
+            content_type='application/json'
+        )
+        self.assert400(resp)

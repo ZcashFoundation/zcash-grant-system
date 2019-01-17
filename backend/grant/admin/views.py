@@ -131,4 +131,8 @@ def approve_proposal(id, is_approve, reject_reason=None):
 @endpoint.api()
 @admin_auth_required
 def get_email_example(type):
-    return generate_email(type, example_email_args.get(type))
+    email = generate_email(type, example_email_args.get(type))
+    if email['info'].get('subscription'):
+        # Unserializable, so remove
+        email['info'].pop('subscription', None)
+    return email

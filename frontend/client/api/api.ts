@@ -8,6 +8,7 @@ import {
   TeamInviteWithProposal,
   SOCIAL_SERVICE,
   ContributionWithAddresses,
+  EmailSubscriptions,
 } from 'types';
 import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
 
@@ -102,6 +103,17 @@ export function updateUser(user: User): Promise<{ data: User }> {
   return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
 }
 
+export function getUserSettings(userId: string | number): Promise<any> {
+  return axios.get(`/api/v1/users/${userId}/settings`);
+}
+
+export function updateUserSettings(
+  userId: string | number,
+  emailSubscriptions?: EmailSubscriptions,
+): Promise<any> {
+  return axios.put(`/api/v1/users/${userId}/settings`, { emailSubscriptions });
+}
+
 export function requestUserRecoveryEmail(email: string): Promise<any> {
   return axios.post(`/api/v1/users/recover`, { email });
 }
@@ -112,6 +124,10 @@ export function resetPassword(code: string, password: string): Promise<any> {
 
 export function verifyEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/verify`);
+}
+
+export function unsubscribeEmail(code: string): Promise<any> {
+  return axios.post(`/api/v1/email/${code}/unsubscribe`);
 }
 
 export function getSocialAuthUrl(service: SOCIAL_SERVICE): Promise<any> {
@@ -219,7 +235,6 @@ export function postProposalContribution(
     amount,
   });
 }
-
 
 export function postProposalComment(payload: {
   proposalId: number;

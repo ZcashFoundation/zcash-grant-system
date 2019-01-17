@@ -3,7 +3,9 @@ import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import './index.less';
 import { Tabs } from 'antd';
+import LinkableTabs from 'components/LinkableTabs';
 import ChangePassword from './ChangePassword';
+import EmailSubscriptions from './EmailSubscriptions';
 
 const { TabPane } = Tabs;
 
@@ -21,11 +23,14 @@ class Settings extends React.Component<Props> {
     return (
       <div className="Settings">
         <h1>Settings</h1>
-        <Tabs defaultActiveKey="1" tabPosition="top">
-          <TabPane tab="Change Password" key="1">
+        <LinkableTabs defaultActiveKey="password" tabPosition="top">
+          <TabPane tab="Change Password" key="password">
             <ChangePassword />
           </TabPane>
-        </Tabs>
+          <TabPane tab="Email Notifications" key="emails">
+            <EmailSubscriptions />
+          </TabPane>
+        </LinkableTabs>
       </div>
     );
   }
