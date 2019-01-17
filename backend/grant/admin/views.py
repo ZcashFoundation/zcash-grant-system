@@ -86,7 +86,7 @@ def get_users():
 
 @blueprint.route('/users/<id>', methods=['GET'])
 @endpoint.api()
-@auth_required
+@admin_auth_required
 def get_user(id):
     user_db = User.query.filter(User.id == id).first()
     if user_db:
