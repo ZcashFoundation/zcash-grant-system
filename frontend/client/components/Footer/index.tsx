@@ -21,9 +21,6 @@ export default () => (
       <Link to="/privacy" className="Footer-links-link">
         privacy policy
       </Link>
-      <Link to="/code-of-conduct" className="Footer-links-link">
-        code of conduct
-      </Link>
     </div>
   </footer>
 );
