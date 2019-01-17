@@ -1,11 +1,14 @@
 import types from './types';
 import usersTypes from 'modules/users/types';
 import { User, AuthSignatureData } from 'types';
+import { RouteProps } from 'react-router-dom';
 
 export interface AuthState {
   user: User | null;
   isAuthingUser: boolean;
   authUserError: string | null;
+
+  authForwardLocation: RouteProps['location'];
 
   isCheckingUser: boolean;
   hasCheckedUser: boolean;
@@ -23,6 +26,8 @@ export const INITIAL_STATE: AuthState = {
   user: null,
   isAuthingUser: false,
   authUserError: null,
+
+  authForwardLocation: undefined,
 
   isCreatingUser: false,
   createUserError: null,
@@ -134,6 +139,12 @@ export default function createReducer(
       return {
         ...state,
         user: null,
+      };
+
+    case types.SET_AUTH_FORWARD_LOCATION:
+      return {
+        ...state,
+        authForwardLocation: action.payload.location,
       };
   }
   return state;
