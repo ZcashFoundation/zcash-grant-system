@@ -36,6 +36,11 @@ async function fetchUsers() {
   return data;
 }
 
+async function fetchUserDetail(id: number) {
+  const { data } = await api.get(`/admin/users/${id}`);
+  return data;
+}
+
 async function deleteUser(id: number | string) {
   const { data } = await api.delete('/admin/users/' + id);
   return data;
@@ -84,14 +89,20 @@ const app = store({
     proposalCount: 0,
     proposalPendingCount: 0,
   },
+
+  usersFetching: false,
   usersFetched: false,
   users: [] as User[],
+  userDetailFetching: false,
+  userDetail: null as null | User,
+
   proposalsFetching: false,
   proposalsFetched: false,
   proposals: [] as Proposal[],
   proposalDetailFetching: false,
   proposalDetail: null as null | Proposal,
   proposalDetailApproving: false,
+
   emailExamples: {} as { [type: string]: EmailExample },
 
   removeGeneralError(i: number) {
@@ -141,12 +152,24 @@ const app = store({
   },
 
   async fetchUsers() {
+    app.usersFetching = true;
     try {
       app.users = await fetchUsers();
       app.usersFetched = true;
     } catch (e) {
       handleApiError(e);
     }
+    app.usersFetching = false;
+  },
+
+  async fetchUserDetail(id: number) {
+    app.userDetailFetching = true;
+    try {
+      app.userDetail = await fetchUserDetail(id);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.userDetailFetching = false;
   },
 
   async deleteUser(id: string | number) {

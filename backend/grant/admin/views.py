@@ -7,9 +7,16 @@ from flask_cors import CORS, cross_origin
 from sqlalchemy import func, or_
 
 from grant.extensions import db
-from grant.user.models import User, users_schema
-from grant.proposal.models import Proposal, proposals_schema, proposal_schema, PENDING
-from grant.comment.models import Comment, comments_schema
+from grant.user.models import User, users_schema, user_schema
+from grant.proposal.models import (
+    Proposal,
+    ProposalContribution,
+    proposals_schema,
+    proposal_schema,
+    user_proposal_contributions_schema,
+    PENDING
+)
+from grant.comment.models import Comment, comments_schema, user_comments_schema
 from grant.email.send import generate_email
 from .example_emails import example_email_args
 
@@ -82,6 +89,9 @@ def stats():
     }
 
 
+# USERS
+
+
 @blueprint.route('/users/<id>', methods=['DELETE'])
 @endpoint.api()
 @auth_required
@@ -95,12 +105,28 @@ def delete_user(id):
 def get_users():
     users = User.query.all()
     result = users_schema.dump(users)
-    for user in result:
+    return result
+
+
+@blueprint.route('/users/<id>', methods=['GET'])
+@endpoint.api()
+@auth_required
+def get_user(id):
+    user_db = User.query.filter(User.id == id).first()
+    if user_db:
+        user = user_schema.dump(user_db)
         user_proposals = Proposal.query.filter(Proposal.team.any(id=user['userid'])).all()
         user['proposals'] = proposals_schema.dump(user_proposals)
-        user_comments = Comment.query.filter(Comment.user_id == user['userid']).all()
-        user['comments'] = comments_schema.dump(user_comments)
-    return result
+        user_comments = Comment.get_by_user(user_db)
+        user['comments'] = user_comments_schema.dump(user_comments)
+        contributions = ProposalContribution.get_by_userid(user_db.id)
+        contributions_dump = user_proposal_contributions_schema.dump(contributions)
+        user["contributions"] = contributions_dump
+        return user
+    return {"message": f"Could not find user with id {id}"}, 404
+
+
+# PROPOSALS
 
 
 @blueprint.route("/proposals", methods=["GET"])
@@ -149,6 +175,9 @@ def approve_proposal(id, is_approve, reject_reason=None):
         return proposal_schema.dump(proposal)
 
     return {"message": "Not implemented."}, 400
+
+
+# EMAIL
 
 
 @blueprint.route('/email/example/<type>', methods=['GET'])

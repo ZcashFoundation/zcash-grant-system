@@ -7,8 +7,9 @@ import store from 'src/store';
 import { formatDateSeconds } from 'util/time';
 import { PROPOSAL_STATUS } from 'src/types';
 import { Link } from 'react-router-dom';
-import './index.less';
+import Back from 'components/Back';
 import Markdown from 'components/Markdown';
+import './index.less';
 
 type Props = RouteComponentProps<any>;
 
@@ -155,6 +156,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
     return (
       <div className="ProposalDetail">
+        <Back to="/proposals" text="Proposals" />
         <h1>{p.title}</h1>
         <Row gutter={16}>
           {/* MAIN */}
@@ -198,9 +200,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {/* TEAM */}
             <Card title="Team" size="small">
               {p.team.map(t => (
-                <Link key={t.userid} to={`/users/${t.userid}`}>
-                  {t.displayName}
-                </Link>
+                <div key={t.userid}>
+                  <Link to={`/users/${t.userid}`}>{t.displayName}</Link>
+                </div>
               ))}
             </Card>
             {/* TODO: contributors here? */}

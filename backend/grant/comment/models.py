@@ -74,7 +74,6 @@ class UserCommentSchema(ma.Schema):
         "ProposalSchema",
         exclude=[
             "comments",
-            "contributions",
             "team",
             "milestones",
             "content",

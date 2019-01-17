@@ -1,6 +1,8 @@
 // backend
 export interface SocialMedia {
-  socialMediaLink: string;
+  url: string;
+  service: string;
+  username: string;
 }
 export interface Milestone {
   content: string;
@@ -41,8 +43,19 @@ export interface Proposal {
 }
 export interface Comment {
   commentId: string;
-  dateCreated: string;
+  proposalId: Proposal['proposalId'];
+  proposal?: Proposal;
+  dateCreated: number;
   content: string;
+}
+export interface Contribution {
+  id: number;
+  status: string;
+  txId: null | string;
+  amount: string;
+  dateCreated: number;
+  user: User;
+  proposal: Proposal;
 }
 export interface User {
   accountAddress: string;
@@ -54,6 +67,7 @@ export interface User {
   userid: number;
   proposals: Proposal[];
   comments: Comment[];
+  contributions: Contribution[];
 }
 
 export interface EmailExample {
