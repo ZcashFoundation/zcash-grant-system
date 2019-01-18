@@ -42,9 +42,6 @@ envProductionRequiredHandler(
 );
 
 if (!process.env.SENTRY_RELEASE) {
-  console.log(
-    'SENTRY_RELEASE env var is not set, sentry logs will not have release information',
-  );
   process.env.SENTRY_RELEASE = undefined;
 }
 
