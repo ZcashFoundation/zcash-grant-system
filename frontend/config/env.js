@@ -41,15 +41,15 @@ envProductionRequiredHandler(
   'http://localhost:' + (process.env.PORT || 3000),
 );
 
-if (!process.env.BACKEND_URL) {
-  process.env.BACKEND_URL = 'http://localhost:5000';
+if (!process.env.SENTRY_RELEASE) {
+  console.log(
+    'SENTRY_RELEASE env var is not set, sentry logs will not have release information',
+  );
+  process.env.SENTRY_RELEASE = undefined;
 }
 
-if (!process.env.SENTRY_RELEASE) {
-  process.env.SENTRY_RELEASE = childProcess
-    .execSync('git rev-parse --short HEAD')
-    .toString()
-    .trim();
+if (!process.env.BACKEND_URL) {
+  process.env.BACKEND_URL = 'http://localhost:5000';
 }
 
 const appDirectory = fs.realpathSync(process.cwd());

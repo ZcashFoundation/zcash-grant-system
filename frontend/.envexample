@@ -10,4 +10,4 @@ BACKEND_URL=http://localhost:5000
 
 # sentry 
 SENTRY_DSN=https://PUBLICKEY@sentry.io/PROJECTID
-SENTRY_RELEASE="optional, overrides git hash"
+SENTRY_RELEASE="optional, provides sentry logging with release info"
