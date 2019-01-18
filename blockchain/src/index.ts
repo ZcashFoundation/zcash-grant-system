@@ -3,6 +3,7 @@ import * as Webhooks from "./webhooks";
 import * as RestServer from "./server";
 import { initNode } from "./node";
 import env from "./env";
+import log from "./log";
 
 async function start() {
   if (env.SENTRY_DSN) {
@@ -12,18 +13,18 @@ async function start() {
     });
   }
 
-  console.log("============== Starting services ==============");
+  log.info("============== Starting services ==============");
   await initNode();
   await Webhooks.start();
   await RestServer.start();
-  console.log("===============================================");
+  log.info("===============================================");
 }
 
 process.on("SIGINT", () => {
-  console.log('Shutting down services...');
+  log.info('Shutting down services...');
   Webhooks.exit();
   RestServer.exit();
-  console.log('Exiting!');
+  log.info('Exiting!');
   process.exit();
 });
 
