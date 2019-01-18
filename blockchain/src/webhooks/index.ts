@@ -96,14 +96,17 @@ async function requestBootstrap() {
 export type Send = (route: string, method: string, payload?: object) => void;
 const send: Send = (route, method, payload) => {
   console.log('About to send to', route);
+  const headers: any = {
+    'Authorization': `Bearer ${env.API_SECRET_KEY}`,
+  };
+  if (payload && (method === 'PUT' || method === 'POST')) {
+    headers['Content-Type'] = 'application/json';
+  }
   axios.request({
     method,
     url: `${env.WEBHOOK_URL}${route}`,
     data: payload,
-    headers: {
-      'Authorization': `Bearer ${env.API_SECRET_KEY}`,
-      'Content-Type': 'application/json',
-    },
+    headers,
   })
   .then((res) => {
     if (res.status >= 400) {
@@ -112,7 +115,7 @@ const send: Send = (route, method, payload) => {
     }
   })
   .catch((err) => {
-    console.error(err);
+    log(err.response ? err.response.data : err);
     console.error('Webhook server request failed! See above for details.');
   });
 };
