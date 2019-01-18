@@ -1,16 +1,8 @@
 .AuthButton {
-  // Needed to override inherited styles
-  &.Header-links-link {
-    display: flex;
-    align-items: center;
-    margin-right: -0.2rem;
-    transform: none;
-    transition: opacity 200ms ease, transform 200ms ease;
+  transition: opacity 200ms ease;
 
-    &.is-loading {
-      opacity: 0;
-      transform: scale(0.9);
-    }
+  &.is-loading {
+    opacity: 0;
   }
 
   &:hover {
@@ -60,5 +52,12 @@
         opacity: 0.8;
       }
     }
+  }
+
+  // Override inherited link styles
+  .Header-links-link {
+    display: flex;
+    align-items: center;
+    margin-right: -0.2rem;
   }
 }

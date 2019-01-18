@@ -27,9 +27,11 @@ const Tos = loadable(() => import('pages/tos'));
 const About = loadable(() => import('pages/about'));
 const Privacy = loadable(() => import('pages/privacy'));
 const Contact = loadable(() => import('pages/contact'));
+const CodeOfConduct = loadable(() => import('pages/code-of-conduct'));
 const VerifyEmail = loadable(() => import('pages/email-verify'));
 const Callback = loadable(() => import('pages/callback'));
 const RecoverEmail = loadable(() => import('pages/email-recover'));
+const UnsubscribeEmail = loadable(() => import('pages/email-unsubscribe'));
 
 import 'styles/style.less';
 
@@ -63,7 +65,6 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Create a Proposal',
-      requiresAuth: true,
     },
     onlyLoggedIn: true,
   },
@@ -76,7 +77,6 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Browse proposals',
-      requiresAuth: false,
     },
   },
   {
@@ -89,7 +89,6 @@ const routeConfigs: RouteConfig[] = [
       title: 'Edit proposal',
       isFullScreen: true,
       hideFooter: true,
-      requiresAuth: true,
     },
     onlyLoggedIn: true,
   },
@@ -101,7 +100,6 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Proposal',
-      requiresAuth: false,
     },
   },
   {
@@ -177,6 +175,18 @@ const routeConfigs: RouteConfig[] = [
     onlyLoggedIn: false,
   },
   {
+    // Code of Conduct page
+    route: {
+      path: '/code-of-conduct',
+      component: CodeOfConduct,
+      exact: true,
+    },
+    template: {
+      title: 'Code of Conduct',
+    },
+    onlyLoggedIn: false,
+  },
+  {
     // User profile
     route: {
       path: '/profile/:id',
@@ -227,7 +237,18 @@ const routeConfigs: RouteConfig[] = [
       exact: true,
     },
     template: {
-      title: 'Verify email',
+      title: 'Recover email',
+    },
+  },
+  {
+    // Unsubscribe email
+    route: {
+      path: '/email/unsubscribe',
+      component: UnsubscribeEmail,
+      exact: true,
+    },
+    template: {
+      title: 'Unsubscribe email',
     },
   },
   {

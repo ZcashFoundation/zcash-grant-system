@@ -1,15 +1,14 @@
 import React from 'react';
 import qs from 'query-string';
 import { uniq, without } from 'lodash';
-import { Link } from 'react-router-dom';
 import { view } from 'react-easy-state';
 import { Icon, Button, Dropdown, Menu, Tag, List } from 'antd';
+import { ClickParam } from 'antd/lib/menu';
 import { RouteComponentProps, withRouter } from 'react-router';
 import store from 'src/store';
 import ProposalItem from './ProposalItem';
 import { PROPOSAL_STATUS, Proposal } from 'src/types';
 import STATUSES, { getStatusById } from './STATUSES';
-import { ClickParam } from 'antd/lib/menu';
 import './index.less';
 
 interface Query {
@@ -32,34 +31,9 @@ class ProposalsNaked extends React.Component<Props, State> {
   }
 
   render() {
-    const id = Number(this.props.match.params.id);
     const { proposals, proposalsFetching, proposalsFetched } = store;
     const { statusFilters } = this.state;
-
-    if (!proposalsFetched) {
-      return 'loading proposals...';
-    }
-
-    if (id) {
-      const singleProposal = proposals.find(p => p.proposalId === id);
-      if (singleProposal) {
-        return (
-          <div className="Proposals">
-            <div className="Proposals-controls">
-              <Link to="/proposals">proposals</Link> <Icon type="right" /> {id}{' '}
-              <Button
-                title="refresh"
-                icon="reload"
-                onClick={() => store.fetchProposals()}
-              />
-            </div>
-            <ProposalItem key={singleProposal.proposalId} {...singleProposal} />
-          </div>
-        );
-      } else {
-        return `could not find proposal: ${id}`;
-      }
-    }
+    const loading = !proposalsFetched || proposalsFetching;
 
     const statusFilterMenu = (
       <Menu onClick={this.handleFilterClick}>
@@ -99,16 +73,14 @@ class ProposalsNaked extends React.Component<Props, State> {
             )}
           </div>
         )}
-        {proposalsFetching && 'Fetching proposals...'}
-        {proposalsFetched &&
-          !proposalsFetching && (
-            <List
-              className="Proposals-list"
-              bordered
-              dataSource={proposals}
-              renderItem={(p: Proposal) => <ProposalItem key={p.proposalId} {...p} />}
-            />
-          )}
+
+        <List
+          className="Proposals-list"
+          bordered
+          dataSource={proposals}
+          loading={loading}
+          renderItem={(p: Proposal) => <ProposalItem key={p.proposalId} {...p} />}
+        />
       </div>
     );
   }

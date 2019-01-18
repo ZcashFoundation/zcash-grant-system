@@ -116,6 +116,33 @@ const urlLoaderServer = {
   },
 };
 
+const markdownLoaderClient = {
+  test: /\.md$/,
+  use: [
+    {
+      loader: 'html-loader',
+    },
+    {
+      loader: 'markdown-loader',
+    },
+  ],
+};
+
+const markdownLoaderServer = {
+  ...markdownLoaderClient,
+  use: [
+    {
+      loader: 'html-loader',
+      options: {
+        emitFile: false,
+      },
+    },
+    {
+      loader: 'markdown-loader',
+    },
+  ],
+};
+
 const fileLoaderClient = {
   // WARNING: this will catch all files except those below
   exclude: [/\.(js|ts|tsx|css|less|mjs|html|json|ejs)$/],
@@ -145,15 +172,18 @@ const svgLoaderClient = {
     loader: '@svgr/webpack',
     options: {
       svgoConfig: {
-        plugins: [{
-          inlineStyles: {
-            onlyMatchedOnce: false
+        plugins: [
+          {
+            inlineStyles: {
+              onlyMatchedOnce: false,
+            },
           },
-        }, {
-          cleanupIDs: {
-            prefix: `svg-${hash(resource)}`,
+          {
+            cleanupIDs: {
+              prefix: `svg-${hash(resource)}`,
+            },
           },
-        }],
+        ],
       },
     },
   }), // svg -> react component
@@ -205,6 +235,7 @@ const client = [
       lessLoaderClient,
       svgLoaderClient,
       urlLoaderClient,
+      markdownLoaderClient,
       fileLoaderClient,
       externalCssLoaderClient,
       externalLessLoaderClient,
@@ -221,6 +252,7 @@ const server = [
       lessLoaderServer,
       svgLoaderServer,
       urlLoaderServer,
+      markdownLoaderServer,
       fileLoaderServer,
       externalCssLoaderServer,
       externalLessLoaderServer,

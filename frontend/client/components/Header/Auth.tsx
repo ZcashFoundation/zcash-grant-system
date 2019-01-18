@@ -10,6 +10,7 @@ import './Auth.less';
 interface StateProps {
   user: AppState['auth']['user'];
   isAuthingUser: AppState['auth']['isAuthingUser'];
+  isCheckingUser: AppState['auth']['isCheckingUser'];
 }
 
 type Props = StateProps;
@@ -24,7 +25,7 @@ class HeaderAuth extends React.Component<Props> {
   };
 
   render() {
-    const { user, isAuthingUser } = this.props;
+    const { user, isAuthingUser, isCheckingUser } = this.props;
     const { isMenuOpen } = this.state;
     const isAuthed = !!user;
 
@@ -32,15 +33,14 @@ class HeaderAuth extends React.Component<Props> {
     let isLoading;
     if (user) {
       avatar = <UserAvatar user={user} />;
-    } else if (isAuthingUser) {
-      avatar = '';
+    } else if (isAuthingUser || isCheckingUser) {
       isLoading = true;
     }
 
     const link = (
       <Link
         to={isAuthed ? '/profile' : '/auth'}
-        className={classnames('AuthButton Header-links-link', isLoading && 'is-loading')}
+        className="Header-links-link"
         onClick={this.toggleMenu}
       >
         {isAuthed ? '' : 'Sign in'}
@@ -57,36 +57,42 @@ class HeaderAuth extends React.Component<Props> {
       </Link>
     );
 
-    // If they're not authed, don't render the dropdown menu
-    if (!isAuthed) {
-      return link;
+    let content;
+    if (isAuthed) {
+      const menu = (
+        <Menu style={{ minWidth: '100px' }} onClick={this.closeMenu}>
+          <Menu.Item>
+            <Link to="/profile">Profile</Link>
+          </Menu.Item>
+          <Menu.Item>
+            <Link to="/profile/settings">Settings</Link>
+          </Menu.Item>
+          <Menu.Divider />
+          <Menu.Item>
+            <Link to="/auth/sign-out">Sign out</Link>
+          </Menu.Item>
+        </Menu>
+      );
+      content = (
+        <Dropdown
+          overlay={menu}
+          visible={isMenuOpen}
+          placement="bottomRight"
+          onVisibleChange={this.handleVisibilityChange}
+          trigger={['click']}
+        >
+          {link}
+        </Dropdown>
+      )
+    }
+    else {
+      content = link;
     }
 
-    const menu = (
-      <Menu style={{ minWidth: '100px' }} onClick={this.closeMenu}>
-        <Menu.Item>
-          <Link to="/profile">Profile</Link>
-        </Menu.Item>
-        <Menu.Item>
-          <Link to="/profile/settings">Settings</Link>
-        </Menu.Item>
-        <Menu.Divider />
-        <Menu.Item>
-          <Link to="/auth/sign-out">Sign out</Link>
-        </Menu.Item>
-      </Menu>
-    );
-
     return (
-      <Dropdown
-        overlay={menu}
-        visible={isMenuOpen}
-        placement="bottomRight"
-        onVisibleChange={this.handleVisibilityChange}
-        trigger={['click']}
-      >
-        {link}
-      </Dropdown>
+      <div className={classnames('AuthButton', isLoading && 'is-loading')}>
+        {content}
+      </div>
     );
   }
 
@@ -113,4 +119,5 @@ class HeaderAuth extends React.Component<Props> {
 export default connect<StateProps, {}, {}, AppState>(state => ({
   user: state.auth.user,
   isAuthingUser: state.auth.isAuthingUser,
+  isCheckingUser: state.auth.isCheckingUser,
 }))(HeaderAuth);

@@ -8,6 +8,7 @@ import store from './store';
 import Login from 'components/Login';
 import Home from 'components/Home';
 import Users from 'components/Users';
+import UserDetail from 'components/UserDetail';
 import Emails from 'components/Emails';
 import Proposals from 'components/Proposals';
 import ProposalDetail from 'components/ProposalDetail';
@@ -29,7 +30,8 @@ class Routes extends React.Component<Props> {
         ) : (
           <Switch>
             <Route path="/" exact={true} component={Home} />
-            <Route path="/users/:id?" exact={true} component={Users} />
+            <Route path="/users/:id" component={UserDetail} />
+            <Route path="/users" component={Users} />
             <Route path="/proposals/:id" component={ProposalDetail} />
             <Route path="/proposals" component={Proposals} />
             <Route path="/emails/:type?" component={Emails} />
