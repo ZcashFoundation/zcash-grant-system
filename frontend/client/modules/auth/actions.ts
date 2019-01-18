@@ -1,6 +1,7 @@
 import types from './types';
 import { Dispatch } from 'redux';
 import * as Sentry from '@sentry/browser';
+import { RouteProps } from 'react-router-dom';
 import {
   createUser as apiCreateUser,
   checkUserAuth,
@@ -94,5 +95,12 @@ export function logout() {
       type: types.LOGOUT,
       payload: logoutUser(),
     });
+  };
+}
+
+export function setAuthForwardLocation(location: RouteProps['location']) {
+  return {
+    type: types.SET_AUTH_FORWARD_LOCATION,
+    payload: { location },
   };
 }

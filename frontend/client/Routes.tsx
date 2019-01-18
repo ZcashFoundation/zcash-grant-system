@@ -64,7 +64,6 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Create a Proposal',
-      requiresAuth: true,
     },
     onlyLoggedIn: true,
   },
@@ -77,7 +76,6 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Browse proposals',
-      requiresAuth: false,
     },
   },
   {
@@ -90,7 +88,6 @@ const routeConfigs: RouteConfig[] = [
       title: 'Edit proposal',
       isFullScreen: true,
       hideFooter: true,
-      requiresAuth: true,
     },
     onlyLoggedIn: true,
   },
@@ -102,7 +99,6 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Proposal',
-      requiresAuth: false,
     },
   },
   {
