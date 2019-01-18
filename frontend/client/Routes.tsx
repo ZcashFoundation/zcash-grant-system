@@ -27,6 +27,7 @@ const Tos = loadable(() => import('pages/tos'));
 const About = loadable(() => import('pages/about'));
 const Privacy = loadable(() => import('pages/privacy'));
 const Contact = loadable(() => import('pages/contact'));
+const CodeOfConduct = loadable(() => import('pages/code-of-conduct'));
 const VerifyEmail = loadable(() => import('pages/email-verify'));
 const Callback = loadable(() => import('pages/callback'));
 const RecoverEmail = loadable(() => import('pages/email-recover'));
@@ -170,6 +171,18 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Contact',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Code of Conduct page
+    route: {
+      path: '/code-of-conduct',
+      component: CodeOfConduct,
+      exact: true,
+    },
+    template: {
+      title: 'Code of Conduct',
     },
     onlyLoggedIn: false,
   },
