@@ -183,7 +183,6 @@ export async function getBootstrapBlockHeight(txid: string | undefined) {
     try {
       const tx = await node.gettransaction(txid);
       const block = await node.getblock(tx.blockhash);
-      console.log(block);
       return block.height.toString();
     } catch(err) {
       console.warn(`Attempted to get block height for tx ${txid} but failed with the following error:\n`, err);
@@ -194,7 +193,6 @@ export async function getBootstrapBlockHeight(txid: string | undefined) {
   // If we can't find the latest tx block, fall back to when the grant
   // system first launched, and scan from there.
   const net = getNetwork();
-  console.log(net);
   if (net === bitcore.Networks.mainnet) {
     return env.MAINNET_START_BLOCK;
   }
