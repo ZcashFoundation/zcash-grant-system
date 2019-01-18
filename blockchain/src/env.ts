@@ -4,6 +4,8 @@ dotenv.load();
 // Maps to .env.example variables, plus any node ones we use
 // fill in sensible defaults, falsy values will throw if not set
 const DEFAULTS = {
+  NODE_ENV: "development",
+
   API_SECRET_HASH: "",
   API_SECRET_KEY: "",
 
@@ -17,9 +19,9 @@ const DEFAULTS = {
 
   SPROUT_ADDRESS: "",
   SPROUT_VIEWKEY: "",
-  BIP32_XPUB: ""
-  // can't find any refs to this
-  // BIP44_ACCOUNT: ""
+  BIP32_XPUB: "",
+
+  SENTRY_DSN: "",
 };
 
 type CustomEnvironment = typeof DEFAULTS;
