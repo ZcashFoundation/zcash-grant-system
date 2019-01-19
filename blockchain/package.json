@@ -30,6 +30,7 @@
     "typescript": "^3.2.1"
   },
   "dependencies": {
+    "@sentry/node": "4.5.2",
     "@types/cors": "2.8.4",
     "@types/dotenv": "^6.1.0",
     "@types/ws": "^6.0.1",
@@ -40,6 +41,7 @@
     "express": "4.16.4",
     "redux": "4.0.1",
     "stdrpc": "1.0.0",
+    "winston": "3.1.0",
     "ws": "^6.1.2",
     "zcash-bitcore-lib": "0.13.20-rc3"
   }

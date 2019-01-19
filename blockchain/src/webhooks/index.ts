@@ -1,10 +1,10 @@
 import axios from 'axios';
+import { captureException } from "@sentry/node";
 import { initializeNotifiers } from "./notifiers";
 import { Notifier } from "./notifiers/notifier";
 import node from "../node";
 import env from "../env";
-
-const log = console.log;
+import log from "../log";
 
 export type Send = (route: string, method: string, payload: object) => void;
 
@@ -19,7 +19,7 @@ export async function start() {
 
 export function exit() {
   notifiers.forEach(n => n.destroy && n.destroy());
-  console.log('Webhook notifiers have exited');
+  log.info('Webhook notifiers have exited');
 }
 
 
@@ -32,7 +32,7 @@ async function initNode() {
     const blockHeight = await node.getblockcount();
     if (blockHeight > currentBlock) {
       if (blockHeight - minBlockConf < 1) {
-        log(`Current height is ${blockHeight}, waiting for ${env.MINIMUM_BLOCK_CONFIRMATIONS} blocks before processing...`);
+        log.info(`Current height is ${blockHeight}, waiting for ${env.MINIMUM_BLOCK_CONFIRMATIONS} blocks before processing...`);
         return;
       }
 
@@ -40,20 +40,21 @@ async function initNode() {
       try {
         // Verbosity of 2 is full blocks
         const block = await node.getblock(String(desiredBlock), 2);
-        log(`Processing block #${block.height}...`);
+        log.info(`Processing block #${block.height}...`);
         notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
         currentBlock++;
         consecutiveBlockFailures = 0;
       } catch(err) {
-        log(err.response ? err.response.data : err);
-        log(`Failed to fetch block ${desiredBlock}`);
+        log.warn(err.response ? err.response.data : err);
+        log.warn(`Failed to fetch block ${desiredBlock}`);
         consecutiveBlockFailures++;
         if (consecutiveBlockFailures >= MAXIMUM_BLOCK_FAILURES) {
-          log('Maximum consecutive failures reached, exiting!');
+          captureException(err);
+          log.error('Maximum consecutive failures reached, exiting!');
           process.exit(1);
         }
         else {
-          log('Attempting to fetch again shortly...');
+          log.warn('Attempting to fetch again shortly...');
         }
       }
     }
@@ -63,7 +64,7 @@ async function initNode() {
 
 function initNotifiers() {
   const send: Send = (route, method, payload) => {
-    console.log('About to send to', route);
+    log.debug(`About to send to ${method} ${route}:`, payload);
     axios.request({
       method,
       url: `${env.WEBHOOK_URL}${route}`,
@@ -75,13 +76,13 @@ function initNotifiers() {
     })
     .then((res) => {
       if (res.status >= 400) {
-        console.error(`Webhook server responded to ${method} ${route} with status code ${res.status}`);
-        console.error(res.data);
+        log.error(`Webhook server responded to ${method} ${route} with status code ${res.status}\n`, res.data);
       }
     })
     .catch((err) => {
-      console.error(err);
-      console.error('Webhook server request failed! See above for details.');
+      captureException(err);
+      log.error(err);
+      log.error('Webhook server request failed! See above for details.');
     });
   };
 
