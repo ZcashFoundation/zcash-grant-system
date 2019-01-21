@@ -3,17 +3,25 @@ import { ActionTypes } from './actions';
 import { dedupeArray, removeItem } from '../util';
 
 export interface StoreState {
+  startingBlockHeight: number | null;
   watchAddresses: { [contributionId: number]: AddressCollection };
   watchDisclosures: { [contributionId: number]: string };
 }
 
 const INITIAL_STATE: StoreState = {
+  startingBlockHeight: null,
   watchAddresses: {},
   watchDisclosures: {},
 };
 
 export function reducer(state: StoreState = INITIAL_STATE, action: ActionTypes): StoreState {
   switch(action.type) {
+    case type.SET_STARTING_BLOCK_HEIGHT:
+      return {
+        ...state,
+        startingBlockHeight: action.payload,
+      };
+
     case type.GENERATE_ADDRESSES:
       return {
         ...state,

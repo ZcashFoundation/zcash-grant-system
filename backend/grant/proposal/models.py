@@ -7,7 +7,7 @@ from grant.comment.models import Comment
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.exceptions import ValidationException
-from grant.blockchain import blockchain_get
+from grant.utils.requests import blockchain_get
 from grant.email.send import send_email
 
 

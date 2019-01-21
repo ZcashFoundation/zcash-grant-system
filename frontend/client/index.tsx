@@ -17,7 +17,7 @@ import i18n from './i18n';
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   release: process.env.SENTRY_RELEASE,
-  environment: process.env.NODE_ENV,
+  environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV,
 });
 const initialState =
   window && massageSerializedState((window as any).__PRELOADED_STATE__);

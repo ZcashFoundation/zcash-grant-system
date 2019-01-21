@@ -1,90 +1,127 @@
 import axios from 'axios';
+import { captureException } from "@sentry/node";
 import { initializeNotifiers } from "./notifiers";
 import { Notifier } from "./notifiers/notifier";
 import node from "../node";
 import env from "../env";
+import { store } from "../store";
+import { sleep } from "../util";
+import log from "../log";
 
-const log = console.log;
-
-export type Send = (route: string, method: string, payload: object) => void;
-
+let blockScanTimeout: any = null;
 let notifiers = [] as Notifier[];
 let consecutiveBlockFailures = 0;
 const MAXIMUM_BLOCK_FAILURES = 5;
+const MIN_BLOCK_CONF = parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
 
 export async function start() {
-  await initNode();
+  initScan();
   initNotifiers();
+  await requestBootstrap();
 }
 
 export function exit() {
   notifiers.forEach(n => n.destroy && n.destroy());
-  console.log('Webhook notifiers have exited');
+  log.info('Webhook notifiers have exited');
 }
 
 
-async function initNode() {
-  const info = await node.getblockchaininfo();
-  let currentBlock = info.blocks;
-  const minBlockConf = parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
-
-  setInterval(async () => {
-    const blockHeight = await node.getblockcount();
-    if (blockHeight > currentBlock) {
-      if (blockHeight - minBlockConf < 1) {
-        log(`Current height is ${blockHeight}, waiting for ${env.MINIMUM_BLOCK_CONFIRMATIONS} blocks before processing...`);
-        return;
-      }
-
-      const desiredBlock = currentBlock - minBlockConf;
-      try {
-        // Verbosity of 2 is full blocks
-        const block = await node.getblock(String(desiredBlock), 2);
-        log(`Processing block #${block.height}...`);
-        notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
-        currentBlock++;
-        consecutiveBlockFailures = 0;
-      } catch(err) {
-        log(err.response ? err.response.data : err);
-        log(`Failed to fetch block ${desiredBlock}`);
-        consecutiveBlockFailures++;
-        if (consecutiveBlockFailures >= MAXIMUM_BLOCK_FAILURES) {
-          log('Maximum consecutive failures reached, exiting!');
-          process.exit(1);
-        }
-        else {
-          log('Attempting to fetch again shortly...');
-        }
-      }
+function initScan() {
+  // Scan is actually kicked off by redux action setting start height
+  let prevHeight: number | null = null;
+  store.subscribe(() => {
+    const { startingBlockHeight } = store.getState();
+    if (startingBlockHeight !== null && prevHeight !== startingBlockHeight) {
+      console.info(`Starting block scan at block ${startingBlockHeight}`);
+      clearTimeout(blockScanTimeout);
+      scanBlock(startingBlockHeight);
+      prevHeight = startingBlockHeight;
     }
-  }, 3000);
+  });
 }
 
+async function scanBlock(height: number) {
+  const highestBlock = await node.getblockcount();
+
+  // Try again in 5 seconds if the next block isn't ready
+  if (height > highestBlock - MIN_BLOCK_CONF) {
+    blockScanTimeout = setTimeout(() => {
+      scanBlock(height);
+    }, 5000);
+    return;
+  }
+
+  // Process the block
+  try {
+    const block = await node.getblock(String(height), 2); // 2 == full blocks
+    log.info(`Processing block #${block.height}...`);
+    notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
+    consecutiveBlockFailures = 0;
+  } catch(err) {
+    log.warn(err.response ? err.response.data : err);
+    log.warn(`Failed to fetch block ${height}, see above error`);
+    consecutiveBlockFailures++;
+    // If we fail a certain number of times, it's reasonable to
+    // assume that the blockchain is down, and we should just quit.
+    // TODO: Scream at sentry or something!
+    if (consecutiveBlockFailures >= MAXIMUM_BLOCK_FAILURES) {
+      captureException(err);
+      log.error('Maximum consecutive failures reached, exiting!');
+      process.exit(1);
+    }
+    else {
+      log.warn('Attempting to fetch again shortly...');
+      await sleep(5000);
+    }
+  }
+
+  // Try next block
+  scanBlock(height + 1);
+}
 
 function initNotifiers() {
-  const send: Send = (route, method, payload) => {
-    console.log('About to send to', route);
-    axios.request({
-      method,
-      url: `${env.WEBHOOK_URL}${route}`,
-      data: payload,
-      headers: {
-        'Authorization': `Bearer ${env.API_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    })
-    .then((res) => {
-      if (res.status >= 400) {
-        console.error(`Webhook server responded to ${method} ${route} with status code ${res.status}`);
-        console.error(res.data);
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      console.error('Webhook server request failed! See above for details.');
-    });
-  };
-
   notifiers = initializeNotifiers();
   notifiers.forEach(n => n.registerSend(send));
 }
+
+async function requestBootstrap() {
+  try {
+    log.debug('Requesting bootstrap from backend...');
+    await send('/blockchain/bootstrap', 'GET');
+  } catch(err) {
+    log.error(err.response ? err.response.data : err);
+    log.error('Request for bootstrap failed, see above for details');
+  }
+}
+
+export type Send = (route: string, method: string, payload?: object) => void;
+const send: Send = (route, method, payload) => {
+  log.debug(`About to send to ${method} ${route}:`, payload);
+  const headers: any = {
+    'Authorization': `Bearer ${env.API_SECRET_KEY}`,
+  };
+  if (payload && (method === 'PUT' || method === 'POST')) {
+    headers['Content-Type'] = 'application/json';
+  }
+  axios.request({
+    method,
+    url: `${env.WEBHOOK_URL}${route}`,
+    data: payload,
+    headers,
+  })
+  .then((res) => {
+    if (res.status >= 400) {
+      log.error(res.data);
+      log.error(`Webhook server responded to ${method} ${route} with status code ${res.status}. See above for details.`);
+    }
+  })
+  .catch((err) => {
+    if (err.code && err.code === 'ECONNREFUSED') {
+      log.warn('Unable to send to backend, probably offline');
+      return;
+    }
+    captureException(err);
+    const errMsg = err.response ? `Response: ${JSON.stringify(err.response.data, null, 2)}` : err.message;
+    log.error(`Webhook server request to ${method} ${route} failed: ${errMsg}`);
+  });
+};

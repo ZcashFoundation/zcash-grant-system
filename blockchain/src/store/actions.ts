@@ -3,6 +3,13 @@ import { deriveTransparentAddress } from '../util';
 import { getNetwork } from '../node';
 import env from '../env';
 
+export function setStartingBlockHeight(height: string | number) {
+  return {
+    type: type.SET_STARTING_BLOCK_HEIGHT as type.SET_STARTING_BLOCK_HEIGHT,
+    payload: parseInt(height.toString(), 10),
+  }
+}
+
 export function generateAddresses(contributionId: number) {
   // 2^31 is the maximum number of BIP32 addresses
   const addresses: AddressCollection = {
@@ -39,6 +46,7 @@ export function confirmPaymentDisclosure(contributionId: number, disclosure: str
 }
 
 export type ActionTypes =
+  | ReturnType<typeof setStartingBlockHeight>
   | ReturnType<typeof generateAddresses>
   | ReturnType<typeof addPaymentDisclosure>
   | ReturnType<typeof confirmPaymentDisclosure>;
