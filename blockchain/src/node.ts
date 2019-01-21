@@ -142,7 +142,7 @@ export async function initNode() {
     if (info.chain === "regtest") {
       bitcore.Networks.enableRegtest();
     }
-    if (info.chain === "regtest" || info.chain.includes("testnet")) {
+    if (info.chain.includes("test")) {
       network = bitcore.Networks.testnet;
     }
     else {
@@ -178,4 +178,31 @@ export function getNetwork() {
     throw new Error('Called getNetwork before initNode');
   }
   return network;
+}
+
+// Relies on initNode being called first
+export async function getBootstrapBlockHeight(txid: string | undefined) {
+  if (txid) {
+    try {
+      const tx = await node.gettransaction(txid);
+      const block = await node.getblock(tx.blockhash);
+      return block.height.toString();
+    } catch(err) {
+      console.warn(`Attempted to get block height for tx ${txid} but failed with the following error:\n`, err);
+      console.warn('Falling back to hard-coded starter blocks');
+    }
+  }
+
+  // If we can't find the latest tx block, fall back to when the grant
+  // system first launched, and scan from there.
+  const net = getNetwork();
+  if (net === bitcore.Networks.mainnet) {
+    return env.MAINNET_START_BLOCK;
+  }
+  else if (net === bitcore.Networks.testnet && !net.regtestEnabled) {
+    return env.TESTNET_START_BLOCK;
+  }
+
+  // Regtest or otherwise unknown networks should start at the bottom
+  return '0';
 }

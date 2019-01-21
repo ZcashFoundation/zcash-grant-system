@@ -8,8 +8,8 @@ from flask import request, g, jsonify
 import sentry_sdk
 
 from grant.settings import SECRET_KEY, BLOCKCHAIN_API_SECRET
-from ..proposal.models import Proposal
-from ..user.models import User
+from grant.proposal.models import Proposal
+from grant.user.models import User
 
 
 def get_authed_user():

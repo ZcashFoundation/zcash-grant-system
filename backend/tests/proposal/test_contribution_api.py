@@ -3,7 +3,7 @@ from mock import patch
 
 from grant.proposal.models import Proposal
 from grant.user.models import SocialMedia, Avatar
-from grant.blockchain import blockchain_get
+from grant.utils.requests import blockchain_get
 from ..config import BaseUserConfig
 from ..test_data import test_proposal, test_user
 from ..mocks import mock_request
