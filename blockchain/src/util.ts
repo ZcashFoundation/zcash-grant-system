@@ -1,7 +1,5 @@
 import { randomBytes, createHmac } from "crypto";
-import { IncomingMessage } from "http";
 import { HDPublicKey, Address } from "zcash-bitcore-lib";
-import { parse } from 'url';
 import env from "./env";
 
 function sha256(input: string) {
@@ -66,4 +64,10 @@ export function getContributionIdFromMemo(memoHex: string) {
 // TODO: Make this more robust
 export function toBaseUnit(unit: number) {
   return Math.floor(100000000 * unit);
+}
+
+export function sleep(ms: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 }

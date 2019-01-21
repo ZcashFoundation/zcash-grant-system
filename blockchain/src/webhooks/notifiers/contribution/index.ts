@@ -1,3 +1,4 @@
+import { captureException } from "@sentry/node";
 import { Send } from "../../index";
 import { Notifier } from "../notifier";
 import node, { BlockWithTransactions } from "../../../node";
@@ -8,6 +9,7 @@ import {
   confirmPaymentDisclosure,
 } from "../../../store";
 import env from "../../../env";
+import log from "../../../log";
 import { getContributionIdFromMemo, decodeHexMemo, toBaseUnit } from "../../../util";
 
 interface ContributionConfirmationPayload {
@@ -66,11 +68,11 @@ export default class ContributionNotifier implements Notifier {
       const newReceived = received.filter(r => !this.confirmedTxIds.includes(r.txid));
 
       newReceived.forEach(receipt => {
-        console.info(`Received new tx ${receipt.txid}`);
+        log.info(`Received new tx ${receipt.txid}`);
         this.confirmedTxIds.push(receipt.txid);
         const contributionId = getContributionIdFromMemo(receipt.memo);
         if (!contributionId) {
-          console.warn(`Sprout address ${env.SPROUT_ADDRESS} received transaction with invalid memo:\n`, {
+          log.warn(`Sprout address ${env.SPROUT_ADDRESS} received transaction with invalid memo:\n`, {
             txid: receipt.txid,
             decodedMemo: decodeHexMemo(receipt.memo)
           });
@@ -86,7 +88,8 @@ export default class ContributionNotifier implements Notifier {
         });
       });
     } catch(err) {
-      console.error(
+      captureException(err);
+      log.error(
         'Failed to check sprout address for memo payments:\n',
         err.response ? err.response.data : err,
       );
@@ -108,16 +111,16 @@ export default class ContributionNotifier implements Notifier {
     try {
       const receipt = await node.z_validatepaymentdisclosure(disclosure);
       if (!receipt.valid) {
-        console.warn('Invalid disclosure checked:', receipt);
+        log.warn('Invalid disclosure checked:', receipt);
         return;
       }
       const tx = await node.gettransaction(receipt.txid);
       const block = await node.getblock(tx.blockhash);
       if (block.height > maxHeight) {
-        console.info(`Validated disclosure, will confirm in ${block.height - maxHeight} block(s)`);
+        log.info(`Validated disclosure, will confirm in ${block.height - maxHeight} block(s)`);
         return;
       }
-      console.info('Confirming disclosure:', receipt.paymentAddress);
+      log.info('Confirming disclosure:', receipt.paymentAddress);
       this.sendContributionConfirmation({
         to: receipt.paymentAddress,
         amount: receipt.value.toString(),
@@ -127,15 +130,16 @@ export default class ContributionNotifier implements Notifier {
       });
       store.dispatch(confirmPaymentDisclosure(contributionId, disclosure));
     } catch(err) {
-      console.error(
-        'Encountered an error while checking disclosure:',
+      captureException(err);
+      log.error(
+        'Encountered an error while checking disclosure:\n',
         err.response ? err.response.data : err,
       );
     }
   };
 
   private sendContributionConfirmation = (p: ContributionConfirmationPayload) => {
-    console.info(`Contribution confirmed for contribution ${p.contributionId}, +${p.amount} ZEC`);
+    log.info(`Contribution confirmed for contribution ${p.contributionId}, +${p.amount} ZEC`);
     this.send(`/proposals/contribution/${p.contributionId}/confirm`, 'POST', p);
   };
 }

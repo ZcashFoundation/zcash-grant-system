@@ -1,6 +1,7 @@
 import http from "http";
 import fs from "fs";
 import env from "../env";
+import log from "../log";
 
 import "../index";
 
@@ -23,5 +24,5 @@ http.createServer(function(request, response) {
   });
 })
 .listen(port, hostname, () => {
-  console.log(`Devtool running at http://${hostname}:${port}/`);
+  log.info(`Devtool running at http://${hostname}:${port}/`);
 });

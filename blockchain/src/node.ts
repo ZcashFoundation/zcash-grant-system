@@ -1,6 +1,8 @@
 import stdrpc from "stdrpc";
 import bitcore from "zcash-bitcore-lib";
+import { captureException } from "@sentry/node";
 import env from "./env";
+import log from "./log";
 
 export interface BlockChainInfo {
   chain: string;
@@ -135,12 +137,12 @@ export async function initNode() {
   // Check if node is available & setup network
   try {
     const info = await node.getblockchaininfo();
-    console.log(`Connected to ${info.chain} node at block height ${info.blocks}`);
+    log.info(`Connected to ${info.chain} node at block height ${info.blocks}`);
 
     if (info.chain === "regtest") {
       bitcore.Networks.enableRegtest();
     }
-    if (info.chain === "regtest" || info.chain.includes("testnet")) {
+    if (info.chain.includes("test")) {
       network = bitcore.Networks.testnet;
     }
     else {
@@ -148,8 +150,9 @@ export async function initNode() {
     }
   }
   catch(err) {
-    console.log(err.response ? err.response.data : err);
-    console.log('Failed to connect to zcash node with the following credentials:\r\n', rpcOptions);
+    captureException(err);
+    log.error(err.response ? err.response.data : err);
+    log.error('Failed to connect to zcash node with the following credentials:\r\n', rpcOptions);
     process.exit(1);
   }
 
@@ -162,7 +165,7 @@ export async function initNode() {
     await node.z_getbalance(env.SPROUT_ADDRESS as string);
   } catch(err) {
     if (!env.SPROUT_VIEWKEY) {
-      console.error('Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting');
+      log.error('Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting');
       process.exit(1);
     }
     await node.z_importviewingkey(env.SPROUT_VIEWKEY as string);
@@ -175,4 +178,31 @@ export function getNetwork() {
     throw new Error('Called getNetwork before initNode');
   }
   return network;
+}
+
+// Relies on initNode being called first
+export async function getBootstrapBlockHeight(txid: string | undefined) {
+  if (txid) {
+    try {
+      const tx = await node.gettransaction(txid);
+      const block = await node.getblock(tx.blockhash);
+      return block.height.toString();
+    } catch(err) {
+      console.warn(`Attempted to get block height for tx ${txid} but failed with the following error:\n`, err);
+      console.warn('Falling back to hard-coded starter blocks');
+    }
+  }
+
+  // If we can't find the latest tx block, fall back to when the grant
+  // system first launched, and scan from there.
+  const net = getNetwork();
+  if (net === bitcore.Networks.mainnet) {
+    return env.MAINNET_START_BLOCK;
+  }
+  else if (net === bitcore.Networks.testnet && !net.regtestEnabled) {
+    return env.TESTNET_START_BLOCK;
+  }
+
+  // Regtest or otherwise unknown networks should start at the bottom
+  return '0';
 }
