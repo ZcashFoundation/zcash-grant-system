@@ -1,20 +1,30 @@
+import * as Sentry from "@sentry/node";
 import * as Webhooks from "./webhooks";
 import * as RestServer from "./server";
-import { initNode } from './node';
+import { initNode } from "./node";
+import env from "./env";
+import log from "./log";
 
 async function start() {
-  console.log("============== Starting services ==============");
+  if (env.SENTRY_DSN) {
+    Sentry.init({
+      dsn: env.SENTRY_DSN,
+      environment: env.NODE_ENV,
+    });
+  }
+
+  log.info("============== Starting services ==============");
   await initNode();
   await RestServer.start();
   await Webhooks.start();
-  console.log("===============================================");
+  log.info("===============================================");
 }
 
 process.on("SIGINT", () => {
-  console.log('Shutting down services...');
+  log.info('Shutting down services...');
   Webhooks.exit();
   RestServer.exit();
-  console.log('Exiting!');
+  log.info('Exiting!');
   process.exit();
 });
 
