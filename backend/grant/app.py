@@ -38,7 +38,7 @@ def register_extensions(app):
     migrate.init_app(app, db)
     ma.init_app(app)
     user_datastore = SQLAlchemyUserDatastore(db, user.models.User, user.models.Role)
-    security.init_app(app, user_datastore)
+    security.init_app(app, datastore=user_datastore, register_blueprint=False)
 
     # supports_credentials for session cookies
     CORS(app, supports_credentials=True)

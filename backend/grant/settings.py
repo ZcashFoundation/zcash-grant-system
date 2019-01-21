@@ -10,13 +10,6 @@ import subprocess
 from environs import Env
 
 
-def git_revision_short_hash():
-    try:
-        return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
-    except subprocess.CalledProcessError:
-        return 0
-
-
 env = Env()
 env.read_env()
 
@@ -36,7 +29,7 @@ SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
 SENDGRID_DEFAULT_FROM = "noreply@grant.io"
 
 SENTRY_DSN = env.str("SENTRY_DSN", default=None)
-SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=git_revision_short_hash())
+SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=None)
 
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB (limits file uploads, raises RequestEntityTooLarge)
 
