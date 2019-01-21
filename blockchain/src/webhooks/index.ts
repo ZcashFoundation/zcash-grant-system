@@ -116,8 +116,12 @@ const send: Send = (route, method, payload) => {
     }
   })
   .catch((err) => {
+    if (err.code && err.code === 'ECONNREFUSED') {
+      log.warn('Unable to send to backend, probably offline');
+      return;
+    }
     captureException(err);
-    log.error(err.response ? err.response.data : err);
-    log.error('Webhook server request failed! See above for details.');
+    const errMsg = err.response ? `Response: ${JSON.stringify(err.response.data, null, 2)}` : err.message;
+    log.error(`Webhook server request to ${method} ${route} failed: ${errMsg}`);
   });
 };
