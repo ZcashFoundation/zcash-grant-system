@@ -55,7 +55,6 @@ export default class Header extends React.Component<Props, State> {
             <HeaderAuth />
           </div>
 
-          {!isTransparent && <div className="Header-alphaBanner">Alpha</div>}
           <HeaderDrawer isOpen={isDrawerOpen} onClose={this.closeDrawer} />
         </div>
       </div>
