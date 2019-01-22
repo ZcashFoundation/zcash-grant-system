@@ -37,12 +37,12 @@ const client = [
     cache: true,
     inject: false,
     favicons: {
-      appName: 'Grant.io',
+      appName: 'ZF Grants',
       appDescription: 'Decentralized funding for Blockchain ecosystem improvements',
-      developerName: 'Grant.io',
-      developerURL: 'https://grant.io/about',
+      developerName: 'ZF Grants',
+      developerURL: 'https://grants.zfnd.org/about',
       background: '#ffffff',
-      theme_color: '#ffffff',
+      theme_color: '#CF8A00',
     },
   }),
   new CopyWebpackPlugin([

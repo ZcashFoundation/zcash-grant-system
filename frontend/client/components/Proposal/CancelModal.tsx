@@ -45,7 +45,7 @@ class CancelModal extends React.Component<Props> {
         <p>
           Canceled proposals cannot be deleted and will still be viewable by contributors
           or anyone with a direct link. However, they will be de-listed everywhere else on
-          Grant.io.
+          ZF Grants.
         </p>
         {hasContributors && (
           <p>

@@ -30,8 +30,8 @@ const HTML: React.SFC<Props> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Grant.io" />
-        <meta name="application-name" content="Grant.io" />
+        <meta name="apple-mobile-web-app-title" content="ZF Grants" />
+        <meta name="application-name" content="ZF Grants" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#fff" />
         <meta name="theme-color" content="#fff" />

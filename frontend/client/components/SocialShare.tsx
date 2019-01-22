@@ -39,7 +39,7 @@ type Props = OwnProps;
 export default class SocialShare extends React.Component<Props> {
   render() {
     let { url, title, text } = this.props;
-    url = url.replace(`localhost:${process.env.PORT}`, 'demo.grant.io');
+    url = url.replace(`localhost:${process.env.PORT}`, 'grants.zfnd.org');
     url = encodeURIComponent(url);
     title = encodeURIComponent(title);
     text = encodeURIComponent(text);
