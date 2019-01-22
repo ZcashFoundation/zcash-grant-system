@@ -12,7 +12,6 @@ import UnitDisplay from 'components/UnitDisplay';
 import ContributionModal from 'components/ContributionModal';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
-import MetaMaskRequiredButton from 'components/MetaMaskRequiredButton';
 import './style.less';
 
 interface OwnProps {
@@ -126,49 +125,35 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               </div>
 
               <Form layout="vertical">
-                <MetaMaskRequiredButton
-                  message={
-                    <Form.Item style={{ marginBottom: '0.5rem', paddingBottom: 0 }}>
-                      <Input
-                        size="large"
-                        type="number"
-                        placeholder="0.5"
-                        addonAfter="ZEC"
-                        disabled={true}
-                      />
-                    </Form.Item>
-                  }
+                <Form.Item
+                  validateStatus={amountError ? 'error' : undefined}
+                  help={amountError}
+                  style={{ marginBottom: '0.5rem', paddingBottom: 0 }}
                 >
-                  <Form.Item
-                    validateStatus={amountError ? 'error' : undefined}
-                    help={amountError}
-                    style={{ marginBottom: '0.5rem', paddingBottom: 0 }}
-                  >
-                    <Input
-                      size="large"
-                      name="amountToRaise"
-                      type="number"
-                      value={amountToRaise}
-                      placeholder="0.5"
-                      min={0}
-                      max={remainingTargetNum}
-                      step={0.1}
-                      onChange={this.handleAmountChange}
-                      addonAfter="ZEC"
-                      disabled={isPreview}
-                    />
-                  </Form.Item>
-                  <Button
-                    onClick={this.openContributionModal}
+                  <Input
                     size="large"
-                    type="primary"
-                    disabled={isDisabled}
-                    loading={sendLoading}
-                    block
-                  >
-                    Fund this project
-                  </Button>
-                </MetaMaskRequiredButton>
+                    name="amountToRaise"
+                    type="number"
+                    value={amountToRaise}
+                    placeholder="0.5"
+                    min={0}
+                    max={remainingTargetNum}
+                    step={0.1}
+                    onChange={this.handleAmountChange}
+                    addonAfter="ZEC"
+                    disabled={isPreview}
+                  />
+                </Form.Item>
+                <Button
+                  onClick={this.openContributionModal}
+                  size="large"
+                  type="primary"
+                  disabled={isDisabled}
+                  loading={sendLoading}
+                  block
+                >
+                  Fund this project
+                </Button>
               </Form>
             </>
           )}
