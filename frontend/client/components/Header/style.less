@@ -10,7 +10,7 @@
   right: 0;
   z-index: 999;
   position: relative;
-  color: #333;
+  color: @secondary-color;
   background: #fff;
   text-shadow: none;
   box-shadow: 0 1px rgba(0, 0, 0, 0.1);
@@ -43,20 +43,18 @@
     transition: transform 100ms ease, opacity 100ms ease;
     flex-grow: 1;
     text-align: center;
-    opacity: 0.92;
+    opacity: 0.8;
 
     &:hover,
     &:focus {
       color: inherit;
       transform: translateY(-2px) translate(-50%, -50%);
-      opacity: 1;
+      opacity: 0.9;
     }
 
     &-logo {
-      height: 2rem;
+      height: 1.4rem;
       width: auto;
-      transform: translateY(10%);
-      fill: #333;
       transition: transform @header-transition ease;
 
       .is-transparent & {
