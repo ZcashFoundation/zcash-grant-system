@@ -99,6 +99,10 @@ export function updateUserPassword(
   return axios.put(`/api/v1/users/password`, { currentPassword, password });
 }
 
+export function updateUserEmail(email: string, currentPassword: string): Promise<any> {
+  return axios.put('/api/v1/users/email', { currentPassword, email });
+}
+
 export function updateUser(user: User): Promise<{ data: User }> {
   return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
 }

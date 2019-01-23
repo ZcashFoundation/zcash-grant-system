@@ -28,7 +28,11 @@ class ChangePassword extends React.Component<Props, State> {
 
     return (
       <div className="ChangePassword">
-        <Form className="ChangePassword-form" onSubmit={this.handleSubmit}>
+        <Form
+          className="ChangePassword-form"
+          onSubmit={this.handleSubmit}
+          layout="vertical"
+        >
           <Form.Item label="Current password">
             {getFieldDecorator('currentPassword', {
               rules: [{ required: true, message: 'Please enter your current password' }],
@@ -37,7 +41,7 @@ class ChangePassword extends React.Component<Props, State> {
                 autoComplete="current-password"
                 name="currentPassword"
                 type="password"
-                placeholder="current password"
+                placeholder="*********"
               />,
             )}
           </Form.Item>
