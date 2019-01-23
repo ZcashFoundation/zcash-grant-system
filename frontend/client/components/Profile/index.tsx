@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
-import { Spin, Tabs, Badge } from 'antd';
+import { Tabs, Badge } from 'antd';
 import { usersActions } from 'modules/users';
 import { AppState } from 'store/reducers';
 import HeaderDetails from 'components/HeaderDetails';
@@ -20,6 +20,7 @@ import ProfileContribution from './ProfileContribution';
 import ProfileComment from './ProfileComment';
 import ProfileInvite from './ProfileInvite';
 import Placeholder from 'components/Placeholder';
+import Loader from 'components/Loader';
 import Exception from 'pages/exception';
 import ContributionModal from 'components/ContributionModal';
 import LinkableTabs from 'components/LinkableTabs';
@@ -76,7 +77,7 @@ class Profile extends React.Component<Props, State> {
     const isAuthedUser = user && authUser && user.userid === authUser.userid;
 
     if (waiting) {
-      return <Spin />;
+      return <Loader />;
     }
 
     if (user.fetchError) {

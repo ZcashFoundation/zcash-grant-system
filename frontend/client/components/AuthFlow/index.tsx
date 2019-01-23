@@ -3,9 +3,9 @@ import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { withRouter, RouteComponentProps, Redirect } from 'react-router';
 import { Switch, Route, Link } from 'react-router-dom';
-import { Spin } from 'antd';
 import { AppState } from 'store/reducers';
 import { authActions } from 'modules/auth';
+import Loader from 'components/Loader';
 import Exception from 'pages/exception';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
@@ -65,7 +65,7 @@ class AuthFlow extends React.Component<Props> {
     const { isCheckingUser, match } = this.props;
 
     if (isCheckingUser) {
-      return <Spin size="large" />;
+      return <Loader />;
     }
 
     return (

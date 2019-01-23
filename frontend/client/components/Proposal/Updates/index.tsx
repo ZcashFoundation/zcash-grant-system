@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin } from 'antd';
+import Loader from 'components/Loader';
 import Markdown from 'components/Markdown';
 import moment from 'moment';
 import Placeholder from 'components/Placeholder';
@@ -58,7 +58,7 @@ class ProposalUpdates extends React.Component<Props, State> {
     let content = null;
 
     if (isFetchingUpdates) {
-      content = <Spin />;
+      content = <Loader />;
     } else if (updatesError) {
       content = <Placeholder title="Something went wrong" subtitle={updatesError} />;
     } else if (updates) {

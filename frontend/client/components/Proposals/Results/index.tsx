@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppState } from 'store/reducers';
-import { Spin, Row, Col, Pagination } from 'antd';
+import { Row, Col, Pagination } from 'antd';
+import Loader from 'components/Loader';
 import ProposalCard from '../ProposalCard';
 
 interface Props {
@@ -31,7 +32,7 @@ export default class ProposalResults extends React.Component<Props, State> {
     const { page } = this.state;
 
     if (isFetchingProposals) {
-      return <Spin size="large" />;
+      return <Loader />;
     }
 
     if (proposalsError) {

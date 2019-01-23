@@ -1,6 +1,6 @@
 import React from 'react';
-import { Spin } from 'antd';
 import { Proposal } from 'types';
+import Loader from 'components/Loader';
 import UserRow from 'components/UserRow';
 
 interface Props {
@@ -12,7 +12,7 @@ const TeamBlock = ({ proposal }: Props) => {
   if (proposal) {
     content = proposal.team.map(user => <UserRow key={user.displayName} user={user} />);
   } else {
-    content = <Spin />;
+    content = <Loader />;
   }
 
   return (
