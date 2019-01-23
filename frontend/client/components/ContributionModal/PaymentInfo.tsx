@@ -1,11 +1,12 @@
 import React from 'react';
 import classnames from 'classnames';
-import { Form, Input, Spin, Button, Icon, Radio, message } from 'antd';
+import { Form, Input, Button, Icon, Radio, message } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import QRCode from 'qrcode.react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { formatZcashURI, formatZcashCLI } from 'utils/formatters';
 import { ContributionWithAddresses } from 'types';
+import Loader from 'components/Loader';
 import './PaymentInfo.less';
 
 interface Props {
@@ -73,7 +74,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
             <span style={{ opacity: uri ? 1 : 0 }}>
               <QRCode value={uri || ''} />
             </span>
-            {!uri && <Spin size="large" />}
+            {!uri && <Loader />}
           </div>
           <div className="PaymentInfo-uri-info">
             <CopyInput

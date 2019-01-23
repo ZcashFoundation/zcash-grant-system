@@ -4,7 +4,8 @@ import { AppState } from 'store/reducers';
 import { updateUserSettings, getUserSettings } from 'api/api';
 import { EmailSubscriptions as IEmailSubscriptions } from 'types';
 import EmailSubscriptionsForm from 'components/EmailSubscriptionsForm';
-import { Spin, message } from 'antd';
+import { message } from 'antd';
+import Loader from 'components/Loader';
 
 interface StateProps {
   authUser: AppState['auth']['user'];
@@ -35,7 +36,7 @@ class EmailSubscriptions extends React.Component<Props, State> {
     }
 
     if (!emailSubscriptions) {
-      return <Spin />;
+      return <Loader />;
     }
 
     return (

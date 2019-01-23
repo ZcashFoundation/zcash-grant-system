@@ -26,7 +26,7 @@ interface Props {
   code: '403' | '404' | '500';
 }
 
-const ExceptionComponent: React.SFC<Props> = ({ code }) => (
+const ExceptionComponent = ({ code }: Props) => (
   <Exception type={code} {...content[code]} />
 );
 

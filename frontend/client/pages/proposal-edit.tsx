@@ -1,10 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { withRouter, RouteComponentProps } from 'react-router';
-import { Spin } from 'antd';
 import CreateFlow from 'components/CreateFlow';
 import { initializeForm } from 'modules/create/actions';
 import { AppState } from 'store/reducers';
+import Loader from 'components/Loader';
 
 interface StateProps {
   form: AppState['create']['form'];
@@ -31,7 +31,7 @@ class ProposalEdit extends React.Component<Props> {
     } else if (initializeFormError) {
       return <h1>{initializeFormError}</h1>;
     } else {
-      return <Spin />;
+      return <Loader />;
     }
   }
 }
