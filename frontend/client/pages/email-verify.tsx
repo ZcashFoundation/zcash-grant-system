@@ -68,7 +68,7 @@ class VerifyEmail extends React.Component<RouteComponentProps, State> {
         <Result
           type="success"
           title="Email has been verified"
-          description="You now have full access to Grant.io"
+          description="You now have full access to ZF Grants"
           actions={actions}
         />
       );

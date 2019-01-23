@@ -18,7 +18,7 @@ class BasicHead extends React.Component<Props> {
     return (
       <div>
         <Helmet>
-          <title>{`Grant.io - ${title}`}</title>
+          <title>{`ZF Grants - ${title}`}</title>
           <meta name={`${title} page`} content={`${title} page stuff`} />
           <link
             rel="stylesheet"
@@ -28,8 +28,8 @@ class BasicHead extends React.Component<Props> {
           />
 
           {/* open graph protocol defaults, can be overridden in children <HeaderDetails ...> */}
-          <meta property="og:site_name" content="Grant.io" />
-          <meta property="og:title" content={`Grant.io - ${title}`} />
+          <meta property="og:site_name" content="ZF Grants" />
+          <meta property="og:title" content={`ZF Grants - ${title}`} />
           <meta property="og:type" content="website" />
           <meta property="og:url" content={defaultOgpUrl} />
           <meta property="og:image" content={defaultOgpImage} />
@@ -41,7 +41,7 @@ class BasicHead extends React.Component<Props> {
           {/* twitter defaults, can be overridden in children <HeaderDetails ...> */}
           <meta property="twitter:card" content="summary_large_image" />
           <meta property="twitter:site" content="@io_grant" />
-          <meta property="twitter:title" content={`Grant.io - ${title}`} />
+          <meta property="twitter:title" content={`ZF Grants - ${title}`} />
           <meta property="twitter:image" content={defaultOgpImage} />
           <meta property="twitter:url" content={defaultOgpUrl} />
         </Helmet>

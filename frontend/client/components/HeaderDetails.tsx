@@ -18,7 +18,7 @@ export default class HeaderDetails extends React.Component<Props> {
     // const { title, image, url, type, description } = this.props;
     // return (
     //   <Helmet>
-    //     <title>{`Grant.io - ${title}`}</title>
+    //     <title>{`ZF Grants - ${title}`}</title>
     //     {/* open graph protocol */}
     //     {type && <meta property="og:type" content="website" />}
     //     <meta property="og:title" content={title} />

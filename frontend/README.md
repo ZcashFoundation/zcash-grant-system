@@ -1,4 +1,4 @@
-# Grant.io Front-End
+# ZF Grants Frontend
 
 This is the front-end component of ZCash Grant System.
 

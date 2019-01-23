@@ -179,7 +179,7 @@ export class ProposalDetail extends React.Component<Props, State> {
                 title={`${proposal.title} needs funding on Grant-io!`}
                 text={`${
                   proposal.title
-                } needs funding on Grant.io! Come help make this proposal a reality by funding it.`}
+                } needs funding on ZF Grants! Come help make this proposal a reality by funding it.`}
               />
             </div>
           )}

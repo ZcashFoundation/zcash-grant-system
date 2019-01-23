@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Logo from 'static/images/logo-name.svg';
+import Logo from 'static/images/logo-name-light.svg';
 import './style.less';
 
 export default () => (

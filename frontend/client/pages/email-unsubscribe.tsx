@@ -68,7 +68,7 @@ class UnsubscribeEmail extends React.Component<RouteComponentProps, State> {
         <Result
           type="success"
           title="Unsubscribed from emails"
-          description="You will no longer receive emails from Grant.io"
+          description="You will no longer receive emails from ZF Grants"
           actions={actions}
         />
       );

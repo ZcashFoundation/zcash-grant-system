@@ -1,15 +1,17 @@
+@import '~styles/variables.less';
+
 .Footer {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  color: #fff;
-  background: #4c4c4c;
-  height: 140px;
+  color: #FFF;
+  background: @secondary-color;
+  height: 160px;
 
   &-title {
-    margin-bottom: 0.75rem;
-    opacity: 0.95;
+    margin-bottom: 1.25rem;
+    opacity: 0.8;
     transition: transform 100ms ease, opacity 100ms ease;
 
     &:hover,
@@ -21,8 +23,7 @@
     }
 
     &-logo {
-      height: 2.6rem;
-      fill: #FFF;
+      height: 1.6rem;
     }
   }
 
@@ -34,7 +35,7 @@
     &-link {
       font-size: 1rem;
       padding: 0 1rem;
-      color: #fff;
+      color: #FFF;
       opacity: 0.8;
       transition: opacity 100ms ease;
 
