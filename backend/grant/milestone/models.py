@@ -43,7 +43,7 @@ class Milestone(db.Model):
         self.immediate_payout = immediate_payout
         self.proposal_id = proposal_id
         self.date_created = datetime.datetime.now()
-    
+
     @staticmethod
     def validate(milestone):
         if len(milestone.title) > 60:

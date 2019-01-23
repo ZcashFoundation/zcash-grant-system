@@ -5,6 +5,7 @@ class FakeUser(object):
     display_name = 'Example User'
     title = 'Email Example Dude'
 
+
 class FakeProposal(object):
     id = 123
     title = 'Example proposal'
@@ -12,17 +13,20 @@ class FakeProposal(object):
     content = 'Example example example example'
     target = "100"
 
+
 class FakeContribution(object):
     id = 123
     amount = '12.5'
     proposal_id = 123
     user_id = 123
 
+
 class FakeUpdate(object):
     id = 123
     title = 'Example update'
     content = 'Example example example example\n\nExample example example example'
     proposal_id = 123
+
 
 user = FakeUser()
 proposal = FakeProposal()

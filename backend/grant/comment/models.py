@@ -1,8 +1,8 @@
 import datetime
-from sqlalchemy.orm import raiseload
 
 from grant.extensions import ma, db
 from grant.utils.misc import dt_to_unix
+from sqlalchemy.orm import raiseload
 
 
 class Comment(db.Model):
@@ -70,6 +70,7 @@ class UserCommentSchema(ma.Schema):
             "content",
             "date_created",
         )
+
     proposal = ma.Nested(
         "ProposalSchema",
         exclude=[

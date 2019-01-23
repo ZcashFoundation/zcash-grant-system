@@ -1,4 +1,3 @@
-import json
 import random
 
 from grant.proposal.models import CATEGORIES

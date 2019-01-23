@@ -1,5 +1,6 @@
-from datetime import timedelta
 from datetime import datetime
+from datetime import timedelta
+
 from grant.extensions import ma, db
 from grant.utils.misc import gen_random_code
 

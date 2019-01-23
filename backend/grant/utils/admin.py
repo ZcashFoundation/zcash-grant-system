@@ -1,9 +1,8 @@
 from functools import wraps
 from hashlib import sha256
+
 from flask import session
-
 from grant.settings import SECRET_KEY, ADMIN_PASS_HASH
-
 
 admin_auth = {
     "username": "admin",

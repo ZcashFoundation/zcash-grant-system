@@ -1,9 +1,8 @@
-import click
 import getpass
-from flask.cli import with_appcontext
 
-from grant.utils.admin import generate_admin_password_hash
+import click
 from grant.settings import SECRET_KEY
+from grant.utils.admin import generate_admin_password_hash
 
 
 @click.command()

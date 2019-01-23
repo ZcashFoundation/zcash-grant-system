@@ -5,6 +5,7 @@ from grant.blockchain.bootstrap import send_bootstrap_data
 
 app = create_app()
 
+
 @app.before_first_request
 def bootstrap_watcher():
-  send_bootstrap_data()
+    send_bootstrap_data()
