@@ -70,15 +70,6 @@ const serverRenderer = () => async (req: Request, res: Response) => {
     return res.status(500).send(disp);
   }
 
-  console.log('About to ask extractor for shit');
-  try {
-    console.log('style', extractor.getStyleTags());
-    console.log('script', extractor.getScriptTags());
-    console.log('link', extractor.getLinkTags());
-  } catch (err) {
-    console.error(err);
-  }
-  console.log('Donezo');
   const cssFiles = ['bundle.css', 'vendor.css']
     .map(f => res.locals.assetPath(f))
     .filter(Boolean);
@@ -92,7 +83,6 @@ const serverRenderer = () => async (req: Request, res: Response) => {
     .map(m => ({ ...m, content: res.locals.assetPath(m.content) }))
     .filter(m => !!m.content);
 
-  console.log('Sending!');
   return res.send(
     '<!doctype html>' +
       renderToString(
