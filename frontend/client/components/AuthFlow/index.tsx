@@ -65,7 +65,7 @@ class AuthFlow extends React.Component<Props> {
     const { isCheckingUser, match } = this.props;
 
     if (isCheckingUser) {
-      return <Loader />;
+      return <Loader size="large" />;
     }
 
     return (

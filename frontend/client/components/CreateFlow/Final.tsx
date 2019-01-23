@@ -57,12 +57,7 @@ class CreateFinal extends React.Component<Props> {
         </div>
       );
     } else {
-      content = (
-        <div className="CreateFinal-loader">
-          <Loader />
-          <div className="CreateFinal-loader-text">Submitting your proposal...</div>
-        </div>
-      );
+      content = <Loader size="large" tip="Submitting your proposal..." />;
     }
 
     return <div className="CreateFinal">{content}</div>;

@@ -51,6 +51,7 @@ class Profile extends React.Component<Props, State> {
   componentDidMount() {
     this.fetchData();
   }
+
   componentDidUpdate(prevProps: Props) {
     const userLookupId = this.props.match.params.id;
     const prevUserLookupId = prevProps.match.params.id;
@@ -59,6 +60,7 @@ class Profile extends React.Component<Props, State> {
       this.fetchData();
     }
   }
+
   render() {
     const { authUser, match, location } = this.props;
     const { activeContribution } = this.state;
@@ -77,7 +79,7 @@ class Profile extends React.Component<Props, State> {
     const isAuthedUser = user && authUser && user.userid === authUser.userid;
 
     if (waiting) {
-      return <Loader />;
+      return <Loader size="large" />;
     }
 
     if (user.fetchError) {

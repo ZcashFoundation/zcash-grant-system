@@ -83,7 +83,7 @@ class VerifyEmail extends React.Component<RouteComponentProps, State> {
         />
       );
     } else {
-      return <Loader />;
+      return <Loader size="large" />;
     }
   }
 }

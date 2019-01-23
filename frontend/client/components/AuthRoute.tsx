@@ -44,7 +44,7 @@ class AuthRoute extends React.Component<Props> {
       ...routeProps
     } = this.props;
     if (isCheckingUser) {
-      return <Loader tip="Checking authentication status" />;
+      return <Loader size="large" tip="Checking authentication status" />;
     }
     if ((user && !onlyLoggedOut) || (!user && onlyLoggedOut)) {
       return <Route {...routeProps} />;

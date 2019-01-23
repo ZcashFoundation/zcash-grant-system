@@ -94,7 +94,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     const showExpand = !isBodyExpanded && isBodyOverflowing;
 
     if (!proposal) {
-      return <Loader />;
+      return <Loader size="large" />;
     }
 
     const deadline = 0; // TODO: Use actual date for deadline

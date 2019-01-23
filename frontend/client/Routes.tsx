@@ -8,32 +8,34 @@ import {
   withRouter,
   matchPath,
 } from 'react-router';
-import loadable from 'loadable-components';
+import loadable from '@loadable/component';
 import AuthRoute from 'components/AuthRoute';
 import Template, { TemplateProps } from 'components/Template';
 
 // wrap components in loadable...import & they will be split
-const Home = loadable(() => import('pages/index'));
-const Create = loadable(() => import('pages/create'));
-const ProposalEdit = loadable(() => import('pages/proposal-edit'));
-const Proposals = loadable(() => import('pages/proposals'));
-const Proposal = loadable(() => import('pages/proposal'));
+const opts = { fallback: <Loader size="large" /> };
+const Home = loadable(() => import('pages/index'), opts);
+const Create = loadable(() => import('pages/create'), opts);
+const ProposalEdit = loadable(() => import('pages/proposal-edit'), opts);
+const Proposals = loadable(() => import('pages/proposals'), opts);
+const Proposal = loadable(() => import('pages/proposal'), opts);
 const Auth = loadable(() => import('pages/auth'));
-const SignOut = loadable(() => import('pages/sign-out'));
-const Profile = loadable(() => import('pages/profile'));
-const Settings = loadable(() => import('pages/settings'));
-const Exception = loadable(() => import('pages/exception'));
+const SignOut = loadable(() => import('pages/sign-out'), opts);
+const Profile = loadable(() => import('pages/profile'), opts);
+const Settings = loadable(() => import('pages/settings'), opts);
+const Exception = loadable(() => import('pages/exception'), opts);
 const Tos = loadable(() => import('pages/tos'));
-const About = loadable(() => import('pages/about'));
-const Privacy = loadable(() => import('pages/privacy'));
-const Contact = loadable(() => import('pages/contact'));
-const CodeOfConduct = loadable(() => import('pages/code-of-conduct'));
-const VerifyEmail = loadable(() => import('pages/email-verify'));
-const Callback = loadable(() => import('pages/callback'));
-const RecoverEmail = loadable(() => import('pages/email-recover'));
-const UnsubscribeEmail = loadable(() => import('pages/email-unsubscribe'));
+const About = loadable(() => import('pages/about'), opts);
+const Privacy = loadable(() => import('pages/privacy'), opts);
+const Contact = loadable(() => import('pages/contact'), opts);
+const CodeOfConduct = loadable(() => import('pages/code-of-conduct'), opts);
+const VerifyEmail = loadable(() => import('pages/email-verify'), opts);
+const Callback = loadable(() => import('pages/callback'), opts);
+const RecoverEmail = loadable(() => import('pages/email-recover'), opts);
+const UnsubscribeEmail = loadable(() => import('pages/email-unsubscribe'), opts);
 
 import 'styles/style.less';
+import Loader from 'components/Loader';
 
 interface RouteConfig extends RouteProps {
   route: RouteProps;

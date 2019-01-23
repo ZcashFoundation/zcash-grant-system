@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { List, Button, Divider, Popconfirm, message } from 'antd';
+import { Spin, List, Button, Divider, Popconfirm, message } from 'antd';
 import Placeholder from 'components/Placeholder';
 import Loader from 'components/Loader';
 import { ProposalDraft, STATUS } from 'types';
@@ -71,7 +71,7 @@ class DraftList extends React.Component<Props, State> {
     const { deletingId } = this.state;
 
     if (!drafts || isCreatingDraft) {
-      return <Loader />;
+      return <Loader size="large" />;
     }
 
     let draftsEl;
@@ -94,18 +94,19 @@ class DraftList extends React.Component<Props, State> {
               </Popconfirm>,
             ];
             return (
-              <List.Item actions={actions}>
-                <List.Item.Meta
-                  title={
-                    <>
-                      {d.title || <em>Untitled proposal</em>}
-                      {d.status === STATUS.REJECTED && <em> (rejected)</em>}
-                    </>
-                  }
-                  description={d.brief || <em>No description</em>}
-                />
-                {deletingId === d.proposalId && <Loader />}
-              </List.Item>
+              <Spin tip="deleting..." spinning={deletingId === d.proposalId}>
+                <List.Item actions={actions}>
+                  <List.Item.Meta
+                    title={
+                      <>
+                        {d.title || <em>Untitled proposal</em>}
+                        {d.status === STATUS.REJECTED && <em> (rejected)</em>}
+                      </>
+                    }
+                    description={d.brief || <em>No description</em>}
+                  />
+                </List.Item>
+              </Spin>
             );
           }}
         />

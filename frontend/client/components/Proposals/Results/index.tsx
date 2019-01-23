@@ -32,7 +32,7 @@ export default class ProposalResults extends React.Component<Props, State> {
     const { page } = this.state;
 
     if (isFetchingProposals) {
-      return <Loader />;
+      return <Loader size="large" />;
     }
 
     if (proposalsError) {
