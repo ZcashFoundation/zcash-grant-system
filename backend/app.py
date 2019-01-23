@@ -8,4 +8,7 @@ app = create_app()
 
 @app.before_first_request
 def bootstrap_watcher():
-    send_bootstrap_data()
+    try:
+        send_bootstrap_data()
+    except:
+        print('Failed to send bootstrap data, watcher must be offline')
