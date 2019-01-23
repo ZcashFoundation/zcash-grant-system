@@ -51,3 +51,5 @@ BLOCKCHAIN_REST_API_URL = env.str("BLOCKCHAIN_REST_API_URL")
 BLOCKCHAIN_API_SECRET = env.str("BLOCKCHAIN_API_SECRET")
 
 ADMIN_PASS_HASH = env.str("ADMIN_PASS_HASH")
+
+EXPLORER_URL = env.str("EXPLORER_URL", default="https://explorer.zcha.in/")
