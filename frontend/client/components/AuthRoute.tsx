@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Route, Redirect, RouteProps } from 'react-router-dom';
+import { Route, Redirect, RouteProps } from 'react-router';
 import { message } from 'antd';
 import { AppState } from 'store/reducers';
 import { authActions } from 'modules/auth';

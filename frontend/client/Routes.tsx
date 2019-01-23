@@ -286,9 +286,15 @@ class Routes extends React.PureComponent<Props> {
     const routeComponents = routeConfigs.map(config => {
       const { route, onlyLoggedIn, onlyLoggedOut } = config;
       if (onlyLoggedIn || onlyLoggedOut) {
-        return <AuthRoute key={route.path} onlyLoggedOut={onlyLoggedOut} {...route} />;
+        return (
+          <AuthRoute
+            key={route.path as string}
+            onlyLoggedOut={onlyLoggedOut}
+            {...route}
+          />
+        );
       } else {
-        return <Route key={route.path} {...route} />;
+        return <Route key={route.path as string} {...route} />;
       }
     });
 
