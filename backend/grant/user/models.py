@@ -1,26 +1,24 @@
 from flask_security import UserMixin, RoleMixin
 from flask_security.core import current_user
 from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
-from sqlalchemy.ext.hybrid import hybrid_property
-
-from grant.utils.exceptions import ValidationException
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification, EmailRecovery
 from grant.email.send import send_email
-from grant.extensions import ma, db, security
-from grant.utils.misc import make_url
-from grant.utils.social import generate_social_url
-from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.email.subscription_settings import (
     get_default_email_subscriptions,
     email_subscriptions_to_bits,
     email_subscriptions_to_dict
 )
+from grant.extensions import ma, db, security
+from grant.utils.misc import make_url
+from grant.utils.social import generate_social_url
+from grant.utils.upload import extract_avatar_filename, construct_avatar_url
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 def is_current_authed_user_id(user_id):
     return current_user.is_authenticated and \
-        current_user.id == user_id
+           current_user.id == user_id
 
 
 class RolesUsers(db.Model):
@@ -233,6 +231,7 @@ class SocialMediaSchema(ma.Schema):
             "service",
             "username",
         )
+
     url = ma.Method("get_url")
 
     def get_url(self, obj):

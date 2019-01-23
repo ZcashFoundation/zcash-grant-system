@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
+import sentry_sdk
 from flask import Flask
 from flask_cors import CORS
-from flask_sslify import SSLify
 from flask_security import SQLAlchemyUserDatastore
-from sentry_sdk.integrations.flask import FlaskIntegration
-import sentry_sdk
-
+from flask_sslify import SSLify
 from grant import commands, proposal, user, comment, milestone, admin, email, blockchain
 from grant.extensions import bcrypt, migrate, db, ma, security
 from grant.settings import SENTRY_RELEASE, ENV
-from grant.blockchain.bootstrap import send_bootstrap_data
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 
 def create_app(config_objects=["grant.settings"]):

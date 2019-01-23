@@ -1,10 +1,7 @@
 import json
-from mock import patch
 
-from grant.proposal.models import Proposal, ProposalTeamInvite, db
-from grant.user.models import SocialMedia, Avatar
+from grant.proposal.models import ProposalTeamInvite, db
 from ..config import BaseProposalCreatorConfig
-from ..test_data import test_proposal, test_user
 
 
 class TestUserInviteAPI(BaseProposalCreatorConfig):

@@ -1,9 +1,9 @@
-from flask import render_template, Markup, current_app
-
 import sendgrid
-from sendgrid.helpers.mail import Email, Mail, Content
+from flask import render_template, Markup, current_app
 from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM
 from python_http_client import HTTPError
+from sendgrid.helpers.mail import Email, Mail, Content
+
 from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
@@ -55,6 +55,7 @@ def proposal_rejected(email_args):
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 
+
 def proposal_contribution(email_args):
     return {
         'subject': 'You just got a contribution!',
@@ -67,6 +68,7 @@ def proposal_contribution(email_args):
         'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
     }
 
+
 def proposal_comment(email_args):
     return {
         'subject': 'New comment from {}'.format(email_args['author'].display_name),
@@ -77,6 +79,7 @@ def proposal_comment(email_args):
         ),
         'subscription': EmailSubscription.MY_PROPOSAL_COMMENT,
     }
+
 
 def contribution_confirmed(email_args):
     return {
@@ -89,6 +92,7 @@ def contribution_confirmed(email_args):
         'subscription': EmailSubscription.FUNDED_PROPOSAL_CONTRIBUTION,
     }
 
+
 def contribution_update(email_args):
     return {
         'subject': 'The {} team posted an update'.format(email_args['proposal'].title),
@@ -99,6 +103,7 @@ def contribution_update(email_args):
         ),
         'subscription': EmailSubscription.FUNDED_PROPOSAL_UPDATE,
     }
+
 
 def comment_reply(email_args):
     return {

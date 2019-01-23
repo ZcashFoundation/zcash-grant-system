@@ -1,8 +1,7 @@
 from flask import Blueprint
-from flask_yoloapi import endpoint, parameter
+from flask_yoloapi import endpoint
 
-from .models import EmailVerification, EmailRecovery, db
-
+from .models import EmailVerification, db
 
 blueprint = Blueprint("email", __name__, url_prefix="/api/v1/email")
 

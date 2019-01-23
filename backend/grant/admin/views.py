@@ -1,13 +1,9 @@
-from functools import wraps
+from flask import Blueprint, request
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
-from hashlib import sha256
-from uuid import uuid4
-from sqlalchemy import func, or_
-
+from grant.comment.models import Comment, user_comments_schema
+from grant.email.send import generate_email
 from grant.extensions import db
-from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
-from grant.user.models import User, users_schema, user_schema
 from grant.proposal.models import (
     Proposal,
     ProposalContribution,
@@ -16,10 +12,11 @@ from grant.proposal.models import (
     user_proposal_contributions_schema,
     PENDING
 )
-from grant.comment.models import Comment, comments_schema, user_comments_schema
-from grant.email.send import generate_email
-from .example_emails import example_email_args
+from grant.user.models import User, users_schema, user_schema
+from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
+from sqlalchemy import func, or_
 
+from .example_emails import example_email_args
 
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
 

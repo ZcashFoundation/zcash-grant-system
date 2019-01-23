@@ -1,14 +1,10 @@
-import ast
-import json
 from functools import wraps
 
-import requests
-from flask_security.core import current_user
-from flask import request, g, jsonify
 import sentry_sdk
-
-from grant.settings import SECRET_KEY, BLOCKCHAIN_API_SECRET
+from flask import request, g, jsonify
+from flask_security.core import current_user
 from grant.proposal.models import Proposal
+from grant.settings import BLOCKCHAIN_API_SECRET
 from grant.user.models import User
 
 
@@ -27,6 +23,7 @@ def requires_auth(f):
                 "id": current_user.id,
             }
         return f(*args, **kwargs)
+
     return decorated
 
 
@@ -68,6 +65,7 @@ def requires_team_member_auth(f):
 
     return requires_auth(decorated)
 
+
 def internal_webhook(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -79,4 +77,5 @@ def internal_webhook(f):
             print(f'Internal webhook provided invalid "Authorization" header: {secret}')
             return jsonify(message="Invalid 'Authorization' header"), 403
         return f(*args, **kwargs)
+
     return decorated

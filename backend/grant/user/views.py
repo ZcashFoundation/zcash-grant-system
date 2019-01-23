@@ -1,11 +1,10 @@
-from flask import Blueprint, g, request
-from flask_yoloapi import endpoint, parameter
 from animal_case import keys_to_snake_case
-
+from flask import Blueprint, g
+from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, user_comments_schema
+from grant.email.models import EmailRecovery
 from grant.proposal.models import (
     Proposal,
-    proposals_schema,
     proposal_team,
     ProposalTeamInvite,
     invites_with_proposal_schema,
@@ -17,15 +16,13 @@ from grant.proposal.models import (
     REJECTED,
     CONFIRMED
 )
-from grant.utils.exceptions import ValidationException
 from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
-from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
+from grant.utils.exceptions import ValidationException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
-from grant.email.models import EmailRecovery
+from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 
 from .models import (
     User,
-    UserSettings,
     SocialMedia,
     Avatar,
     users_schema,
@@ -48,10 +45,10 @@ def get_users(proposal_id):
     else:
         users = (
             User.query
-            .join(proposal_team)
-            .join(Proposal)
-            .filter(proposal_team.c.proposal_id == proposal.id)
-            .all()
+                .join(proposal_team)
+                .join(Proposal)
+                .filter(proposal_team.c.proposal_id == proposal.id)
+                .all()
         )
     result = users_schema.dump(users)
     return result

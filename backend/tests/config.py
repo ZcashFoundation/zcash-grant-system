@@ -1,10 +1,11 @@
 import json
-from flask_testing import TestCase
 
+from flask_testing import TestCase
 from grant.app import create_app
-from grant.user.models import User, SocialMedia, db, Avatar
 from grant.proposal.models import Proposal
-from .test_data import test_user, test_other_user, test_proposal, message
+from grant.user.models import User, SocialMedia, db, Avatar
+
+from .test_data import test_user, test_other_user, test_proposal
 
 
 class BaseTestConfig(TestCase):
@@ -29,7 +30,7 @@ class BaseTestConfig(TestCase):
         """
 
         message = message or 'HTTP Status %s expected but got %s. Response json: %s' \
-                             % (status_code, response.status_code, response.json or response.data)
+                  % (status_code, response.status_code, response.json or response.data)
         self.assertEqual(response.status_code, status_code, message)
 
     assert_status = assertStatus
