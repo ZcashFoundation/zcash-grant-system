@@ -37,14 +37,6 @@ class ProfileUser extends React.Component<Props> {
         <div className="ProfileUser-info">
           <div className="ProfileUser-info-name">{user.displayName}</div>
           <div className="ProfileUser-info-title">{user.title}</div>
-          <div>
-            {user.emailAddress && (
-              <div className="ProfileUser-info-address">
-                <span>email address</span>
-                {user.emailAddress}
-              </div>
-            )}
-          </div>
           {socialMedias.length > 0 && (
             <div className="ProfileUser-info-social">
               {socialMedias.map(sm => (
