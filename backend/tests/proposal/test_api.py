@@ -1,9 +1,9 @@
 import json
-from mock import patch
 
-from grant.proposal.models import Proposal, APPROVED, PENDING, DRAFT
+from grant.proposal.models import Proposal, PENDING
+
 from ..config import BaseProposalCreatorConfig
-from ..test_data import test_proposal, test_user
+from ..test_data import test_proposal
 
 
 class TestProposalAPI(BaseProposalCreatorConfig):

@@ -2,10 +2,8 @@ import json
 from mock import patch
 
 from grant.proposal.models import Proposal
-from grant.user.models import SocialMedia, Avatar
-from grant.utils.requests import blockchain_get
 from ..config import BaseUserConfig
-from ..test_data import test_proposal, test_user
+from ..test_data import test_proposal
 from ..mocks import mock_request
 
 mock_contribution_addresses = mock_request({
@@ -13,6 +11,7 @@ mock_contribution_addresses = mock_request({
     'sprout': 'z123',
     'memo': '123',
 })
+
 
 class TestProposalContributionAPI(BaseUserConfig):
     @patch('requests.get', side_effect=mock_contribution_addresses)

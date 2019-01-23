@@ -1,7 +1,5 @@
 import json
-from mock import patch
 
-from grant.proposal.models import Proposal, db
 from ..config import BaseProposalCreatorConfig
 
 test_update = {

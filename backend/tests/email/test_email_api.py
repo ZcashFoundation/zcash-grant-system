@@ -1,16 +1,11 @@
-import copy
 import json
-from datetime import datetime, timedelta
 
-from animal_case import animalify
-from grant.proposal.models import Proposal
-from grant.user.models import User, user_schema, db
-from grant.email.subscription_settings import get_default_email_subscriptions
 from grant.email.models import EmailVerification
-from mock import patch, Mock
+from grant.user.models import db
+from mock import patch
 
 from ..config import BaseUserConfig
-from ..test_data import test_team, test_proposal, test_user
+from ..test_data import test_user
 
 
 class TestEmailAPI(BaseUserConfig):

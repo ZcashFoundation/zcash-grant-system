@@ -26,4 +26,3 @@ class UserFactory(BaseFactory):
 
     class Meta:
         """Factory configuration."""
-

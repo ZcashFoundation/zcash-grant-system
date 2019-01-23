@@ -1,15 +1,13 @@
 import datetime
-from typing import List
-from sqlalchemy import func, or_
 from functools import reduce
 
 from grant.comment.models import Comment
-from grant.extensions import ma, db
-from grant.utils.misc import dt_to_unix, make_url
-from grant.utils.exceptions import ValidationException
-from grant.utils.requests import blockchain_get
 from grant.email.send import send_email
-
+from grant.extensions import ma, db
+from grant.utils.exceptions import ValidationException
+from grant.utils.misc import dt_to_unix, make_url
+from grant.utils.requests import blockchain_get
+from sqlalchemy import func, or_
 
 # Proposal states
 DRAFT = 'DRAFT'
@@ -101,10 +99,10 @@ class ProposalContribution(db.Model):
     user = db.relationship("User")
 
     def __init__(
-        self,
-        proposal_id: int,
-        user_id: int,
-        amount: str
+            self,
+            proposal_id: int,
+            user_id: int,
+            amount: str
     ):
         self.proposal_id = proposal_id
         self.user_id = user_id
@@ -243,14 +241,14 @@ class Proposal(db.Model):
             .all()
 
     def update(
-        self,
-        title: str = '',
-        brief: str = '',
-        category: str = '',
-        content: str = '',
-        target: str = '0',
-        payout_address: str = '',
-        deadline_duration: int = 5184000  # 60 days
+            self,
+            title: str = '',
+            brief: str = '',
+            category: str = '',
+            content: str = '',
+            target: str = '0',
+            payout_address: str = '',
+            deadline_duration: int = 5184000  # 60 days
     ):
         self.title = title
         self.brief = brief
@@ -438,6 +436,7 @@ class ProposalTeamInviteSchema(ma.Schema):
 
 proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
+
 
 # TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
 

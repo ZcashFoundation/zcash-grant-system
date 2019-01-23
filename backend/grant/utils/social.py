@@ -1,10 +1,5 @@
-import requests
-import re
-import json
-import pprint
 import abc
-from requests_oauthlib import OAuth1Session, OAuth2Session
-from flask import session
+
 from grant.settings import (
     SITE_URL,
     GITHUB_CLIENT_ID,
@@ -14,6 +9,7 @@ from grant.settings import (
     LINKEDIN_CLIENT_ID,
     LINKEDIN_CLIENT_SECRET
 )
+from requests_oauthlib import OAuth1Session, OAuth2Session
 
 
 class VerifySocialException(Exception):

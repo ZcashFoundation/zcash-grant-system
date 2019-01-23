@@ -1,9 +1,4 @@
-import json
-from mock import patch
 import pytest
-
-from ..config import BaseTestConfig
-from grant.utils.exceptions import ValidationException
 from grant.email.subscription_settings import (
     email_subscriptions_to_bits,
     email_subscriptions_to_dict,
@@ -12,6 +7,9 @@ from grant.email.subscription_settings import (
     is_subscribed,
     EmailSubscription
 )
+from grant.utils.exceptions import ValidationException
+
+from ..config import BaseTestConfig
 
 test_dict = get_default_email_subscriptions()
 

@@ -1,10 +1,8 @@
-import json
+from grant.proposal.models import APPROVED, REJECTED
+from grant.utils.admin import generate_admin_password_hash
 from mock import patch
 
-from grant.utils.admin import generate_admin_password_hash
-from grant.proposal.models import Proposal, APPROVED, REJECTED, PENDING, DRAFT
 from ..config import BaseProposalCreatorConfig
-from ..test_data import test_proposal, test_user
 
 plaintext_mock_password = "p4ssw0rd"
 mock_admin_auth = {
