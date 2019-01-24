@@ -50,6 +50,11 @@ example_email_args = {
         'display_name': user.display_name,
         'confirm_url': 'http://someconfirmurl.com',
     },
+    'change_password': {
+        'display_name': user.display_name,
+        'recover_url': 'http://somerecoverurl.com',
+        'contact_url': 'http://somecontacturl.com',
+    },
     'proposal_approved': {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',

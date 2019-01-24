@@ -22,6 +22,11 @@ export default [
     description: 'Sent when the user has changed their email, to confirm their new one',
   },
   {
+    id: 'change_password',
+    title: 'Change password confirmation',
+    description: 'Sent when the user has changed their password, in case of compromise',
+  },
+  {
     id: 'team_invite',
     title: 'Proposal team invite',
     description: 'Sent when a proposal creator sends an invite to a user',

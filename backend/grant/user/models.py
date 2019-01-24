@@ -180,6 +180,11 @@ class User(db.Model, UserMixin):
     def set_password(self, password: str):
         self.password = hash_password(password)
         db.session.commit()
+        send_email(self.email_address, 'change_password', {
+            'display_name': self.display_name,
+            'recover_url': make_url('/auth/recover'),
+            'contact_url': make_url('/contact')
+        })
 
     def set_email(self, email: str):
         # Update email address

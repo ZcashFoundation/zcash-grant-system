@@ -46,6 +46,14 @@ def change_email_info(email_args):
     }
 
 
+def change_password_info(email_args):
+    return {
+        'subject': 'Your password has been changed',
+        'title': 'Password changed',
+        'preview': 'This is just a confirmation of your recent password change'
+    }
+
+
 def proposal_approved(email_args):
     return {
         'subject': 'Your proposal has been approved!',
@@ -127,6 +135,7 @@ get_info_lookup = {
     'team_invite': team_invite_info,
     'recover': recover_info,
     'change_email': change_email_info,
+    'change_password': change_password_info,
     'proposal_approved': proposal_approved,
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,
