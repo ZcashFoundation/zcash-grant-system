@@ -132,6 +132,6 @@ class AccountSettings extends React.Component<Props, State> {
 
 const FormWrappedAccountSettings = Form.create()(AccountSettings);
 
-export default connect<StateProps, {}, FormComponentProps, AppState>(state => ({
+export default connect<StateProps, {}, {}, AppState>(state => ({
   email: state.auth.user ? state.auth.user.emailAddress || '' : '',
 }))(FormWrappedAccountSettings);
