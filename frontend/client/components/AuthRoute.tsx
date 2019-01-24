@@ -1,9 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Route, Redirect, RouteProps } from 'react-router-dom';
-import { Spin, message } from 'antd';
+import { Route, Redirect, RouteProps } from 'react-router';
+import { message } from 'antd';
 import { AppState } from 'store/reducers';
 import { authActions } from 'modules/auth';
+import Loader from 'components/Loader';
 
 interface OwnProps {
   onlyLoggedOut?: boolean;
@@ -43,7 +44,7 @@ class AuthRoute extends React.Component<Props> {
       ...routeProps
     } = this.props;
     if (isCheckingUser) {
-      return <Spin tip="Checking authentication status" />;
+      return <Loader size="large" tip="Checking authentication status" />;
     }
     if ((user && !onlyLoggedOut) || (!user && onlyLoggedOut)) {
       return <Route {...routeProps} />;

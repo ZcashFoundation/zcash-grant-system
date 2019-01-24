@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { Spin, Form, Input, Button, Icon } from 'antd';
+import { Form, Input, Button, Icon } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { fromZat } from 'utils/units';
@@ -10,6 +10,7 @@ import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
 import UnitDisplay from 'components/UnitDisplay';
 import ContributionModal from 'components/ContributionModal';
+import Loader from 'components/Loader';
 import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI } from 'api/constants';
 import './style.less';
@@ -167,7 +168,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
         </React.Fragment>
       );
     } else {
-      content = <Spin />;
+      content = <Loader />;
     }
 
     return (

@@ -1,8 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { List, Button, Divider, Spin, Popconfirm, message } from 'antd';
+import { Spin, List, Button, Divider, Popconfirm, message } from 'antd';
 import Placeholder from 'components/Placeholder';
+import Loader from 'components/Loader';
 import { ProposalDraft, STATUS } from 'types';
 import { fetchDrafts, createDraft, deleteDraft } from 'modules/create/actions';
 import { AppState } from 'store/reducers';
@@ -70,7 +71,7 @@ class DraftList extends React.Component<Props, State> {
     const { deletingId } = this.state;
 
     if (!drafts || isCreatingDraft) {
-      return <Spin />;
+      return <Loader size="large" />;
     }
 
     let draftsEl;

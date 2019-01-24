@@ -23,7 +23,7 @@ const tsBabelLoaderClient = {
       options: {
         plugins: [
           'dynamic-import-webpack', // for client
-          'loadable-components/babel',
+          '@loadable/babel-plugin',
           'react-hot-loader/babel',
           '@babel/plugin-proposal-object-rest-spread',
           '@babel/plugin-proposal-class-properties',
@@ -47,7 +47,7 @@ const tsBabelLoaderServer = {
       options: {
         plugins: [
           'dynamic-import-node', // for server
-          'loadable-components/babel',
+          '@loadable/babel-plugin',
           '@babel/plugin-proposal-object-rest-spread',
           '@babel/plugin-proposal-class-properties',
           ['import', { libraryName: 'antd', style: false }],

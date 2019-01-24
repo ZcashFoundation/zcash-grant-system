@@ -1,7 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin, Icon } from 'antd';
+import { Icon } from 'antd';
 import { Link } from 'react-router-dom';
+import Loader from 'components/Loader';
 import { createActions } from 'modules/create';
 import { AppState } from 'store/reducers';
 import './Final.less';
@@ -56,12 +57,7 @@ class CreateFinal extends React.Component<Props> {
         </div>
       );
     } else {
-      content = (
-        <div className="CreateFinal-loader">
-          <Spin size="large" />
-          <div className="CreateFinal-loader-text">Submitting your proposal...</div>
-        </div>
-      );
+      content = <Loader size="large" tip="Submitting your proposal..." />;
     }
 
     return <div className="CreateFinal">{content}</div>;
