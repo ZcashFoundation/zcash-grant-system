@@ -1,24 +1,25 @@
 import sendgrid
 from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI
+from grant.utils.misc import make_url
 from python_http_client import HTTPError
 from sendgrid.helpers.mail import Email, Mail, Content
 
 from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
-    'home_url': 'https://grant.io',
-    'account_url': 'https://grant.io/user',
-    'email_settings_url': 'https://grant.io/user/settings',
-    'unsubscribe_url': 'https://grant.io/unsubscribe',
+    'home_url': make_url('/'),
+    'account_url': make_url('/user'),
+    'email_settings_url': make_url('/settings'),
+    'unsubscribe_url': make_url('/unsubscribe'),
 }
 
 
 def signup_info(email_args):
     return {
-        'subject': 'Confirm your email on Grant.io',
-        'title': 'Welcome to Grant.io!',
-        'preview': 'Welcome to Grant.io, we just need to confirm your email address.',
+        'subject': 'Confirm your email on {}'.format(UI['NAME']),
+        'title': 'Welcome to {}!'.format(UI['NAME']),
+        'preview': 'Welcome to {}, we just need to confirm your email address.'.format(UI['NAME']),
     }
 
 
@@ -32,8 +33,8 @@ def team_invite_info(email_args):
 
 def recover_info(email_args):
     return {
-        'subject': 'Grant.io account recovery',
-        'title': 'Grant.io account recovery',
+        'subject': '{} account recovery'.format(UI['NAME']),
+        'title': '{} account recovery'.format(UI['NAME']),
         'preview': 'Use the link to recover your account.'
     }
 
@@ -50,7 +51,7 @@ def change_email_old_info(email_args):
     return {
         'subject': 'Your email has been changed',
         'title': 'Email changed',
-        'preview': 'Your email address has been updated on ZF Grants'
+        'preview': 'Your email address has been updated on {}'.format(UI['NAME']),
     }
 
 
@@ -157,19 +158,35 @@ get_info_lookup = {
 
 def generate_email(type, email_args):
     info = get_info_lookup[type](email_args)
-    body_text = render_template('emails/%s.txt' % (type), args=email_args)
-    body_html = render_template('emails/%s.html' % (type), args=email_args)
+    body_text = render_template(
+        'emails/%s.txt' % (type),
+        args=email_args,
+        UI=UI,
+    )
+    body_html = render_template(
+        'emails/%s.html' % (type),
+        args=email_args,
+        UI=UI,
+    )
 
-    html = render_template('emails/template.html', args={
-        **default_template_args,
-        **info,
-        'body': Markup(body_html),
-    })
-    text = render_template('emails/template.txt', args={
-        **default_template_args,
-        **info,
-        'body': body_text,
-    })
+    html = render_template(
+        'emails/template.html',
+        args={
+            **default_template_args,
+            **info,
+            'body': Markup(body_html),
+        },
+        UI=UI,
+    )
+    text = render_template(
+        'emails/template.txt',
+        args={
+            **default_template_args,
+            **info,
+            'body': body_text,
+        },
+        UI=UI,
+    )
 
     return {
         'info': info,
