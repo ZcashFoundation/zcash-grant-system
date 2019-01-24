@@ -22,6 +22,11 @@ export default [
     description: 'Sent when the user has changed their email, to confirm their new one',
   },
   {
+    id: 'change_email_old',
+    title: 'Change email notification (Old email)',
+    description: 'Sent when the user has changed their email, in case of compromise',
+  },
+  {
     id: 'change_password',
     title: 'Change password confirmation',
     description: 'Sent when the user has changed their password, in case of compromise',
