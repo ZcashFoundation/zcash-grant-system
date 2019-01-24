@@ -13,6 +13,7 @@ interface StateProps {
 type Props = FormComponentProps & StateProps;
 
 const STATE = {
+  newEmail: '',
   emailChangePending: false,
   emailChangeSuccess: false,
   emailChangeError: '',
@@ -25,7 +26,12 @@ class AccountSettings extends React.Component<Props, State> {
 
   render() {
     const { email, form } = this.props;
-    const { emailChangeError, emailChangePending, emailChangeSuccess } = this.state;
+    const {
+      emailChangeError,
+      emailChangePending,
+      emailChangeSuccess,
+      newEmail,
+    } = this.state;
 
     return (
       <div className="AccountSettings">
@@ -36,7 +42,7 @@ class AccountSettings extends React.Component<Props, State> {
         >
           <Form.Item label="Email">
             {form.getFieldDecorator('email', {
-              initialValue: email,
+              initialValue: newEmail || email,
               rules: [
                 { type: 'email', message: 'Please enter a valid email' },
                 { required: true, message: 'Please enter a new email' },
@@ -113,11 +119,16 @@ class AccountSettings extends React.Component<Props, State> {
         });
         updateUserEmail(values.email, values.currentPassword)
           .then(() => {
-            this.setState({
-              emailChangePending: false,
-              emailChangeSuccess: true,
-            });
-            this.props.form.resetFields();
+            this.setState(
+              {
+                newEmail: values.email,
+                emailChangePending: false,
+                emailChangeSuccess: true,
+              },
+              () => {
+                this.props.form.resetFields();
+              },
+            );
           })
           .catch(e => {
             this.setState({
