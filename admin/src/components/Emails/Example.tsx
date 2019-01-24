@@ -21,7 +21,7 @@ export default class Example extends React.Component<Props> {
             <div className="Example-inbox-left">
               <div className="Example-inbox-left-icon is-checkbox" />
               <div className="Example-inbox-left-icon is-favorite" />
-              <div className="Example-inbox-left-sender">Grant.io</div>
+              <div className="Example-inbox-left-sender">ZF Grants</div>
             </div>
             <div className="Example-inbox-subject">
               <strong>{email.info.subject}</strong>
