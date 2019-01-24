@@ -181,6 +181,23 @@ class User(db.Model, UserMixin):
         self.password = hash_password(password)
         db.session.commit()
 
+    def set_email(self, email: str):
+        # Update email address
+        self.email_address = email
+        # Delete old verification(s?)
+        old_evs = EmailVerification.query.filter_by(user_id=self.id).all()
+        for old_ev in old_evs:
+            db.session.delete(old_ev)
+        # Generate a new one
+        ev = EmailVerification(user_id=self.id)
+        db.session.add(ev)
+        # Save changes & send a verification email
+        db.session.commit()
+        send_email(self.email_address, 'change_email', {
+            'display_name': self.display_name,
+            'confirm_url': make_url(f'/email/verify?code={ev.code}')
+        })
+
     def login(self):
         login_user(self)
 

@@ -73,7 +73,8 @@ class ChangePassword extends React.Component<Props, State> {
           {passwordChangeSuccess && (
             <Alert
               type="success"
-              message="Password changed."
+              message="Password changed successfully!"
+              description="We’ve sent you an email to confirm this change."
               showIcon
               closable
               onClose={() => this.setState({ passwordChangeSuccess: false })}

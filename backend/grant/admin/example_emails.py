@@ -35,6 +35,7 @@ update = FakeUpdate()
 
 example_email_args = {
     'signup': {
+        'display_name': user.display_name,
         'confirm_url': 'http://someconfirmurl.com',
     },
     'team_invite': {
@@ -44,6 +45,10 @@ example_email_args = {
     },
     'recover': {
         'recover_url': 'http://somerecoveryurl.com',
+    },
+    'change_email': {
+        'display_name': user.display_name,
+        'confirm_url': 'http://someconfirmurl.com',
     },
     'proposal_approved': {
         'proposal': proposal,

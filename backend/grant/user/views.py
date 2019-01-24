@@ -141,7 +141,7 @@ def auth_user(email, password):
     return user_schema.dump(existing_user)
 
 
-@blueprint.route("/password", methods=["PUT"])
+@blueprint.route("/me/password", methods=["PUT"])
 @requires_auth
 @endpoint.api(
     parameter('currentPassword', type=str, required=True),
@@ -151,6 +151,20 @@ def update_user_password(current_password, password):
     if not g.current_user.check_password(current_password):
         return {"message": "Current password incorrect"}, 403
     g.current_user.set_password(password)
+    return None, 200
+
+
+@blueprint.route("/me/email", methods=["PUT"])
+@requires_auth
+@endpoint.api(
+    parameter('email', type=str, required=True),
+    parameter('password', type=str, required=True)
+)
+def update_user_email(email, password):
+    if not g.current_user.check_password(password):
+        return {"message": "Password is incorrect"}, 403
+    print('set_email')
+    g.current_user.set_email(email)
     return None, 200
 
 

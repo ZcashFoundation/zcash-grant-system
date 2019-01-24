@@ -38,6 +38,14 @@ def recover_info(email_args):
     }
 
 
+def change_email_info(email_args):
+    return {
+        'subject': 'Confirm your new email',
+        'title': 'Confirm your email',
+        'preview': 'Click the link inside to confirm your new email'
+    }
+
+
 def proposal_approved(email_args):
     return {
         'subject': 'Your proposal has been approved!',
@@ -118,6 +126,7 @@ get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
     'recover': recover_info,
+    'change_email': change_email_info,
     'proposal_approved': proposal_approved,
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,

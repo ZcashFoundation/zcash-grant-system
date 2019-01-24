@@ -1,10 +1,16 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { Form, Input, Button, Alert } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
 import { updateUserEmail } from 'api/api';
+import { AppState } from 'store/reducers';
 import './Account.less';
 
-type Props = FormComponentProps;
+interface StateProps {
+  email: string;
+}
+
+type Props = FormComponentProps & StateProps;
 
 const STATE = {
   emailChangePending: false,
@@ -18,8 +24,8 @@ class AccountSettings extends React.Component<Props, State> {
   state: State = { ...STATE };
 
   render() {
+    const { email, form } = this.props;
     const { emailChangeError, emailChangePending, emailChangeSuccess } = this.state;
-    const { getFieldDecorator } = this.props.form;
 
     return (
       <div className="AccountSettings">
@@ -29,7 +35,8 @@ class AccountSettings extends React.Component<Props, State> {
           layout="vertical"
         >
           <Form.Item label="Email">
-            {getFieldDecorator('email', {
+            {form.getFieldDecorator('email', {
+              initialValue: email,
               rules: [
                 { type: 'email', message: 'Please enter a valid email' },
                 { required: true, message: 'Please enter a new email' },
@@ -45,7 +52,7 @@ class AccountSettings extends React.Component<Props, State> {
           </Form.Item>
 
           <Form.Item label="Current password">
-            {getFieldDecorator('currentPassword', {
+            {form.getFieldDecorator('currentPassword', {
               rules: [{ required: true, message: 'Please enter your current password' }],
             })(
               <Input
@@ -63,6 +70,7 @@ class AccountSettings extends React.Component<Props, State> {
               htmlType="submit"
               size="large"
               block
+              disabled={form.getFieldValue('email') === email}
               loading={emailChangePending}
             >
               Change email
@@ -82,10 +90,9 @@ class AccountSettings extends React.Component<Props, State> {
           {emailChangeSuccess && (
             <Alert
               type="success"
-              message="Email changed."
-              description="Check your email for a confirmation. Your account will be limited until you do this."
+              message="Email change successful!"
+              description="Check your email for a confirmation link."
               showIcon
-              closable
               onClose={() => this.setState({ emailChangeSuccess: false })}
               className="AccountSettings-alert"
             />
@@ -125,4 +132,6 @@ class AccountSettings extends React.Component<Props, State> {
 
 const FormWrappedAccountSettings = Form.create()(AccountSettings);
 
-export default FormWrappedAccountSettings;
+export default connect<StateProps, {}, FormComponentProps, AppState>(state => ({
+  email: state.auth.user ? state.auth.user.emailAddress || '' : '',
+}))(FormWrappedAccountSettings);

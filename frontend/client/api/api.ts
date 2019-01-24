@@ -96,11 +96,11 @@ export function updateUserPassword(
   currentPassword: string,
   password: string,
 ): Promise<any> {
-  return axios.put(`/api/v1/users/password`, { currentPassword, password });
+  return axios.put(`/api/v1/users/me/password`, { currentPassword, password });
 }
 
-export function updateUserEmail(email: string, currentPassword: string): Promise<any> {
-  return axios.put('/api/v1/users/email', { currentPassword, email });
+export function updateUserEmail(email: string, password: string): Promise<any> {
+  return axios.put('/api/v1/users/me/email', { email, password });
 }
 
 export function updateUser(user: User): Promise<{ data: User }> {
