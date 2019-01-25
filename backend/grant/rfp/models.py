@@ -5,7 +5,7 @@ from grant.utils.enums import RFPStatus
 
 rfp_proposal = db.Table(
     'rfp_proposal', db.Model.metadata,
-    db.Column('rfp_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('rfp_id', db.Integer, db.ForeignKey('rfp.id')),
     db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'), unique=True)
 )
 

@@ -1,8 +1,5 @@
-from enum import Enum
-
-
-# Extend Enum with some helper functions
-class CustomEnum(Enum):
+# Our own Enum class with custom functionality, not Python's
+class CustomEnum():
     # Adds an .includes function that tests if a value is in enum
     def includes(enum: str):
         return enum in self.__members__

@@ -32,7 +32,7 @@ def upgrade():
     sa.Column('rfp_id', sa.Integer(), nullable=True),
     sa.Column('proposal_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['proposal_id'], ['proposal.id'], ),
-    sa.ForeignKeyConstraint(['rfp_id'], ['user.id'], ),
+    sa.ForeignKeyConstraint(['rfp_id'], ['rfp.id'], ),
     sa.UniqueConstraint('proposal_id')
     )
     # ### end Alembic commands ###
