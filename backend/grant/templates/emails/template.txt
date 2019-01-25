@@ -2,8 +2,8 @@
 
 ===============
 
-Grant.io
+{{ UI.NAME }}
 123 Address Street
 City, ST 12345
 
-Unsubscribe here: https://grant.io/unsubscribe
+Unsubscribe here: {{ args.unsubscribe_url }}
