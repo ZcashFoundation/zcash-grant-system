@@ -35,3 +35,9 @@ class ContributionStatus(CustomEnum):
     PENDING = 'PENDING'
     CONFIRMED = 'CONFIRMED'
     DELETED = 'DELETED'
+
+
+class RFPStatus(CustomEnum):
+    DRAFT = 'DRAFT'
+    LIVE = 'LIVE'
+    CLOSED = 'CLOSED'
