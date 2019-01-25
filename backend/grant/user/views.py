@@ -11,15 +11,12 @@ from grant.proposal.models import (
     ProposalContribution,
     user_proposal_contributions_schema,
     user_proposals_schema,
-    PENDING,
-    APPROVED,
-    REJECTED,
-    CONFIRMED
 )
 from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
 from grant.utils.exceptions import ValidationException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
+from grant.utils.enums import ProposalStatus, ContributionStatus
 
 from .models import (
     User,
@@ -81,7 +78,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
         if with_funded:
             contributions = ProposalContribution.get_by_userid(user_id)
             if not authed_user or user.id != authed_user.id:
-                contributions = [c for c in contributions if c.status == CONFIRMED]
+                contributions = [c for c in contributions if c.status == ContributionStatus.CONFIRMED]
             contributions_dump = user_proposal_contributions_schema.dump(contributions)
             result["contributions"] = contributions_dump
         if with_comments:
@@ -89,7 +86,11 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
             comments_dump = user_comments_schema.dump(comments)
             result["comments"] = comments_dump
         if with_pending and authed_user and authed_user.id == user.id:
-            pending = Proposal.get_by_user(user, [PENDING, APPROVED, REJECTED])
+            pending = Proposal.get_by_user(user, [
+                ProposalStatus.PENDING,
+                ProposalStatus.APPROVED,
+                ProposalStatus.REJECTED,
+            ])
             pending_dump = user_proposals_schema.dump(pending)
             result["pendingProposals"] = pending_dump
         return result

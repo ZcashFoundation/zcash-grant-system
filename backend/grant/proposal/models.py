@@ -1,5 +1,6 @@
 import datetime
 from functools import reduce
+from sqlalchemy import func, or_
 
 from grant.comment.models import Comment
 from grant.email.send import send_email
@@ -7,34 +8,7 @@ from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
-from sqlalchemy import func, or_
-
-# Proposal states
-DRAFT = 'DRAFT'
-PENDING = 'PENDING'
-APPROVED = 'APPROVED'
-REJECTED = 'REJECTED'
-LIVE = 'LIVE'
-DELETED = 'DELETED'
-STATUSES = [DRAFT, PENDING, APPROVED, REJECTED, LIVE, DELETED]
-
-# Funding stages
-FUNDING_REQUIRED = 'FUNDING_REQUIRED'
-COMPLETED = 'COMPLETED'
-PROPOSAL_STAGES = [FUNDING_REQUIRED, COMPLETED]
-
-# Proposal categories
-DAPP = "DAPP"
-DEV_TOOL = "DEV_TOOL"
-CORE_DEV = "CORE_DEV"
-COMMUNITY = "COMMUNITY"
-DOCUMENTATION = "DOCUMENTATION"
-ACCESSIBILITY = "ACCESSIBILITY"
-CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
-
-# Contribution states
-# PENDING = 'PENDING'
-CONFIRMED = 'CONFIRMED'
+from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -108,7 +82,7 @@ class ProposalContribution(db.Model):
         self.user_id = user_id
         self.amount = amount
         self.date_created = datetime.datetime.now()
-        self.status = PENDING
+        self.status = ContributionStatus.PENDING
 
     @staticmethod
     def get_existing_contribution(user_id: int, proposal_id: int, amount: str):
@@ -116,19 +90,19 @@ class ProposalContribution(db.Model):
             user_id=user_id,
             proposal_id=proposal_id,
             amount=amount,
-            status=PENDING,
+            status=ContributionStatus.PENDING,
         ).first()
 
     @staticmethod
     def get_by_userid(user_id):
         return ProposalContribution.query \
             .filter(ProposalContribution.user_id == user_id) \
-            .filter(ProposalContribution.status != DELETED) \
+            .filter(ProposalContribution.status != ContributionStatus.DELETED) \
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
 
     def confirm(self, tx_id: str, amount: str):
-        self.status = CONFIRMED
+        self.status = ContributionStatus.CONFIRMED
         self.tx_id = tx_id
         self.amount = amount
 
@@ -165,7 +139,7 @@ class Proposal(db.Model):
 
     def __init__(
             self,
-            status: str = 'DRAFT',
+            status: str = ProposalStatus.DRAFT,
             title: str = '',
             brief: str = '',
             content: str = '',
@@ -193,10 +167,10 @@ class Proposal(db.Model):
         category = proposal.get('category')
         if title and len(title) > 60:
             raise ValidationException("Proposal title cannot be longer than 60 characters")
-        if stage and stage not in PROPOSAL_STAGES:
-            raise ValidationException("Proposal stage {} not in {}".format(stage, PROPOSAL_STAGES))
-        if category and category not in CATEGORIES:
-            raise ValidationException("Category {} not in {}".format(category, CATEGORIES))
+        if stage and not ProposalStage.includes(stage):
+            raise ValidationException("Proposal stage {} is not a valid stage".format(stage))
+        if category and not Category.includes(category):
+            raise ValidationException("Category {} not a valid category".format(category))
 
     def validate_publishable(self):
         # Require certain fields
@@ -224,7 +198,7 @@ class Proposal(db.Model):
         )
 
     @staticmethod
-    def get_by_user(user, statuses=[LIVE]):
+    def get_by_user(user, statuses=[ProposalStatus.LIVE]):
         status_filter = or_(Proposal.status == v for v in statuses)
         return Proposal.query \
             .join(proposal_team) \
@@ -261,21 +235,21 @@ class Proposal(db.Model):
 
     def submit_for_approval(self):
         self.validate_publishable()
-        allowed_statuses = [DRAFT, REJECTED]
+        allowed_statuses = [ProposalStatus.DRAFT, ProposalStatus.REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
-            raise ValidationException(f"Proposal status must be {DRAFT} or {REJECTED} to submit for approval")
+            raise ValidationException(f"Proposal status must be draft or rejected to submit for approval")
 
-        self.status = PENDING
+        self.status = ProposalStatus.PENDING
 
     def approve_pending(self, is_approve, reject_reason=None):
         self.validate_publishable()
         # specific validation
-        if not self.status == PENDING:
-            raise ValidationException(f"Proposal status must be {PENDING} to approve or reject")
+        if not self.status == ProposalStatus.PENDING:
+            raise ValidationException(f"Proposal must be pending to approve or reject")
 
         if is_approve:
-            self.status = APPROVED
+            self.status = ProposalStatus.APPROVED
             self.date_approved = datetime.datetime.now()
             for t in self.team:
                 send_email(t.email_address, 'proposal_approved', {
@@ -287,7 +261,7 @@ class Proposal(db.Model):
         else:
             if not reject_reason:
                 raise ValidationException("Please provide a reason for rejecting the proposal")
-            self.status = REJECTED
+            self.status = ProposalStatus.REJECTED
             self.reject_reason = reject_reason
             for t in self.team:
                 send_email(t.email_address, 'proposal_rejected', {
@@ -300,15 +274,15 @@ class Proposal(db.Model):
     def publish(self):
         self.validate_publishable()
         # specific validation
-        if not self.status == APPROVED:
-            raise ValidationException(f"Proposal status must be {APPROVED}")
+        if not self.status == ProposalStatus.APPROVED:
+            raise ValidationException(f"Proposal status must be approved")
 
         self.date_published = datetime.datetime.now()
-        self.status = LIVE
+        self.status = ProposalStatus.LIVE
 
     def get_amount_funded(self):
         contributions = ProposalContribution.query \
-            .filter_by(proposal_id=self.id, status=CONFIRMED) \
+            .filter_by(proposal_id=self.id, status=ProposalStatus.CONFIRMED) \
             .all()
         funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
         return str(funded)

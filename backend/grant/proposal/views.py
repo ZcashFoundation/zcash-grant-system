@@ -8,6 +8,7 @@ from grant.user.models import User
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_preview
+from grant.utils.enums import ProposalStatus, ContributionStatus
 from sqlalchemy import or_
 
 from .models import (
@@ -23,13 +24,6 @@ from .models import (
     proposal_team_invite_schema,
     proposal_proposal_contributions_schema,
     db,
-    DRAFT,
-    PENDING,
-    APPROVED,
-    REJECTED,
-    LIVE,
-    DELETED,
-    CONFIRMED,
 )
 
 blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
@@ -40,8 +34,8 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
-        if proposal.status != LIVE:
-            if proposal.status == DELETED:
+        if proposal.status != ProposalStatus.LIVE:
+            if proposal.status == ProposalStatus.DELETED:
                 return {"message": "Proposal was deleted"}, 404
             authed_user = get_authed_user()
             team_ids = list(x.id for x in proposal.team)
@@ -130,13 +124,13 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 def get_proposals(stage):
     if stage:
         proposals = (
-            Proposal.query.filter_by(status=LIVE, stage=stage)
+            Proposal.query.filter_by(status=ProposalStatus.LIVE, stage=stage)
                 .order_by(Proposal.date_created.desc())
                 .all()
         )
     else:
         proposals = (
-            Proposal.query.filter_by(status=LIVE)
+            Proposal.query.filter_by(status=ProposalStatus.LIVE)
                 .order_by(Proposal.date_created.desc())
                 .all()
         )
@@ -152,7 +146,7 @@ def get_proposals(stage):
 @requires_auth
 @endpoint.api()
 def make_proposal_draft():
-    proposal = Proposal.create(status="DRAFT")
+    proposal = Proposal.create(status=ProposalStatus.DRAFT)
     proposal.team.append(g.current_user)
     db.session.add(proposal)
     db.session.commit()
@@ -165,11 +159,14 @@ def make_proposal_draft():
 def get_proposal_drafts():
     proposals = (
         Proposal.query
-            .filter(or_(Proposal.status == DRAFT, Proposal.status == REJECTED))
-            .join(proposal_team)
-            .filter(proposal_team.c.user_id == g.current_user.id)
-            .order_by(Proposal.date_created.desc())
-            .all()
+        .filter(or_(
+            Proposal.status == ProposalStatus.DRAFT,
+            Proposal.status == ProposalStatus.REJECTED,
+        ))
+        .join(proposal_team)
+        .filter(proposal_team.c.user_id == g.current_user.id)
+        .order_by(Proposal.date_created.desc())
+        .all()
     )
     return proposals_schema.dump(proposals), 200
 
@@ -217,7 +214,12 @@ def update_proposal(milestones, proposal_id, **kwargs):
 @requires_team_member_auth
 @endpoint.api()
 def delete_proposal(proposal_id):
-    deleteable_statuses = [DRAFT, PENDING, APPROVED, REJECTED]
+    deleteable_statuses = [
+        ProposalStatus.DRAFT,
+        ProposalStatus.PENDING,
+        ProposalStatus.APPROVED,
+        ProposalStatus.REJECTED,
+    ]
     status = g.current_proposal.status
     if status not in deleteable_statuses:
         return {"message": "Cannot delete proposals with %s status" % status}, 400
@@ -364,12 +366,18 @@ def get_proposal_contributions(proposal_id):
         return {"message": "No proposal matching id"}, 404
 
     top_contributions = ProposalContribution.query \
-        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .filter_by(
+            proposal_id=proposal_id,
+            status=ContributionStatus.CONFIRMED,
+        ) \
         .order_by(ProposalContribution.amount.desc()) \
         .limit(5) \
         .all()
     latest_contributions = ProposalContribution.query \
-        .filter_by(proposal_id=proposal_id, status=CONFIRMED) \
+        .filter_by(
+            proposal_id=proposal_id,
+            status=ContributionStatus.CONFIRMED,
+        ) \
         .order_by(ProposalContribution.date_created.desc()) \
         .limit(5) \
         .all()
@@ -439,7 +447,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
         print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
         return {"message": "No contribution matching id"}, 404
 
-    if contribution.status == CONFIRMED:
+    if contribution.status == ContributionStatus.CONFIRMED:
         # Duplicates can happen, just return ok
         return None, 200
 
@@ -483,13 +491,13 @@ def delete_proposal_contribution(contribution_id):
     if not contribution:
         return {"message": "No contribution matching id"}, 404
 
-    if contribution.status == CONFIRMED:
+    if contribution.status == ContributionStatus.CONFIRMED:
         return {"message": "Cannot delete confirmed contributions"}, 400
 
     if contribution.user_id != g.current_user.id:
         return {"message": "Must be the user of the contribution to delete it"}, 403
 
-    contribution.status = DELETED
+    contribution.status = ContributionStatus.DELETED
     db.session.add(contribution)
     db.session.commit()
     return None, 202

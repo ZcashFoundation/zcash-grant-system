@@ -10,10 +10,10 @@ from grant.proposal.models import (
     proposals_schema,
     proposal_schema,
     user_proposal_contributions_schema,
-    PENDING
 )
 from grant.user.models import User, users_schema, user_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
+from grant.utils.enums import ProposalStatus
 from sqlalchemy import func, or_
 
 from .example_emails import example_email_args
@@ -53,7 +53,7 @@ def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
     proposal_count = db.session.query(func.count(Proposal.id)).scalar()
     proposal_pending_count = db.session.query(func.count(Proposal.id)) \
-        .filter(Proposal.status == PENDING) \
+        .filter(Proposal.status == ProposalStatus.PENDING) \
         .scalar()
     return {
         "userCount": user_count,
