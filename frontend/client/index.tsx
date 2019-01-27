@@ -2,12 +2,12 @@ import '@babel/polyfill';
 import React from 'react';
 import { hot } from 'react-hot-loader';
 import { hydrate } from 'react-dom';
-import { loadComponents } from 'loadable-components';
 import { Provider } from 'react-redux';
 import { Router } from 'react-router-dom';
 import { PersistGate } from 'redux-persist/integration/react';
 import * as Sentry from '@sentry/browser';
 import { I18nextProvider } from 'react-i18next';
+import { loadableReady } from '@loadable/component';
 import { configureStore } from 'store/configure';
 import history from 'store/history';
 import { massageSerializedState } from 'utils/api';
@@ -38,6 +38,6 @@ const App = hot(module)(() => (
   </I18nextProvider>
 ));
 
-loadComponents().then(() => {
+loadableReady(() => {
   hydrate(<App />, document.getElementById('app'));
 });

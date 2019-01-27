@@ -1,11 +1,12 @@
 import React from 'react';
-import { Spin, Alert } from 'antd';
+import { Alert } from 'antd';
 import qs from 'query-string';
 import { withRouter, RouteComponentProps, Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { SOCIAL_INFO } from 'utils/social';
+import Loader from 'components/Loader';
 
 interface StateProps {
   authUser: AppState['auth']['user'];
@@ -35,7 +36,7 @@ class Callback extends React.Component<Props, State> {
     const { hasCheckedAuthUser, authUser } = this.props;
 
     if (!hasCheckedAuthUser) {
-      return <Spin />;
+      return <Loader />;
     }
 
     if (hasCheckedAuthUser && !authUser) {

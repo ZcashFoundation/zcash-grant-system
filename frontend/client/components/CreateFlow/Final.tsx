@@ -1,7 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin, Icon } from 'antd';
+import { Icon } from 'antd';
 import { Link } from 'react-router-dom';
+import Loader from 'components/Loader';
 import { createActions } from 'modules/create';
 import { AppState } from 'store/reducers';
 import './Final.less';
@@ -42,8 +43,8 @@ class CreateFinal extends React.Component<Props> {
           <Icon type="check-circle" />
           <div className="CreateFinal-message-text">
             Your proposal has been submitted! Check your{' '}
-            <Link to={`/profile?tab=pending`}>profile's pending proposals tab</Link>
-            {' '}to check its status.
+            <Link to={`/profile?tab=pending`}>profile's pending proposals tab</Link> to
+            check its status.
           </div>
           {/* TODO - remove or rework depending on design choices */}
           {/* <div className="CreateFinal-message-text">
@@ -56,12 +57,7 @@ class CreateFinal extends React.Component<Props> {
         </div>
       );
     } else {
-      content = (
-        <div className="CreateFinal-loader">
-          <Spin size="large" />
-          <div className="CreateFinal-loader-text">Submitting your proposal...</div>
-        </div>
-      );
+      content = <Loader size="large" tip="Submitting your proposal..." />;
     }
 
     return <div className="CreateFinal">{content}</div>;

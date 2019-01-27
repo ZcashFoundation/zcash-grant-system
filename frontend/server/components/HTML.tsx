@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Helmet from 'react-helmet';
+import { ChunkExtractor } from '@loadable/server';
 
 export interface Props {
   children: any;
@@ -9,7 +10,7 @@ export interface Props {
   metaTags: Array<React.MetaHTMLAttributes<HTMLMetaElement>>;
   state: string;
   i18n: string;
-  loadableStateScript: string;
+  extractor: ChunkExtractor;
 }
 
 const HTML: React.SFC<Props> = ({
@@ -20,7 +21,7 @@ const HTML: React.SFC<Props> = ({
   i18n,
   linkTags,
   metaTags,
-  loadableStateScript,
+  extractor,
 }) => {
   const head = Helmet.renderStatic();
   return (
@@ -43,6 +44,7 @@ const HTML: React.SFC<Props> = ({
           crossOrigin="anonymous"
         /> */}
         {/* Custom link & meta tags from webpack */}
+        {extractor.getLinkElements()}
         {linkTags.map((l, idx) => (
           <link key={idx} {...l as any} />
         ))}
@@ -57,9 +59,12 @@ const HTML: React.SFC<Props> = ({
         {head.link.toComponent()}
         {head.script.toComponent()}
 
+        {extractor.getStyleElements()}
         {css.map(href => {
           return <link key={href} rel="stylesheet" href={href} />;
         })}
+
+        {extractor.getScriptElements()}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__PRELOADED_STATE__ = ${state}`,
@@ -73,7 +78,6 @@ const HTML: React.SFC<Props> = ({
       </head>
       <body>
         <div id="app" dangerouslySetInnerHTML={{ __html: children }} />
-        <script dangerouslySetInnerHTML={{ __html: loadableStateScript }} />
         {scripts.map(src => {
           return <script key={src} src={src} />;
         })}

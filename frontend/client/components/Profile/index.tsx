@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
-import { Spin, Tabs, Badge } from 'antd';
+import { Tabs, Badge } from 'antd';
 import { usersActions } from 'modules/users';
 import { AppState } from 'store/reducers';
 import HeaderDetails from 'components/HeaderDetails';
@@ -20,6 +20,7 @@ import ProfileContribution from './ProfileContribution';
 import ProfileComment from './ProfileComment';
 import ProfileInvite from './ProfileInvite';
 import Placeholder from 'components/Placeholder';
+import Loader from 'components/Loader';
 import Exception from 'pages/exception';
 import ContributionModal from 'components/ContributionModal';
 import LinkableTabs from 'components/LinkableTabs';
@@ -50,6 +51,7 @@ class Profile extends React.Component<Props, State> {
   componentDidMount() {
     this.fetchData();
   }
+
   componentDidUpdate(prevProps: Props) {
     const userLookupId = this.props.match.params.id;
     const prevUserLookupId = prevProps.match.params.id;
@@ -58,6 +60,7 @@ class Profile extends React.Component<Props, State> {
       this.fetchData();
     }
   }
+
   render() {
     const { authUser, match, location } = this.props;
     const { activeContribution } = this.state;
@@ -76,7 +79,7 @@ class Profile extends React.Component<Props, State> {
     const isAuthedUser = user && authUser && user.userid === authUser.userid;
 
     if (waiting) {
-      return <Spin />;
+      return <Loader size="large" />;
     }
 
     if (user.fetchError) {
@@ -201,7 +204,8 @@ class Profile extends React.Component<Props, State> {
     }
   }
 
-  private openContributionModal = (c: UserContribution) => this.setState({ activeContribution: c });
+  private openContributionModal = (c: UserContribution) =>
+    this.setState({ activeContribution: c });
   private closeContributionModal = () => this.setState({ activeContribution: null });
 }
 

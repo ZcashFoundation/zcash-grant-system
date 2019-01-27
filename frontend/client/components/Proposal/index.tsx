@@ -4,12 +4,13 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import Markdown from 'components/Markdown';
 import LinkableTabs from 'components/LinkableTabs';
+import Loader from 'components/Loader';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
 import { Proposal, STATUS } from 'types';
 import { getProposal } from 'modules/proposals/selectors';
-import { Spin, Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
+import { Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
 import { AlertProps } from 'antd/lib/alert';
 import CampaignBlock from './CampaignBlock';
 import TeamBlock from './TeamBlock';
@@ -93,7 +94,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     const showExpand = !isBodyExpanded && isBodyOverflowing;
 
     if (!proposal) {
-      return <Spin />;
+      return <Loader size="large" />;
     }
 
     const deadline = 0; // TODO: Use actual date for deadline
@@ -141,7 +142,8 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal has been approved! It is currently only visible to the team.
-            Visit your <Link to="/profile?tab=pending">profile's pending tab</Link> to publish.
+            Visit your <Link to="/profile?tab=pending">profile's pending tab</Link> to
+            publish.
           </>
         ),
         type: 'success',
@@ -150,7 +152,8 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal was rejected and is only visible to the team. Visit your{' '}
-            <Link to="/profile?tab=pending">profile's pending tab</Link> for more information.
+            <Link to="/profile?tab=pending">profile's pending tab</Link> for more
+            information.
           </>
         ),
         type: 'error',
@@ -195,11 +198,7 @@ export class ProposalDetail extends React.Component<Props, State> {
                   ['is-expanded']: isBodyExpanded,
                 })}
               >
-                {proposal ? (
-                  <Markdown source={proposal.content} />
-                ) : (
-                  <Spin size="large" />
-                )}
+                {proposal ? <Markdown source={proposal.content} /> : <Loader />}
               </div>
               {showExpand && (
                 <button

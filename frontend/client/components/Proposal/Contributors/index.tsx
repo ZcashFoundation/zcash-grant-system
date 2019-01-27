@@ -1,9 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin } from 'antd';
 import UserRow from 'components/UserRow';
 import Placeholder from 'components/Placeholder';
 import UnitDisplay from 'components/UnitDisplay';
+import Loader from 'components/Loader';
 import { toZat } from 'utils/units';
 import { fetchProposalContributions } from 'modules/proposals/actions';
 import {
@@ -54,20 +54,26 @@ class ProposalContributors extends React.Component<Props> {
           <div className="ProposalContributors-block-contributor" key={c.id}>
             <UserRow
               user={c.user}
-              extra={<>+<UnitDisplay value={toZat(c.amount)} symbol="ZEC" /></>}
+              extra={
+                <>
+                  +<UnitDisplay value={toZat(c.amount)} symbol="ZEC" />
+                </>
+              }
             />
           </div>
-        )
-        content = <>
-          <div className="ProposalContributors-block">
-            <h3 className="ProposalContributors-block-title">Latest contributors</h3>
-            {contributions.latest.map(makeContributionRow)}
-          </div>
-          <div className="ProposalContributors-block">
-            <h3 className="ProposalContributors-block-title">Top contributors</h3>
-            {contributions.top.map(makeContributionRow)}
-          </div>
-        </>;
+        );
+        content = (
+          <>
+            <div className="ProposalContributors-block">
+              <h3 className="ProposalContributors-block-title">Latest contributors</h3>
+              {contributions.latest.map(makeContributionRow)}
+            </div>
+            <div className="ProposalContributors-block">
+              <h3 className="ProposalContributors-block-title">Top contributors</h3>
+              {contributions.top.map(makeContributionRow)}
+            </div>
+          </>
+        );
       } else {
         content = (
           <Placeholder
@@ -81,18 +87,16 @@ class ProposalContributors extends React.Component<Props> {
         );
       }
     } else if (fetchContributionsError) {
-      content = <Placeholder title="Something went wrong" subtitle={fetchContributionsError} />;
+      content = (
+        <Placeholder title="Something went wrong" subtitle={fetchContributionsError} />
+      );
     } else {
-      content = <Spin />;
+      content = <Loader />;
     }
 
-    return (
-      <div className="ProposalContributors">
-        {content}
-      </div>
-    );
+    return <div className="ProposalContributors">{content}</div>;
   }
-};
+}
 
 export default connect(
   (state: AppState, ownProps: OwnProps) => ({
