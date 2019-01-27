@@ -30,7 +30,7 @@ class Template extends React.Component<Props> {
           </div>
         )}
         <Sider className="Template-sider">
-          <div className="Template-sider-logo">grant.io</div>
+          <div className="Template-sider-logo">ZF Grants</div>
           <Menu theme="dark" mode="inline" selectedKeys={[pathname]}>
             <Menu.Item key="/">
               <Link to="/">

@@ -1,0 +1,5 @@
+Hey {{ args.display_name }}, you just changed your email. In order to confirm this change, you’ll need to visit the link below.
+
+{{ args.confirm_url }}
+
+Don’t know why you got this email? Don’t worry, you can safely ignore it. We won’t send you anymore.

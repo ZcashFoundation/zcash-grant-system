@@ -1,0 +1,5 @@
+Hey {{ args.display_name }}, you just changed your email. Your new email address was also sent an email to confirm your new one. If you did this, you can safely delete this message.
+
+If it wasn't you who did this, you should contact support immediately.
+
+{{ args.contact_url }}
