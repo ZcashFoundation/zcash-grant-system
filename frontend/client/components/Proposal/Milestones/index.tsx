@@ -122,8 +122,8 @@ class ProposalMilestones extends React.Component<Props, State> {
                   The team was awarded <strong>{reward}</strong>{' '}
                   {milestone.isImmediatePayout
                     ? 'as an initial payout'
-                    : // TODO: Add property for payout date on milestones
-                      `on ${moment().format('MMM Do, YYYY')}`}
+                    // TODO: Add property for payout date on milestones
+                    : `on ${moment().format('MMM Do, YYYY')}`}
                   .
                 </span>
               }
@@ -151,8 +151,9 @@ class ProposalMilestones extends React.Component<Props, State> {
                 <span>
                   Payout for this milestone was rejected on{' '}
                   {/* TODO: add property for payout rejection date on milestones */}
-                  {moment().format('MMM Do, YYYY')}.{isTrustee ? ' You ' : ' The team '}{' '}
-                  can request another review for payout at any time.
+                  {moment().format('MMM Do, YYYY')}.
+                  {isTrustee ? ' You ' : ' The team '} can request another
+                  review for payout at any time.
                 </span>
               }
               style={alertStyle}

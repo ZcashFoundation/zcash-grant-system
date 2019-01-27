@@ -43,8 +43,8 @@ class CreateFinal extends React.Component<Props> {
           <Icon type="check-circle" />
           <div className="CreateFinal-message-text">
             Your proposal has been submitted! Check your{' '}
-            <Link to={`/profile?tab=pending`}>profile's pending proposals tab</Link> to
-            check its status.
+            <Link to={`/profile?tab=pending`}>profile's pending proposals tab</Link>
+            {' '}to check its status.
           </div>
           {/* TODO - remove or rework depending on design choices */}
           {/* <div className="CreateFinal-message-text">

@@ -142,8 +142,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal has been approved! It is currently only visible to the team.
-            Visit your <Link to="/profile?tab=pending">profile's pending tab</Link> to
-            publish.
+            Visit your <Link to="/profile?tab=pending">profile's pending tab</Link> to publish.
           </>
         ),
         type: 'success',
@@ -152,8 +151,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal was rejected and is only visible to the team. Visit your{' '}
-            <Link to="/profile?tab=pending">profile's pending tab</Link> for more
-            information.
+            <Link to="/profile?tab=pending">profile's pending tab</Link> for more information.
           </>
         ),
         type: 'error',
@@ -198,7 +196,11 @@ export class ProposalDetail extends React.Component<Props, State> {
                   ['is-expanded']: isBodyExpanded,
                 })}
               >
-                {proposal ? <Markdown source={proposal.content} /> : <Loader />}
+                {proposal ? (
+                  <Markdown source={proposal.content} />
+                ) : (
+                  <Loader />
+                )}
               </div>
               {showExpand && (
                 <button

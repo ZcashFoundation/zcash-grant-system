@@ -204,8 +204,7 @@ class Profile extends React.Component<Props, State> {
     }
   }
 
-  private openContributionModal = (c: UserContribution) =>
-    this.setState({ activeContribution: c });
+  private openContributionModal = (c: UserContribution) => this.setState({ activeContribution: c });
   private closeContributionModal = () => this.setState({ activeContribution: null });
 }
 

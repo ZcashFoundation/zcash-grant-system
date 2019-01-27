@@ -49,7 +49,9 @@ export default class PaymentInfo extends React.Component<Props, State> {
           Thank you for contributing! Just send using whichever method works best for you,
           and we'll let you know when your contribution has been confirmed. Need help
           sending?
-          {/* TODO: Help / FAQ page for sending */} <a>Click here</a>.
+          {/* TODO: Help / FAQ page for sending */}
+          {' '}
+          <a>Click here</a>.
         </p>
 
         <Radio.Group
@@ -57,12 +59,18 @@ export default class PaymentInfo extends React.Component<Props, State> {
           onChange={this.handleChangeSendType}
           value={sendType}
         >
-          <Radio.Button value="sprout">Z Address (Private)</Radio.Button>
-          <Radio.Button value="transparent">T Address (Public)</Radio.Button>
+          <Radio.Button value="sprout">
+            Z Address (Private)
+          </Radio.Button>
+          <Radio.Button value="transparent">
+            T Address (Public)
+          </Radio.Button>
         </Radio.Group>
 
         <div className="PaymentInfo-uri">
-          <div className={classnames('PaymentInfo-uri-qr', !uri && 'is-loading')}>
+          <div className={
+            classnames('PaymentInfo-uri-qr', !uri && 'is-loading')
+          }>
             <span style={{ opacity: uri ? 1 : 0 }}>
               <QRCode value={uri || ''} />
             </span>
@@ -115,29 +123,33 @@ interface CopyInputProps {
   isTextarea?: boolean;
 }
 
-const CopyInput: React.SFC<CopyInputProps> = ({
-  label,
-  value,
-  help,
-  className,
-  isTextarea,
-}) => (
+const CopyInput: React.SFC<CopyInputProps> = ({ label, value, help, className, isTextarea }) => (
   <Form.Item
-    className={classnames('CopyInput', className, isTextarea && 'is-textarea')}
+    className={classnames(
+      'CopyInput',
+      className,
+      isTextarea && 'is-textarea',
+    )}
     label={label}
     help={help}
   >
     {isTextarea ? (
       <>
         <Input.TextArea value={value} readOnly rows={3} />
-        <CopyToClipboard text={value || ''} onCopy={() => message.success('Copied!', 2)}>
+        <CopyToClipboard
+          text={value || ''}
+          onCopy={() => message.success('Copied!', 2)}
+        >
           <Button icon="copy" />
         </CopyToClipboard>
       </>
     ) : (
       <>
         <Input value={value} readOnly />
-        <CopyToClipboard text={value || ''} onCopy={() => message.success('Copied!', 2)}>
+        <CopyToClipboard
+          text={value || ''}
+          onCopy={() => message.success('Copied!', 2)}
+        >
           <Button icon="copy" />
         </CopyToClipboard>
       </>
