@@ -25,8 +25,9 @@ from .models import (
     User,
     SocialMedia,
     Avatar,
-    users_schema,
+    self_user_schema,
     user_schema,
+    users_schema,
     user_settings_schema,
     db
 )
@@ -58,7 +59,7 @@ def get_users(proposal_id):
 @requires_auth
 @endpoint.api()
 def get_me():
-    dumped_user = user_schema.dump(g.current_user)
+    dumped_user = self_user_schema.dump(g.current_user)
     return dumped_user
 
 
@@ -122,7 +123,7 @@ def create_user(
         title=title
     )
     user.login()
-    result = user_schema.dump(user)
+    result = self_user_schema.dump(user)
     return result, 201
 
 
@@ -138,7 +139,7 @@ def auth_user(email, password):
     if not existing_user.check_password(password):
         return {"message": "Invalid password"}, 403
     existing_user.login()
-    return user_schema.dump(existing_user)
+    return self_user_schema.dump(existing_user)
 
 
 @blueprint.route("/password", methods=["PUT"])
@@ -290,7 +291,7 @@ def update_user(user_id, display_name, title, social_medias, avatar):
         remove_avatar(old_avatar_url, user.id)
 
     db.session.commit()
-    result = user_schema.dump(user)
+    result = self_user_schema.dump(user)
     return result
 
 

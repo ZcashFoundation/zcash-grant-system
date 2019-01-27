@@ -142,10 +142,6 @@ def get_proposals(stage):
         )
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
-    # except Exception as e:
-    #     print(e)
-    #     print(traceback.format_exc())
-    #     return {"message": "Oops! Something went wrong."}, 500
 
 
 @blueprint.route("/drafts", methods=["POST"])
