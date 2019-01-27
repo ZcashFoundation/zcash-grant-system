@@ -2,13 +2,13 @@
     You’ve been invited by <strong>{{ args.inviter.display_name }}</strong> to
     join the team for
     <strong>{{ args.proposal.title or '<em>Untitled Project</em>'|safe }}</strong
-    >, a project on Grant.io! If you want to accept the invitation, continue to
+    >, a project on {{ UI.NAME }}! If you want to accept the invitation, continue to
     the site below.
 </p>
 
 {% if not args.user %}
 <p style="margin: 20px 0 0;">
-    It looks like you don't yet have a Grant.io account, so you'll need to sign up
+    It looks like you don't yet have a {{ UI.NAME }} account, so you'll need to sign up
     first before you can join the team.
 </p>
 {% endif %}
@@ -18,11 +18,11 @@
         <td bgcolor="#ffffff" align="center" style="padding: 40px 30px 0 30px;">
             <table border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                    <td align="center" style="border-radius: 3px;" bgcolor="#530EEC">
+                    <td align="center" style="border-radius: 3px;" bgcolor="{{ UI.PRIMARY }}">
                         <a
                                 href="{{ args.invite_url }}"
                                 target="_blank"
-                                style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 20px 50px; border-radius: 4px; border: 1px solid #530EEC; display: inline-block;"
+                                style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 20px 50px; border-radius: 4px; border: 1px solid {{ UI.PRIMARY }}; display: inline-block;"
                         >
                             {% if args.user %} See invitation {% else %} Get started {% endif %}
                         </a>
