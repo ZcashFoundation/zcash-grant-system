@@ -89,7 +89,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
     def test_publish_proposal_approved(self):
         self.login_default_user()
         # submit for approval, then approve
-        self.proposal.submit_for_approval()
+        self.proposal.submit_for_approval(self.user)
         self.proposal.approve_pending(True)  # admin action
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert200(resp)
