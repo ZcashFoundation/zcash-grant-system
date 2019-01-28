@@ -9,6 +9,7 @@ from grant.utils.auth import requires_auth, requires_team_member_auth, get_authe
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_preview
 from sqlalchemy import or_
+from grant.settings import EXPLORER_URL
 
 from .models import (
     Proposal,
@@ -455,7 +456,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     send_email(contribution.user.email_address, 'contribution_confirmed', {
         'contribution': contribution,
         'proposal': contribution.proposal,
-        'tx_explorer_url': f'https://explorer.zcha.in/transactions/{txid}',
+        'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
     })
 
     # Send to the full proposal gang

@@ -269,8 +269,9 @@ class UserSchema(ma.Schema):
         return obj.id
 
 
-user_schema = SelfUserSchema()
-users_schema = SelfUserSchema(many=True)
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+
 
 class SocialMediaSchema(ma.Schema):
     class Meta:
