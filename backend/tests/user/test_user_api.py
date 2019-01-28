@@ -63,7 +63,6 @@ class TestUserAPI(BaseUserConfig):
             }),
             content_type="application/json"
         )
-        print(user_auth_resp.headers)
         self.assertEqual(user_auth_resp.json['emailAddress'], self.user.email_address)
         self.assertEqual(user_auth_resp.json['displayName'], self.user.display_name)
 
@@ -76,20 +75,24 @@ class TestUserAPI(BaseUserConfig):
             }),
             content_type="application/json"
         )
-        print(login_resp.headers)
         # should have session cookie now
         me_resp = self.app.get(
             "/api/v1/users/me"
         )
-        print(me_resp.headers)
         self.assert200(me_resp)
+
+    def test_me_get_includes_email_address(self):
+        self.login_default_user()
+        me_resp = self.app.get(
+            "/api/v1/users/me"
+        )
+        self.assert200(me_resp)
+        self.assertIsNotNone(me_resp.json['emailAddress'])
 
     def test_user_auth_required_fail(self):
         me_resp = self.app.get(
             "/api/v1/users/me",
         )
-        print(me_resp.json)
-        print(me_resp.headers)
         self.assert401(me_resp)
 
     def test_user_auth_bad_password(self):
