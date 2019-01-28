@@ -45,6 +45,8 @@ class BaseUserConfig(BaseTestConfig):
             display_name=test_user["displayName"],
             title=test_user["title"],
         )
+        self._user.email_verification.has_verified = True
+        db.session.add(self._user)
         sm = SocialMedia(
             service=test_user['socialMedias'][0]['service'],
             username=test_user['socialMedias'][0]['username'],

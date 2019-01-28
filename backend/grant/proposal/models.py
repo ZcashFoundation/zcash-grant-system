@@ -201,15 +201,14 @@ class Proposal(db.Model):
     def validate_publishable(self, current_user=None):
         # Require certain fields
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
+        for field in required_fields:
+            if not hasattr(self, field):
+                raise ValidationException("Proposal must have a {}".format(field))
 
         if current_user:
             if not current_user.email_verification.has_verified:
                 message = "Please confirm your email before attempting to publish a proposal."
                 raise ValidationException(message)
-
-        for field in required_fields:
-            if not self[required_fields]:
-                raise ValidationException("Proposal must have a {}".format(field))
 
         # Then run through regular validation
         Proposal.validate(vars(self))

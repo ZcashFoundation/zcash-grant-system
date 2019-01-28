@@ -76,11 +76,6 @@ def get_proposal_comments(proposal_id):
     parameter('parentCommentId', type=int, required=False)
 )
 def post_proposal_comments(proposal_id, comment, parent_comment_id):
-    # Make sure user has verified their email
-    if not g.current_user.email_verification.has_verified:
-        message = "Please confirm your email before commenting."
-        return {"message": message}, 401
-
     # Make sure proposal exists
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
@@ -92,6 +87,11 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         parent = Comment.query.filter_by(id=parent_comment_id).first()
         if not parent:
             return {"message": "Parent comment doesn’t exist"}, 400
+
+    # Make sure user has verified their email
+    if not g.current_user.email_verification.has_verified:
+        message = "Please confirm your email before commenting."
+        return {"message": message}, 401
 
     # Make the comment
     comment = Comment(
