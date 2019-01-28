@@ -87,5 +87,5 @@ export function formatZcashCLI(address: string, amount?: string | number, memo?:
 }
 
 export function formatTxExplorerUrl(txid: string) {
-  return `https://explorer.zcha.in/transactions/${txid}`;
+  return `${process.env.EXPLORER_URL}transactions/${txid}`;
 }
