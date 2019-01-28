@@ -198,21 +198,19 @@ class Proposal(db.Model):
         if category and category not in CATEGORIES:
             raise ValidationException("Category {} not in {}".format(category, CATEGORIES))
 
-    def validate_publishable(self):
+    def validate_publishable(self, current_user=None):
         # Require certain fields
-        # TODO: I'm an idiot, make this a loop.
-        if not self.title:
-            raise ValidationException("Proposal must have a title")
-        if not self.content:
-            raise ValidationException("Proposal must have content")
-        if not self.brief:
-            raise ValidationException("Proposal must have a brief")
-        if not self.category:
-            raise ValidationException("Proposal must have a category")
-        if not self.target:
-            raise ValidationException("Proposal must have a target amount")
-        if not self.payout_address:
-            raise ValidationException("Proposal must have a payout address")
+        required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
+
+        if current_user:
+            if not current_user.email_verification.has_verified:
+                message = "Please confirm your email before attempting to publish a proposal."
+                raise ValidationException(message)
+
+        for field in required_fields:
+            if not self[required_fields]:
+                raise ValidationException("Proposal must have a {}".format(field))
+
         # Then run through regular validation
         Proposal.validate(vars(self))
 
@@ -259,8 +257,8 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def submit_for_approval(self):
-        self.validate_publishable()
+    def submit_for_approval(self, current_user):
+        self.validate_publishable(current_user)
         allowed_statuses = [DRAFT, REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
