@@ -190,7 +190,6 @@ def update_proposal(milestones, proposal_id, **kwargs):
     except ValidationException as e:
         return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
     db.session.add(g.current_proposal)
-
     # Delete & re-add milestones
     [db.session.delete(x) for x in g.current_proposal.milestones]
     if milestones:

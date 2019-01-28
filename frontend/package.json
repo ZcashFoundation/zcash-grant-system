@@ -129,7 +129,7 @@
     "react-helmet": "^5.2.0",
     "react-hot-loader": "^4.3.8",
     "react-i18next": "^8.3.5",
-    "react-mde": "^5.8.0",
+    "react-mde": "^6.0.0",
     "react-redux": "^5.0.7",
     "react-router": "4.4.0-beta.6",
     "react-router-dom": "4.4.0-beta.6",

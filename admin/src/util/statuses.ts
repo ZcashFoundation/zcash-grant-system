@@ -1,14 +1,14 @@
-import { PROPOSAL_STATUS } from 'src/types';
+import { PROPOSAL_STATUS, RFP_STATUS } from 'src/types';
 
-export interface ProposalStatusSoT {
-  id: PROPOSAL_STATUS;
+export interface StatusSoT<E> {
+  id: E;
   filterDisplay: string;
   tagDisplay: string;
   tagColor: string;
   hint: string;
 }
 
-const STATUSES: ProposalStatusSoT[] = [
+export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
   {
     id: PROPOSAL_STATUS.APPROVED,
     filterDisplay: 'Status: approved',
@@ -54,12 +54,35 @@ const STATUSES: ProposalStatusSoT[] = [
   },
 ];
 
-export const getStatusById = (id: PROPOSAL_STATUS) => {
-  const result = STATUSES.find(s => s.id === id);
+export const RFP_STATUSES: Array<StatusSoT<RFP_STATUS>> = [
+  {
+    id: RFP_STATUS.DRAFT,
+    filterDisplay: 'Status: draft',
+    tagDisplay: 'Draft',
+    tagColor: '#ffaa00',
+    hint: 'RFP is currently being edited by admins and isn’t visible to users.',
+  },
+  {
+    id: RFP_STATUS.LIVE,
+    filterDisplay: 'Status: live',
+    tagDisplay: 'Live',
+    tagColor: '#108ee9',
+    hint: 'RFP is live and users can submit proposals for it.',
+  },
+  {
+    id: RFP_STATUS.CLOSED,
+    filterDisplay: 'Status: rejected',
+    tagDisplay: 'Approval Rejected',
+    tagColor: '#eb4118',
+    hint:
+      'RFP has been closed to new submissions and will no longer be listed, but can still be viewed, and associated proposals will remain open.',
+  },
+];
+
+export function getStatusById<E>(statuses: Array<StatusSoT<E>>, id: E) {
+  const result = statuses.find(s => s.id === id);
   if (!result) {
     throw Error(`getStatusById: could not find status for '${id}'`);
   }
   return result;
-};
-
-export default STATUSES;
+}

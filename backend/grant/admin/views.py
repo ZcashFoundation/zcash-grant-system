@@ -184,7 +184,7 @@ def get_rfps():
     parameter('category', type=str),
 )
 @admin_auth_required
-def create_rfp():
+def create_rfp(title, brief, content, category):
     rfp = RFP(
         title=title,
         brief=brief,
@@ -200,7 +200,7 @@ def create_rfp():
 @endpoint.api()
 @admin_auth_required
 def get_rfp(rfp_id):
-    rfp = RFP.query.filter(RFP.id == id).first()
+    rfp = RFP.query.filter(RFP.id == rfp_id).first()
     if not rfp:
         return {"message": "No RFP matching that id"}, 404
 
@@ -216,11 +216,19 @@ def get_rfp(rfp_id):
     parameter('status', type=str),
 )
 @admin_auth_required
-def update_rfp(rfp_id):
-    rfp = RFP.query.filter(RFP.id == id).first()
+def update_rfp(rfp_id, title, brief, content, category, status):
+    rfp = RFP.query.filter(RFP.id == rfp_id).first()
     if not rfp:
         return {"message": "No RFP matching that id"}, 404
 
+    rfp.title = title
+    rfp.brief = brief
+    rfp.content = content
+    rfp.category = category
+    rfp.status = status
+
+    db.session.add(rfp)
+    db.session.commit()
     return rfp_schema.dump(rfp)
 
 
@@ -228,7 +236,7 @@ def update_rfp(rfp_id):
 @endpoint.api()
 @admin_auth_required
 def delete_rfp(rfp_id):
-    rfp = RFP.query.filter(RFP.id == id).first()
+    rfp = RFP.query.filter(RFP.id == rfp_id).first()
     if not rfp:
         return {"message": "No RFP matching that id"}, 404
 

@@ -30,12 +30,14 @@ class RFP(db.Model):
         title: str,
         brief: str,
         content: str,
+        category: str,
         status: str = RFPStatus.DRAFT,
     ):
         self.date_created = datetime.datetime.now()
         self.title = title
         self.brief = brief
         self.content = content
+        self.category = category
         self.status = status
 
 
@@ -48,6 +50,7 @@ class RFPSchema(ma.Schema):
             "title",
             "brief",
             "content",
+            "category",
             "status",
             "proposals"
         )

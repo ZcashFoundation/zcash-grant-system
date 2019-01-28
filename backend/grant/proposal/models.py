@@ -282,7 +282,7 @@ class Proposal(db.Model):
 
     def get_amount_funded(self):
         contributions = ProposalContribution.query \
-            .filter_by(proposal_id=self.id, status=ProposalStatus.CONFIRMED) \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
             .all()
         funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
         return str(funded)

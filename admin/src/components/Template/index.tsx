@@ -14,6 +14,7 @@ type Props = RouteComponentProps<any>;
 class Template extends React.Component<Props> {
   render() {
     const { pathname } = this.props.location;
+    const pathbase = pathname.split('/')[1];
     return (
       <Layout className="Template">
         {store.generalError.length > 0 && (
@@ -31,34 +32,40 @@ class Template extends React.Component<Props> {
         )}
         <Sider className="Template-sider">
           <div className="Template-sider-logo">grant.io</div>
-          <Menu theme="dark" mode="inline" selectedKeys={[pathname]}>
+          <Menu theme="dark" mode="inline" selectedKeys={[pathbase]}>
             <Menu.Item key="/">
               <Link to="/">
                 <Icon type="home" />
-                <span className="nav-text">home</span>
+                <span className="nav-text">Home</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="/users">
+            <Menu.Item key="users">
               <Link to="/users">
                 <Icon type="user" />
-                <span className="nav-text">users</span>
+                <span className="nav-text">Users</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="/proposals">
+            <Menu.Item key="proposals">
               <Link to="/proposals">
                 <Icon type="file" />
-                <span className="nav-text">proposals</span>
+                <span className="nav-text">Proposals</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="/emails">
+            <Menu.Item key="rfps">
+              <Link to="/rfps">
+                <Icon type="notification" />
+                <span className="nav-text">RFPs</span>
+              </Link>
+            </Menu.Item>
+            <Menu.Item key="emails">
               <Link to="/emails">
                 <Icon type="mail" />
-                <span className="nav-text">emails</span>
+                <span className="nav-text">Emails</span>
               </Link>
             </Menu.Item>
             <Menu.Item key="logout" onClick={store.logout}>
               <Icon type="logout" />
-              <span className="nav-text">logout</span>
+              <span className="nav-text">Logout</span>
             </Menu.Item>
           </Menu>
         </Sider>
