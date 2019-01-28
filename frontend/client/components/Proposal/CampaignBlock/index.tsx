@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { Form, Input, Button, Icon } from 'antd';
+import { Form, Input, Button, Icon, Popover } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { fromZat } from 'utils/units';
@@ -91,6 +91,22 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">
+              {proposal.contributionMatching > 0 && (
+                <Popover
+                  overlayClassName="ProposalCampaignBlock-popover-overlay"
+                  placement="left"
+                  content={
+                    <>
+                      <b>Matching</b>
+                      <br />
+                      Double your impact! Contributions to this proposal are being
+                      matched.
+                    </>
+                  }
+                >
+                  <span className="ProposalCampaignBlock-info-value-matching">x2 </span>
+                </Popover>
+              )}
               <UnitDisplay value={funded} /> / <UnitDisplay value={target} symbol="ZEC" />
             </div>
           </div>
