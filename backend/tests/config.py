@@ -76,6 +76,13 @@ class BaseUserConfig(BaseTestConfig):
     def other_user(self):
         return User.query.filter_by(id=self._other_user_id).first()
 
+    def mark_user_not_verified(self, user=None):
+        if not user:
+            user = self.user
+        user.email_verification.has_verified = False
+        db.session.add(user)
+        db.session.commit()
+
     def login_default_user(self, cust_pass=None):
         return self.app.post(
             "/api/v1/users/auth",
