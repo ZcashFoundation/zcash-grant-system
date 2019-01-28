@@ -6,6 +6,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ModuleDependencyWarning = require('./module-dependency-warning');
 const WebappWebpackPlugin = require('webapp-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const LoadablePlugin = require('@loadable/webpack-plugin');
 
 const env = require('../env')();
 const paths = require('../paths');
@@ -75,6 +76,7 @@ const client = [
       return JSON.stringify(trans, null, 2);
     },
   }),
+  new LoadablePlugin(),
 ];
 
 const server = [

@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin, Button, message } from 'antd';
+import { Button, message } from 'antd';
 import { AppState } from 'store/reducers';
 import { Proposal } from 'types';
 import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
@@ -12,6 +12,7 @@ import {
 import { getIsSignedIn } from 'modules/auth/selectors';
 import Comments from 'components/Comments';
 import Placeholder from 'components/Placeholder';
+import Loader from 'components/Loader';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
 import './style.less';
 
@@ -83,7 +84,7 @@ class ProposalComments extends React.Component<Props, State> {
     let content = null;
 
     if (isFetchingComments) {
-      content = <Spin />;
+      content = <Loader />;
     } else if (commentsError) {
       content = (
         <>

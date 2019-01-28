@@ -1,9 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Spin } from 'antd';
 import UserRow from 'components/UserRow';
 import Placeholder from 'components/Placeholder';
 import UnitDisplay from 'components/UnitDisplay';
+import Loader from 'components/Loader';
 import { toZat } from 'utils/units';
 import { fetchProposalContributions } from 'modules/proposals/actions';
 import {
@@ -83,7 +83,7 @@ class ProposalContributors extends React.Component<Props> {
     } else if (fetchContributionsError) {
       content = <Placeholder title="Something went wrong" subtitle={fetchContributionsError} />;
     } else {
-      content = <Spin />;
+      content = <Loader />;
     }
 
     return (

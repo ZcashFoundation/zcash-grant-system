@@ -1,9 +1,10 @@
 import React from 'react';
-import { Spin, Button } from 'antd';
+import { Button } from 'antd';
 import qs from 'query-string';
 import { withRouter, RouteComponentProps, Link } from 'react-router-dom';
 import Result from 'ant-design-pro/lib/Result';
 import { verifyEmail } from 'api/api';
+import Loader from 'components/Loader';
 
 interface State {
   isVerifying: boolean;
@@ -82,7 +83,7 @@ class VerifyEmail extends React.Component<RouteComponentProps, State> {
         />
       );
     } else {
-      return <Spin size="large" />;
+      return <Loader size="large" />;
     }
   }
 }

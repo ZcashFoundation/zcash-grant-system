@@ -1,6 +1,6 @@
-# Grant.io Admin UI
+# ZF Grants Admin UI
 
-This is the admin component of [Grant.io](http://grant.io).
+This is the admin component of [grants.zfnd.org](http://grants.zfnd.org).
 
 ## Development
 

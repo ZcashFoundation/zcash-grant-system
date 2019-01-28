@@ -13,7 +13,7 @@ env.read_env()
 
 ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
-SITE_URL = env.str('SITE_URL', default='https://grant.io')
+SITE_URL = env.str('SITE_URL', default='https://zfnd.org')
 SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL")
 QUEUES = ["default"]
 SECRET_KEY = env.str("SECRET_KEY")
@@ -24,7 +24,7 @@ CACHE_TYPE = "simple"  # Can be "memcached", "redis", etc.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
-SENDGRID_DEFAULT_FROM = "noreply@grant.io"
+SENDGRID_DEFAULT_FROM = "noreply@zfnd.org"
 
 SENTRY_DSN = env.str("SENTRY_DSN", default=None)
 SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=None)
@@ -53,3 +53,9 @@ BLOCKCHAIN_API_SECRET = env.str("BLOCKCHAIN_API_SECRET")
 ADMIN_PASS_HASH = env.str("ADMIN_PASS_HASH")
 
 EXPLORER_URL = env.str("EXPLORER_URL", default="https://explorer.zcha.in/")
+
+UI = {
+  'NAME': 'ZF Grants',
+  'PRIMARY': '#CF8A00',
+  'SECONDARY': '#2D2A26',
+}

@@ -1,6 +1,6 @@
-# Grant.io Backend
+# ZF Grants Backend
 
-This is the backend component of [Grant.io](http://grant.io).
+This is the backend component of [grants.zfnd.org](http://grants.zfnd.org).
 
 ## Environment Setup
 
@@ -89,16 +89,6 @@ To create a proposal, run
 
     flask create_proposal "FUNDING_REQUIRED" 1 123 "My Awesome Proposal" "### Hi! I have a great proposal"
 
-## External Services
-
-To decode EIP-712 signed messages, a Grant.io deployed service was created `https://eip-712.herokuapp.com`.
-
-To adjust this endpoint, simply export `AUTH_URL` with a new endpoint value:
-
-    export AUTH_URL=http://new-endpoint.com
-
-To learn more about this auth service, you can visit the repo [here](https://github.com/grant-project/eip-712-server).
-
 ## S3 Storage Setup
 
 1. create bucket, keep the `bucket name` and `region` handy
@@ -158,7 +148,7 @@ These instructions are for `development`, for `production` simply replace all ho
 1. Create Twitter oauth app https://developer.twitter.com/en/apply/user
 
    1. click **Create an App**
-   1. set **Website URL** to a valid URL, such as `http://demo.grant.io`
+   1. set **Website URL** to a valid URL, such as `http://grants.zfnd.org`
    1. check the **Enable Sign in with Twitter** option
    1. set **Callback URLs** to `http://127.0.0.1:3000/callback/twitter`
    1. fill out other required fields

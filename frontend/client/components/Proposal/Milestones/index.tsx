@@ -1,9 +1,10 @@
 import lodash from 'lodash';
 import React from 'react';
 import moment from 'moment';
-import { Alert, Steps, Spin } from 'antd';
+import { Alert, Steps } from 'antd';
 import { Proposal, MILESTONE_STATE } from 'types';
 import UnitDisplay from 'components/UnitDisplay';
+import Loader from 'components/Loader';
 import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
@@ -82,7 +83,7 @@ class ProposalMilestones extends React.Component<Props, State> {
   render() {
     const { proposal } = this.props;
     if (!proposal) {
-      return <Spin />;
+      return <Loader />;
     }
     const { milestones } = proposal;
 
