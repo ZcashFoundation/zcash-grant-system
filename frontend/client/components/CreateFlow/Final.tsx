@@ -32,7 +32,10 @@ class CreateFinal extends React.Component<Props> {
         <div className="CreateFinal-message is-error">
           <Icon type="close-circle" />
           <div className="CreateFinal-message-text">
-            Something went wrong during creation: "{submitError}"{' '}
+            <h3>
+              <b>Something went wrong during creation</b>
+            </h3>
+            <h5>{submitError}</h5>
             <a onClick={this.submit}>Click here</a> to try again.
           </div>
         </div>
@@ -43,8 +46,8 @@ class CreateFinal extends React.Component<Props> {
           <Icon type="check-circle" />
           <div className="CreateFinal-message-text">
             Your proposal has been submitted! Check your{' '}
-            <Link to={`/profile?tab=pending`}>profile's pending proposals tab</Link>
-            {' '}to check its status.
+            <Link to={`/profile?tab=pending`}>profile's pending proposals tab</Link> to
+            check its status.
           </div>
           {/* TODO - remove or rework depending on design choices */}
           {/* <div className="CreateFinal-message-text">
