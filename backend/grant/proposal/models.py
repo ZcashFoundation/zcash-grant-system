@@ -154,6 +154,7 @@ class Proposal(db.Model):
     target = db.Column(db.String(255), nullable=False)
     payout_address = db.Column(db.String(255), nullable=False)
     deadline_duration = db.Column(db.Integer(), nullable=False)
+    contribution_matching = db.Column(db.Float(), nullable=False, default=0, server_default=db.text("0"))
 
     # Relations
     team = db.relationship("User", secondary=proposal_team)
@@ -338,6 +339,7 @@ class ProposalSchema(ma.Schema):
             "team",
             "payout_address",
             "deadline_duration",
+            "contribution_matching",
             "invites"
         )
 
@@ -378,6 +380,7 @@ user_fields = [
     "brief",
     "target",
     "funded",
+    "contribution_matching",
     "date_created",
     "date_approved",
     "date_published",

@@ -75,6 +75,25 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # 2 proposals created by BaseProposalCreatorConfig
         self.assertEqual(len(resp.json), 2)
 
+    def test_update_proposal(self):
+        self.login_admin()
+        # set to 1 (on)
+        resp_on = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 1})
+        self.assert200(resp_on)
+        self.assertEqual(resp_on.json['contributionMatching'], 1)
+        resp_off = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 0})
+        self.assert200(resp_off)
+        self.assertEqual(resp_off.json['contributionMatching'], 0)
+
+    def test_update_proposal_no_auth(self):
+        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 1})
+        self.assert401(resp)
+
+    def test_update_proposal_bad_matching(self):
+        self.login_admin()
+        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 2})
+        self.assert400(resp)
+
     def test_approve_proposal(self):
         self.login_admin()
         # submit for approval (performed by end-user)

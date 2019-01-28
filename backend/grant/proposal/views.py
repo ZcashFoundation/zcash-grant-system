@@ -470,6 +470,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
     # on funding target reached.
+    # TODO: Include contribution matching in funding target reached calculations.
 
     return None, 200
 
