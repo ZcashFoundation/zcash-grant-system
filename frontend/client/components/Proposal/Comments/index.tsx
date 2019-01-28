@@ -68,7 +68,7 @@ class ProposalComments extends React.Component<Props, State> {
     }
 
     if (postCommentError && postCommentError !== prevProps.postCommentError) {
-      message.error('Failed to submit comment');
+      message.error(postCommentError);
     }
   }
 

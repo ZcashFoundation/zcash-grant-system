@@ -76,6 +76,11 @@ def get_proposal_comments(proposal_id):
     parameter('parentCommentId', type=int, required=False)
 )
 def post_proposal_comments(proposal_id, comment, parent_comment_id):
+    # Make sure user has verified their email
+    if not g.current_user.email_verification.has_verified:
+        message = "Please confirm your email before commenting."
+        return {"message": message}, 401
+
     # Make sure proposal exists
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
@@ -187,7 +192,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
     try:
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
 
     # Delete & re-add milestones
@@ -227,9 +232,9 @@ def delete_proposal(proposal_id):
 @endpoint.api()
 def submit_for_approval_proposal(proposal_id):
     try:
-        g.current_proposal.submit_for_approval()
+        g.current_proposal.submit_for_approval(current_user=g.current_user)
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
@@ -242,7 +247,7 @@ def publish_proposal(proposal_id):
     try:
         g.current_proposal.publish()
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
