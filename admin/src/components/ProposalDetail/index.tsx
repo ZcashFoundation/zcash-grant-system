@@ -1,13 +1,25 @@
 import React from 'react';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { Row, Col, Card, Alert, Button, Collapse, Popconfirm, Modal, Input } from 'antd';
+import {
+  Row,
+  Col,
+  Card,
+  Alert,
+  Button,
+  Collapse,
+  Popconfirm,
+  Modal,
+  Input,
+  Switch,
+} from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { formatDateSeconds } from 'util/time';
 import { PROPOSAL_STATUS } from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
+import Info from 'components/Info';
 import Markdown from 'components/Markdown';
 import './index.less';
 
@@ -42,9 +54,45 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         okText="delete"
         cancelText="cancel"
       >
-        <Button icon="delete" block>
+        <Button icon="delete" className="ProposalDetail-controls-control" block>
           Delete
         </Button>
+      </Popconfirm>
+    );
+
+    const renderMatching = () => (
+      <Popconfirm
+        overlayClassName="ProposalDetail-popover-overlay"
+        onConfirm={this.handleToggleMatching}
+        title={
+          <>
+            <div>Turn {p.contributionMatching ? 'off' : 'on'} contribution matching?</div>
+            {p.status === PROPOSAL_STATUS.LIVE && (
+              <div>
+                This is a LIVE proposal, this will alter the funding state of the
+                proposal!
+              </div>
+            )}
+          </>
+        }
+        okText="ok"
+        cancelText="cancel"
+      >
+        <div className="ProposalDetail-controls-control">
+          <Switch checked={p.contributionMatching === 1} loading={false} />{' '}
+          <span>
+            matching{' '}
+            <Info
+              placement="right"
+              content={
+                <span>
+                  <b>Contribution matching</b>
+                  <br /> Funded amount will be multiplied by 2.
+                </span>
+              }
+            />
+          </span>
+        </div>
       </Popconfirm>
     );
 
@@ -150,7 +198,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     const renderDeetItem = (name: string, val: any) => (
       <div className="ProposalDetail-deet">
         <span>{name}</span>
-        {val}
+        {val} &nbsp;
       </div>
     );
 
@@ -183,8 +231,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           {/* RIGHT SIDE */}
           <Col span={6}>
             {/* ACTIONS */}
-            <Card size="small">
+            <Card size="small" className="ProposalDetail-controls">
               {renderDelete()}
+              {renderMatching()}
               {/* TODO - other actions */}
             </Card>
 
@@ -195,10 +244,12 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('status', p.status)}
               {renderDeetItem('category', p.category)}
               {renderDeetItem('target', p.target)}
+              {renderDeetItem('funded', p.funded)}
+              {renderDeetItem('matching', p.contributionMatching)}
             </Card>
 
             {/* TEAM */}
-            <Card title="Team" size="small">
+            <Card title="team" size="small">
               {p.team.map(t => (
                 <div key={t.userid}>
                   <Link to={`/users/${t.userid}`}>{t.displayName}</Link>
@@ -232,6 +283,15 @@ class ProposalDetailNaked extends React.Component<Props, State> {
   private handleReject = async () => {
     await store.approveProposal(false, this.state.rejectReason);
     this.setState({ showRejectModal: false });
+  };
+
+  private handleToggleMatching = async () => {
+    if (store.proposalDetail) {
+      // we lock this to be 1 or 0 for now, we may support more values later on
+      const contributionMatching =
+        store.proposalDetail.contributionMatching === 0 ? 1 : 0;
+      store.updateProposalDetail({ contributionMatching });
+    }
   };
 }
 

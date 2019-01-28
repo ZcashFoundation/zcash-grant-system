@@ -39,7 +39,9 @@ export interface Proposal {
   comments: Comment[];
   contractStatus: string;
   target: string;
+  funded: string;
   rejectReason: string;
+  contributionMatching: number;
 }
 export interface Comment {
   commentId: string;
