@@ -78,7 +78,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_approve_proposal(self):
         self.login_admin()
         # submit for approval (performed by end-user)
-        self.proposal.submit_for_approval(self.user)
+        self.proposal.submit_for_approval()
         # approve
         resp = self.app.put(
             "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
@@ -90,7 +90,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_reject_proposal(self):
         self.login_admin()
         # submit for approval (performed by end-user)
-        self.proposal.submit_for_approval(self.user)
+        self.proposal.submit_for_approval()
         # reject
         resp = self.app.put(
             "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),

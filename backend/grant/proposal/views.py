@@ -233,7 +233,7 @@ def delete_proposal(proposal_id):
 @endpoint.api()
 def submit_for_approval_proposal(proposal_id):
     try:
-        g.current_proposal.submit_for_approval(current_user=g.current_user)
+        g.current_proposal.submit_for_approval()
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)

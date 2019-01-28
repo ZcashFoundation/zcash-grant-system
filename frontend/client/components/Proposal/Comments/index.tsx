@@ -5,11 +5,11 @@ import { AppState } from 'store/reducers';
 import { Proposal } from 'types';
 import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
 import {
-  getProposalComments,
-  getIsFetchingComments,
   getCommentsError,
+  getIsFetchingComments,
+  getProposalComments,
 } from 'modules/proposals/selectors';
-import { getIsSignedIn } from 'modules/auth/selectors';
+import { getIsVerified } from 'modules/auth/selectors';
 import Comments from 'components/Comments';
 import Placeholder from 'components/Placeholder';
 import Loader from 'components/Loader';
@@ -26,7 +26,7 @@ interface StateProps {
   commentsError: ReturnType<typeof getCommentsError>;
   isPostCommentPending: AppState['proposal']['isPostCommentPending'];
   postCommentError: AppState['proposal']['postCommentError'];
-  isSignedIn: ReturnType<typeof getIsSignedIn>;
+  isVerified: ReturnType<typeof getIsVerified>;
 }
 
 interface DispatchProps {
@@ -78,7 +78,7 @@ class ProposalComments extends React.Component<Props, State> {
       isFetchingComments,
       commentsError,
       isPostCommentPending,
-      isSignedIn,
+      isVerified,
     } = this.props;
     const { comment } = this.state;
     let content = null;
@@ -106,26 +106,33 @@ class ProposalComments extends React.Component<Props, State> {
     }
 
     return (
-      <>
-        {isSignedIn && (
-          <div className="ProposalComments-post">
-            <MarkdownEditor
-              ref={el => (this.editor = el)}
-              onChange={this.handleCommentChange}
-              type={MARKDOWN_TYPE.REDUCED}
+      <div>
+        <div className="ProposalComments-post">
+          {isVerified ? (
+            <>
+              <MarkdownEditor
+                ref={el => (this.editor = el)}
+                onChange={this.handleCommentChange}
+                type={MARKDOWN_TYPE.REDUCED}
+              />
+              <div style={{ marginTop: '0.5rem' }} />
+              <Button
+                onClick={this.postComment}
+                disabled={!comment.length}
+                loading={isPostCommentPending}
+              >
+                Submit comment
+              </Button>
+            </>
+          ) : (
+            <Placeholder
+              title="Your email is not verified"
+              subtitle="Please verify your email to post a comment."
             />
-            <div style={{ marginTop: '0.5rem' }} />
-            <Button
-              onClick={this.postComment}
-              disabled={!comment.length}
-              loading={isPostCommentPending}
-            >
-              Submit comment
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
         {content}
-      </>
+      </div>
     );
   }
 
@@ -145,7 +152,7 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
     commentsError: getCommentsError(state),
     isPostCommentPending: state.proposal.isPostCommentPending,
     postCommentError: state.proposal.postCommentError,
-    isSignedIn: getIsSignedIn(state),
+    isVerified: getIsVerified(state),
   }),
   {
     fetchProposalComments,
