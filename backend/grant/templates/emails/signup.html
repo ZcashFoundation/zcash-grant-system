@@ -7,9 +7,9 @@
         <td bgcolor="#ffffff" align="center" style="padding: 40px 30px 40px 30px;">
             <table border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                    <td align="center" style="border-radius: 3px;" bgcolor="#530EEC">
+                    <td align="center" style="border-radius: 3px;" bgcolor="{{ UI.PRIMARY }}">
                         <a href="{{ args.confirm_url }}" target="_blank"
-                           style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 20px 50px; border-radius: 4px; border: 1px solid #530EEC; display: inline-block;">
+                           style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 20px 50px; border-radius: 4px; border: 1px solid {{ UI.PRIMARY }}; display: inline-block;">
                             Confirm Email
                         </a>
                     </td>
@@ -24,7 +24,9 @@
 </p>
 
 <p style="margin: 0 0 30px; font-size: 12px; text-align: center;">
-    <a href="{{ args.confirm_url }}" target="_blank" style="color: #530EEC;">{{ args.confirm_url }}</a>
+    <a href="{{ args.confirm_url }}" target="_blank" style="color: {{ UI.PRIMARY }};">
+        {{ args.confirm_url }}
+    </a>
 </p>
 
 <p style="margin: 0; font-size: 10px; color: #AAA; text-align: center;">
