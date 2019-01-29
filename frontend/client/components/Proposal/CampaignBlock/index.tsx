@@ -91,25 +91,29 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">
-              {proposal.contributionMatching > 0 && (
-                <Popover
-                  overlayClassName="ProposalCampaignBlock-popover-overlay"
-                  placement="left"
-                  content={
-                    <>
-                      <b>Matching</b>
-                      <br />
-                      Double your impact! Contributions to this proposal are being
-                      matched.
-                    </>
-                  }
-                >
-                  <span className="ProposalCampaignBlock-info-value-matching">x2 </span>
-                </Popover>
-              )}
               <UnitDisplay value={funded} /> / <UnitDisplay value={target} symbol="ZEC" />
             </div>
           </div>
+
+          {proposal.contributionMatching > 0 && (
+            <div className="ProposalCampaignBlock-matching">
+              <span>Funds are being matched x{proposal.contributionMatching + 1}</span>
+              <Popover
+                overlayClassName="ProposalCampaignBlock-popover-overlay"
+                placement="left"
+                content={
+                  <>
+                    <b>Matching</b>
+                    <br />
+                    Increase your impact! Contributions to this proposal are being
+                    matched by the Zcash Foundation, up to the target amount.
+                  </>
+                }
+              >
+                <Icon type="question-circle" theme="filled" />
+              </Popover>
+            </div>
+          )}
 
           {isFundingOver ? (
             <div
