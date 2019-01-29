@@ -11,20 +11,9 @@ export function formatUserForPost(user: User) {
   };
 }
 
-function deriveProposalFunded(p: any) {
-  const targetZat = toZat(p.target);
-  // funded = funded + funded * matching
-  let fundedZat = toZat(p.funded).muln(1 + p.contributionMatching);
-  // if funded exceeds the target, due to matching, just return the target
-  if (fundedZat.gt(targetZat)) {
-    fundedZat = targetZat;
-  }
-  return fundedZat;
-}
-
 export function formatUserFromGet(user: UserState) {
   const bnUserProp = (p: any) => {
-    p.funded = deriveProposalFunded(p);
+    p.funded = toZat(p.funded);
     p.target = toZat(p.target);
     return p;
   };
@@ -43,7 +32,7 @@ export function formatProposalFromGet(p: any): Proposal {
   const proposal = { ...p } as Proposal;
   proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
   proposal.target = toZat(p.target);
-  proposal.funded = deriveProposalFunded(p);
+  proposal.funded = toZat(p.funded);
   proposal.percentFunded = proposal.target.isZero()
     ? 0
     : proposal.funded.div(proposal.target.divn(100)).toNumber();

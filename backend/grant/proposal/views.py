@@ -465,14 +465,13 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             'proposal': contribution.proposal,
             'contribution': contribution,
             'contributor': contribution.user,
-            'funded': contribution.proposal.get_amount_funded(),
+            'funded': contribution.proposal.funded,
             'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
             'contributor_url': make_url(f'/profile/{contribution.user.id}'),
         })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
-    # on funding target reached.
-    # TODO: Include contribution matching in funding target reached calculations.
+    # on funding target reached. 
 
     return None, 200
 
