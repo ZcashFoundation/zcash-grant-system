@@ -45,6 +45,8 @@ class BaseUserConfig(BaseTestConfig):
             display_name=test_user["displayName"],
             title=test_user["title"],
         )
+        self._user.email_verification.has_verified = True
+        db.session.add(self._user)
         sm = SocialMedia(
             service=test_user['socialMedias'][0]['service'],
             username=test_user['socialMedias'][0]['username'],
@@ -73,6 +75,13 @@ class BaseUserConfig(BaseTestConfig):
     @property
     def other_user(self):
         return User.query.filter_by(id=self._other_user_id).first()
+
+    def mark_user_not_verified(self, user=None):
+        if not user:
+            user = self.user
+        user.email_verification.has_verified = False
+        db.session.add(user)
+        db.session.commit()
 
     def login_default_user(self, cust_pass=None):
         return self.app.post(

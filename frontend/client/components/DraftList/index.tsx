@@ -1,11 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Spin, List, Button, Divider, Popconfirm, message } from 'antd';
+import { Button, Divider, List, message, Popconfirm, Spin } from 'antd';
 import Placeholder from 'components/Placeholder';
+import { getIsVerified } from 'modules/auth/selectors';
 import Loader from 'components/Loader';
 import { ProposalDraft, STATUS } from 'types';
-import { fetchDrafts, createDraft, deleteDraft } from 'modules/create/actions';
+import { createDraft, deleteDraft, fetchDrafts } from 'modules/create/actions';
 import { AppState } from 'store/reducers';
 import './style.less';
 
@@ -17,6 +18,7 @@ interface StateProps {
   createDraftError: AppState['create']['createDraftError'];
   isDeletingDraft: AppState['create']['isDeletingDraft'];
   deleteDraftError: AppState['create']['deleteDraftError'];
+  isVerified: ReturnType<typeof getIsVerified>;
 }
 
 interface DispatchProps {
@@ -51,8 +53,9 @@ class DraftList extends React.Component<Props, State> {
       isDeletingDraft,
       deleteDraftError,
       createDraftError,
+      isVerified,
     } = this.props;
-    if (createIfNone && drafts && !prevProps.drafts && !drafts.length) {
+    if (isVerified && createIfNone && drafts && !prevProps.drafts && !drafts.length) {
       this.createDraft();
     }
     if (prevProps.isDeletingDraft && !isDeletingDraft) {
@@ -67,8 +70,19 @@ class DraftList extends React.Component<Props, State> {
   }
 
   render() {
-    const { drafts, isCreatingDraft } = this.props;
+    const { drafts, isCreatingDraft, isVerified } = this.props;
     const { deletingId } = this.state;
+
+    if (!isVerified) {
+      return (
+        <div className="DraftList">
+          <Placeholder
+            title="Your email is not verified"
+            subtitle="Please confirm your email before making a proposal."
+          />
+        </div>
+      );
+    }
 
     if (!drafts || isCreatingDraft) {
       return <Loader size="large" />;
@@ -158,6 +172,7 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
     createDraftError: state.create.createDraftError,
     isDeletingDraft: state.create.isDeletingDraft,
     deleteDraftError: state.create.deleteDraftError,
+    isVerified: getIsVerified(state),
   }),
   {
     fetchDrafts,

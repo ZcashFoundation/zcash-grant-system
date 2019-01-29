@@ -201,19 +201,11 @@ class Proposal(db.Model):
 
     def validate_publishable(self):
         # Require certain fields
-        # TODO: I'm an idiot, make this a loop.
-        if not self.title:
-            raise ValidationException("Proposal must have a title")
-        if not self.content:
-            raise ValidationException("Proposal must have content")
-        if not self.brief:
-            raise ValidationException("Proposal must have a brief")
-        if not self.category:
-            raise ValidationException("Proposal must have a category")
-        if not self.target:
-            raise ValidationException("Proposal must have a target amount")
-        if not self.payout_address:
-            raise ValidationException("Proposal must have a payout address")
+        required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
+        for field in required_fields:
+            if not hasattr(self, field):
+                raise ValidationException("Proposal must have a {}".format(field))
+
         # Then run through regular validation
         Proposal.validate(vars(self))
 
