@@ -4,6 +4,7 @@ from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
 from grant.milestone.models import Milestone
+from grant.settings import EXPLORER_URL
 from grant.user.models import User
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
@@ -88,6 +89,11 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         if not parent:
             return {"message": "Parent comment doesn’t exist"}, 400
 
+    # Make sure user has verified their email
+    if not g.current_user.email_verification.has_verified:
+        message = "Please confirm your email before commenting."
+        return {"message": message}, 401
+
     # Make the comment
     comment = Comment(
         proposal_id=proposal_id,
@@ -142,10 +148,6 @@ def get_proposals(stage):
         )
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
-    # except Exception as e:
-    #     print(e)
-    #     print(traceback.format_exc())
-    #     return {"message": "Oops! Something went wrong."}, 500
 
 
 @blueprint.route("/drafts", methods=["POST"])
@@ -191,7 +193,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
     try:
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
 
     # Delete & re-add milestones
@@ -233,7 +235,7 @@ def submit_for_approval_proposal(proposal_id):
     try:
         g.current_proposal.submit_for_approval()
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
@@ -246,7 +248,7 @@ def publish_proposal(proposal_id):
     try:
         g.current_proposal.publish()
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
@@ -454,7 +456,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     send_email(contribution.user.email_address, 'contribution_confirmed', {
         'contribution': contribution,
         'proposal': contribution.proposal,
-        'tx_explorer_url': f'https://explorer.zcha.in/transactions/{txid}',
+        'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
     })
 
     # Send to the full proposal gang

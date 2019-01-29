@@ -50,7 +50,7 @@ class CommentSchema(ma.Schema):
         )
 
     date_created = ma.Method("get_date_created")
-    author = ma.Nested("UserSchema", exclude=["email_address"])
+    author = ma.Nested("UserSchema")
     replies = ma.Nested("CommentSchema", many=True)
 
     def get_date_created(self, obj):
