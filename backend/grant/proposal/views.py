@@ -4,12 +4,12 @@ from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
 from grant.milestone.models import Milestone
+from grant.settings import EXPLORER_URL
 from grant.user.models import User
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_preview
 from sqlalchemy import or_
-from grant.settings import EXPLORER_URL
 
 from .models import (
     Proposal,

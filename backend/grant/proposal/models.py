@@ -205,13 +205,6 @@ class Proposal(db.Model):
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
 
-        from grant.utils.auth import get_authed_user
-        current_user = get_authed_user()
-        if current_user:
-            if not current_user.email_verification.has_verified:
-                message = "Please confirm your email before attempting to publish a proposal."
-                raise ValidationException(message)
-
         # Then run through regular validation
         Proposal.validate(vars(self))
 
