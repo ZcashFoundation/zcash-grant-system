@@ -61,39 +61,41 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     );
 
     const renderMatching = () => (
-      <Popconfirm
-        overlayClassName="ProposalDetail-popover-overlay"
-        onConfirm={this.handleToggleMatching}
-        title={
-          <>
-            <div>Turn {p.contributionMatching ? 'off' : 'on'} contribution matching?</div>
-            {p.status === PROPOSAL_STATUS.LIVE && (
+      <div className="ProposalDetail-controls-control">
+        <Popconfirm
+          overlayClassName="ProposalDetail-popover-overlay"
+          onConfirm={this.handleToggleMatching}
+          title={
+            <>
               <div>
-                This is a LIVE proposal, this will alter the funding state of the
-                proposal!
+                Turn {p.contributionMatching ? 'off' : 'on'} contribution matching?
               </div>
-            )}
-          </>
-        }
-        okText="ok"
-        cancelText="cancel"
-      >
-        <div className="ProposalDetail-controls-control">
+              {p.status === PROPOSAL_STATUS.LIVE && (
+                <div>
+                  This is a LIVE proposal, this will alter the funding state of the
+                  proposal!
+                </div>
+              )}
+            </>
+          }
+          okText="ok"
+          cancelText="cancel"
+        >
           <Switch checked={p.contributionMatching === 1} loading={false} />{' '}
-          <span>
-            matching{' '}
-            <Info
-              placement="right"
-              content={
-                <span>
-                  <b>Contribution matching</b>
-                  <br /> Funded amount will be multiplied by 2.
-                </span>
-              }
-            />
-          </span>
-        </div>
-      </Popconfirm>
+        </Popconfirm>
+        <span>
+          matching{' '}
+          <Info
+            placement="right"
+            content={
+              <span>
+                <b>Contribution matching</b>
+                <br /> Funded amount will be multiplied by 2.
+              </span>
+            }
+          />
+        </span>
+      </div>
     );
 
     const renderApproved = () =>
