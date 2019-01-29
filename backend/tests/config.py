@@ -3,6 +3,7 @@ import json
 from flask_testing import TestCase
 from grant.app import create_app
 from grant.proposal.models import Proposal
+from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
 
 from .test_data import test_user, test_other_user, test_proposal
@@ -139,3 +140,7 @@ class BaseProposalCreatorConfig(BaseUserConfig):
     @property
     def other_proposal(self):
         return Proposal.query.filter_by(id=self._other_proposal_id).first()
+
+    def make_proposal_reminder_task(self):
+        proposal_reminder = ProposalReminder(self.proposal.id)
+        proposal_reminder.make_task()
