@@ -1,9 +1,7 @@
 from grant.extensions import db
 
 
-def proposal_reminder(task_id):
-    from grant.task.models import Task
-    task = Task.query.filter_by(id=task_id).first()
+def proposal_reminder(task):
     from grant.proposal.models import Proposal
     proposal = Proposal.query.filter_by(id=task.blob["proposal_id"]).first()
     # TODO - replace with email

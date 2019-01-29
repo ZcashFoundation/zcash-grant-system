@@ -11,5 +11,9 @@ blueprint = Blueprint("task", __name__, url_prefix="/api/v1/task")
 def task():
     tasks = Task.query.filter(Task.execute_after <= datetime.now()).all()
     for each_task in tasks:
-        JOBS[each_task.job_id](each_task.id)
+        try:
+            JOBS[each_task.job_type](each_task)
+        except Exception as e:
+            # replace with Sentry logging
+            print("Oops, something went wrong: {}".format(e))
     return jsonify(tasks_schema.dump(tasks))
