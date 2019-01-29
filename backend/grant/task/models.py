@@ -2,6 +2,7 @@ import json
 
 from grant.extensions import ma, db
 from sqlalchemy.ext import mutable
+
 from .jobs import JOBS
 
 
@@ -34,12 +35,11 @@ class Task(db.Model):
     execute_after = db.Column(db.DateTime, nullable=False)
     completed = db.Column(db.Boolean, default=False)
 
-    def __init__(self, job_type, blob, execute_after, completed=False):
+    def __init__(self, job_type, blob, execute_after):
         assert job_type in list(JOBS.keys()), "Not a valid job"
         self.job_type = job_type
         self.blob = blob
         self.execute_after = execute_after
-        self.completed = completed
 
 
 class TaskSchema(ma.Schema):

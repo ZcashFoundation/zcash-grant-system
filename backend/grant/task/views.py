@@ -9,7 +9,7 @@ blueprint = Blueprint("task", __name__, url_prefix="/api/v1/task")
 
 @blueprint.route("/", methods=["GET"])
 def task():
-    tasks = Task.query.filter(Task.execute_after <= datetime.now()).all()
+    tasks = Task.query.filter(Task.execute_after <= datetime.now()).filter_by(completed=False).all()
     for each_task in tasks:
         try:
             JOBS[each_task.job_type](each_task)
