@@ -246,7 +246,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('status', p.status)}
               {renderDeetItem('category', p.category)}
               {renderDeetItem('target', p.target)}
-              {renderDeetItem('funded', p.funded)}
+              {renderDeetItem('contributed', p.contributed)}
+              {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
             </Card>
 
