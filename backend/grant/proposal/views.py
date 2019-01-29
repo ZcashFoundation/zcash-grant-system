@@ -4,6 +4,7 @@ from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
 from grant.milestone.models import Milestone
+from grant.settings import EXPLORER_URL
 from grant.user.models import User
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
@@ -232,7 +233,7 @@ def delete_proposal(proposal_id):
 @endpoint.api()
 def submit_for_approval_proposal(proposal_id):
     try:
-        g.current_proposal.submit_for_approval(current_user=g.current_user)
+        g.current_proposal.submit_for_approval()
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
@@ -455,7 +456,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     send_email(contribution.user.email_address, 'contribution_confirmed', {
         'contribution': contribution,
         'proposal': contribution.proposal,
-        'tx_explorer_url': f'https://explorer.zcha.in/transactions/{txid}',
+        'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
     })
 
     # Send to the full proposal gang

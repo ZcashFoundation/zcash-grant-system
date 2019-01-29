@@ -198,17 +198,12 @@ class Proposal(db.Model):
         if category and category not in CATEGORIES:
             raise ValidationException("Category {} not in {}".format(category, CATEGORIES))
 
-    def validate_publishable(self, current_user=None):
+    def validate_publishable(self):
         # Require certain fields
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
         for field in required_fields:
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
-
-        if current_user:
-            if not current_user.email_verification.has_verified:
-                message = "Please confirm your email before attempting to publish a proposal."
-                raise ValidationException(message)
 
         # Then run through regular validation
         Proposal.validate(vars(self))
@@ -256,8 +251,8 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def submit_for_approval(self, current_user):
-        self.validate_publishable(current_user)
+    def submit_for_approval(self):
+        self.validate_publishable()
         allowed_statuses = [DRAFT, REJECTED]
         # specific validation
         if self.status not in allowed_statuses:

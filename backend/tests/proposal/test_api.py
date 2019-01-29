@@ -89,7 +89,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
     def test_publish_proposal_approved(self):
         self.login_default_user()
         # submit for approval, then approve
-        self.proposal.submit_for_approval(self.user)
+        self.proposal.submit_for_approval()
         self.proposal.approve_pending(True)  # admin action
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert200(resp)
@@ -114,7 +114,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.mark_user_not_verified()
         self.proposal.status = "DRAFT"
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
-        self.assert400(resp)
+        self.assert403(resp)
 
     # /
     def test_get_proposals(self):
