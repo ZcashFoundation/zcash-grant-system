@@ -144,5 +144,3 @@ class BaseProposalCreatorConfig(BaseUserConfig):
     def make_proposal_reminder_task(self):
         proposal_reminder = ProposalReminder(self.proposal.id)
         proposal_reminder.make_task()
-        from grant.task.models import Task
-        print(Task.query.all()[0].__dict__)
