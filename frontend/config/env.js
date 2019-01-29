@@ -41,14 +41,6 @@ envProductionRequiredHandler(
   'http://localhost:' + (process.env.PORT || 3000),
 );
 
-if (!process.env.SENTRY_RELEASE) {
-  process.env.SENTRY_RELEASE = undefined;
-}
-
-if (!process.env.BACKEND_URL) {
-  process.env.BACKEND_URL = 'http://localhost:5000';
-}
-
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .split(path.delimiter)
@@ -58,12 +50,13 @@ process.env.NODE_PATH = (process.env.NODE_PATH || '')
 
 module.exports = () => {
   const raw = {
-    BACKEND_URL: process.env.BACKEND_URL,
+    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:5000',
+    EXPLORER_URL: process.env.EXPLORER_URL || 'https://chain.so/zcash/',
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: process.env.PORT || 3000,
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,
     SENTRY_DSN: process.env.SENTRY_DSN || null,
-    SENTRY_RELEASE: process.env.SENTRY_RELEASE,
+    SENTRY_RELEASE: process.env.SENTRY_RELEASE || undefined,
   };
 
   // Stringify all values so we can feed into Webpack DefinePlugin

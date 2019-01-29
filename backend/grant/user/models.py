@@ -224,13 +224,37 @@ class User(db.Model, UserMixin):
         })
 
 
-class UserSchema(ma.Schema):
+class SelfUserSchema(ma.Schema):
     class Meta:
         model = User
         # Fields to expose
         fields = (
             "title",
             "email_address",
+            "social_medias",
+            "avatar",
+            "display_name",
+            "userid"
+        )
+
+    social_medias = ma.Nested("SocialMediaSchema", many=True)
+    avatar = ma.Nested("AvatarSchema")
+    userid = ma.Method("get_userid")
+
+    def get_userid(self, obj):
+        return obj.id
+
+
+self_user_schema = SelfUserSchema()
+self_users_schema = SelfUserSchema(many=True)
+
+
+class UserSchema(ma.Schema):
+    class Meta:
+        model = User
+        # Fields to expose
+        fields = (
+            "title",
             "social_medias",
             "avatar",
             "display_name",

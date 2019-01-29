@@ -482,7 +482,7 @@ class ProposalContributionSchema(ma.Schema):
         )
 
     proposal = ma.Nested("ProposalSchema")
-    user = ma.Nested("UserSchema", exclude=["email_address"])
+    user = ma.Nested("UserSchema")
     date_created = ma.Method("get_date_created")
     addresses = ma.Method("get_addresses")
 

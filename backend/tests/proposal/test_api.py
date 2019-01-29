@@ -108,3 +108,17 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.proposal.status = PENDING  # should be APPROVED
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert400(resp)
+
+    # /
+    def test_get_proposals(self):
+        self.test_publish_proposal_approved()
+        resp = self.app.get("/api/v1/proposals/")
+        self.assert200(resp)
+
+    def test_get_proposals_does_not_include_team_member_email_addresses(self):
+        self.test_publish_proposal_approved()
+        resp = self.app.get("/api/v1/proposals/")
+        self.assert200(resp)
+        for each_proposal in resp.json:
+            for team_member in each_proposal["team"]:
+                self.assertIsNone(team_member.get('email_address'))
