@@ -51,7 +51,13 @@ class RFPForm extends React.Component<Props, State> {
 
       const rfp = store.rfps.find(r => r.id === rfpId);
       if (rfp) {
-        defaults = { ...rfp };
+        defaults = {
+          title: rfp.title,
+          brief: rfp.brief,
+          content: rfp.content,
+          category: rfp.category,
+          status: rfp.status,
+        };
       } else {
         return <Exception type="404" desc="This RFP does not exist" />;
       }
