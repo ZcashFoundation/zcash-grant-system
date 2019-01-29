@@ -187,6 +187,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
     deadlineDuration: 86400 * 60,
     target: toZat(draft.target),
     funded: Zat('0'),
+    contributionMatching: 0,
     percentFunded: 0,
     stage: 'preview',
     category: draft.category || PROPOSAL_CATEGORY.DAPP,

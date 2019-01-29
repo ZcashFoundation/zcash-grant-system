@@ -8,6 +8,7 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
 from sqlalchemy import func, or_
+from sqlalchemy.ext.hybrid import hybrid_property
 
 # Proposal states
 DRAFT = 'DRAFT'
@@ -154,6 +155,8 @@ class Proposal(db.Model):
     target = db.Column(db.String(255), nullable=False)
     payout_address = db.Column(db.String(255), nullable=False)
     deadline_duration = db.Column(db.Integer(), nullable=False)
+    contribution_matching = db.Column(db.Float(), nullable=False, default=0, server_default=db.text("0"))
+    contributed = db.column_property()
 
     # Relations
     team = db.relationship("User", secondary=proposal_team)
@@ -298,11 +301,23 @@ class Proposal(db.Model):
         self.date_published = datetime.datetime.now()
         self.status = LIVE
 
-    def get_amount_funded(self):
+    @hybrid_property
+    def contributed(self):
         contributions = ProposalContribution.query \
             .filter_by(proposal_id=self.id, status=CONFIRMED) \
             .all()
         funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        return str(funded)
+
+    @hybrid_property
+    def funded(self):
+        target = float(self.target)
+        # apply matching multiplier
+        funded = float(self.contributed) * (1 + self.contribution_matching)
+        # if funded > target, just set as target
+        if funded > target:
+            return str(target)
+
         return str(funded)
 
 
@@ -321,6 +336,7 @@ class ProposalSchema(ma.Schema):
             "brief",
             "proposal_id",
             "target",
+            "contributed",
             "funded",
             "content",
             "comments",
@@ -330,6 +346,7 @@ class ProposalSchema(ma.Schema):
             "team",
             "payout_address",
             "deadline_duration",
+            "contribution_matching",
             "invites"
         )
 
@@ -337,7 +354,6 @@ class ProposalSchema(ma.Schema):
     date_approved = ma.Method("get_date_approved")
     date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
-    funded = ma.Method("get_funded")
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
@@ -357,9 +373,6 @@ class ProposalSchema(ma.Schema):
     def get_date_published(self, obj):
         return dt_to_unix(obj.date_published) if obj.date_published else None
 
-    def get_funded(self, obj):
-        return obj.get_amount_funded()
-
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
@@ -370,6 +383,7 @@ user_fields = [
     "brief",
     "target",
     "funded",
+    "contribution_matching",
     "date_created",
     "date_approved",
     "date_published",

@@ -1,6 +1,8 @@
 @import '~styles/variables.less';
 
 .ProposalCard {
+  position: relative;
+  background: white;
   border: 1px solid #eee;
   padding: 1rem 1rem 0;
   border-radius: 2px;
@@ -15,6 +17,34 @@
     border: 1px solid #ccc;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
     transform: translateY(-2px);
+  }
+
+  &-ribbon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 66px;
+    height: 66px;
+    background: transparent;
+    overflow: hidden;
+
+    & span {
+      position: absolute;
+      top: 10px;
+      right: -80px;
+      padding: 0.2rem 0;
+      line-height: 0.8rem;
+      display: block;
+      background: @info-color;
+      color: white;
+      transform: rotate(45deg);
+      width: 200px;
+      text-align: center;
+
+      & small {
+        display: block;
+      }
+    }
   }
 
   &-title {
@@ -58,7 +88,7 @@
         height: 1.8rem;
         margin-left: -0.75rem;
         border-radius: 100%;
-        border: 2px solid #FFF;
+        border: 2px solid #fff;
       }
     }
   }

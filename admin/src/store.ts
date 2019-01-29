@@ -58,6 +58,11 @@ async function fetchProposalDetail(id: number) {
   return data;
 }
 
+async function updateProposal(p: Partial<Proposal>) {
+  const { data } = await api.put('/admin/proposals/' + p.proposalId, p);
+  return data;
+}
+
 async function deleteProposal(id: number) {
   const { data } = await api.delete('/admin/proposals/' + id);
   return data;
@@ -202,6 +207,21 @@ const app = store({
     app.proposalDetailFetching = false;
   },
 
+  async updateProposalDetail(updates: Partial<Proposal>) {
+    if (!app.proposalDetail) {
+      return;
+    }
+    try {
+      const res = await updateProposal({
+        ...updates,
+        proposalId: app.proposalDetail.proposalId,
+      });
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+  },
+
   async deleteProposal(id: number) {
     try {
       await deleteProposal(id);
@@ -213,10 +233,9 @@ const app = store({
 
   async approveProposal(isApprove: boolean, rejectReason?: string) {
     if (!app.proposalDetail) {
-      (x => {
-        app.generalError.push(x);
-        console.error(x);
-      })('store.approveProposal(): Expected proposalDetail to be populated!');
+      const m = 'store.approveProposal(): Expected proposalDetail to be populated!';
+      app.generalError.push(m);
+      console.error(m);
       return;
     }
     app.proposalDetailApproving = true;

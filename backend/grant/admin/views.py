@@ -124,7 +124,7 @@ def get_proposal(id):
     proposal = Proposal.query.filter(Proposal.id == id).first()
     if proposal:
         return proposal_schema.dump(proposal)
-    return {"message": "Could not find proposal with id %s" % id}, 404
+    return {"message": f"Could not find proposal with id {id}"}, 404
 
 
 @blueprint.route('/proposals/<id>', methods=['DELETE'])
@@ -132,6 +132,29 @@ def get_proposal(id):
 @admin_auth_required
 def delete_proposal(id):
     return {"message": "Not implemented."}, 400
+
+
+@blueprint.route('/proposals/<id>', methods=['PUT'])
+@endpoint.api(
+    parameter('contributionMatching', type=float, required=False, default=None)
+)
+@admin_auth_required
+def update_proposal(id, contribution_matching):
+    proposal = Proposal.query.filter(Proposal.id == id).first()
+    if proposal:
+        if contribution_matching is not None:
+            # enforce 1 or 0 for now
+            if contribution_matching == 0.0 or contribution_matching == 1.0:
+                proposal.contribution_matching = contribution_matching
+                # TODO: trigger check if funding target reached OR make sure
+                # job schedule checks for funding completion include matching funds
+            else:
+                return {"message": f"Bad value for contributionMatching: {contribution_matching}"}, 400
+
+        db.session.commit()
+        return proposal_schema.dump(proposal)
+
+    return {"message": f"Could not find proposal with id {id}"}, 404
 
 
 @blueprint.route('/proposals/<id>/approve', methods=['PUT'])
