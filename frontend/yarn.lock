@@ -12405,10 +12405,9 @@ react-loadable@^5.5.0:
   dependencies:
     prop-types "^15.5.0"
 
-react-mde@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/react-mde/-/react-mde-6.0.0.tgz#13330accdc3e4ed210a3710f54aac6af14812146"
-  integrity sha512-hLilqeAT+IcbaZB625f3n1zlisOWy5EYHO7MmlaXUFtmKqGo8uVR5eLyBpkjFdHmuCSOpKtmPKAyk39aIFOJ+w==
+react-mde@^5.8.0:
+  version "5.8.0"
+  resolved "https://registry.yarnpkg.com/react-mde/-/react-mde-5.8.0.tgz#af29cad35a289eb45321c3e4450911afa26bc94a"
   dependencies:
     classnames "^2.2.5"
     npm "^6.1.0"

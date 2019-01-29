@@ -1,6 +1,4 @@
-import random
-
-from grant.proposal.models import CATEGORIES
+from grant.utils.enums import Category
 
 message = {
     "sig": "0x7b3a85e9f158c2ae2a9ffba986a7dcb9108cf8ea9691080f80eadb506719f14925c89777aade3fabc5f9730ea389abdf7ffb0da16babdf1a1ea710b1e998cb891c",
@@ -86,7 +84,7 @@ test_proposal = {
     "title": "Give Me Money",
     "brief": "$$$",
     "milestones": milestones,
-    "category": random.choice(CATEGORIES),
+    "category": Category.ACCESSIBILITY,
     "target": "123.456",
     "payoutAddress": "123",
     "deadlineDuration": 100
