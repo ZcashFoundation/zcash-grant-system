@@ -234,15 +234,20 @@ class SelfUserSchema(ma.Schema):
             "social_medias",
             "avatar",
             "display_name",
-            "userid"
+            "userid",
+            "email_verified"
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
+    email_verified = ma.Method("get_email_verified")
 
     def get_userid(self, obj):
         return obj.id
+
+    def get_email_verified(self, obj):
+        return obj.email_verification.has_verified
 
 
 self_user_schema = SelfUserSchema()
@@ -258,15 +263,20 @@ class UserSchema(ma.Schema):
             "social_medias",
             "avatar",
             "display_name",
-            "userid"
+            "userid",
+            "email_verified"
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
+    email_verified = ma.Method("get_email_verified")
 
     def get_userid(self, obj):
         return obj.id
+
+    def get_email_verified(self, obj):
+        return obj.email_verification.has_verified
 
 
 user_schema = UserSchema()

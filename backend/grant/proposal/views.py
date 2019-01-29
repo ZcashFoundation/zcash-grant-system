@@ -4,12 +4,12 @@ from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
 from grant.milestone.models import Milestone
+from grant.settings import EXPLORER_URL
 from grant.user.models import User
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_preview
 from sqlalchemy import or_
-from grant.settings import EXPLORER_URL
 
 from .models import (
     Proposal,
@@ -88,6 +88,11 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         parent = Comment.query.filter_by(id=parent_comment_id).first()
         if not parent:
             return {"message": "Parent comment doesn’t exist"}, 400
+
+    # Make sure user has verified their email
+    if not g.current_user.email_verification.has_verified:
+        message = "Please confirm your email before commenting."
+        return {"message": message}, 401
 
     # Make the comment
     comment = Comment(
@@ -188,7 +193,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
     try:
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
 
     # Delete & re-add milestones
@@ -230,7 +235,7 @@ def submit_for_approval_proposal(proposal_id):
     try:
         g.current_proposal.submit_for_approval()
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
@@ -243,7 +248,7 @@ def publish_proposal(proposal_id):
     try:
         g.current_proposal.publish()
     except ValidationException as e:
-        return {"message": "Invalid proposal parameters: {}".format(str(e))}, 400
+        return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200

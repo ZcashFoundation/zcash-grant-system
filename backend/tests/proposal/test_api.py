@@ -109,6 +109,13 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert400(resp)
 
+    def test_not_verified_email_address_publish_proposal(self):
+        self.login_default_user()
+        self.mark_user_not_verified()
+        self.proposal.status = "DRAFT"
+        resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
+        self.assert403(resp)
+
     # /
     def test_get_proposals(self):
         self.test_publish_proposal_approved()
