@@ -20,7 +20,7 @@ function addRfp(state: RFPState, payload: RFP) {
 
   const rfps = [...state.rfps];
   if (!existingProposal) {
-    rfps.concat(payload);
+    rfps.push(payload);
   } else {
     const index = rfps.indexOf(existingProposal);
     rfps[index] = payload;
