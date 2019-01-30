@@ -25,6 +25,7 @@ from .models import (
     proposal_proposal_contributions_schema,
     db,
     DRAFT,
+    STAKING,
     PENDING,
     APPROVED,
     REJECTED,
@@ -241,6 +242,20 @@ def submit_for_approval_proposal(proposal_id):
     return proposal_schema.dump(g.current_proposal), 200
 
 
+
+@blueprint.route("/<proposal_id>/stake", methods=["GET"])
+@requires_team_member_auth
+@endpoint.api()
+def get_proposal_stake(proposal_id):
+    if g.current_proposal.status != STAKING:
+        return None, 400
+    contribution = g.current_proposal.get_staking_contribution(g.current_user.id)
+    if contribution:
+        return proposal_contribution_schema.dump(contribution)
+    return None, 404
+
+
+
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
 @requires_team_member_auth
 @endpoint.api()
@@ -412,13 +427,7 @@ def post_proposal_contribution(proposal_id, amount):
 
     if not contribution:
         code = 201
-        contribution = ProposalContribution(
-            proposal_id=proposal_id,
-            user_id=g.current_user.id,
-            amount=amount
-        )
-        db.session.add(contribution)
-        db.session.commit()
+        contribution = proposal.create_contribution(g.current_user.id, amount)
 
     dumped_contribution = proposal_contribution_schema.dump(contribution)
     return dumped_contribution, code

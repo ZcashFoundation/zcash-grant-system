@@ -9,15 +9,17 @@ from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from grant.settings import PROPOSAL_STAKING_AMOUNT
 
 # Proposal states
 DRAFT = 'DRAFT'
 PENDING = 'PENDING'
+STAKING = 'STAKING'
 APPROVED = 'APPROVED'
 REJECTED = 'REJECTED'
 LIVE = 'LIVE'
 DELETED = 'DELETED'
-STATUSES = [DRAFT, PENDING, APPROVED, REJECTED, LIVE, DELETED]
+STATUSES = [DRAFT, PENDING, STAKING, APPROVED, REJECTED, LIVE, DELETED]
 
 # Funding stages
 FUNDING_REQUIRED = 'FUNDING_REQUIRED'
@@ -254,6 +256,33 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
+    def create_contribution(self, user_id: int, amount: float):
+        contribution = ProposalContribution(
+            proposal_id=self.id,
+            user_id=user_id,
+            amount=amount
+        )
+        db.session.add(contribution)
+        db.session.commit()
+        return contribution
+
+    def get_staking_contribution(self, user_id: int):
+        contribution = None
+        remaining = PROPOSAL_STAKING_AMOUNT - float(self.contributed)
+        # check funding
+        if remaining > 0:
+            # find pending contribution for any user
+            # (always use full staking amout so we can find it)
+            contribution = ProposalContribution.query.filter_by(
+                proposal_id=self.id,
+                amount=PROPOSAL_STAKING_AMOUNT,
+                status=PENDING,
+            ).first()
+            if not contribution:
+                contribution = self.create_contribution(user_id, PROPOSAL_STAKING_AMOUNT)
+
+        return contribution
+
     def submit_for_approval(self):
         self.validate_publishable()
         allowed_statuses = [DRAFT, REJECTED]
@@ -261,7 +290,7 @@ class Proposal(db.Model):
         if self.status not in allowed_statuses:
             raise ValidationException(f"Proposal status must be {DRAFT} or {REJECTED} to submit for approval")
 
-        self.status = PENDING
+        self.status = STAKING
 
     def approve_pending(self, is_approve, reject_reason=None):
         self.validate_publishable()
