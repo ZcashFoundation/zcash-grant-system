@@ -8,7 +8,7 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import store from 'src/store';
 import ProposalItem from './ProposalItem';
 import { PROPOSAL_STATUS, Proposal } from 'src/types';
-import STATUSES, { getStatusById } from './STATUSES';
+import { PROPOSAL_STATUSES, getStatusById } from 'util/statuses';
 import './index.less';
 
 interface Query {
@@ -37,7 +37,7 @@ class ProposalsNaked extends React.Component<Props, State> {
 
     const statusFilterMenu = (
       <Menu onClick={this.handleFilterClick}>
-        {STATUSES.map(f => (
+        {PROPOSAL_STATUSES.map(f => (
           <Menu.Item key={f.id}>{f.filterDisplay}</Menu.Item>
         ))}
       </Menu>
@@ -51,7 +51,7 @@ class ProposalsNaked extends React.Component<Props, State> {
               Filter <Icon type="down" />
             </Button>
           </Dropdown>
-          <Button title="refresh" icon="reload" onClick={() => this.fetchProposals()} />
+          <Button title="refresh" icon="reload" onClick={this.fetchProposals} />
         </div>
         {!!statusFilters.length && (
           <div className="Proposals-filters">
@@ -60,7 +60,7 @@ class ProposalsNaked extends React.Component<Props, State> {
               <Tag
                 key={sf}
                 onClose={() => this.handleFilterClose(sf)}
-                color={getStatusById(sf).tagColor}
+                color={getStatusById(PROPOSAL_STATUSES, sf).tagColor}
                 closable
               >
                 status: {sf}

@@ -1,0 +1,38 @@
+.RFPDetail {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  &-actions {
+    .ant-btn {
+      margin-top: 0.5rem;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+  }
+
+  &-deet {
+    position: relative;
+    margin-bottom: 1rem;
+
+    & > span {
+      font-size: 0.7rem;
+      position: absolute;
+      opacity: 0.8;
+      top: 1rem;
+    }
+  }
+
+  & .ant-card,
+  .ant-alert,
+  .ant-collapse {
+    margin-bottom: 16px;
+
+    button + button {
+      margin-left: 0.5rem;
+    }
+  }
+}
+  

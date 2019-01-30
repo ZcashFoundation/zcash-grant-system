@@ -12,6 +12,9 @@ import UserDetail from 'components/UserDetail';
 import Emails from 'components/Emails';
 import Proposals from 'components/Proposals';
 import ProposalDetail from 'components/ProposalDetail';
+import RFPs from 'components/RFPs';
+import RFPForm from 'components/RFPForm';
+import RFPDetail from 'components/RFPDetail';
 
 import 'styles/style.less';
 
@@ -34,6 +37,10 @@ class Routes extends React.Component<Props> {
             <Route path="/users" component={Users} />
             <Route path="/proposals/:id" component={ProposalDetail} />
             <Route path="/proposals" component={Proposals} />
+            <Route path="/rfps/new" component={RFPForm} />
+            <Route path="/rfps/:id/edit" component={RFPForm} />
+            <Route path="/rfps/:id" component={RFPDetail} />
+            <Route path="/rfps" component={RFPs} />
             <Route path="/emails/:type?" component={Emails} />
           </Switch>
         )}

@@ -1,6 +1,7 @@
 import json
 
 from grant.proposal.models import Proposal, db
+from grant.utils.enums import ProposalStatus
 
 from ..config import BaseUserConfig
 from ..test_data import test_comment, test_reply
@@ -9,9 +10,7 @@ from ..test_data import test_comment, test_reply
 class TestProposalCommentAPI(BaseUserConfig):
     def test_unauthorized_create_new_proposal_comment(self):
         # no login
-        proposal = Proposal(
-            status="LIVE"
-        )
+        proposal = Proposal(status=ProposalStatus.LIVE)
         db.session.add(proposal)
         db.session.commit()
 
@@ -24,9 +23,7 @@ class TestProposalCommentAPI(BaseUserConfig):
 
     def test_create_new_proposal_comment(self):
         self.login_default_user()
-        proposal = Proposal(
-            status="LIVE"
-        )
+        proposal = Proposal(status=ProposalStatus.LIVE)
         db.session.add(proposal)
         db.session.commit()
 
@@ -48,9 +45,7 @@ class TestProposalCommentAPI(BaseUserConfig):
 
     def test_create_new_proposal_comment_reply(self):
         self.login_default_user()
-        proposal = Proposal(
-            status="LIVE"
-        )
+        proposal = Proposal(status=ProposalStatus.LIVE)
         db.session.add(proposal)
         db.session.commit()
         proposal_id = proposal.id
@@ -77,9 +72,7 @@ class TestProposalCommentAPI(BaseUserConfig):
 
     def test_invalid_parent_comment_id_create_reply(self):
         self.login_default_user()
-        proposal = Proposal(
-            status="LIVE"
-        )
+        proposal = Proposal(status=ProposalStatus.LIVE)
         db.session.add(proposal)
         db.session.commit()
         proposal_id = proposal.id

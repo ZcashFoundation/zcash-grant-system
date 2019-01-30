@@ -1,6 +1,4 @@
-import random
-
-from grant.proposal.models import CATEGORIES
+from grant.utils.enums import Category
 
 
 test_user = {
@@ -45,7 +43,7 @@ test_proposal = {
     "title": "Give Me Money",
     "brief": "$$$",
     "milestones": milestones,
-    "category": random.choice(CATEGORIES),
+    "category": Category.ACCESSIBILITY,
     "target": "123.456",
     "payoutAddress": "123",
     "deadlineDuration": 100

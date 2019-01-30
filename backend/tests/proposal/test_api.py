@@ -1,6 +1,7 @@
 import json
 
-from grant.proposal.models import Proposal, PENDING
+from grant.proposal.models import Proposal
+from grant.utils.enums import ProposalStatus
 
 from ..config import BaseProposalCreatorConfig
 from ..test_data import test_proposal
@@ -81,7 +82,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
     def test_invalid_status_proposal_draft_submit_for_approval(self):
         self.login_default_user()
-        self.proposal.status = PENDING  # should be DRAFT
+        self.proposal.status = ProposalStatus.PENDING  # should be ProposalStatus.DRAFT
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert400(resp)
 
@@ -105,7 +106,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
     def test_invalid_status_proposal_publish_proposal(self):
         self.login_default_user()
-        self.proposal.status = PENDING  # should be APPROVED
+        self.proposal.status = ProposalStatus.PENDING  # should be ProposalStatus.APPROVED
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert400(resp)
 

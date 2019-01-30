@@ -5,7 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
-from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task
+from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp
 from grant.extensions import bcrypt, migrate, db, ma, security
 from grant.settings import SENTRY_RELEASE, ENV
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -54,6 +54,7 @@ def register_blueprints(app):
     app.register_blueprint(email.views.blueprint)
     app.register_blueprint(blockchain.views.blueprint)
     app.register_blueprint(task.views.blueprint)
+    app.register_blueprint(rfp.views.blueprint)
 
 
 def register_shellcontext(app):

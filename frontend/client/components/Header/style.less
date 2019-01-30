@@ -1,8 +1,9 @@
 @import '~styles/variables.less';
 @header-height: 62px;
-@header-transition: 120ms;
-@small-query: ~'(max-width: 660px)';
-@big-query: ~'(min-width: 661px)';
+@header-transition: 200ms;
+@link-padding: 0.7rem;
+@small-query: ~'(max-width: 820px)';
+@big-query: ~'(min-width: 821px)';
 
 .Header {
   top: 0;
@@ -65,15 +66,20 @@
 
   &-links {
     display: flex;
+    transition: transform @header-transition ease;
+
+    .is-transparent & {
+      transform: translateY(20%);
+    }
 
     &.is-left {
       justify-self: flex-start;
-      margin-left: -0.75rem;
+      margin-left: -@link-padding;
     }
 
     &.is-right {
       justify-self: flex-end;
-      margin-right: -0.75rem;
+      margin-right: -@link-padding;
     }
 
     &.is-desktop {
@@ -91,11 +97,9 @@
     &-link {
       display: block;
       background: none;
-      padding: 0 0.75rem;
-      font-size: 1rem;
-      font-weight: 300;
+      padding: 0 @link-padding;
+      font-size: 0.9rem;
       color: inherit;
-      letter-spacing: 0.05rem;
       cursor: pointer;
       opacity: 0.8;
       transition: transform 100ms ease, opacity 100ms ease;

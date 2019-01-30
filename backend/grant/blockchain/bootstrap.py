@@ -1,18 +1,17 @@
 from grant.proposal.models import (
     ProposalContribution,
     proposal_contributions_schema,
-    PENDING,
-    CONFIRMED,
 )
 from grant.utils.requests import blockchain_post
+from grant.utils.enums import ContributionStatus
 
 
 def make_bootstrap_data():
     pending_contributions = ProposalContribution.query \
-        .filter_by(status=PENDING) \
+        .filter_by(status=ContributionStatus.PENDING) \
         .all()
     latest_contribution = ProposalContribution.query \
-        .filter_by(status=CONFIRMED) \
+        .filter_by(status=ContributionStatus.CONFIRMED) \
         .order_by(ProposalContribution.date_created.desc()) \
         .first()
     return {

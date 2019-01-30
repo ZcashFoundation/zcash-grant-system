@@ -1,6 +1,6 @@
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal, EmailExample, PROPOSAL_STATUS } from './types';
+import { User, Proposal, RFP, RFPArgs, EmailExample, PROPOSAL_STATUS } from './types';
 
 // API
 const api = axios.create({
@@ -81,6 +81,25 @@ async function getEmailExample(type: string) {
   return data;
 }
 
+async function getRFPs() {
+  const { data } = await api.get(`/admin/rfps`);
+  return data;
+}
+
+async function createRFP(args: RFPArgs) {
+  const { data } = await api.post('/admin/rfps', args);
+  return data;
+}
+
+async function editRFP(id: number, args: RFPArgs) {
+  const { data } = await api.put(`/admin/rfps/${id}`, args);
+  return data;
+}
+
+async function deleteRFP(id: number) {
+  await api.delete(`/admin/rfps/${id}`);
+}
+
 // STORE
 const app = store({
   hasCheckedLogin: false,
@@ -107,6 +126,14 @@ const app = store({
   proposalDetailFetching: false,
   proposalDetail: null as null | Proposal,
   proposalDetailApproving: false,
+
+  rfps: [] as RFP[],
+  rfpsFetching: false,
+  rfpsFetched: false,
+  rfpSaving: false,
+  rfpSaved: false,
+  rfpDeleting: false,
+  rfpDeleted: false,
 
   emailExamples: {} as { [type: string]: EmailExample },
 
@@ -259,6 +286,55 @@ const app = store({
     } catch (e) {
       handleApiError(e);
     }
+  },
+
+  async fetchRFPs() {
+    app.rfpsFetching = true;
+    try {
+      app.rfps = await getRFPs();
+      app.rfpsFetched = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.rfpsFetching = false;
+  },
+
+  async createRFP(args: RFPArgs) {
+    app.rfpSaving = true;
+    try {
+      const data = await createRFP(args);
+      app.rfps = [data, ...app.rfps];
+      app.rfpSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.rfpSaving = false;
+  },
+
+  async editRFP(id: number, args: RFPArgs) {
+    app.rfpSaving = true;
+    app.rfpSaved = false;
+    try {
+      await editRFP(id, args);
+      app.rfpSaved = true;
+      await app.fetchRFPs();
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.rfpSaving = false;
+  },
+
+  async deleteRFP(id: number) {
+    app.rfpDeleting = true;
+    app.rfpDeleted = false;
+    try {
+      await deleteRFP(id);
+      app.rfps = app.rfps.filter(rfp => rfp.id !== id);
+      app.rfpDeleted = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.rfpDeleting = false;
   },
 });
 

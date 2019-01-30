@@ -2,6 +2,7 @@ import json
 from mock import patch
 
 from grant.proposal.models import Proposal
+from grant.utils.enums import ProposalStatus
 from ..config import BaseUserConfig
 from ..test_data import test_proposal
 from ..mocks import mock_request
@@ -96,4 +97,4 @@ class TestProposalContributionAPI(BaseUserConfig):
 
         contribution = contribution_res.json
         self.assertEqual(contribution['id'], contribution_id)
-        self.assertEqual(contribution['status'], 'PENDING')
+        self.assertEqual(contribution['status'], ProposalStatus.PENDING)

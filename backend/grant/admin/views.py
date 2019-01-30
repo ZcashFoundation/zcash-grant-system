@@ -10,10 +10,11 @@ from grant.proposal.models import (
     proposals_schema,
     proposal_schema,
     user_proposal_contributions_schema,
-    PENDING
 )
 from grant.user.models import User, users_schema, user_schema
+from grant.rfp.models import RFP, rfp_schema, rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
+from grant.utils.enums import ProposalStatus
 from sqlalchemy import func, or_
 
 from .example_emails import example_email_args
@@ -53,7 +54,7 @@ def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
     proposal_count = db.session.query(func.count(Proposal.id)).scalar()
     proposal_pending_count = db.session.query(func.count(Proposal.id)) \
-        .filter(Proposal.status == PENDING) \
+        .filter(Proposal.status == ProposalStatus.PENDING) \
         .scalar()
     return {
         "userCount": user_count,
@@ -185,3 +186,83 @@ def get_email_example(type):
         # Unserializable, so remove
         email['info'].pop('subscription', None)
     return email
+
+
+# Requests for Proposal
+
+
+@blueprint.route('/rfps', methods=['GET'])
+@endpoint.api()
+@admin_auth_required
+def get_rfps():
+    rfps = RFP.query.all()
+    return rfps_schema.dump(rfps)
+
+
+@blueprint.route('/rfps', methods=['POST'])
+@endpoint.api(
+    parameter('title', type=str),
+    parameter('brief', type=str),
+    parameter('content', type=str),
+    parameter('category', type=str),
+)
+@admin_auth_required
+def create_rfp(title, brief, content, category):
+    rfp = RFP(
+        title=title,
+        brief=brief,
+        content=content,
+        category=category,
+    )
+    db.session.add(rfp)
+    db.session.commit()
+    return rfp_schema.dump(rfp), 201
+
+
+@blueprint.route('/rfps/<rfp_id>', methods=['GET'])
+@endpoint.api()
+@admin_auth_required
+def get_rfp(rfp_id):
+    rfp = RFP.query.filter(RFP.id == rfp_id).first()
+    if not rfp:
+        return {"message": "No RFP matching that id"}, 404
+
+    return rfp_schema.dump(rfp)
+
+
+@blueprint.route('/rfps/<rfp_id>', methods=['PUT'])
+@endpoint.api(
+    parameter('title', type=str),
+    parameter('brief', type=str),
+    parameter('content', type=str),
+    parameter('category', type=str),
+    parameter('status', type=str),
+)
+@admin_auth_required
+def update_rfp(rfp_id, title, brief, content, category, status):
+    rfp = RFP.query.filter(RFP.id == rfp_id).first()
+    if not rfp:
+        return {"message": "No RFP matching that id"}, 404
+
+    rfp.title = title
+    rfp.brief = brief
+    rfp.content = content
+    rfp.category = category
+    rfp.status = status
+
+    db.session.add(rfp)
+    db.session.commit()
+    return rfp_schema.dump(rfp)
+
+
+@blueprint.route('/rfps/<rfp_id>', methods=['DELETE'])
+@endpoint.api()
+@admin_auth_required
+def delete_rfp(rfp_id):
+    rfp = RFP.query.filter(RFP.id == rfp_id).first()
+    if not rfp:
+        return {"message": "No RFP matching that id"}, 404
+
+    db.session.delete(rfp)
+    db.session.commit()
+    return None, 200
