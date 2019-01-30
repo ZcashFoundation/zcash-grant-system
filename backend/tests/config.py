@@ -1,12 +1,14 @@
 import json
+from mock import patch
 
 from flask_testing import TestCase
 from grant.app import create_app
-from grant.proposal.models import Proposal
+from grant.proposal.models import Proposal, ProposalContribution
 from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
+from grant.settings import PROPOSAL_STAKING_AMOUNT
 
-from .test_data import test_user, test_other_user, test_proposal
+from .test_data import test_user, test_other_user, test_proposal, mock_contribution_addresses
 
 
 class BaseTestConfig(TestCase):
@@ -31,7 +33,7 @@ class BaseTestConfig(TestCase):
         """
 
         message = message or 'HTTP Status %s expected but got %s. Response json: %s' \
-                  % (status_code, response.status_code, response.json or response.data)
+            % (status_code, response.status_code, response.json or response.data)
         self.assertEqual(response.status_code, status_code, message)
 
     assert_status = assertStatus
@@ -144,3 +146,16 @@ class BaseProposalCreatorConfig(BaseUserConfig):
     def make_proposal_reminder_task(self):
         proposal_reminder = ProposalReminder(self.proposal.id)
         proposal_reminder.make_task()
+
+    @patch('requests.get', side_effect=mock_contribution_addresses)
+    def stake_proposal(self, mock_get):
+        # 1. submit
+        self.proposal.submit_for_approval()
+        # 2. get staking contribution
+        contribution = self.proposal.get_staking_contribution(self.user.id)
+        # 3. fake a confirmation
+        contribution.confirm(tx_id='tx', amount=str(PROPOSAL_STAKING_AMOUNT))
+        db.session.add(contribution)
+        db.session.commit()
+        contribution = self.proposal.get_staking_contribution(self.user.id)
+        return contribution

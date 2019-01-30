@@ -1,6 +1,7 @@
 import random
 
 from grant.proposal.models import CATEGORIES
+from .mocks import mock_request
 
 
 test_user = {
@@ -59,3 +60,9 @@ test_reply = {
     "comment": "Test reply"
     # Fill in parentCommentId in test
 }
+
+mock_contribution_addresses = mock_request({
+    'transparent': 't123',
+    'sprout': 'z123',
+    'memo': '123',
+})

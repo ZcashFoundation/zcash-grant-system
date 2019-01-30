@@ -1,8 +1,10 @@
-from grant.proposal.models import APPROVED, REJECTED
+from grant.proposal.models import PENDING, APPROVED, REJECTED
 from grant.utils.admin import generate_admin_password_hash
 from mock import patch
 
 from ..config import BaseProposalCreatorConfig
+from ..mocks import mock_request
+
 
 plaintext_mock_password = "p4ssw0rd"
 mock_admin_auth = {
@@ -96,8 +98,10 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
     def test_approve_proposal(self):
         self.login_admin()
-        # submit for approval (performed by end-user)
-        self.proposal.submit_for_approval()
+
+        # proposal needs to be PENDING
+        self.proposal.status = PENDING
+
         # approve
         resp = self.app.put(
             "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
@@ -108,8 +112,10 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
     def test_reject_proposal(self):
         self.login_admin()
-        # submit for approval (performed by end-user)
-        self.proposal.submit_for_approval()
+
+        # proposal needs to be PENDING
+        self.proposal.status = PENDING
+
         # reject
         resp = self.app.put(
             "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
