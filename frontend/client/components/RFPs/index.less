@@ -1,0 +1,57 @@
+.RFPs {
+  &-about {
+    display: flex;
+    align-content: center;
+    max-width: 880px;
+    margin: 0 auto 3rem;
+
+    &-logo {
+      flex-shrink: 0;
+      width: 140px;
+      padding-right: 1.5rem;
+      margin-right: 1.5rem;
+      border-right: 1px solid rgba(#000, 0.05);
+
+      svg {
+        width: 100%;
+        height: auto;
+      }
+    }
+
+    &-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      &-title {
+        font-size: 1.6rem;
+      }
+      
+      &-desc {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  &-list {
+    max-width: 1180px;
+    margin: 2rem auto 0;
+
+    &-title {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+  }
+
+  &-loading {
+    position: relative;
+    height: 12rem;
+  }
+
+  &-error {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 2rem 0;
+  }
+}

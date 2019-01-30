@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { User, Proposal, UserProposal, MILESTONE_STATE } from 'types';
+import { User, Proposal, UserProposal, RFP, MILESTONE_STATE } from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 import { toZat } from './units';
@@ -30,7 +30,7 @@ export function formatUserFromGet(user: UserState) {
 
 export function formatProposalFromGet(p: any): Proposal {
   const proposal = { ...p } as Proposal;
-  proposal.proposalUrlId = generateProposalUrl(proposal.proposalId, proposal.title);
+  proposal.proposalUrlId = generateSlugUrl(proposal.proposalId, proposal.title);
   proposal.target = toZat(p.target);
   proposal.funded = toZat(p.funded);
   proposal.percentFunded = proposal.target.isZero()
@@ -51,8 +51,13 @@ export function formatProposalFromGet(p: any): Proposal {
   return proposal;
 }
 
+export function formatRFPFromGet(rfp: any): RFP {
+  rfp.proposals = rfp.proposals.map(formatProposalFromGet);
+  return rfp;
+}
+
 // TODO: i18n on case-by-case basis
-export function generateProposalUrl(id: number, title: string) {
+export function generateSlugUrl(id: number, title: string) {
   const slug = title
     .toLowerCase()
     .replace(/[\s_]+/g, '-')
@@ -63,12 +68,12 @@ export function generateProposalUrl(id: number, title: string) {
   return `${id}-${slug}`;
 }
 
-export function extractProposalIdFromUrl(slug: string) {
-  const proposalId = parseInt(slug, 10);
-  if (isNaN(proposalId)) {
-    console.error('extractProposalIdFromUrl could not find id in : ' + slug);
+export function extractIdFromSlug(slug: string) {
+  const id = parseInt(slug, 10);
+  if (isNaN(id)) {
+    console.error('extractIdFromSlug could not find id in : ' + slug);
   }
-  return proposalId;
+  return id;
 }
 
 // pre-hydration massage (BNify JSONed BNs)

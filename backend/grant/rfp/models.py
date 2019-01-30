@@ -1,6 +1,7 @@
 import datetime
 from grant.extensions import ma, db
 from grant.utils.enums import RFPStatus
+from grant.utils.misc import dt_to_unix
 
 
 rfp_proposal = db.Table(
@@ -52,10 +53,15 @@ class RFPSchema(ma.Schema):
             "content",
             "category",
             "status",
+            "date_created",
             "proposals"
         )
 
+    date_created = ma.Method("get_date_created")
     proposals = ma.Nested("ProposalSchema", many=True)
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
 
 rfp_schema = RFPSchema()
 rfps_schema = RFPSchema(many=True)

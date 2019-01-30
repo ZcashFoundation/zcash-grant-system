@@ -34,7 +34,10 @@ export default class Header extends React.Component<Props, State> {
         <div className="Header-inner">
           <div className="Header-links is-left is-desktop">
             <Link to="/proposals" className="Header-links-link">
-              Browse
+              Proposals
+            </Link>
+            <Link to="/requests" className="Header-links-link">
+              Requests
             </Link>
             <Link to="/create" className="Header-links-link">
               Start a Proposal
