@@ -7,6 +7,7 @@ from grant.proposal.models import Proposal, ProposalContribution
 from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
 from grant.settings import PROPOSAL_STAKING_AMOUNT
+from grant.utils.enums import ProposalStatus
 
 from .test_data import test_user, test_other_user, test_proposal, mock_contribution_addresses
 
@@ -115,7 +116,7 @@ class BaseProposalCreatorConfig(BaseUserConfig):
     def setUp(self):
         super().setUp()
         self._proposal = Proposal.create(
-            status="DRAFT",
+            status=ProposalStatus.DRAFT,
             title=test_proposal["title"],
             content=test_proposal["content"],
             brief=test_proposal["brief"],
@@ -127,7 +128,7 @@ class BaseProposalCreatorConfig(BaseUserConfig):
         self._proposal.team.append(self.user)
         db.session.add(self._proposal)
 
-        self._other_proposal = Proposal.create(status="DRAFT")
+        self._other_proposal = Proposal.create(status=ProposalStatus.DRAFT)
         self._other_proposal.team.append(self.other_user)
         db.session.add(self._other_proposal)
         db.session.commit()

@@ -1,8 +1,9 @@
 import json
 from mock import patch
 
-from grant.proposal.models import Proposal, PENDING, STAKING, APPROVED, db
 from grant.settings import PROPOSAL_STAKING_AMOUNT
+from grant.proposal.models import Proposal
+from grant.utils.enums import ProposalStatus
 
 from ..config import BaseProposalCreatorConfig
 from ..test_data import test_proposal, mock_contribution_addresses
@@ -71,7 +72,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.login_default_user()
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert200(resp)
-        self.assertEqual(resp.json['status'], STAKING)
+        self.assertEqual(resp.json['status'], ProposalStatus.STAKING)
 
     def test_no_auth_proposal_draft_submit_for_approval(self):
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
@@ -84,7 +85,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
     def test_invalid_status_proposal_draft_submit_for_approval(self):
         self.login_default_user()
-        self.proposal.status = PENDING  # should be DRAFT
+        self.proposal.status = ProposalStatus.PENDING  # should be ProposalStatus.DRAFT
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert400(resp)
 
@@ -92,7 +93,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
     @patch('requests.get', side_effect=mock_contribution_addresses)
     def test_proposal_stake(self, mock_get):
         self.login_default_user()
-        self.proposal.status = STAKING
+        self.proposal.status = ProposalStatus.STAKING
         resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
         print(resp)
         self.assert200(resp)
@@ -100,7 +101,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
     @patch('requests.get', side_effect=mock_contribution_addresses)
     def test_proposal_stake_no_auth(self, mock_get):
-        self.proposal.status = STAKING
+        self.proposal.status = ProposalStatus.STAKING
         resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
         print(resp)
         self.assert401(resp)
@@ -108,7 +109,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
     @patch('requests.get', side_effect=mock_contribution_addresses)
     def test_proposal_stake_bad_status(self, mock_get):
         self.login_default_user()
-        self.proposal.status = PENDING  # should be staking
+        self.proposal.status = ProposalStatus.PENDING  # should be staking
         resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
         print(resp)
         self.assert400(resp)
@@ -126,9 +127,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
     def test_publish_proposal_approved(self):
         self.login_default_user()
         # proposal needs to be APPROVED
-        self.proposal.status = APPROVED
-        db.session.add(self.proposal)
-        db.session.commit()
+        self.proposal.status = ProposalStatus.APPROVED
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert200(resp)
 
@@ -143,7 +142,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
     def test_invalid_status_proposal_publish_proposal(self):
         self.login_default_user()
-        self.proposal.status = PENDING  # should be APPROVED
+        self.proposal.status = ProposalStatus.PENDING  # should be ProposalStatus.APPROVED
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert400(resp)
 

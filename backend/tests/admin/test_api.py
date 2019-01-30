@@ -1,4 +1,4 @@
-from grant.proposal.models import PENDING, APPROVED, REJECTED
+from grant.utils.enums import ProposalStatus
 from grant.utils.admin import generate_admin_password_hash
 from mock import patch
 
@@ -100,7 +100,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.login_admin()
 
         # proposal needs to be PENDING
-        self.proposal.status = PENDING
+        self.proposal.status = ProposalStatus.PENDING
 
         # approve
         resp = self.app.put(
@@ -108,13 +108,13 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             data={"isApprove": True}
         )
         self.assert200(resp)
-        self.assertEqual(resp.json["status"], APPROVED)
+        self.assertEqual(resp.json["status"], ProposalStatus.APPROVED)
 
     def test_reject_proposal(self):
         self.login_admin()
 
         # proposal needs to be PENDING
-        self.proposal.status = PENDING
+        self.proposal.status = ProposalStatus.PENDING
 
         # reject
         resp = self.app.put(
@@ -122,5 +122,5 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             data={"isApprove": False, "rejectReason": "Funnzies."}
         )
         self.assert200(resp)
-        self.assertEqual(resp.json["status"], REJECTED)
+        self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
         self.assertEqual(resp.json["rejectReason"], "Funnzies.")

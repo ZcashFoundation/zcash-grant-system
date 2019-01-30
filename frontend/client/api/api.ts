@@ -9,8 +9,9 @@ import {
   SOCIAL_SERVICE,
   ContributionWithAddresses,
   EmailSubscriptions,
+  RFP,
 } from 'types';
-import { formatUserForPost, formatProposalFromGet, formatUserFromGet } from 'utils/api';
+import { formatUserForPost, formatProposalFromGet, formatUserFromGet, formatRFPFromGet } from 'utils/api';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
@@ -258,4 +259,18 @@ export function getProposalContribution(
   contributionId: number,
 ): Promise<{ data: ContributionWithAddresses }> {
   return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
+}
+
+export function getRFPs(): Promise<{ data: RFP[] }> {
+  return axios.get('/api/v1/rfps/').then(res => {
+    res.data = res.data.map(formatRFPFromGet);
+    return res;
+  });
+}
+
+export function getRFP(rfpId: number | string): Promise<{ data: RFP }> {
+  return axios.get(`/api/v1/rfps/${rfpId}`).then(res => {
+    res.data = formatRFPFromGet(res.data);
+    return res;
+  });
 }
