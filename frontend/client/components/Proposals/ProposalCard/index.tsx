@@ -23,6 +23,7 @@ export class ProposalCard extends React.Component<Proposal> {
       team,
       target,
       funded,
+      contributionMatching,
       percentFunded,
     } = this.props;
 
@@ -32,6 +33,14 @@ export class ProposalCard extends React.Component<Proposal> {
         to={`/proposals/${proposalUrlId}`}
         title={title}
       >
+        {contributionMatching > 0 && (
+          <div className="ProposalCard-ribbon">
+            <span>
+              x2
+              <small>matching</small>
+            </span>
+          </div>
+        )}
         <div className="ProposalCard-funding">
           <div className="ProposalCard-funding-raised">
             <UnitDisplay value={funded} symbol="ZEC" /> <small>raised</small> of{' '}

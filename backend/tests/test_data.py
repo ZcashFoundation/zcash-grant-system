@@ -1,46 +1,5 @@
 from grant.utils.enums import Category
 
-message = {
-    "sig": "0x7b3a85e9f158c2ae2a9ffba986a7dcb9108cf8ea9691080f80eadb506719f14925c89777aade3fabc5f9730ea389abdf7ffb0da16babdf1a1ea710b1e998cb891c",
-    "data": {
-        "domain": {
-            "name": "Grant.io",
-            "version": 1,
-            "chainId": 1543277948575
-        },
-        "types": {
-            "authorization": [
-                {
-                    "name": "Message Proof",
-                    "type": "string"
-                },
-                {
-                    "name": "Time",
-                    "type": "string"
-                }
-            ],
-            "EIP712Domain": [
-                {
-                    "name": "name",
-                    "type": "string"
-                },
-                {
-                    "name": "version",
-                    "type": "string"
-                },
-                {
-                    "name": "chainId",
-                    "type": "uint256"
-                }
-            ]
-        },
-        "message": {
-            "message": "I am proving the identity of 0x6bEeA1Cef016c23e292381b6FcaeC092960e41aa on Grant.io",
-            "time": "Tue, 27 Nov 2018 19:02:04 GMT"
-        },
-        "primaryType": "authorization"
-    }
-}
 
 test_user = {
     "displayName": 'Groot',

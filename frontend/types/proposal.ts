@@ -42,6 +42,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   target: Zat;
   funded: Zat;
   percentFunded: number;
+  contributionMatching: number;
   milestones: ProposalMilestone[];
   datePublished: number;
 }

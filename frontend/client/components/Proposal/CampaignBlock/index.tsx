@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { Form, Input, Button, Icon } from 'antd';
+import { Form, Input, Button, Icon, Popover } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { fromZat } from 'utils/units';
@@ -94,6 +94,26 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               <UnitDisplay value={funded} /> / <UnitDisplay value={target} symbol="ZEC" />
             </div>
           </div>
+
+          {proposal.contributionMatching > 0 && (
+            <div className="ProposalCampaignBlock-matching">
+              <span>Funds are being matched x{proposal.contributionMatching + 1}</span>
+              <Popover
+                overlayClassName="ProposalCampaignBlock-popover-overlay"
+                placement="left"
+                content={
+                  <>
+                    <b>Matching</b>
+                    <br />
+                    Increase your impact! Contributions to this proposal are being
+                    matched by the Zcash Foundation, up to the target amount.
+                  </>
+                }
+              >
+                <Icon type="question-circle" theme="filled" />
+              </Popover>
+            </div>
+          )}
 
           {isFundingOver ? (
             <div

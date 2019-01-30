@@ -1,6 +1,7 @@
 import datetime
 from functools import reduce
 from sqlalchemy import func, or_
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from grant.comment.models import Comment
 from grant.email.send import send_email
@@ -9,6 +10,33 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
 from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
+
+# Proposal states
+DRAFT = 'DRAFT'
+PENDING = 'PENDING'
+APPROVED = 'APPROVED'
+REJECTED = 'REJECTED'
+LIVE = 'LIVE'
+DELETED = 'DELETED'
+STATUSES = [DRAFT, PENDING, APPROVED, REJECTED, LIVE, DELETED]
+
+# Funding stages
+FUNDING_REQUIRED = 'FUNDING_REQUIRED'
+COMPLETED = 'COMPLETED'
+PROPOSAL_STAGES = [FUNDING_REQUIRED, COMPLETED]
+
+# Proposal categories
+DAPP = "DAPP"
+DEV_TOOL = "DEV_TOOL"
+CORE_DEV = "CORE_DEV"
+COMMUNITY = "COMMUNITY"
+DOCUMENTATION = "DOCUMENTATION"
+ACCESSIBILITY = "ACCESSIBILITY"
+CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
+
+# Contribution states
+# PENDING = 'PENDING'
+CONFIRMED = 'CONFIRMED'
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -128,6 +156,8 @@ class Proposal(db.Model):
     target = db.Column(db.String(255), nullable=False)
     payout_address = db.Column(db.String(255), nullable=False)
     deadline_duration = db.Column(db.Integer(), nullable=False)
+    contribution_matching = db.Column(db.Float(), nullable=False, default=0, server_default=db.text("0"))
+    contributed = db.column_property()
 
     # Relations
     team = db.relationship("User", secondary=proposal_team)
@@ -174,19 +204,11 @@ class Proposal(db.Model):
 
     def validate_publishable(self):
         # Require certain fields
-        # TODO: I'm an idiot, make this a loop.
-        if not self.title:
-            raise ValidationException("Proposal must have a title")
-        if not self.content:
-            raise ValidationException("Proposal must have content")
-        if not self.brief:
-            raise ValidationException("Proposal must have a brief")
-        if not self.category:
-            raise ValidationException("Proposal must have a category")
-        if not self.target:
-            raise ValidationException("Proposal must have a target amount")
-        if not self.payout_address:
-            raise ValidationException("Proposal must have a payout address")
+        required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
+        for field in required_fields:
+            if not hasattr(self, field):
+                raise ValidationException("Proposal must have a {}".format(field))
+
         # Then run through regular validation
         Proposal.validate(vars(self))
 
@@ -280,11 +302,23 @@ class Proposal(db.Model):
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
 
-    def get_amount_funded(self):
+    @hybrid_property
+    def contributed(self):
         contributions = ProposalContribution.query \
             .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
             .all()
         funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        return str(funded)
+
+    @hybrid_property
+    def funded(self):
+        target = float(self.target)
+        # apply matching multiplier
+        funded = float(self.contributed) * (1 + self.contribution_matching)
+        # if funded > target, just set as target
+        if funded > target:
+            return str(target)
+
         return str(funded)
 
 
@@ -303,6 +337,7 @@ class ProposalSchema(ma.Schema):
             "brief",
             "proposal_id",
             "target",
+            "contributed",
             "funded",
             "content",
             "comments",
@@ -312,6 +347,7 @@ class ProposalSchema(ma.Schema):
             "team",
             "payout_address",
             "deadline_duration",
+            "contribution_matching",
             "invites"
         )
 
@@ -319,7 +355,6 @@ class ProposalSchema(ma.Schema):
     date_approved = ma.Method("get_date_approved")
     date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
-    funded = ma.Method("get_funded")
 
     comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
@@ -339,9 +374,6 @@ class ProposalSchema(ma.Schema):
     def get_date_published(self, obj):
         return dt_to_unix(obj.date_published) if obj.date_published else None
 
-    def get_funded(self, obj):
-        return obj.get_amount_funded()
-
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
@@ -352,6 +384,7 @@ user_fields = [
     "brief",
     "target",
     "funded",
+    "contribution_matching",
     "date_created",
     "date_approved",
     "date_published",
@@ -453,7 +486,7 @@ class ProposalContributionSchema(ma.Schema):
         )
 
     proposal = ma.Nested("ProposalSchema")
-    user = ma.Nested("UserSchema", exclude=["email_address"])
+    user = ma.Nested("UserSchema")
     date_created = ma.Method("get_date_created")
     addresses = ma.Method("get_addresses")
 

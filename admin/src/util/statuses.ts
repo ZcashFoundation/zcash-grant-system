@@ -71,8 +71,8 @@ export const RFP_STATUSES: Array<StatusSoT<RFP_STATUS>> = [
   },
   {
     id: RFP_STATUS.CLOSED,
-    filterDisplay: 'Status: rejected',
-    tagDisplay: 'Approval Rejected',
+    filterDisplay: 'Status: closed',
+    tagDisplay: 'Closed',
     tagColor: '#eb4118',
     hint:
       'RFP has been closed to new submissions and will no longer be listed, but can still be viewed, and associated proposals will remain open.',

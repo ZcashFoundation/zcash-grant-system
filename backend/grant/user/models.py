@@ -180,6 +180,33 @@ class User(db.Model, UserMixin):
     def set_password(self, password: str):
         self.password = hash_password(password)
         db.session.commit()
+        send_email(self.email_address, 'change_password', {
+            'display_name': self.display_name,
+            'recover_url': make_url('/auth/recover'),
+            'contact_url': make_url('/contact')
+        })
+
+    def set_email(self, email: str):
+        # Update email address
+        old_email = self.email_address
+        self.email_address = email
+        # Delete old verification(s?)
+        old_evs = EmailVerification.query.filter_by(user_id=self.id).all()
+        for old_ev in old_evs:
+            db.session.delete(old_ev)
+        # Generate a new one
+        ev = EmailVerification(user_id=self.id)
+        db.session.add(ev)
+        # Save changes & send notification & verification emails
+        db.session.commit()
+        send_email(old_email, 'change_email_old', {
+            'display_name': self.display_name,
+            'contact_url': make_url('/contact')
+        })
+        send_email(self.email_address, 'change_email', {
+            'display_name': self.display_name,
+            'confirm_url': make_url(f'/email/verify?code={ev.code}')
+        })
 
     def login(self):
         login_user(self)
@@ -197,7 +224,7 @@ class User(db.Model, UserMixin):
         })
 
 
-class UserSchema(ma.Schema):
+class SelfUserSchema(ma.Schema):
     class Meta:
         model = User
         # Fields to expose
@@ -207,15 +234,49 @@ class UserSchema(ma.Schema):
             "social_medias",
             "avatar",
             "display_name",
-            "userid"
+            "userid",
+            "email_verified"
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
+    email_verified = ma.Method("get_email_verified")
 
     def get_userid(self, obj):
         return obj.id
+
+    def get_email_verified(self, obj):
+        return obj.email_verification.has_verified
+
+
+self_user_schema = SelfUserSchema()
+self_users_schema = SelfUserSchema(many=True)
+
+
+class UserSchema(ma.Schema):
+    class Meta:
+        model = User
+        # Fields to expose
+        fields = (
+            "title",
+            "social_medias",
+            "avatar",
+            "display_name",
+            "userid",
+            "email_verified"
+        )
+
+    social_medias = ma.Nested("SocialMediaSchema", many=True)
+    avatar = ma.Nested("AvatarSchema")
+    userid = ma.Method("get_userid")
+    email_verified = ma.Method("get_email_verified")
+
+    def get_userid(self, obj):
+        return obj.id
+
+    def get_email_verified(self, obj):
+        return obj.email_verification.has_verified
 
 
 user_schema = UserSchema()
