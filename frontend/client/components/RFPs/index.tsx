@@ -54,7 +54,7 @@ class RFPs extends React.Component<Props> {
       const closed = rfps.filter(rfp => rfp.status === RFP_STATUS.CLOSED);
       rfpsEl = <>
         {this.renderRfpsList('Open Requests', live)}
-        {closed.length && this.renderRfpsList('Closed Requests', closed)}
+        {!!closed.length && this.renderRfpsList('Closed Requests', closed)}
       </>;
     }
 
