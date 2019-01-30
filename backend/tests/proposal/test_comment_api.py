@@ -92,3 +92,22 @@ class TestProposalCommentAPI(BaseUserConfig):
             content_type='application/json'
         )
         self.assertStatus(reply_res, 400)
+
+    def test_create_new_proposal_comment_fails_with_no_verification(self):
+        self.login_default_user()
+        self.mark_user_not_verified()
+
+        proposal = Proposal(
+            status="LIVE"
+        )
+        db.session.add(proposal)
+        db.session.commit()
+        proposal_id = proposal.id
+
+        comment_res = self.app.post(
+            "/api/v1/proposals/{}/comments".format(proposal_id),
+            data=json.dumps(test_comment),
+            content_type='application/json'
+        )
+
+        self.assertStatus(comment_res, 401)

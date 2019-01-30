@@ -1,5 +1,11 @@
 import lodash from 'lodash';
-import { User, UserProposal, UserComment, UserContribution, TeamInviteWithProposal } from 'types';
+import {
+  User,
+  UserProposal,
+  UserComment,
+  UserContribution,
+  TeamInviteWithProposal,
+} from 'types';
 import types from './types';
 
 export interface TeamInviteWithResponse extends TeamInviteWithProposal {
@@ -32,6 +38,7 @@ export const INITIAL_USER: User = {
   avatar: null,
   displayName: '',
   emailAddress: '',
+  emailVerified: false,
   socialMedias: [],
   title: '',
 };
@@ -153,7 +160,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.DELETE_CONTRIBUTION:
       return updateUserState(state, payload.userId, {
         contributions: state.map[payload.userId].contributions.filter(
-          c => c.id !== payload.contributionId
+          c => c.id !== payload.contributionId,
         ),
       });
     // proposal delete

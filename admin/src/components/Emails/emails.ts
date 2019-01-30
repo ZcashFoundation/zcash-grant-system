@@ -17,6 +17,21 @@ export default [
     description: 'For recovering a user’s forgotten password',
   },
   {
+    id: 'change_email',
+    title: 'Change email confirmation',
+    description: 'Sent when the user has changed their email, to confirm their new one',
+  },
+  {
+    id: 'change_email_old',
+    title: 'Change email notification (Old email)',
+    description: 'Sent when the user has changed their email, in case of compromise',
+  },
+  {
+    id: 'change_password',
+    title: 'Change password confirmation',
+    description: 'Sent when the user has changed their password, in case of compromise',
+  },
+  {
     id: 'team_invite',
     title: 'Proposal team invite',
     description: 'Sent when a proposal creator sends an invite to a user',

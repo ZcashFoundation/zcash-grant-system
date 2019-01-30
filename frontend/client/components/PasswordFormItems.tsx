@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import { Form, Input, Row, Col } from 'antd';
 import { FormItemProps } from 'antd/lib/form';
 import { WrappedFormUtils } from 'antd/lib/form/Form';
-import './PasswordFormItems.less';
 
 export interface Props {
   form: WrappedFormUtils;
@@ -31,8 +30,8 @@ export default class AddressInput extends React.Component<Props, State> {
 
     return (
       <Row className="PasswordFormItems" gutter={8}>
-        <Col span={12}>
-          <Form.Item {...formItemProps} label="Password">
+        <Col sm={12} xs={24}>
+          <Form.Item {...formItemProps} label="New password">
             {getFieldDecorator('password', {
               rules: [
                 { required: true, message: 'Please enter a password' },
@@ -50,13 +49,13 @@ export default class AddressInput extends React.Component<Props, State> {
               <Input
                 name="password"
                 type="password"
-                placeholder="password"
+                placeholder="Minimum 8 chars"
                 autoComplete="new-password"
               />,
             )}
           </Form.Item>
         </Col>
-        <Col span={12} className="PasswordFormItems-confirm">
+        <Col sm={12} xs={24} className="PasswordFormItems-confirm">
           <Form.Item {...formItemProps} label="Confirm password">
             {getFieldDecorator('passwordConfirm', {
               rules: [
@@ -80,7 +79,7 @@ export default class AddressInput extends React.Component<Props, State> {
                     passwordConfirmDirty: passwordConfirmDirty || !!e.target.value,
                   })
                 }
-                placeholder="confirm password"
+                placeholder=""
                 autoComplete="off"
               />,
             )}

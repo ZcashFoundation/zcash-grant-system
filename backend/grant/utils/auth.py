@@ -57,8 +57,11 @@ def requires_team_member_auth(f):
         if not proposal:
             return jsonify(message="No proposal exists with id {}".format(proposal_id)), 404
 
-        if not g.current_user in proposal.team:
+        if g.current_user not in proposal.team:
             return jsonify(message="You are not authorized to modify this proposal"), 403
+
+        if not g.current_user.email_verification.has_verified:
+            return jsonify(message="Please confirm your email."), 403
 
         g.current_proposal = proposal
         return f(*args, **kwargs)

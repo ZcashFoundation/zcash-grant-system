@@ -3,6 +3,7 @@ import json
 from flask_testing import TestCase
 from grant.app import create_app
 from grant.proposal.models import Proposal
+from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
 from grant.utils.enums import ProposalStatus
 
@@ -46,6 +47,8 @@ class BaseUserConfig(BaseTestConfig):
             display_name=test_user["displayName"],
             title=test_user["title"],
         )
+        self._user.email_verification.has_verified = True
+        db.session.add(self._user)
         sm = SocialMedia(
             service=test_user['socialMedias'][0]['service'],
             username=test_user['socialMedias'][0]['username'],
@@ -74,6 +77,13 @@ class BaseUserConfig(BaseTestConfig):
     @property
     def other_user(self):
         return User.query.filter_by(id=self._other_user_id).first()
+
+    def mark_user_not_verified(self, user=None):
+        if not user:
+            user = self.user
+        user.email_verification.has_verified = False
+        db.session.add(user)
+        db.session.commit()
 
     def login_default_user(self, cust_pass=None):
         return self.app.post(
@@ -131,3 +141,7 @@ class BaseProposalCreatorConfig(BaseUserConfig):
     @property
     def other_proposal(self):
         return Proposal.query.filter_by(id=self._other_proposal_id).first()
+
+    def make_proposal_reminder_task(self):
+        proposal_reminder = ProposalReminder(self.proposal.id)
+        proposal_reminder.make_task()

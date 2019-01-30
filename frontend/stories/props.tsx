@@ -153,6 +153,7 @@ export function generateProposal({
     target: amountBn,
     funded: fundedBn,
     percentFunded,
+    contributionMatching: 0,
     title: 'Crowdfund Title',
     brief: 'A cool test crowdfund',
     content: 'body',
