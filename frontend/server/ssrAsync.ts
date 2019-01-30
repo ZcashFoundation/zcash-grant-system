@@ -1,7 +1,7 @@
 import { Store } from 'redux';
 import { fetchUser } from 'modules/users/actions';
 import { fetchProposals, fetchProposal } from 'modules/proposals/actions';
-import { extractProposalIdFromUrl } from 'utils/api';
+import { extractIdFromSlug } from 'utils/api';
 
 const pathActions = [
   {
@@ -13,7 +13,7 @@ const pathActions = [
   {
     matcher: /^\/proposals\/(.+)$/,
     action: (match: RegExpMatchArray, store: Store) => {
-      const proposalId = extractProposalIdFromUrl(match[1]);
+      const proposalId = extractIdFromSlug(match[1]);
       if (proposalId) {
         // return null for errors (404 most likely)
         return store.dispatch<any>(fetchProposal(proposalId)).catch(() => null);

@@ -33,6 +33,8 @@ const VerifyEmail = loadable(() => import('pages/email-verify'), opts);
 const Callback = loadable(() => import('pages/callback'), opts);
 const RecoverEmail = loadable(() => import('pages/email-recover'), opts);
 const UnsubscribeEmail = loadable(() => import('pages/email-unsubscribe'), opts);
+const RFP = loadable(() => import('pages/rfp'), opts);
+const RFPs = loadable(() => import('pages/rfps'), opts);
 
 import 'styles/style.less';
 import Loader from 'components/Loader';
@@ -102,6 +104,27 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Proposal',
+    },
+  },
+  {
+    // RFP list page,
+    route: {
+      path: '/requests',
+      component: RFPs,
+      exact: true,
+    },
+    template: {
+      title: 'Requests',
+    },
+  },
+  {
+    // RFP detail page
+    route: {
+      path: '/requests/:id',
+      component: RFP,
+    },
+    template: {
+      title: 'Request',
     },
   },
   {

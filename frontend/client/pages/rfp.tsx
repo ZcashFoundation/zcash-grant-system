@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Proposal from 'components/Proposal';
+import RFP from 'components/RFP';
 import { extractIdFromSlug } from 'utils/api';
 
 import { withRouter, RouteComponentProps } from 'react-router';
@@ -11,8 +11,8 @@ class ProposalPage extends Component<RouteProps> {
     super(props);
   }
   render() {
-    const proposalId = extractIdFromSlug(this.props.match.params.id);
-    return <Proposal proposalId={proposalId} />;
+    const rfpId = extractIdFromSlug(this.props.match.params.id);
+    return <RFP rfpId={rfpId} />;
   }
 }
 

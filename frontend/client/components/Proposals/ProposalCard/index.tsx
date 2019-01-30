@@ -1,10 +1,9 @@
 import React from 'react';
 import classnames from 'classnames';
-import { Progress, Icon } from 'antd';
-import moment from 'moment';
+import { Progress } from 'antd';
 import { Redirect } from 'react-router-dom';
-import { CATEGORY_UI } from 'api/constants';
 import { Proposal } from 'types';
+import Card from 'components/Card';
 import UserAvatar from 'components/UserAvatar';
 import UnitDisplay from 'components/UnitDisplay';
 import './style.less';
@@ -28,11 +27,11 @@ export class ProposalCard extends React.Component<Proposal> {
     } = this.props;
 
     return (
-      <div
+      <Card
         className="ProposalCard"
-        onClick={() => this.setState({ redirect: `/proposals/${proposalUrlId}` })}
+        to={`/proposals/${proposalUrlId}`}
+        title={title}
       >
-        <h3 className="ProposalCard-title">{title}</h3>
         <div className="ProposalCard-funding">
           <div className="ProposalCard-funding-raised">
             <UnitDisplay value={funded} symbol="ZEC" /> <small>raised</small> of{' '}
@@ -69,19 +68,8 @@ export class ProposalCard extends React.Component<Proposal> {
           </div>
         </div>
         <div className="ProposalCard-address">{proposalAddress}</div>
-
-        <div className="ProposalCard-info">
-          <div
-            className="ProposalCard-info-category"
-            style={{ color: CATEGORY_UI[category].color }}
-          >
-            <Icon type={CATEGORY_UI[category].icon} /> {CATEGORY_UI[category].label}
-          </div>
-          <div className="ProposalCard-info-created">
-            {moment(dateCreated * 1000).fromNow()}
-          </div>
-        </div>
-      </div>
+        <Card.Info category={category} time={dateCreated * 1000} />
+      </Card>
     );
   }
 }

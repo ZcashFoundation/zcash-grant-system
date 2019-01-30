@@ -85,3 +85,9 @@ export const STAGE_UI: { [key in PROPOSAL_STAGE]: StageUI } = {
     color: '#27ae60',
   },
 };
+
+export enum RFP_STATUS {
+  DRAFT = 'DRAFT',
+  LIVE = 'LIVE',
+  CLOSED = 'CLOSED',
+}
