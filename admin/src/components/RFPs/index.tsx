@@ -54,7 +54,7 @@ class RFPs extends React.Component<Props, State> {
     const { deletingId } = this.state;
     const actions = [
       <Link key="edit" to={`/rfps/${rfp.id}/edit`}>
-        <a key="edit">edit</a>
+        edit
       </Link>,
       <Popconfirm
         key="delete"
