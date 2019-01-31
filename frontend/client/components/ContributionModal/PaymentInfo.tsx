@@ -46,7 +46,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
 
     return (
       <Form className="PaymentInfo" layout="vertical">
-        <p className="PaymentInfo-text">
+        <div className="PaymentInfo-text">
           {text || (
             <>
               Thank you for contributing! Just send using whichever method works best for
@@ -54,7 +54,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
             </>
           )}
           {/* TODO: Help / FAQ page for sending */} Need help sending? <a>Click here</a>.
-        </p>
+        </div>
 
         <Radio.Group
           className="PaymentInfo-types"
@@ -96,7 +96,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
           </div>
           <div className="PaymentInfo-fields-row">
             <CopyInput
-              label="ZCash CLI command"
+              label="Zcash CLI command"
               help="Make sure you replace YOUR_ADDRESS with your actual address"
               value={cli}
             />
