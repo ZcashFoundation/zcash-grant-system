@@ -11,7 +11,12 @@ import {
   EmailSubscriptions,
   RFP,
 } from 'types';
-import { formatUserForPost, formatProposalFromGet, formatUserFromGet, formatRFPFromGet } from 'utils/api';
+import {
+  formatUserForPost,
+  formatProposalFromGet,
+  formatUserFromGet,
+  formatRFPFromGet,
+} from 'utils/api';
 
 export function getProposals(): Promise<{ data: Proposal[] }> {
   return axios.get('/api/v1/proposals/').then(res => {
@@ -259,6 +264,12 @@ export function getProposalContribution(
   contributionId: number,
 ): Promise<{ data: ContributionWithAddresses }> {
   return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
+}
+
+export function getProposalStakingContribution(
+  proposalId: number,
+): Promise<{ data: ContributionWithAddresses }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/stake`);
 }
 
 export function getRFPs(): Promise<{ data: RFP[] }> {

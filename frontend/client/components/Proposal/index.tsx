@@ -142,7 +142,8 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal has been approved! It is currently only visible to the team.
-            Visit your <Link to="/profile?tab=pending">profile's pending tab</Link> to publish.
+            Visit your <Link to="/profile?tab=pending">profile's pending tab</Link> to
+            publish.
           </>
         ),
         type: 'success',
@@ -151,10 +152,21 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal was rejected and is only visible to the team. Visit your{' '}
-            <Link to="/profile?tab=pending">profile's pending tab</Link> for more information.
+            <Link to="/profile?tab=pending">profile's pending tab</Link> for more
+            information.
           </>
         ),
         type: 'error',
+      },
+      [STATUS.STAKING]: {
+        blurb: (
+          <>
+            Your proposal is awaiting a staking contribution. Visit your{' '}
+            <Link to="/profile?tab=pending">profile's pending tab</Link> for more
+            information.
+          </>
+        ),
+        type: 'warning',
       },
     } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
     let banner = statusBanner[proposal.status];
@@ -196,11 +208,7 @@ export class ProposalDetail extends React.Component<Props, State> {
                   ['is-expanded']: isBodyExpanded,
                 })}
               >
-                {proposal ? (
-                  <Markdown source={proposal.content} />
-                ) : (
-                  <Loader />
-                )}
+                {proposal ? <Markdown source={proposal.content} /> : <Loader />}
               </div>
               {showExpand && (
                 <button

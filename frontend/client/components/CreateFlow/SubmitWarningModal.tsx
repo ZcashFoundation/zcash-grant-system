@@ -2,30 +2,32 @@ import React from 'react';
 import { Modal, Alert } from 'antd';
 import { getCreateWarnings } from 'modules/create/utils';
 import { ProposalDraft } from 'types';
-import './PublishWarningModal.less';
+import './SubmitWarningModal.less';
 
 interface Props {
   proposal: ProposalDraft | null;
   isVisible: boolean;
   handleClose(): void;
-  handlePublish(): void;
+  handleSubmit(): void;
 }
 
-export default class PublishWarningModal extends React.Component<Props> {
+export default class SubmitWarningModal extends React.Component<Props> {
   render() {
-    const { proposal, isVisible, handleClose, handlePublish } = this.props;
+    const { proposal, isVisible, handleClose, handleSubmit } = this.props;
     const warnings = proposal ? getCreateWarnings(proposal) : [];
+
+    const staked = proposal && proposal.isStaked;
 
     return (
       <Modal
-        title={<>Confirm submit for approval</>}
+        title={<>Confirm submission</>}
         visible={isVisible}
-        okText="Confirm submit"
+        okText={staked ? 'Submit' : `I'm ready to stake`}
         cancelText="Never mind"
-        onOk={handlePublish}
+        onOk={handleSubmit}
         onCancel={handleClose}
       >
-        <div className="PublishWarningModal">
+        <div className="SubmitWarningModal">
           {!!warnings.length && (
             <Alert
               type="warning"
@@ -43,10 +45,19 @@ export default class PublishWarningModal extends React.Component<Props> {
               }
             />
           )}
-          <p>
-            Are you sure you're ready to submit your proposal for approval? Once you’ve
-            done so, you won't be able to edit it.
-          </p>
+          {staked && (
+            <p>
+              Are you sure you're ready to submit your proposal for approval? Once you’ve
+              done so, you won't be able to edit it.
+            </p>
+          )}
+          {!staked && (
+            <p>
+              Are you sure you're ready to submit your proposal? You will be asked to send
+              a staking contribution of <b>0.025 ZEC</b>. Once confirmed, the proposal
+              will be submitted for approval by site administrators.
+            </p>
+          )}
         </div>
       </Modal>
     );
