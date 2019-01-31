@@ -33,4 +33,44 @@
   &-content {
     font-size: 1.15rem;
   }
+
+  &-proposals {
+    padding-top: 2rem;
+    margin-top: 2rem;
+    border-top: 1px solid rgba(#000, 0.08);
+
+    &-title {
+      font-size: 1.4rem;
+    }
+  }
+
+  &-submit {
+    margin-top: 3rem;
+    font-size: 1.1rem;
+
+    &-inner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem 0;
+
+      &-button {
+        margin-left: 1rem;
+        height: 4rem;
+        padding: 0 1.25rem;
+        font-size: 1.4rem;
+
+        .anticon {
+          margin-left: 0.2rem;
+          font-size: 1.2rem;
+        }
+      }
+    }
+
+    // Only has this class while affixed
+    .ant-affix {
+      box-shadow: 0 0 10px 10px #FFF;
+      background: #FFF;
+    }
+  }
 }

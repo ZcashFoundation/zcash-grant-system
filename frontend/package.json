@@ -70,7 +70,7 @@
     "@types/webpack-env": "^1.13.6",
     "@types/winston": "^2.4.4",
     "ant-design-pro": "2.0.0",
-    "antd": "3.9.3",
+    "antd": "3.13.0",
     "axios": "^0.18.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-loader": "^8.0.2",

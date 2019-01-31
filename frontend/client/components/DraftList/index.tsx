@@ -6,7 +6,12 @@ import Placeholder from 'components/Placeholder';
 import { getIsVerified } from 'modules/auth/selectors';
 import Loader from 'components/Loader';
 import { ProposalDraft, STATUS } from 'types';
-import { createDraft, deleteDraft, fetchDrafts } from 'modules/create/actions';
+import {
+  createDraft,
+  deleteDraft,
+  fetchDrafts,
+  fetchAndCreateDrafts,
+} from 'modules/create/actions';
 import { AppState } from 'store/reducers';
 import './style.less';
 
@@ -25,10 +30,12 @@ interface DispatchProps {
   fetchDrafts: typeof fetchDrafts;
   createDraft: typeof createDraft;
   deleteDraft: typeof deleteDraft;
+  fetchAndCreateDrafts: typeof fetchAndCreateDrafts;
 }
 
 interface OwnProps {
   createIfNone?: boolean;
+  createWithRfpId?: number;
 }
 
 type Props = StateProps & DispatchProps & OwnProps;
@@ -42,22 +49,21 @@ class DraftList extends React.Component<Props, State> {
     deletingId: null,
   };
 
-  componentWillMount() {
-    this.props.fetchDrafts();
+  componentDidMount() {
+    const { createIfNone, createWithRfpId } = this.props;
+    console.log({ createIfNone, createWithRfpId });
+    if (createIfNone || createWithRfpId) {
+      this.props.fetchAndCreateDrafts({
+        rfpId: createWithRfpId,
+        redirect: true,
+      });
+    } else {
+      this.props.fetchDrafts();
+    }
   }
 
   componentDidUpdate(prevProps: Props) {
-    const {
-      drafts,
-      createIfNone,
-      isDeletingDraft,
-      deleteDraftError,
-      createDraftError,
-      isVerified,
-    } = this.props;
-    if (isVerified && createIfNone && drafts && !prevProps.drafts && !drafts.length) {
-      this.createDraft();
-    }
+    const { isDeletingDraft, deleteDraftError, createDraftError } = this.props;
     if (prevProps.isDeletingDraft && !isDeletingDraft) {
       this.setState({ deletingId: null });
     }
@@ -70,7 +76,7 @@ class DraftList extends React.Component<Props, State> {
   }
 
   render() {
-    const { drafts, isCreatingDraft, isVerified } = this.props;
+    const { drafts, isCreatingDraft, isFetchingDrafts, isVerified } = this.props;
     const { deletingId } = this.state;
 
     if (!isVerified) {
@@ -94,6 +100,7 @@ class DraftList extends React.Component<Props, State> {
         <List
           itemLayout="horizontal"
           dataSource={drafts}
+          loading={isFetchingDrafts}
           renderItem={(d: ProposalDraft) => {
             const actions = [
               <Link key="edit" to={`/proposals/${d.proposalId}/edit`}>
@@ -144,7 +151,7 @@ class DraftList extends React.Component<Props, State> {
           type="primary"
           size="large"
           block
-          onClick={this.createDraft}
+          onClick={() => this.createDraft()}
           loading={isCreatingDraft}
         >
           Create a new Proposal
@@ -153,8 +160,8 @@ class DraftList extends React.Component<Props, State> {
     );
   }
 
-  private createDraft = () => {
-    this.props.createDraft({ redirect: true });
+  private createDraft = (rfpId?: number) => {
+    this.props.createDraft({ rfpId, redirect: true });
   };
 
   private deleteDraft = (proposalId: number) => {
@@ -178,5 +185,6 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
     fetchDrafts,
     createDraft,
     deleteDraft,
+    fetchAndCreateDrafts,
   },
 )(DraftList);

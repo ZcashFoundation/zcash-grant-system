@@ -6,6 +6,7 @@ from grant.email.send import send_email
 from grant.milestone.models import Milestone
 from grant.settings import EXPLORER_URL
 from grant.user.models import User
+from grant.rfp.models import RFP
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_preview
@@ -146,10 +147,23 @@ def get_proposals(stage):
 
 @blueprint.route("/drafts", methods=["POST"])
 @requires_auth
-@endpoint.api()
-def make_proposal_draft():
+@endpoint.api(
+    parameter('rfpId', type=int),
+)
+def make_proposal_draft(rfp_id):
     proposal = Proposal.create(status=ProposalStatus.DRAFT)
     proposal.team.append(g.current_user)
+
+    if rfp_id:
+        rfp = RFP.query.filter_by(id=rfp_id).first()
+        if not rfp:
+            return {"message": "The request this proposal was made for doesn’t exist"}, 400
+        proposal.title = rfp.title
+        proposal.brief = rfp.brief
+        proposal.category = rfp.category
+        rfp.proposals.append(proposal)
+        db.session.add(rfp)
+
     db.session.add(proposal)
     db.session.commit()
     return proposal_schema.dump(proposal), 201
