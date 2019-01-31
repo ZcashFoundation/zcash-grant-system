@@ -54,8 +54,10 @@ ADMIN_PASS_HASH = env.str("ADMIN_PASS_HASH")
 
 EXPLORER_URL = env.str("EXPLORER_URL", default="https://explorer.zcha.in/")
 
+PROPOSAL_STAKING_AMOUNT = env.float("PROPOSAL_STAKING_AMOUNT")
+
 UI = {
-  'NAME': 'ZF Grants',
-  'PRIMARY': '#CF8A00',
-  'SECONDARY': '#2D2A26',
+    'NAME': 'ZF Grants',
+    'PRIMARY': '#CF8A00',
+    'SECONDARY': '#2D2A26',
 }

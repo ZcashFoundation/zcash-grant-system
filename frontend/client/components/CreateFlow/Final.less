@@ -1,17 +1,16 @@
 @import '~styles/variables.less';
 
 .CreateFinal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
+  max-width: 550px;
+  padding: 1rem;
+  margin: 3rem auto;
 
   &-message {
     display: flex;
     justify-content: center;
     align-items: center;
-    
+    margin-bottom: 2rem;
+
     .anticon {
       margin-right: 1rem;
       font-size: 3.2rem;
@@ -27,5 +26,16 @@
       font-size: 1rem;
       text-align: left;
     }
+  }
+
+  &-contribute {
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+  }
+
+  &-staked {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    text-align: center;
   }
 }

@@ -43,10 +43,10 @@ def get_users(proposal_id):
     else:
         users = (
             User.query
-                .join(proposal_team)
-                .join(Proposal)
-                .filter(proposal_team.c.proposal_id == proposal.id)
-                .all()
+            .join(proposal_team)
+            .join(Proposal)
+            .filter(proposal_team.c.proposal_id == proposal.id)
+            .all()
         )
     result = users_schema.dump(users)
     return result
@@ -88,6 +88,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
             result["comments"] = comments_dump
         if with_pending and authed_user and authed_user.id == user.id:
             pending = Proposal.get_by_user(user, [
+                ProposalStatus.STAKING,
                 ProposalStatus.PENDING,
                 ProposalStatus.APPROVED,
                 ProposalStatus.REJECTED,

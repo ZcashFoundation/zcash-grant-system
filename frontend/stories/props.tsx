@@ -159,6 +159,7 @@ export function generateProposal({
     content: 'body',
     stage: 'FUNDING_REQUIRED',
     category: PROPOSAL_CATEGORY.COMMUNITY,
+    isStaked: true,
     team: [
       {
         userid: 123,

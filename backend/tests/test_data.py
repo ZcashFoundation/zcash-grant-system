@@ -1,3 +1,4 @@
+from .mocks import mock_request
 from grant.utils.enums import Category
 
 
@@ -57,3 +58,9 @@ test_reply = {
     "comment": "Test reply"
     # Fill in parentCommentId in test
 }
+
+mock_contribution_addresses = mock_request({
+    'transparent': 't123',
+    'sprout': 'z123',
+    'memo': '123',
+})

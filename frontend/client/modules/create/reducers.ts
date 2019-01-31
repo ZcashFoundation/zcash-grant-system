@@ -174,6 +174,7 @@ export default function createReducer(
     case types.SUBMIT_PROPOSAL_PENDING:
       return {
         ...state,
+        submittedProposal: null,
         isSubmitting: true,
         submitError: null,
       };

@@ -52,6 +52,13 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     hint:
       'Admin has rejected this proposal. User may adjust it and resubmit for approval.',
   },
+  {
+    id: PROPOSAL_STATUS.STAKING,
+    filterDisplay: 'Status: staking',
+    tagDisplay: 'Staking',
+    tagColor: '#722ed1',
+    hint: 'This proposal is awaiting a staking contribution.',
+  },
 ];
 
 export const RFP_STATUSES: Array<StatusSoT<RFP_STATUS>> = [
