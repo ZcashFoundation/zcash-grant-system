@@ -1,6 +1,6 @@
 # ZF Grants Frontend
 
-This is the front-end component of ZCash Grant System.
+This is the front-end component of Zcash Grant System.
 
 ## Setup
 
