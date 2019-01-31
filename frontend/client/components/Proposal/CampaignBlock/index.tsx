@@ -105,8 +105,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                   <>
                     <b>Matching</b>
                     <br />
-                    Increase your impact! Contributions to this proposal are being
-                    matched by the Zcash Foundation, up to the target amount.
+                    Increase your impact! Contributions to this proposal are being matched
+                    by the Zcash Foundation, up to the target amount.
                   </>
                 }
               >
@@ -193,7 +193,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
     return (
       <div className="ProposalCampaignBlock Proposal-top-side-block">
-        <h1 className="Proposal-top-main-block-title">Campaign</h1>
+        <h2 className="Proposal-top-main-block-title">Campaign</h2>
         <div className="Proposal-top-main-block">{content}</div>
       </div>
     );
