@@ -5,10 +5,13 @@ import DraftList from 'components/DraftList';
 
 type Props = RouteComponentProps<{ rfp?: string }>;
 
-const CreatePage: React.SFC<Props> = ({ location }) => {
-  const parsed = parse(location.search);
-  const rfpId = parsed.rfp ? parseInt(parsed.rfp, 10) : undefined;
-  return <DraftList createIfNone createWithRfpId={rfpId} />;
-};
+class CreatePage extends React.Component<Props> {
+  render() {
+    const { location } = this.props;
+    const parsed = parse(location.search);
+    const rfpId = parsed.rfp ? parseInt(parsed.rfp, 10) : undefined;
+    return <DraftList createIfNone createWithRfpId={rfpId} />;
+  }
+}
 
 export default withRouter(CreatePage);

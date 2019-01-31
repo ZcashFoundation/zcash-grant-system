@@ -171,10 +171,11 @@ export function proposalToContractData(form: ProposalDraft): any {
 
 // This is kind of a disgusting function, sorry.
 export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
+  const { invites, ...rest } = draft;
   const target = parseFloat(draft.target);
 
   return {
-    ...draft,
+    ...rest,
     proposalId: 0,
     status: STATUS.DRAFT,
     proposalUrlId: '0-title',

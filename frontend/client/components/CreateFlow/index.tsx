@@ -174,12 +174,13 @@ class CreateFlow extends React.Component<Props, State> {
           <div className="CreateFlow-header">
             <Steps current={currentIndex}>
               {STEP_ORDER.slice(0, 5).map(s => (
-                <Steps.Step
+                <div
                   key={s}
-                  title={STEP_INFO[s].short}
                   onClick={() => this.setStep(s)}
                   style={{ cursor: 'pointer' }}
-                />
+                >
+                  <Steps.Step title={STEP_INFO[s].short} />
+                </div>
               ))}
             </Steps>
             <h1 className="CreateFlow-header-title">{info.title}</h1>
