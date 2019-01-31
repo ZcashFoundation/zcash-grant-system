@@ -54,8 +54,9 @@ export default class SubmitWarningModal extends React.Component<Props> {
           {!staked && (
             <p>
               Are you sure you're ready to submit your proposal? You will be asked to send
-              a staking contribution of <b>0.025 ZEC</b>. Once confirmed, the proposal
-              will be submitted for approval by site administrators.
+              a staking contribution of <b>{process.env.PROPOSAL_STAKING_AMOUNT} ZEC</b>.
+              Once confirmed, the proposal will be submitted for approval by site
+              administrators.
             </p>
           )}
         </div>
