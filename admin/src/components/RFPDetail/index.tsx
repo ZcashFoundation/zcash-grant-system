@@ -8,6 +8,7 @@ import Back from 'components/Back';
 import Markdown from 'components/Markdown';
 import { formatDateSeconds } from 'util/time';
 import store from 'src/store';
+import { PROPOSAL_STATUS } from 'src/types';
 import './index.less';
 
 type Props = RouteComponentProps<{ id?: string }>;
@@ -34,6 +35,11 @@ class RFPDetail extends React.Component<Props> {
         <span>{name}</span>
         {val}
       </div>
+    );
+
+    const pendingProposals = rfp.proposals.filter(p => p.status === PROPOSAL_STATUS.PENDING);
+    const acceptedProposals = rfp.proposals.filter(p =>
+      p.status === PROPOSAL_STATUS.LIVE || p.status === PROPOSAL_STATUS.APPROVED
     );
 
     return (
@@ -88,14 +94,31 @@ class RFPDetail extends React.Component<Props> {
             </Card>
 
             {/* PROPOSALS */}
-            <Card title="Proposals" size="small">
-              {rfp.proposals.map(p => (
-                <Link to={`/proposals/${p.proposalId}`}>
+            <Card title="Approved Proposals" size="small">
+              {acceptedProposals.map(p => (
+                <Link
+                  key={p.proposalId}
+                  className="RFPDetails-proposal"
+                  to={`/proposals/${p.proposalId}`}
+                >
                   <div>{p.title}</div>
                   <small>{p.brief}</small>
                 </Link>
               ))}
-              {!rfp.proposals.length && <div>No proposals (yet!)</div>}
+              {!acceptedProposals.length && <em>No proposals accepted</em>}
+            </Card>
+            <Card title="Pending Proposals" size="small">
+              {pendingProposals.map(p => (
+                <Link
+                  key={p.proposalId}
+                  className="RFPDetail-proposal"
+                  to={`/proposals/${p.proposalId}`}
+                >
+                  <div>{p.title}</div>
+                  <small>{p.brief}</small>
+                </Link>
+              ))}
+              {!pendingProposals.length && <em>No proposals pending</em>}
             </Card>
           </Col>
         </Row>

@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { RFP_STATUSES, getStatusById } from 'util/statuses';
 import store from 'src/store';
 import './index.less';
-import { RFP } from 'src/types';
+import { RFP, PROPOSAL_STATUS } from 'src/types';
 
 type Props = RouteComponentProps<any>;
 
@@ -67,6 +67,10 @@ class RFPs extends React.Component<Props, State> {
         <a>delete</a>
       </Popconfirm>,
     ];
+    const pendingProposals = rfp.proposals.filter(p => p.status === PROPOSAL_STATUS.PENDING);
+    const acceptedProposals = rfp.proposals.filter(p =>
+      p.status === PROPOSAL_STATUS.LIVE || p.status === PROPOSAL_STATUS.APPROVED
+    );
     const status = getStatusById(RFP_STATUSES, rfp.status);
     return (
       <Spin key={rfp.id} spinning={deletingId === rfp.id}>
@@ -78,7 +82,11 @@ class RFPs extends React.Component<Props, State> {
                 <Tag color={status.tagColor}>{status.tagDisplay}</Tag>
               </Tooltip>
             </h2>
-            <p>{rfp.proposals.length} proposals submitted</p>
+            <p>
+              {pendingProposals.length} submitted
+              {' · '}
+              {acceptedProposals.length} accepted
+            </p>
             <p>{rfp.brief}</p>
           </Link>
         </List.Item>

@@ -13,6 +13,29 @@ export interface Milestone {
   stage: string;
   title: string;
 }
+// NOTE: sync with backend/grant/utils/enums.py RFPStatus
+export enum RFP_STATUS {
+  DRAFT = 'DRAFT',
+  LIVE = 'LIVE',
+  CLOSED = 'CLOSED',
+}
+export interface RFP {
+  id: number;
+  dateCreated: number;
+  title: string;
+  brief: string;
+  content: string;
+  category: string;
+  status: string;
+  proposals: Proposal[];
+}
+export interface RFPArgs {
+  title: string;
+  brief: string;
+  content: string;
+  category: string;
+  status?: string;
+}
 // NOTE: sync with backend/grant/utils/enums.py ProposalStatus
 export enum PROPOSAL_STATUS {
   DRAFT = 'DRAFT',
@@ -43,6 +66,7 @@ export interface Proposal {
   funded: string;
   rejectReason: string;
   contributionMatching: number;
+  rfp?: RFP;
 }
 export interface Comment {
   commentId: string;
@@ -71,29 +95,6 @@ export interface User {
   proposals: Proposal[];
   comments: Comment[];
   contributions: Contribution[];
-}
-// NOTE: sync with backend/grant/utils/enums.py RFPStatus
-export enum RFP_STATUS {
-  DRAFT = 'DRAFT',
-  LIVE = 'LIVE',
-  CLOSED = 'CLOSED',
-}
-export interface RFP {
-  id: number;
-  dateCreated: number;
-  title: string;
-  brief: string;
-  content: string;
-  category: string;
-  status: string;
-  proposals: Proposal[];
-}
-export interface RFPArgs {
-  title: string;
-  brief: string;
-  content: string;
-  category: string;
-  status?: string;
 }
 
 export interface EmailExample {
