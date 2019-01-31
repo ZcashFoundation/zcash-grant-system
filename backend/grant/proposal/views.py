@@ -467,16 +467,19 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     if contribution.proposal.status == ProposalStatus.STAKING:
         # fully staked, set status PENDING & notify user
-        if float(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
+        if contribution.proposal.is_staked:  # float(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
             contribution.proposal.status = ProposalStatus.PENDING
             db.session.add(contribution.proposal)
             db.session.commit()
-            # TODO: email: staking complete, awaiting approval
-            send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
-                'contribution': contribution,
-                'proposal': contribution.proposal,
-                'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
-            })
+
+        # email progress of staking, partial or complete
+        send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
+            'contribution': contribution,
+            'proposal': contribution.proposal,
+            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+            'fully_staked': contribution.proposal.is_staked,
+            'stake_target': PROPOSAL_STAKING_AMOUNT
+        })
 
     else:
         # Send to the user

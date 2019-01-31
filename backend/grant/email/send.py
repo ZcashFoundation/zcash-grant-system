@@ -107,8 +107,11 @@ def proposal_comment(email_args):
 
 
 def staking_contribution_confirmed(email_args):
+    subject = 'Your proposal has been staked!' if \
+        email_args['fully_staked'] else \
+        'Partial staking contribution confirmed'
     return {
-        'subject': 'Your proposal has been staked!',
+        'subject': subject,
         'title': 'Staking contribution confirmed',
         'preview': 'Your {} ZEC staking contribution to {} has been confirmed!'.format(
             email_args['contribution'].amount,

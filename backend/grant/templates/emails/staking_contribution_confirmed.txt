@@ -1,6 +1,12 @@
+{% if args.fully_staked %} 
 {{args.proposal.title}} has been staked for {{args.contribution.amount}} ZEC!
 Your proposal will now be forwarded to administrators for approval.
-
+{% else %}
+{{ args.proposal.title }} has been partially staked for
+{{ args.contribution.amount }} ZEC. This is not enough to
+fully stake the proposal. You must send at least
+{{ args.stake_target }} ZEC. 
+{% endif %} 
 You can view your transaction here:
 
 {{ args.tx_explorer_url }}
