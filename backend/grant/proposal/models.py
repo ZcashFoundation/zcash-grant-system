@@ -276,7 +276,7 @@ class Proposal(db.Model):
             # (always use full staking amout so we can find it)
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
-                amount=PROPOSAL_STAKING_AMOUNT,
+                amount=str(PROPOSAL_STAKING_AMOUNT),
                 status=PENDING,
             ).first()
             if not contribution:
@@ -290,8 +290,11 @@ class Proposal(db.Model):
         # specific validation
         if self.status not in allowed_statuses:
             raise ValidationException(f"Proposal status must be draft or rejected to submit for approval")
-
-        self.status = ProposalStatus.STAKING
+        # set to PENDING if staked, else STAKING
+        if self.is_staked:
+            self.status = ProposalStatus.PENDING
+        else:
+            self.status = ProposalStatus.STAKING
 
     def approve_pending(self, is_approve, reject_reason=None):
         self.validate_publishable()
@@ -350,6 +353,10 @@ class Proposal(db.Model):
 
         return str(funded)
 
+    @hybrid_property
+    def is_staked(self):
+        return float(self.contributed) >= PROPOSAL_STAKING_AMOUNT
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -367,6 +374,7 @@ class ProposalSchema(ma.Schema):
             "proposal_id",
             "target",
             "contributed",
+            "is_staked",
             "funded",
             "content",
             "comments",
@@ -412,6 +420,7 @@ user_fields = [
     "title",
     "brief",
     "target",
+    "is_staked",
     "funded",
     "contribution_matching",
     "date_created",

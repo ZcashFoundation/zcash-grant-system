@@ -4,7 +4,7 @@ from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
 from grant.milestone.models import Milestone
-from grant.settings import EXPLORER_URL
+from grant.settings import EXPLORER_URL, PROPOSAL_STAKING_AMOUNT
 from grant.user.models import User
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
@@ -467,23 +467,37 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     db.session.add(contribution)
     db.session.commit()
 
-    # Send to the user
-    send_email(contribution.user.email_address, 'contribution_confirmed', {
-        'contribution': contribution,
-        'proposal': contribution.proposal,
-        'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
-    })
-
-    # Send to the full proposal gang
-    for member in contribution.proposal.team:
-        send_email(member.email_address, 'proposal_contribution', {
-            'proposal': contribution.proposal,
+    if contribution.proposal.status == ProposalStatus.STAKING:
+        # fully staked, set status PENDING & notify user
+        if float(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
+            contribution.proposal.status = ProposalStatus.PENDING
+            db.session.add(contribution.proposal)
+            db.session.commit()
+            # TODO: email: staking complete, awaiting approval
+            send_email(contribution.user.email_address, 'contribution_confirmed', {
+                'contribution': contribution,
+                'proposal': contribution.proposal,
+                'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+            })
+    
+    else:
+        # Send to the user
+        send_email(contribution.user.email_address, 'contribution_confirmed', {
             'contribution': contribution,
-            'contributor': contribution.user,
-            'funded': contribution.proposal.funded,
-            'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
-            'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+            'proposal': contribution.proposal,
+            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
         })
+
+        # Send to the full proposal gang
+        for member in contribution.proposal.team:
+            send_email(member.email_address, 'proposal_contribution', {
+                'proposal': contribution.proposal,
+                'contribution': contribution,
+                'contributor': contribution.user,
+                'funded': contribution.proposal.funded,
+                'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
+                'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+            })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
     # on funding target reached. 
