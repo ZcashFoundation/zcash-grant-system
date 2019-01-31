@@ -363,7 +363,7 @@ class ProposalSchema(ma.Schema):
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
-    rfp = ma.Nested("RFPSchema", exclude=["proposals"])
+    rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
 
     def get_proposal_id(self, obj):
         return obj.id

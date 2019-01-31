@@ -9,5 +9,5 @@ export interface RFP {
   content: string;
   category: PROPOSAL_CATEGORY;
   status: RFP_STATUS;
-  proposals: Proposal[];
+  acceptedProposals: Proposal[];
 }

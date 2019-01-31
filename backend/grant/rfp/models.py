@@ -1,7 +1,8 @@
 import datetime
 from grant.extensions import ma, db
-from grant.utils.enums import RFPStatus
+from grant.utils.enums import RFPStatus, ProposalStatus
 from grant.utils.misc import dt_to_unix
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class RFP(db.Model):
@@ -17,7 +18,18 @@ class RFP(db.Model):
     status = db.Column(db.String(255), nullable=False)
 
     # Relationships
-    proposals = db.relationship("Proposal", backref="rfp", lazy=True, cascade="all, delete-orphan")
+    proposals = db.relationship(
+        "Proposal",
+        backref="rfp",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+    accepted_proposals = db.relationship(
+        "Proposal",
+        lazy=True,
+        primaryjoin="and_(Proposal.rfp_id==RFP.id, Proposal.status=='LIVE')",
+        cascade="all, delete-orphan",
+    )
 
     def __init__(
         self,
@@ -47,11 +59,11 @@ class RFPSchema(ma.Schema):
             "category",
             "status",
             "date_created",
-            "proposals"
+            "accepted_proposals"
         )
 
     date_created = ma.Method("get_date_created")
-    proposals = ma.Nested("ProposalSchema", many=True, exclude=["rfp"])
+    accepted_proposals = ma.Nested("ProposalSchema", many=True, exclude=["rfp"])
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)

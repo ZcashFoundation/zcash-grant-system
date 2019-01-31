@@ -59,10 +59,10 @@ class RFPDetail extends React.Component<Props> {
         <h1 className="RFPDetail-title">{rfp.title}</h1>
         <Markdown className="RFPDetail-content" source={rfp.content} />
 
-        {!!rfp.proposals.length && (
+        {!!rfp.acceptedProposals.length && (
           <div className="RFPDetail-proposals">
-            <h2 className="RFPDetails-proposals-title">Accepted Proposals</h2>
-            {rfp.proposals.map(p => (
+            <h2 className="RFPDetail-proposals-title">Accepted Proposals</h2>
+            {rfp.acceptedProposals.map(p => (
               <ProposalCard key={p.proposalId} {...p} />
             ))}
           </div>
