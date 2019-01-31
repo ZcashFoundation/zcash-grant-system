@@ -1,0 +1,8 @@
+{{args.proposal.title}} has been staked for {{args.contribution.amount}} ZEC!
+Your proposal will now be forwarded to administrators for approval.
+
+You can view your transaction here:
+
+{{ args.tx_explorer_url }}
+
+Thank you for your help in improving the Zcash ecosystem.

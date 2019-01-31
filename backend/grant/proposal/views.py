@@ -131,14 +131,14 @@ def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(status=ProposalStatus.LIVE, stage=stage)
-                .order_by(Proposal.date_created.desc())
-                .all()
+            .order_by(Proposal.date_created.desc())
+            .all()
         )
     else:
         proposals = (
             Proposal.query.filter_by(status=ProposalStatus.LIVE)
-                .order_by(Proposal.date_created.desc())
-                .all()
+            .order_by(Proposal.date_created.desc())
+            .all()
         )
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
@@ -242,7 +242,6 @@ def submit_for_approval_proposal(proposal_id):
     return proposal_schema.dump(g.current_proposal), 200
 
 
-
 @blueprint.route("/<proposal_id>/stake", methods=["GET"])
 @requires_team_member_auth
 @endpoint.api()
@@ -253,7 +252,6 @@ def get_proposal_stake(proposal_id):
     if contribution:
         return proposal_contribution_schema.dump(contribution)
     return None, 404
-
 
 
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
@@ -474,12 +472,12 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             db.session.add(contribution.proposal)
             db.session.commit()
             # TODO: email: staking complete, awaiting approval
-            send_email(contribution.user.email_address, 'contribution_confirmed', {
+            send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
                 'contribution': contribution,
                 'proposal': contribution.proposal,
                 'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
             })
-    
+
     else:
         # Send to the user
         send_email(contribution.user.email_address, 'contribution_confirmed', {
@@ -500,7 +498,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
-    # on funding target reached. 
+    # on funding target reached.
 
     return None, 200
 

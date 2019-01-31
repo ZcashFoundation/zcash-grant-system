@@ -106,6 +106,18 @@ def proposal_comment(email_args):
     }
 
 
+def staking_contribution_confirmed(email_args):
+    return {
+        'subject': 'Your proposal has been staked!',
+        'title': 'Staking contribution confirmed',
+        'preview': 'Your {} ZEC staking contribution to {} has been confirmed!'.format(
+            email_args['contribution'].amount,
+            email_args['proposal'].title
+        ),
+        'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
+    }
+
+
 def contribution_confirmed(email_args):
     return {
         'subject': 'Your contribution has been confirmed!',
@@ -150,6 +162,7 @@ get_info_lookup = {
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
+    'staking_contribution_confirmed': staking_contribution_confirmed,
     'contribution_confirmed': contribution_confirmed,
     'contribution_update': contribution_update,
     'comment_reply': comment_reply,
