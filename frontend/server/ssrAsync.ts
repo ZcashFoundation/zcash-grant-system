@@ -1,6 +1,7 @@
 import { Store } from 'redux';
 import { fetchUser } from 'modules/users/actions';
 import { fetchProposals, fetchProposal } from 'modules/proposals/actions';
+import { fetchRfps, fetchRfp } from 'modules/rfps/actions';
 import { extractIdFromSlug } from 'utils/api';
 
 const pathActions = [
@@ -26,6 +27,22 @@ const pathActions = [
       const userId = match[1];
       if (userId) {
         return store.dispatch<any>(fetchUser(userId));
+      }
+    },
+  },
+  {
+    matcher: /^\/requests$/,
+    action: (_: RegExpMatchArray, store: Store) => {
+      return store.dispatch<any>(fetchRfps());
+    },
+  },
+  {
+    matcher: /^\/requests\/(.+)$/,
+    action: (match: RegExpMatchArray, store: Store) => {
+      const rfpId = extractIdFromSlug(match[1]);
+      if (rfpId) {
+        // return null for errors (404 most likely)
+        return store.dispatch<any>(fetchRfp(rfpId)).catch(() => null);
       }
     },
   },

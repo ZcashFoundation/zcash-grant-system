@@ -4,12 +4,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const babelPresets = [
-  '@babel/react',
-  // '@babel/typescript', (using ts-loader)
-  ['@babel/env', { useBuiltIns: 'entry', modules: false }],
-];
-
 const lessLoader = {
   loader: 'less-loader',
   options: { javascriptEnabled: true },
@@ -22,7 +16,6 @@ const tsBabelLoaderClient = {
       loader: 'babel-loader',
       options: {
         plugins: [
-          'dynamic-import-webpack', // for client
           '@loadable/babel-plugin',
           'react-hot-loader/babel',
           '@babel/plugin-proposal-object-rest-spread',
@@ -46,7 +39,6 @@ const tsBabelLoaderServer = {
       loader: 'babel-loader',
       options: {
         plugins: [
-          'dynamic-import-node', // for server
           '@loadable/babel-plugin',
           '@babel/plugin-proposal-object-rest-spread',
           '@babel/plugin-proposal-class-properties',
