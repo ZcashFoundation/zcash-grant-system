@@ -24,16 +24,6 @@ const HTML: React.SFC<Props> = ({
   extractor,
 }) => {
   const head = Helmet.renderStatic();
-  console.log(extractor);
-  console.log((extractor as any).chunks);
-  console.log((extractor as any).entrypoints);
-  try {
-    console.log('About to extract');
-    console.log(extractor.getStyleTags());
-    console.log(extractor.getStyleElements());
-  } catch(err) {
-    console.log(err);
-  }
   return (
     <html lang="">
       <head>
@@ -69,12 +59,11 @@ const HTML: React.SFC<Props> = ({
         {head.link.toComponent()}
         {head.script.toComponent()}
 
-        {extractor.getStyleElements()}
         {css.map(href => {
           return <link key={href} type="text/css" rel="stylesheet" href={href} />;
         })}
+        {extractor.getStyleElements()}
 
-        {extractor.getScriptElements()}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__PRELOADED_STATE__ = ${state}`,
@@ -85,6 +74,7 @@ const HTML: React.SFC<Props> = ({
             __html: `window.__PRELOADED_I18N__ = ${i18n}`,
           }}
         />
+        {extractor.getScriptElements()}
       </head>
       <body>
         <div id="app" dangerouslySetInnerHTML={{ __html: children }} />

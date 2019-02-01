@@ -16,7 +16,6 @@ const tsBabelLoaderClient = {
       loader: 'babel-loader',
       options: {
         plugins: [
-          'dynamic-import-webpack', // for client
           '@loadable/babel-plugin',
           'react-hot-loader/babel',
           '@babel/plugin-proposal-object-rest-spread',
@@ -40,7 +39,6 @@ const tsBabelLoaderServer = {
       loader: 'babel-loader',
       options: {
         plugins: [
-          'dynamic-import-node', // for server
           '@loadable/babel-plugin',
           '@babel/plugin-proposal-object-rest-spread',
           '@babel/plugin-proposal-class-properties',

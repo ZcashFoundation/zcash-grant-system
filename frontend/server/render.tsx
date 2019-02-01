@@ -1,14 +1,11 @@
 import path from 'path';
 import React from 'react';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { renderToString } from 'react-dom/server';
 import { ChunkExtractor } from '@loadable/server';
 import { StaticRouter as Router } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { I18nextProvider } from 'react-i18next';
-import * as Sentry from '@sentry/node';
-
-import log from './log';
 import { configureStore } from '../client/store/configure';
 import Html from './components/HTML';
 import Routes from '../client/Routes';
@@ -20,7 +17,7 @@ import i18n from './i18n';
 import * as paths from '../config/paths';
 import { storeActionsForPath } from './ssrAsync';
 
-const serverRenderer = () => async (req: Request, res: Response) => {
+const serverRenderer = async (req: Request, res: Response) => {
   const { store } = configureStore();
   await storeActionsForPath(req.url, store);
 
@@ -43,35 +40,15 @@ const serverRenderer = () => async (req: Request, res: Response) => {
 
   let extractor;
   // 1. loadable state will render dynamic imports
-  try {
-    const statsFile = path.join(
-      paths.clientBuild,
-      paths.publicPath,
-      'loadable-stats.json',
-    );
-    extractor = new ChunkExtractor({ statsFile, entrypoints: ['bundle'] });
-  } catch (e) {
-    const disp = `Error getting loadable state for SSR`;
-    e.message = disp + ': ' + e.message;
-    log.error(e);
-    Sentry.captureException(e);
-    return res.status(500).send(disp + ' (more info in server logs)');
-  }
+  const statsFile = path.join(paths.clientBuild, paths.publicPath, 'loadable-stats.json');
+  extractor = new ChunkExtractor({ statsFile, entrypoints: ['bundle'] });
 
   // 2. render and collect state
   const content = renderToString(extractor.collectChunks(reactApp));
   const state = JSON.stringify(store.getState());
 
   // ! ensure manifest.json is available
-  try {
-    res.locals.getManifest();
-  } catch (e) {
-    const disp =
-      'ERROR: Could not load client manifest.json, there was probably a client build error.';
-    log.error(e);
-    Sentry.captureException(e);
-    return res.status(500).send(disp);
-  }
+  res.locals.getManifest();
 
   const cssFiles = ['bundle.css', 'vendor.css']
     .map(f => res.locals.assetPath(f))
@@ -86,26 +63,27 @@ const serverRenderer = () => async (req: Request, res: Response) => {
     .map(m => ({ ...m, content: res.locals.assetPath(m.content) }))
     .filter(m => !!m.content);
 
-  try {
-    const html = renderToString(
-      <Html
-        css={cssFiles}
-        scripts={jsFiles}
-        linkTags={mappedLinkTags}
-        metaTags={mappedMetaTags}
-        state={state}
-        i18n={i18nClient}
-        extractor={extractor}
-      >
-        {content}
-      </Html>,
-    );
-    return res.send('<!doctype html>' + html);
-  } catch (e) {
-    log.error(e);
-    Sentry.captureException(e);
-    return res.send('ERROR: Failed to render app');
-  }
+  const html = renderToString(
+    <Html
+      css={cssFiles}
+      scripts={jsFiles}
+      linkTags={mappedLinkTags}
+      metaTags={mappedMetaTags}
+      state={state}
+      i18n={i18nClient}
+      extractor={extractor}
+    >
+      {content}
+    </Html>,
+  );
+  return res.send('<!doctype html>' + html);
 };
 
-export default serverRenderer;
+// Wrap in function to handle async errors
+export default function() {
+  return (req: Request, res: Response, next: NextFunction) => {
+    serverRenderer(req, res)
+      .then(() => next())
+      .catch(err => next(err));
+  };
+}
