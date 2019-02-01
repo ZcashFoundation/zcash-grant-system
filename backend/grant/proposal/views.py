@@ -7,7 +7,13 @@ from grant.milestone.models import Milestone
 from grant.settings import EXPLORER_URL, PROPOSAL_STAKING_AMOUNT
 from grant.user.models import User
 from grant.rfp.models import RFP
-from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
+from grant.utils.auth import (
+    requires_auth,
+    requires_team_member_auth,
+    requires_email_verified_auth,
+    get_authed_user,
+    internal_webhook
+)
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_preview
 from grant.utils.enums import ProposalStatus, ContributionStatus
@@ -66,7 +72,7 @@ def get_proposal_comments(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
-@requires_auth
+@requires_email_verified_auth
 @endpoint.api(
     parameter('comment', type=str, required=True),
     parameter('parentCommentId', type=int, required=False)
@@ -146,7 +152,7 @@ def get_proposals(stage):
 
 
 @blueprint.route("/drafts", methods=["POST"])
-@requires_auth
+@requires_email_verified_auth
 @endpoint.api(
     parameter('rfpId', type=int),
 )

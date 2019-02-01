@@ -110,4 +110,4 @@ class TestProposalCommentAPI(BaseUserConfig):
             content_type='application/json'
         )
 
-        self.assertStatus(comment_res, 401)
+        self.assertStatus(comment_res, 403)
