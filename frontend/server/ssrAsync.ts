@@ -37,7 +37,7 @@ const pathActions = [
     },
   },
   {
-    matcher: /^\/proposals\/(.+)$/,
+    matcher: /^\/requests\/(.+)$/,
     action: (match: RegExpMatchArray, store: Store) => {
       const rfpId = extractIdFromSlug(match[1]);
       if (rfpId) {
