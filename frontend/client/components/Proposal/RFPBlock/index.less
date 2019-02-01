@@ -1,0 +1,24 @@
+@import '~styles/variables.less';
+
+.RFPBlock {
+  &-content {
+    color: @text-color;
+
+    &:hover {
+      color: @primary-color;
+    }
+
+    &-title {
+      font-size: 1.2rem;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      color: inherit;
+    }
+
+    &-brief {
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { Zat } from 'utils/units';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { CreateMilestone, Update, User, Comment, ContributionWithUser } from 'types';
 import { ProposalMilestone } from './milestone';
+import { RFP } from './rfp';
 
 export interface TeamInvite {
   id: number;
@@ -35,6 +36,7 @@ export interface ProposalDraft {
   invites: TeamInvite[];
   status: STATUS;
   isStaked: boolean;
+  rfp?: RFP;
 }
 
 export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {

@@ -35,6 +35,13 @@ export function createDraft(opts: CreateDraftOptions = {}) {
   };
 }
 
+export function fetchAndCreateDrafts(opts: CreateDraftOptions = {}) {
+  return {
+    type: types.FETCH_AND_CREATE_DRAFTS,
+    payload: opts,
+  };
+}
+
 export function deleteDraft(proposalId: number) {
   return {
     type: types.DELETE_DRAFT_PENDING,

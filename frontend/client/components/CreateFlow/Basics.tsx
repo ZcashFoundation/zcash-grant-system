@@ -1,16 +1,18 @@
 import React from 'react';
-import { Input, Form, Icon, Select } from 'antd';
+import { Input, Form, Icon, Select, Alert } from 'antd';
 import { SelectValue } from 'antd/lib/select';
 import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
-import { ProposalDraft } from 'types';
+import { ProposalDraft, RFP } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { typedKeys } from 'utils/ts';
+import { Link } from 'react-router-dom';
 
 interface State extends Partial<ProposalDraft> {
   title: string;
   brief: string;
   category?: PROPOSAL_CATEGORY;
   target: string;
+  rfp?: RFP;
 }
 
 interface Props {
@@ -46,11 +48,30 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
   };
 
   render() {
-    const { title, brief, category, target } = this.state;
+    const { title, brief, category, target, rfp } = this.state;
     const errors = getCreateErrors(this.state, true);
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
+        {rfp && (
+          <Alert
+            type="info"
+            message="This proposal is linked to a request"
+            description={
+              <>
+                This proposal is for the open request{' '}
+                <Link to={`/requests/${rfp.id}`} target="_blank">
+                  {rfp.title}
+                </Link>
+                . If you didn’t mean to do this, you can delete this proposal and create a
+                new one.
+              </>
+            }
+            style={{ marginBottom: '2rem' }}
+            showIcon
+          />
+        )}
+
         <Form.Item
           label="Title"
           validateStatus={errors.title ? 'error' : undefined}

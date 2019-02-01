@@ -12,7 +12,7 @@ from grant.proposal.models import (
     user_proposal_contributions_schema,
 )
 from grant.user.models import User, users_schema, user_schema
-from grant.rfp.models import RFP, rfp_schema, rfps_schema
+from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.enums import ProposalStatus
 from sqlalchemy import func, or_
@@ -196,7 +196,7 @@ def get_email_example(type):
 @admin_auth_required
 def get_rfps():
     rfps = RFP.query.all()
-    return rfps_schema.dump(rfps)
+    return admin_rfps_schema.dump(rfps)
 
 
 @blueprint.route('/rfps', methods=['POST'])
@@ -216,7 +216,7 @@ def create_rfp(title, brief, content, category):
     )
     db.session.add(rfp)
     db.session.commit()
-    return rfp_schema.dump(rfp), 201
+    return admin_rfp_schema.dump(rfp), 201
 
 
 @blueprint.route('/rfps/<rfp_id>', methods=['GET'])
@@ -227,7 +227,7 @@ def get_rfp(rfp_id):
     if not rfp:
         return {"message": "No RFP matching that id"}, 404
 
-    return rfp_schema.dump(rfp)
+    return admin_rfp_schema.dump(rfp)
 
 
 @blueprint.route('/rfps/<rfp_id>', methods=['PUT'])
@@ -252,7 +252,7 @@ def update_rfp(rfp_id, title, brief, content, category, status):
 
     db.session.add(rfp)
     db.session.commit()
-    return rfp_schema.dump(rfp)
+    return admin_rfp_schema.dump(rfp)
 
 
 @blueprint.route('/rfps/<rfp_id>', methods=['DELETE'])

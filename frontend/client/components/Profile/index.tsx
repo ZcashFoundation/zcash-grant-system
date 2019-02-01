@@ -113,7 +113,7 @@ class Profile extends React.Component<Props, State> {
             render={() => <ProfileEdit user={user} />}
           />
         </Switch>
-        <LinkableTabs>
+        <LinkableTabs defaultActiveKey="pending">
           {isAuthedUser && (
             <Tabs.TabPane
               tab={TabTitle('Pending', pendingProposals.length)}

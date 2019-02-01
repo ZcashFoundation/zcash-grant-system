@@ -240,7 +240,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             </Card>
 
             {/* DETAILS */}
-            <Card title="details" size="small">
+            <Card title="Details" size="small">
               {renderDeetItem('id', p.proposalId)}
               {renderDeetItem('created', formatDateSeconds(p.dateCreated))}
               {renderDeetItem('status', p.status)}
@@ -249,16 +249,20 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
+              {p.rfp &&
+                renderDeetItem('rfp', <Link to={`/rfps/${p.rfp.id}`}>{p.rfp.title}</Link>)
+              }
             </Card>
 
             {/* TEAM */}
-            <Card title="team" size="small">
+            <Card title="Team" size="small">
               {p.team.map(t => (
                 <div key={t.userid}>
                   <Link to={`/users/${t.userid}`}>{t.displayName}</Link>
                 </div>
               ))}
             </Card>
+
             {/* TODO: contributors here? */}
           </Col>
         </Row>

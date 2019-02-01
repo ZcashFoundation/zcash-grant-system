@@ -11,3 +11,8 @@
 .ant-form-item-required:before {
   color: @primary-color;
 }
+
+// Fix ellipsis breaking on character. I think it's a chinese simplified thing.
+div.antd-pro-ellipsis-ellipsis {
+  word-break: break-word;
+}
