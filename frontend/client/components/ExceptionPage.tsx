@@ -29,7 +29,7 @@ interface Props {
 }
 
 const ExceptionPage = ({ code, desc }: Props) => (
-  <Exception type={code} {...content[code]} desc={desc} />
+  <Exception type={code} {...content[code]} desc={desc || content[code].desc} />
 );
 
 export default ExceptionPage;
