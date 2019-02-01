@@ -3,7 +3,7 @@ import moment from 'moment';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Icon, Button, Affix } from 'antd';
-import Exception from 'ant-design-pro/lib/Exception';
+import ExceptionPage from 'components/ExceptionPage';
 import { fetchRfp } from 'modules/rfps/actions';
 import { getRfp } from 'modules/rfps/selectors';
 import { RFP } from 'types';
@@ -42,7 +42,7 @@ class RFPDetail extends React.Component<Props> {
       if (isFetchingRfps) {
         return <Loader size="large" />;
       } else {
-        return <Exception type="404" desc="No request could be found" />;
+        return <ExceptionPage code="404" desc="No request could be found" />;
       }
     }
 

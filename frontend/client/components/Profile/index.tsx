@@ -21,7 +21,7 @@ import ProfileComment from './ProfileComment';
 import ProfileInvite from './ProfileInvite';
 import Placeholder from 'components/Placeholder';
 import Loader from 'components/Loader';
-import Exception from 'pages/exception';
+import ExceptionPage from 'components/ExceptionPage';
 import ContributionModal from 'components/ContributionModal';
 import LinkableTabs from 'components/LinkableTabs';
 import './style.less';
@@ -83,7 +83,7 @@ class Profile extends React.Component<Props, State> {
     }
 
     if (user.fetchError) {
-      return <Exception code="404" />;
+      return <ExceptionPage code="404" desc="No user could be found" />;
     }
 
     const { proposals, pendingProposals, contributions, comments, invites } = user;

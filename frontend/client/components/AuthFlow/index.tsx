@@ -6,7 +6,7 @@ import { Switch, Route, Link } from 'react-router-dom';
 import { AppState } from 'store/reducers';
 import { authActions } from 'modules/auth';
 import Loader from 'components/Loader';
-import Exception from 'pages/exception';
+import ExceptionPage from 'components/ExceptionPage';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
 import AccountRecovery from './AccountRecovery';
@@ -79,7 +79,7 @@ class AuthFlow extends React.Component<Props> {
           <Route path={`${match.path}/sign-in`} render={this.renderSignIn} />
           <Route path={`${match.path}/sign-up`} render={this.renderSignUp} />
           <Route path={`${match.path}/recover`} render={this.renderRecover} />
-          <Route render={() => <Exception code="404" />} />
+          <Route render={() => <ExceptionPage code="404" desc="Bad auth URL path" />} />
         </Switch>
       </div>
     );
