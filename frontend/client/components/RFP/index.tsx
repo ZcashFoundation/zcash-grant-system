@@ -2,7 +2,7 @@ import React from 'react';
 import moment from 'moment';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Icon } from 'antd';
+import { Icon, Button, Affix } from 'antd';
 import Exception from 'ant-design-pro/lib/Exception';
 import { fetchRfp } from 'modules/rfps/actions';
 import { getRfp } from 'modules/rfps/selectors';
@@ -10,6 +10,7 @@ import { RFP } from 'types';
 import { AppState } from 'store/reducers';
 import Loader from 'components/Loader';
 import Markdown from 'components/Markdown';
+import ProposalCard from 'components/Proposals/ProposalCard';
 import './index.less';
 
 interface OwnProps {
@@ -57,6 +58,33 @@ class RFPDetail extends React.Component<Props> {
         </div>
         <h1 className="RFPDetail-title">{rfp.title}</h1>
         <Markdown className="RFPDetail-content" source={rfp.content} />
+
+        {!!rfp.acceptedProposals.length && (
+          <div className="RFPDetail-proposals">
+            <h2 className="RFPDetail-proposals-title">Accepted Proposals</h2>
+            {rfp.acceptedProposals.map(p => (
+              <ProposalCard key={p.proposalId} {...p} />
+            ))}
+          </div>
+        )}
+
+        <div className="RFPDetail-submit">
+          <Affix offsetBottom={0}>
+            <div className="RFPDetail-submit-inner">
+              <span>Ready to take on this request?</span>{' '}
+              <Link to={`/create?rfp=${rfp.id}`}>
+                <Button
+                  className="RFPDetail-submit-inner-button"
+                  type="primary"
+                  size="large"
+                >
+                  Start a Proposal
+                  <Icon type="right-circle" />
+                </Button>
+              </Link>
+            </div>
+          </Affix>
+        </div>
       </div>
     );
   }

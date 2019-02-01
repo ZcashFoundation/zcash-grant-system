@@ -14,6 +14,7 @@ import { Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
 import { AlertProps } from 'antd/lib/alert';
 import CampaignBlock from './CampaignBlock';
 import TeamBlock from './TeamBlock';
+import RFPBlock from './RFPBlock';
 import Milestones from './Milestones';
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
@@ -238,10 +239,11 @@ export class ProposalDetail extends React.Component<Props, State> {
           <div className="Proposal-top-side">
             <CampaignBlock proposal={proposal} isPreview={!isLive} />
             <TeamBlock proposal={proposal} />
+            {proposal.rfp && <RFPBlock rfp={proposal.rfp} />}
           </div>
         </div>
 
-        <LinkableTabs scrollToTabs>
+        <LinkableTabs scrollToTabs defaultActiveKey="milestones">
           <Tabs.TabPane tab="Milestones" key="milestones">
             <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
               <Milestones proposal={proposal} />
@@ -253,7 +255,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
             <UpdatesTab proposalId={proposal.proposalId} />
           </Tabs.TabPane>
-          <Tabs.TabPane tab="Contributors" key="contributors">
+          <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
             <ContributorsTab proposalId={proposal.proposalId} />
           </Tabs.TabPane>
         </LinkableTabs>

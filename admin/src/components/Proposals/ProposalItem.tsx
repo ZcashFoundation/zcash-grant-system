@@ -39,6 +39,9 @@ class ProposalItemNaked extends React.Component<Proposal> {
           </h2>
           <p>Created: {formatDateSeconds(p.dateCreated)}</p>
           <p>{p.brief}</p>
+          {p.rfp && (
+            <p>Submitted for RFP: <strong>{p.rfp.title}</strong></p>
+          )}
         </Link>
       </List.Item>
     );

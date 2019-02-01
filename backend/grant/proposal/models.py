@@ -142,6 +142,7 @@ class Proposal(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
+    rfp_id = db.Column(db.Integer(), db.ForeignKey('rfp.id'), nullable=True)
 
     # Content info
     status = db.Column(db.String(255), nullable=False)
@@ -385,7 +386,8 @@ class ProposalSchema(ma.Schema):
             "payout_address",
             "deadline_duration",
             "contribution_matching",
-            "invites"
+            "invites",
+            "rfp"
         )
 
     date_created = ma.Method("get_date_created")
@@ -398,6 +400,7 @@ class ProposalSchema(ma.Schema):
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
+    rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
 
     def get_proposal_id(self, obj):
         return obj.id

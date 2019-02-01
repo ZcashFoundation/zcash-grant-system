@@ -9,6 +9,7 @@ import { AppState } from 'store/reducers';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
 import './style.less';
+import Placeholder from 'components/Placeholder';
 
 const { WAITING, ACTIVE, PAID, REJECTED } = MILESTONE_STATE;
 
@@ -122,8 +123,8 @@ class ProposalMilestones extends React.Component<Props, State> {
                   The team was awarded <strong>{reward}</strong>{' '}
                   {milestone.isImmediatePayout
                     ? 'as an initial payout'
-                    // TODO: Add property for payout date on milestones
-                    : `on ${moment().format('MMM Do, YYYY')}`}
+                    : // TODO: Add property for payout date on milestones
+                      `on ${moment().format('MMM Do, YYYY')}`}
                   .
                 </span>
               }
@@ -151,9 +152,8 @@ class ProposalMilestones extends React.Component<Props, State> {
                 <span>
                   Payout for this milestone was rejected on{' '}
                   {/* TODO: add property for payout rejection date on milestones */}
-                  {moment().format('MMM Do, YYYY')}.
-                  {isTrustee ? ' You ' : ' The team '} can request another
-                  review for payout at any time.
+                  {moment().format('MMM Do, YYYY')}.{isTrustee ? ' You ' : ' The team '}{' '}
+                  can request another review for payout at any time.
                 </span>
               }
               style={alertStyle}
@@ -201,12 +201,21 @@ class ProposalMilestones extends React.Component<Props, State> {
           [`is-count-${milestoneCount}`]: true,
         })}
       >
-        <Steps current={this.state.step} size={stepSize}>
-          {milestoneSteps.map(mss => (
-            <Steps.Step key={mss.key} {...mss.stepProps} />
-          ))}
-        </Steps>
-        {milestoneSteps[this.state.step].content}
+        {!!milestoneSteps.length ? (
+          <>
+            <Steps current={this.state.step} size={stepSize}>
+              {milestoneSteps.map(mss => (
+                <Steps.Step key={mss.key} {...mss.stepProps} />
+              ))}
+            </Steps>
+            {milestoneSteps[this.state.step].content}
+          </>
+        ) : (
+          <Placeholder
+            title="No milestones"
+            subtitle="The creator of this proposal has not setup any milestones"
+          />
+        )}
       </div>
     );
   }

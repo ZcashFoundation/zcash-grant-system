@@ -173,8 +173,8 @@ export function getProposalDrafts(): Promise<{ data: ProposalDraft[] }> {
   return axios.get('/api/v1/proposals/drafts');
 }
 
-export function postProposalDraft(): Promise<{ data: ProposalDraft }> {
-  return axios.post('/api/v1/proposals/drafts');
+export function postProposalDraft(rfpId?: number): Promise<{ data: ProposalDraft }> {
+  return axios.post('/api/v1/proposals/drafts', { rfpId });
 }
 
 export function deleteProposalDraft(proposalId: number): Promise<any> {

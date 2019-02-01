@@ -51,8 +51,8 @@ export function formatProposalFromGet(p: any): Proposal {
   return proposal;
 }
 
-export function formatRFPFromGet(rfp: any): RFP {
-  rfp.proposals = rfp.proposals.map(formatProposalFromGet);
+export function formatRFPFromGet(rfp: RFP): RFP {
+  rfp.acceptedProposals = rfp.acceptedProposals.map(formatProposalFromGet);
   return rfp;
 }
 

@@ -7,7 +7,7 @@ interface Props {
   proposal: Proposal;
 }
 
-const TeamBlock = ({ proposal }: Props) => {
+const TeamBlock: React.SFC<Props> = ({ proposal }) => {
   let content;
   if (proposal) {
     content = proposal.team.map(user => <UserRow key={user.displayName} user={user} />);
@@ -17,7 +17,7 @@ const TeamBlock = ({ proposal }: Props) => {
 
   return (
     <div className="Proposal-top-side-block">
-      <h1 className="Proposal-top-main-block-title">Team</h1>
+      <h2 className="Proposal-top-main-block-title">Team</h2>
       <div className="Proposal-top-main-block">{content}</div>
     </div>
   );
