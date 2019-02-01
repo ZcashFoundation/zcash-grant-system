@@ -46,6 +46,16 @@ def requires_same_user_auth(f):
     return requires_auth(decorated)
 
 
+def requires_email_verified_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not g.current_user.email_verification.has_verified:
+            return jsonify(message="Please confirm your email."), 403
+        return f(*args, **kwargs)
+
+    return requires_auth(decorated)
+
+
 def requires_team_member_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -60,13 +70,10 @@ def requires_team_member_auth(f):
         if g.current_user not in proposal.team:
             return jsonify(message="You are not authorized to modify this proposal"), 403
 
-        if not g.current_user.email_verification.has_verified:
-            return jsonify(message="Please confirm your email."), 403
-
         g.current_proposal = proposal
         return f(*args, **kwargs)
 
-    return requires_auth(decorated)
+    return requires_email_verified_auth(decorated)
 
 
 def internal_webhook(f):
