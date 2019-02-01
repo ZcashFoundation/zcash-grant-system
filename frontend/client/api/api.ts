@@ -266,6 +266,12 @@ export function getProposalContribution(
   return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
 }
 
+export function getProposalStakingContribution(
+  proposalId: number,
+): Promise<{ data: ContributionWithAddresses }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/stake`);
+}
+
 export function getRFPs(): Promise<{ data: RFP[] }> {
   return axios.get('/api/v1/rfps/').then(res => {
     res.data = res.data.map(formatRFPFromGet);

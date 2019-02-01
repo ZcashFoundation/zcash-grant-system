@@ -10,15 +10,17 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
 from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
+from grant.settings import PROPOSAL_STAKING_AMOUNT
 
 # Proposal states
 DRAFT = 'DRAFT'
 PENDING = 'PENDING'
+STAKING = 'STAKING'
 APPROVED = 'APPROVED'
 REJECTED = 'REJECTED'
 LIVE = 'LIVE'
 DELETED = 'DELETED'
-STATUSES = [DRAFT, PENDING, APPROVED, REJECTED, LIVE, DELETED]
+STATUSES = [DRAFT, PENDING, STAKING, APPROVED, REJECTED, LIVE, DELETED]
 
 # Funding stages
 FUNDING_REQUIRED = 'FUNDING_REQUIRED'
@@ -256,14 +258,44 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
+    def create_contribution(self, user_id: int, amount: float):
+        contribution = ProposalContribution(
+            proposal_id=self.id,
+            user_id=user_id,
+            amount=amount
+        )
+        db.session.add(contribution)
+        db.session.commit()
+        return contribution
+
+    def get_staking_contribution(self, user_id: int):
+        contribution = None
+        remaining = PROPOSAL_STAKING_AMOUNT - float(self.contributed)
+        # check funding
+        if remaining > 0:
+            # find pending contribution for any user
+            # (always use full staking amout so we can find it)
+            contribution = ProposalContribution.query.filter_by(
+                proposal_id=self.id,
+                amount=str(PROPOSAL_STAKING_AMOUNT),
+                status=PENDING,
+            ).first()
+            if not contribution:
+                contribution = self.create_contribution(user_id, PROPOSAL_STAKING_AMOUNT)
+
+        return contribution
+
     def submit_for_approval(self):
         self.validate_publishable()
         allowed_statuses = [ProposalStatus.DRAFT, ProposalStatus.REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
             raise ValidationException(f"Proposal status must be draft or rejected to submit for approval")
-
-        self.status = ProposalStatus.PENDING
+        # set to PENDING if staked, else STAKING
+        if self.is_staked:
+            self.status = ProposalStatus.PENDING
+        else:
+            self.status = ProposalStatus.STAKING
 
     def approve_pending(self, is_approve, reject_reason=None):
         self.validate_publishable()
@@ -322,6 +354,10 @@ class Proposal(db.Model):
 
         return str(funded)
 
+    @hybrid_property
+    def is_staked(self):
+        return float(self.contributed) >= PROPOSAL_STAKING_AMOUNT
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -339,6 +375,7 @@ class ProposalSchema(ma.Schema):
             "proposal_id",
             "target",
             "contributed",
+            "is_staked",
             "funded",
             "content",
             "comments",
@@ -386,6 +423,7 @@ user_fields = [
     "title",
     "brief",
     "target",
+    "is_staked",
     "funded",
     "contribution_matching",
     "date_created",

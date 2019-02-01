@@ -59,12 +59,11 @@ const HTML: React.SFC<Props> = ({
         {head.link.toComponent()}
         {head.script.toComponent()}
 
-        {extractor.getStyleElements()}
         {css.map(href => {
-          return <link key={href} rel="stylesheet" href={href} />;
+          return <link key={href} type="text/css" rel="stylesheet" href={href} />;
         })}
+        {extractor.getStyleElements()}
 
-        {extractor.getScriptElements()}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__PRELOADED_STATE__ = ${state}`,
@@ -75,6 +74,7 @@ const HTML: React.SFC<Props> = ({
             __html: `window.__PRELOADED_I18N__ = ${i18n}`,
           }}
         />
+        {extractor.getScriptElements()}
       </head>
       <body>
         <div id="app" dangerouslySetInnerHTML={{ __html: children }} />

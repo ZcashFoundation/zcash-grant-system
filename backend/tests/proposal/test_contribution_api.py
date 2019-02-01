@@ -3,7 +3,7 @@ from mock import patch
 
 from grant.proposal.models import Proposal
 from grant.utils.enums import ProposalStatus
-from ..config import BaseUserConfig
+from ..config import BaseProposalCreatorConfig
 from ..test_data import test_proposal
 from ..mocks import mock_request
 
@@ -14,24 +14,17 @@ mock_contribution_addresses = mock_request({
 })
 
 
-class TestProposalContributionAPI(BaseUserConfig):
+class TestProposalContributionAPI(BaseProposalCreatorConfig):
     @patch('requests.get', side_effect=mock_contribution_addresses)
     def test_create_proposal_contribution(self, mock_blockchain_get):
         self.login_default_user()
-        proposal_res = self.app.post(
-            "/api/v1/proposals/drafts",
-            data=json.dumps(test_proposal),
-            content_type='application/json'
-        )
-        proposal_json = proposal_res.json
-        proposal_id = proposal_json["proposalId"]
 
         contribution = {
             "amount": "1.2345"
         }
 
         post_res = self.app.post(
-            "/api/v1/proposals/{}/contributions".format(proposal_id),
+            "/api/v1/proposals/{}/contributions".format(self.proposal.id),
             data=json.dumps(contribution),
             content_type='application/json'
         )
@@ -41,20 +34,13 @@ class TestProposalContributionAPI(BaseUserConfig):
     @patch('requests.get', side_effect=mock_contribution_addresses)
     def test_create_duplicate_contribution(self, mock_blockchain_get):
         self.login_default_user()
-        proposal_res = self.app.post(
-            "/api/v1/proposals/drafts",
-            data=json.dumps(test_proposal),
-            content_type='application/json'
-        )
-        proposal_json = proposal_res.json
-        proposal_id = proposal_json["proposalId"]
 
         contribution = {
             "amount": "1.2345"
         }
 
         post_res = self.app.post(
-            "/api/v1/proposals/{}/contributions".format(proposal_id),
+            "/api/v1/proposals/{}/contributions".format(self.proposal.id),
             data=json.dumps(contribution),
             content_type='application/json'
         )
@@ -62,7 +48,7 @@ class TestProposalContributionAPI(BaseUserConfig):
         self.assertStatus(post_res, 201)
 
         dupe_res = self.app.post(
-            "/api/v1/proposals/{}/contributions".format(proposal_id),
+            "/api/v1/proposals/{}/contributions".format(self.proposal.id),
             data=json.dumps(contribution),
             content_type='application/json'
         )
@@ -72,27 +58,20 @@ class TestProposalContributionAPI(BaseUserConfig):
     @patch('requests.get', side_effect=mock_contribution_addresses)
     def test_get_proposal_contribution(self, mock_blockchain_get):
         self.login_default_user()
-        proposal_res = self.app.post(
-            "/api/v1/proposals/drafts",
-            data=json.dumps(test_proposal),
-            content_type='application/json'
-        )
-        proposal_json = proposal_res.json
-        proposal_id = proposal_json["proposalId"]
 
         contribution = {
             "amount": "1.2345"
         }
 
         post_res = self.app.post(
-            "/api/v1/proposals/{}/contributions".format(proposal_id),
+            "/api/v1/proposals/{}/contributions".format(self.proposal.id),
             data=json.dumps(contribution),
             content_type='application/json'
         )
         contribution_id = post_res.json['id']
 
         contribution_res = self.app.get(
-            f'/api/v1/proposals/{proposal_id}/contributions/{contribution_id}'
+            f'/api/v1/proposals/{self.proposal.id}/contributions/{contribution_id}'
         )
 
         contribution = contribution_res.json

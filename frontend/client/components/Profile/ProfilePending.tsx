@@ -55,6 +55,17 @@ class ProfilePending extends React.Component<Props, State> {
           </>
         ),
       },
+      [STATUS.STAKING]: {
+        color: 'purple',
+        tag: 'Staking',
+        blurb: (
+          <div>
+            Awaiting staking contribution, you will recieve an email when staking has been
+            confirmed. If you staked this proposal you may check its status under the
+            "funded" tab.
+          </div>
+        ),
+      },
       [STATUS.PENDING]: {
         color: 'orange',
         tag: 'Pending',

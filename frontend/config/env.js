@@ -41,6 +41,8 @@ envProductionRequiredHandler(
   'http://localhost:' + (process.env.PORT || 3000),
 );
 
+envProductionRequiredHandler('PROPOSAL_STAKING_AMOUNT', '0.025');
+
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .split(path.delimiter)
@@ -54,6 +56,7 @@ module.exports = () => {
     EXPLORER_URL: process.env.EXPLORER_URL || 'https://chain.so/zcash/',
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: process.env.PORT || 3000,
+    PROPOSAL_STAKING_AMOUNT: process.env.PROPOSAL_STAKING_AMOUNT,
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,
     SENTRY_DSN: process.env.SENTRY_DSN || null,
     SENTRY_RELEASE: process.env.SENTRY_RELEASE || undefined,

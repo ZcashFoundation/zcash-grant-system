@@ -35,6 +35,7 @@ export interface ProposalDraft {
   team: User[];
   invites: TeamInvite[];
   status: STATUS;
+  isStaked: boolean;
   rfp?: RFP;
 }
 
@@ -87,6 +88,7 @@ export interface UserProposal {
 // NOTE: sync with backend/grant/proposal/models.py STATUSES
 export enum STATUS {
   DRAFT = 'DRAFT',
+  STAKING = 'STAKING',
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',

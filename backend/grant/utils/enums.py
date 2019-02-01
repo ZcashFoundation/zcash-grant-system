@@ -8,16 +8,21 @@ class CustomEnum():
 class ProposalStatusEnum(CustomEnum):
     DRAFT = 'DRAFT'
     PENDING = 'PENDING'
+    STAKING = 'STAKING'
     APPROVED = 'APPROVED'
     REJECTED = 'REJECTED'
     LIVE = 'LIVE'
     DELETED = 'DELETED'
+
+
 ProposalStatus = ProposalStatusEnum()
 
 
 class ProposalStageEnum(CustomEnum):
     FUNDING_REQUIRED = 'FUNDING_REQUIRED'
     COMPLETED = 'COMPLETED'
+
+
 ProposalStage = ProposalStageEnum()
 
 
@@ -28,6 +33,8 @@ class CategoryEnum(CustomEnum):
     COMMUNITY = 'COMMUNITY'
     DOCUMENTATION = 'DOCUMENTATION'
     ACCESSIBILITY = 'ACCESSIBILITY'
+
+
 Category = CategoryEnum()
 
 
@@ -35,6 +42,8 @@ class ContributionStatusEnum(CustomEnum):
     PENDING = 'PENDING'
     CONFIRMED = 'CONFIRMED'
     DELETED = 'DELETED'
+
+
 ContributionStatus = ContributionStatusEnum()
 
 
@@ -42,4 +51,6 @@ class RFPStatusEnum(CustomEnum):
     DRAFT = 'DRAFT'
     LIVE = 'LIVE'
     CLOSED = 'CLOSED'
+
+
 RFPStatus = RFPStatusEnum()

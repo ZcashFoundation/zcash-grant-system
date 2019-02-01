@@ -159,6 +159,16 @@ export class ProposalDetail extends React.Component<Props, State> {
         ),
         type: 'error',
       },
+      [STATUS.STAKING]: {
+        blurb: (
+          <>
+            Your proposal is awaiting a staking contribution. Visit your{' '}
+            <Link to="/profile?tab=pending">profile's pending tab</Link> for more
+            information.
+          </>
+        ),
+        type: 'warning',
+      },
     } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
     let banner = statusBanner[proposal.status];
     if (isPreview) {

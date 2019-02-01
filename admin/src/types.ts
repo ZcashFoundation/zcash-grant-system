@@ -44,6 +44,7 @@ export enum PROPOSAL_STATUS {
   REJECTED = 'REJECTED',
   LIVE = 'LIVE',
   DELETED = 'DELETED',
+  STAKING = 'STAKING',
 }
 export interface Proposal {
   proposalId: number;

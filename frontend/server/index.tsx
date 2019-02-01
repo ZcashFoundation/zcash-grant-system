@@ -28,8 +28,8 @@ Sentry.init({
 const app = express();
 
 // ssl
-if (!isDev) {
-  console.log('Enabling HTTPS redirect.');
+if (!isDev && !process.env.DISABLE_SSL) {
+  log.warn('PRODUCTION mode, enforcing HTTPS redirect');
   app.use(enforce.HTTPS({ trustProtoHeader: true }));
 }
 
@@ -51,7 +51,7 @@ if (isDev) {
     res.send('');
   });
 } else {
-  log.warn('PRODUCTION mode, serving static assets from node server.');
+  log.warn('PRODUCTION mode, serving static assets from node server');
   app.use(
     paths.publicPath,
     express.static(path.join(paths.clientBuild, paths.publicPath)),

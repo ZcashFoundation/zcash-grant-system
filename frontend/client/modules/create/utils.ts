@@ -190,6 +190,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
     percentFunded: 0,
     stage: 'preview',
     category: draft.category || PROPOSAL_CATEGORY.DAPP,
+    isStaked: true,
     milestones: draft.milestones.map((m, idx) => ({
       index: idx,
       title: m.title,
