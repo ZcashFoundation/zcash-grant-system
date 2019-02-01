@@ -169,18 +169,19 @@ class CreateFlow extends React.Component<Props, State> {
     } else if (isPreviewing) {
       content = <Preview />;
     } else {
+      // Antd definitions are missing `onClick` for step, even though it works.
+      const Step = Steps.Step as any;
       content = (
         <div className="CreateFlow">
           <div className="CreateFlow-header">
             <Steps current={currentIndex}>
               {STEP_ORDER.slice(0, 5).map(s => (
-                <div
+                <Step
                   key={s}
+                  title={STEP_INFO[s].short}
                   onClick={() => this.setStep(s)}
                   style={{ cursor: 'pointer' }}
-                >
-                  <Steps.Step title={STEP_INFO[s].short} />
-                </div>
+                />
               ))}
             </Steps>
             <h1 className="CreateFlow-header-title">{info.title}</h1>

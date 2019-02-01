@@ -51,7 +51,6 @@ class DraftList extends React.Component<Props, State> {
 
   componentDidMount() {
     const { createIfNone, createWithRfpId } = this.props;
-    console.log({ createIfNone, createWithRfpId });
     if (createIfNone || createWithRfpId) {
       this.props.fetchAndCreateDrafts({
         rfpId: createWithRfpId,

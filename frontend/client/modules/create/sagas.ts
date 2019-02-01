@@ -1,6 +1,6 @@
 import { SagaIterator } from 'redux-saga';
 import { takeEvery, takeLatest, put, take, call, select } from 'redux-saga/effects';
-import { push } from 'connected-react-router';
+import { replace } from 'connected-react-router';
 import {
   postProposalDraft,
   getProposalDrafts,
@@ -29,7 +29,7 @@ export function* handleCreateDraft(action: ReturnType<typeof createDraft>): Saga
     });
 
     if (action.payload.redirect) {
-      yield put(push(`/proposals/${res.data.proposalId}/edit`));
+      yield put(replace(`/proposals/${res.data.proposalId}/edit`));
     }
   } catch (err) {
     yield put({
@@ -94,7 +94,7 @@ export function* handleFetchAndCreateDrafts(
       yield put(createDraft(action.payload));
     } else if (action.payload.redirect) {
       // If we were supposed to redirect, redirect to existing rfp draft
-      yield put(push(`/proposals/${rfpDraft.proposalId}/edit`));
+      yield put(replace(`/proposals/${rfpDraft.proposalId}/edit`));
     }
   } else if (drafts.length === 0) {
     yield put(createDraft(action.payload));
