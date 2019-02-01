@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Ellipsis from 'ant-design-pro/lib/Ellipsis';
 import { RFP } from 'types';
 import './index.less';
 
@@ -15,9 +14,7 @@ const RFPBlock: React.SFC<Props> = ({ rfp }) => {
       <div className="Proposal-top-main-block">
         <Link className="RFPBlock-content" to={`/requests/${rfp.id}`}>
           <h3 className="RFPBlock-content-title">{rfp.title}</h3>
-          <Ellipsis className="RFPBlock-content-brief" lines={2}>
-            {rfp.brief}
-          </Ellipsis>
+          <div className="RFPBlock-content-brief">{rfp.brief}</div>
         </Link>
       </div>
     </div>
