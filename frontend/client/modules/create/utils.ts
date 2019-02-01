@@ -192,6 +192,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
     stage: 'preview',
     category: draft.category || PROPOSAL_CATEGORY.DAPP,
     team: draft.team,
+    isStaked: true,
     milestones: draft.milestones.map((m, idx) => ({
       index: idx,
       title: m.title,

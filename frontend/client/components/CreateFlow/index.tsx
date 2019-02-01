@@ -14,7 +14,7 @@ import Payment from './Payment';
 import Review from './Review';
 import Preview from './Preview';
 import Final from './Final';
-import PublishWarningModal from './PublishWarningModal';
+import SubmitWarningModal from './SubmitWarningModal';
 import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
@@ -115,8 +115,8 @@ type Props = StateProps & DispatchProps & RouteComponentProps<any>;
 interface State {
   step: CREATE_STEP;
   isPreviewing: boolean;
-  isShowingPublishWarning: boolean;
-  isPublishing: boolean;
+  isShowingSubmitWarning: boolean;
+  isSubmitting: boolean;
   isExample: boolean;
 }
 
@@ -134,9 +134,9 @@ class CreateFlow extends React.Component<Props, State> {
     this.state = {
       step,
       isPreviewing: false,
-      isPublishing: false,
+      isSubmitting: false,
       isExample: false,
-      isShowingPublishWarning: false,
+      isShowingSubmitWarning: false,
     };
     this.debouncedUpdateForm = debounce(this.updateForm, 800);
     this.historyUnlisten = this.props.history.listen(this.handlePop);
@@ -154,7 +154,7 @@ class CreateFlow extends React.Component<Props, State> {
 
   render() {
     const { isSavingDraft } = this.props;
-    const { step, isPreviewing, isPublishing, isShowingPublishWarning } = this.state;
+    const { step, isPreviewing, isSubmitting, isShowingSubmitWarning } = this.state;
 
     const info = STEP_INFO[step];
     const currentIndex = STEP_ORDER.indexOf(step);
@@ -163,7 +163,7 @@ class CreateFlow extends React.Component<Props, State> {
 
     let content;
     let showFooter = true;
-    if (isPublishing) {
+    if (isSubmitting) {
       content = <Final />;
       showFooter = false;
     } else if (isPreviewing) {
@@ -241,11 +241,11 @@ class CreateFlow extends React.Component<Props, State> {
         {isSavingDraft && (
           <div className="CreateFlow-draftNotification">Saving draft...</div>
         )}
-        <PublishWarningModal
+        <SubmitWarningModal
           proposal={this.props.form}
-          isVisible={isShowingPublishWarning}
+          isVisible={isShowingSubmitWarning}
           handleClose={this.closePublishWarning}
-          handlePublish={this.startPublish}
+          handleSubmit={this.startSubmit}
         />
       </div>
     );
@@ -274,10 +274,10 @@ class CreateFlow extends React.Component<Props, State> {
     this.setState({ isPreviewing: !this.state.isPreviewing });
   };
 
-  private startPublish = () => {
+  private startSubmit = () => {
     this.setState({
-      isPublishing: true,
-      isShowingPublishWarning: false,
+      isSubmitting: true,
+      isShowingSubmitWarning: false,
     });
   };
 
@@ -302,11 +302,11 @@ class CreateFlow extends React.Component<Props, State> {
   };
 
   private openPublishWarning = () => {
-    this.setState({ isShowingPublishWarning: true });
+    this.setState({ isShowingSubmitWarning: true });
   };
 
   private closePublishWarning = () => {
-    this.setState({ isShowingPublishWarning: false });
+    this.setState({ isShowingSubmitWarning: false });
   };
 
   private fillInExample = () => {

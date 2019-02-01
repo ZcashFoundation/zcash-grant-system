@@ -4,7 +4,7 @@ from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
 from grant.milestone.models import Milestone
-from grant.settings import EXPLORER_URL
+from grant.settings import EXPLORER_URL, PROPOSAL_STAKING_AMOUNT
 from grant.user.models import User
 from grant.utils.auth import requires_auth, requires_team_member_auth, get_authed_user, internal_webhook
 from grant.utils.exceptions import ValidationException
@@ -131,14 +131,14 @@ def get_proposals(stage):
     if stage:
         proposals = (
             Proposal.query.filter_by(status=ProposalStatus.LIVE, stage=stage)
-                .order_by(Proposal.date_created.desc())
-                .all()
+            .order_by(Proposal.date_created.desc())
+            .all()
         )
     else:
         proposals = (
             Proposal.query.filter_by(status=ProposalStatus.LIVE)
-                .order_by(Proposal.date_created.desc())
-                .all()
+            .order_by(Proposal.date_created.desc())
+            .all()
         )
     dumped_proposals = proposals_schema.dump(proposals)
     return dumped_proposals
@@ -240,6 +240,18 @@ def submit_for_approval_proposal(proposal_id):
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
+
+
+@blueprint.route("/<proposal_id>/stake", methods=["GET"])
+@requires_team_member_auth
+@endpoint.api()
+def get_proposal_stake(proposal_id):
+    if g.current_proposal.status != ProposalStatus.STAKING:
+        return None, 400
+    contribution = g.current_proposal.get_staking_contribution(g.current_user.id)
+    if contribution:
+        return proposal_contribution_schema.dump(contribution)
+    return None, 404
 
 
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
@@ -419,13 +431,7 @@ def post_proposal_contribution(proposal_id, amount):
 
     if not contribution:
         code = 201
-        contribution = ProposalContribution(
-            proposal_id=proposal_id,
-            user_id=g.current_user.id,
-            amount=amount
-        )
-        db.session.add(contribution)
-        db.session.commit()
+        contribution = proposal.create_contribution(g.current_user.id, amount)
 
     dumped_contribution = proposal_contribution_schema.dump(contribution)
     return dumped_contribution, code
@@ -459,26 +465,43 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     db.session.add(contribution)
     db.session.commit()
 
-    # Send to the user
-    send_email(contribution.user.email_address, 'contribution_confirmed', {
-        'contribution': contribution,
-        'proposal': contribution.proposal,
-        'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
-    })
+    if contribution.proposal.status == ProposalStatus.STAKING:
+        # fully staked, set status PENDING & notify user
+        if contribution.proposal.is_staked:  # float(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
+            contribution.proposal.status = ProposalStatus.PENDING
+            db.session.add(contribution.proposal)
+            db.session.commit()
 
-    # Send to the full proposal gang
-    for member in contribution.proposal.team:
-        send_email(member.email_address, 'proposal_contribution', {
-            'proposal': contribution.proposal,
+        # email progress of staking, partial or complete
+        send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
             'contribution': contribution,
-            'contributor': contribution.user,
-            'funded': contribution.proposal.funded,
-            'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
-            'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+            'proposal': contribution.proposal,
+            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+            'fully_staked': contribution.proposal.is_staked,
+            'stake_target': PROPOSAL_STAKING_AMOUNT
         })
 
+    else:
+        # Send to the user
+        send_email(contribution.user.email_address, 'contribution_confirmed', {
+            'contribution': contribution,
+            'proposal': contribution.proposal,
+            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+        })
+
+        # Send to the full proposal gang
+        for member in contribution.proposal.team:
+            send_email(member.email_address, 'proposal_contribution', {
+                'proposal': contribution.proposal,
+                'contribution': contribution,
+                'contributor': contribution.user,
+                'funded': contribution.proposal.funded,
+                'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
+                'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+            })
+
     # TODO: Once we have a task queuer in place, queue emails to everyone
-    # on funding target reached. 
+    # on funding target reached.
 
     return None, 200
 

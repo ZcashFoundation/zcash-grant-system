@@ -4,4 +4,4 @@ account will now show your contribution. You can view your transaction here:
 
 {{ args.tx_explorer_url }}
 
-Thank you for your help in improving the ZCash ecosystem.
+Thank you for your help in improving the Zcash ecosystem.

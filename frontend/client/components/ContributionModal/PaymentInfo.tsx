@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import classnames from 'classnames';
 import { Form, Input, Button, Icon, Radio, message } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
@@ -11,6 +11,7 @@ import './PaymentInfo.less';
 
 interface Props {
   contribution?: ContributionWithAddresses | Falsy;
+  text?: ReactNode;
 }
 
 type SendType = 'sprout' | 'transparent';
@@ -25,7 +26,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
   };
 
   render() {
-    const { contribution } = this.props;
+    const { contribution, text } = this.props;
     const { sendType } = this.state;
     let address;
     let memo;
@@ -45,32 +46,27 @@ export default class PaymentInfo extends React.Component<Props, State> {
 
     return (
       <Form className="PaymentInfo" layout="vertical">
-        <p className="PaymentInfo-text">
-          Thank you for contributing! Just send using whichever method works best for you,
-          and we'll let you know when your contribution has been confirmed. Need help
-          sending?
-          {/* TODO: Help / FAQ page for sending */}
-          {' '}
-          <a>Click here</a>.
-        </p>
+        <div className="PaymentInfo-text">
+          {text || (
+            <>
+              Thank you for contributing! Just send using whichever method works best for
+              you, and we'll let you know when your contribution has been confirmed.
+            </>
+          )}
+          {/* TODO: Help / FAQ page for sending */} Need help sending? <a>Click here</a>.
+        </div>
 
         <Radio.Group
           className="PaymentInfo-types"
           onChange={this.handleChangeSendType}
           value={sendType}
         >
-          <Radio.Button value="sprout">
-            Z Address (Private)
-          </Radio.Button>
-          <Radio.Button value="transparent">
-            T Address (Public)
-          </Radio.Button>
+          <Radio.Button value="sprout">Z Address (Private)</Radio.Button>
+          <Radio.Button value="transparent">T Address (Public)</Radio.Button>
         </Radio.Group>
 
         <div className="PaymentInfo-uri">
-          <div className={
-            classnames('PaymentInfo-uri-qr', !uri && 'is-loading')
-          }>
+          <div className={classnames('PaymentInfo-uri-qr', !uri && 'is-loading')}>
             <span style={{ opacity: uri ? 1 : 0 }}>
               <QRCode value={uri || ''} />
             </span>
@@ -100,7 +96,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
           </div>
           <div className="PaymentInfo-fields-row">
             <CopyInput
-              label="ZCash CLI command"
+              label="Zcash CLI command"
               help="Make sure you replace YOUR_ADDRESS with your actual address"
               value={cli}
             />
@@ -123,33 +119,29 @@ interface CopyInputProps {
   isTextarea?: boolean;
 }
 
-const CopyInput: React.SFC<CopyInputProps> = ({ label, value, help, className, isTextarea }) => (
+const CopyInput: React.SFC<CopyInputProps> = ({
+  label,
+  value,
+  help,
+  className,
+  isTextarea,
+}) => (
   <Form.Item
-    className={classnames(
-      'CopyInput',
-      className,
-      isTextarea && 'is-textarea',
-    )}
+    className={classnames('CopyInput', className, isTextarea && 'is-textarea')}
     label={label}
     help={help}
   >
     {isTextarea ? (
       <>
         <Input.TextArea value={value} readOnly rows={3} />
-        <CopyToClipboard
-          text={value || ''}
-          onCopy={() => message.success('Copied!', 2)}
-        >
+        <CopyToClipboard text={value || ''} onCopy={() => message.success('Copied!', 2)}>
           <Button icon="copy" />
         </CopyToClipboard>
       </>
     ) : (
       <>
         <Input value={value} readOnly />
-        <CopyToClipboard
-          text={value || ''}
-          onCopy={() => message.success('Copied!', 2)}
-        >
+        <CopyToClipboard text={value || ''} onCopy={() => message.success('Copied!', 2)}>
           <Button icon="copy" />
         </CopyToClipboard>
       </>

@@ -1,6 +1,6 @@
 # Blockchain Watcher
 
-Creates a websocket server that reads and reports on the activity of the ZCash
+Creates a websocket server that reads and reports on the activity of the Zcash
 blockchain. Communicates with a node over RPC.
 
 ## Development
