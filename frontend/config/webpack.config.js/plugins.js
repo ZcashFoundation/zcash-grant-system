@@ -1,7 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
 const ManifestPlugin = require('webpack-manifest-plugin');
-const { StatsWriterPlugin } = require('webpack-stats-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ModuleDependencyWarning = require('./module-dependency-warning');
 const WebappWebpackPlugin = require('webapp-webpack-plugin');
@@ -55,27 +54,6 @@ const client = [
       },
     },
   ]),
-  // this allows the server access to the dependency graph
-  // so it can find which js/css to add to initial page
-  new StatsWriterPlugin({
-    fileName: 'stats.json',
-    fields: null,
-    transform(data) {
-      const trans = {};
-      trans.publicPath = data.publicPath;
-      trans.modules = data.modules.map(m => ({
-        id: m.id,
-        chunks: m.chunks,
-        reasons: m.reasons,
-      }));
-      trans.chunks = data.chunks.map(c => ({
-        id: c.id,
-        files: c.files,
-        origins: c.origins,
-      }));
-      return JSON.stringify(trans, null, 2);
-    },
-  }),
   new LoadablePlugin(),
 ];
 

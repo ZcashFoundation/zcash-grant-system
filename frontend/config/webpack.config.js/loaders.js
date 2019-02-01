@@ -4,12 +4,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const babelPresets = [
-  '@babel/react',
-  // '@babel/typescript', (using ts-loader)
-  ['@babel/env', { useBuiltIns: 'entry', modules: false }],
-];
-
 const lessLoader = {
   loader: 'less-loader',
   options: { javascriptEnabled: true },

@@ -13,6 +13,7 @@ import AuthRoute from 'components/AuthRoute';
 import Template, { TemplateProps } from 'components/Template';
 
 // wrap components in loadable...import & they will be split
+// Make sure you specify chunkname! Must replace slashes with dashes.
 const opts = { fallback: <Loader size="large" /> };
 const Home = loadable(() => import('pages/index'), opts);
 const Create = loadable(() => import('pages/create'), opts);

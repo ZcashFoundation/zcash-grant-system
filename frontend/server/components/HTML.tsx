@@ -24,6 +24,16 @@ const HTML: React.SFC<Props> = ({
   extractor,
 }) => {
   const head = Helmet.renderStatic();
+  console.log(extractor);
+  console.log((extractor as any).chunks);
+  console.log((extractor as any).entrypoints);
+  try {
+    console.log('About to extract');
+    console.log(extractor.getStyleTags());
+    console.log(extractor.getStyleElements());
+  } catch(err) {
+    console.log(err);
+  }
   return (
     <html lang="">
       <head>
@@ -61,7 +71,7 @@ const HTML: React.SFC<Props> = ({
 
         {extractor.getStyleElements()}
         {css.map(href => {
-          return <link key={href} rel="stylesheet" href={href} />;
+          return <link key={href} type="text/css" rel="stylesheet" href={href} />;
         })}
 
         {extractor.getScriptElements()}

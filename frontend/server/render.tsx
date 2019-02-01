@@ -6,6 +6,7 @@ import { ChunkExtractor } from '@loadable/server';
 import { StaticRouter as Router } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { I18nextProvider } from 'react-i18next';
+import * as Sentry from '@sentry/node';
 
 import log from './log';
 import { configureStore } from '../client/store/configure';
@@ -53,11 +54,12 @@ const serverRenderer = () => async (req: Request, res: Response) => {
     const disp = `Error getting loadable state for SSR`;
     e.message = disp + ': ' + e.message;
     log.error(e);
+    Sentry.captureException(e);
     return res.status(500).send(disp + ' (more info in server logs)');
   }
 
   // 2. render and collect state
-  const content = renderToString(reactApp);
+  const content = renderToString(extractor.collectChunks(reactApp));
   const state = JSON.stringify(store.getState());
 
   // ! ensure manifest.json is available
@@ -66,7 +68,8 @@ const serverRenderer = () => async (req: Request, res: Response) => {
   } catch (e) {
     const disp =
       'ERROR: Could not load client manifest.json, there was probably a client build error.';
-    log.error(disp);
+    log.error(e);
+    Sentry.captureException(e);
     return res.status(500).send(disp);
   }
 
@@ -83,22 +86,26 @@ const serverRenderer = () => async (req: Request, res: Response) => {
     .map(m => ({ ...m, content: res.locals.assetPath(m.content) }))
     .filter(m => !!m.content);
 
-  return res.send(
-    '<!doctype html>' +
-      renderToString(
-        <Html
-          css={cssFiles}
-          scripts={jsFiles}
-          linkTags={mappedLinkTags}
-          metaTags={mappedMetaTags}
-          state={state}
-          i18n={i18nClient}
-          extractor={extractor}
-        >
-          {content}
-        </Html>,
-      ),
-  );
+  try {
+    const html = renderToString(
+      <Html
+        css={cssFiles}
+        scripts={jsFiles}
+        linkTags={mappedLinkTags}
+        metaTags={mappedMetaTags}
+        state={state}
+        i18n={i18nClient}
+        extractor={extractor}
+      >
+        {content}
+      </Html>,
+    );
+    return res.send('<!doctype html>' + html);
+  } catch (e) {
+    log.error(e);
+    Sentry.captureException(e);
+    return res.send('ERROR: Failed to render app');
+  }
 };
 
 export default serverRenderer;
