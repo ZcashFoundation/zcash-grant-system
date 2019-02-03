@@ -4,6 +4,12 @@ class CustomEnum():
     def includes(self, enum: str):
         return hasattr(self, enum)
 
+    # provide a list of enum values (strs)
+    def list(self):
+        return [attr for attr in dir(self)
+                if not callable(getattr(self, attr)) and
+                not attr.startswith('__')]
+
 
 class ProposalStatusEnum(CustomEnum):
     DRAFT = 'DRAFT'
@@ -16,6 +22,16 @@ class ProposalStatusEnum(CustomEnum):
 
 
 ProposalStatus = ProposalStatusEnum()
+
+
+class ProposalSortEnum(CustomEnum):
+    NEWEST = 'NEWEST'
+    OLDEST = 'OLDEST'
+    MOST_FUNDED = 'MOST_FUNDED'
+    LEAST_FUNDED = 'LEAST_FUNDED'
+
+
+ProposalSort = ProposalSortEnum()
 
 
 class ProposalStageEnum(CustomEnum):
