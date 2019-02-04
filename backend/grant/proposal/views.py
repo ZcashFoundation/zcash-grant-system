@@ -17,7 +17,7 @@ from grant.utils.auth import (
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_preview
 from grant.utils.enums import ProposalStatus, ContributionStatus
-from grant.utils.pagination import proposal_paginate
+from grant.utils import pagination
 from sqlalchemy import or_
 
 from .models import (
@@ -140,7 +140,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 )
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
-    page = proposal_paginate(
+    page = pagination.proposal(
         schema=proposals_schema,
         query=Proposal.query.filter_by(status=ProposalStatus.LIVE),
         page=page,
