@@ -1,16 +1,11 @@
-import { combineReducers, Reducer } from 'redux';
+import { combineReducers } from 'redux';
 import { connectRouter, RouterState } from 'connected-react-router';
-import { persistReducer } from 'redux-persist';
 import proposal, {
   ProposalState,
   INITIAL_STATE as proposalInitialState,
 } from 'modules/proposals';
 import create, { CreateState, INITIAL_STATE as createInitialState } from 'modules/create';
-import authReducer, {
-  AuthState,
-  INITIAL_STATE as authInitialState,
-  authPersistConfig,
-} from 'modules/auth';
+import auth, { AuthState, INITIAL_STATE as authInitialState } from 'modules/auth';
 import users, { UsersState, INITIAL_STATE as usersInitialState } from 'modules/users';
 import rfps, { RFPState, INITIAL_STATE as rfpsInitialState } from 'modules/rfps';
 import history from './history';
@@ -37,7 +32,6 @@ export default combineReducers<AppState>({
   create,
   users,
   rfps,
-  // Don't allow for redux-persist's _persist key to be touched in our code
-  auth: (persistReducer(authPersistConfig, authReducer) as any) as Reducer<AuthState>,
+  auth,
   router: connectRouter(history),
 });
