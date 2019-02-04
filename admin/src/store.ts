@@ -41,7 +41,7 @@ async function fetchUserDetail(id: number) {
   return data;
 }
 
-async function deleteUser(id: number | string) {
+async function deleteUser(id: number) {
   const { data } = await api.delete('/admin/users/' + id);
   return data;
 }
@@ -119,6 +119,8 @@ const app = store({
   users: [] as User[],
   userDetailFetching: false,
   userDetail: null as null | User,
+  userDeleting: false,
+  userDeleted: false,
 
   proposalsFetching: false,
   proposalsFetched: false,
@@ -204,13 +206,18 @@ const app = store({
     app.userDetailFetching = false;
   },
 
-  async deleteUser(id: string | number) {
+  async deleteUser(id: number) {
+    app.userDeleting = false;
+    app.userDeleted = false;
     try {
       await deleteUser(id);
-      app.users = app.users.filter(u => u.userid !== id && u.emailAddress !== id);
+      app.users = app.users.filter(u => u.userid !== id);
+      app.userDeleted = true;
+      app.userDetail = null;
     } catch (e) {
       handleApiError(e);
     }
+    app.userDeleting = false;
   },
 
   async fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {

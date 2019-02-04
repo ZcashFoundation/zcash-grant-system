@@ -1,7 +1,7 @@
 import React from 'react';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { Row, Col, Card, Button, Collapse, Popconfirm, Avatar, List } from 'antd';
+import { Row, Col, Card, Button, Collapse, Popconfirm, Avatar, List, message } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { Proposal, Comment, Contribution } from 'src/types';
@@ -20,9 +20,11 @@ type State = typeof STATE;
 class UserDetailNaked extends React.Component<Props, State> {
   state = STATE;
   rejectInput: null | TextArea = null;
+
   componentDidMount() {
     this.loadDetail();
   }
+  
   render() {
     const id = this.getIdFromQuery();
     const { userDetail: u, userDetailFetching } = store;
@@ -34,11 +36,16 @@ class UserDetailNaked extends React.Component<Props, State> {
     const renderDelete = () => (
       <Popconfirm
         onConfirm={this.handleDelete}
-        title="Delete user?"
-        okText="delete"
-        cancelText="cancel"
+        title={<>
+          Are you sure? Due to GDPR compliance,
+          <br/>
+          this <strong>cannot</strong> be undone.
+        </>}
+        okText="Delete"
+        cancelText="Cancel"
+        okType="danger"
       >
-        <Button icon="delete" block>
+        <Button icon="delete" type="danger" ghost block>
           Delete
         </Button>
       </Popconfirm>
@@ -197,9 +204,13 @@ class UserDetailNaked extends React.Component<Props, State> {
     store.fetchUserDetail(this.getIdFromQuery());
   };
 
-  private handleDelete = () => {
+  private handleDelete = async () => {
     if (!store.userDetail) return;
-    store.deleteUser(store.userDetail.userid);
+    await store.deleteUser(store.userDetail.userid);
+    if (store.userDeleted) {
+      message.success('Successfully deleted', 2);
+      this.props.history.replace('/users');
+    }
   };
 }
 
