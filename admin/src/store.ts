@@ -229,12 +229,11 @@ const app = store({
     app.proposals.page.fetching = true;
     try {
       const page = await fetchProposals(app.getProposalPageQuery());
-      // this is how we do in react-easy-state
-      app.proposals.page.items = page.items;
-      app.proposals.page.page = page.page;
-      app.proposals.page.pageSize = page.pageSize;
-      app.proposals.page.total = page.total;
-      app.proposals.page.fetched = true;
+      app.proposals.page = {
+        ...app.proposals.page,
+        ...page,
+        fetched: true,
+      };
     } catch (e) {
       handleApiError(e);
     }
