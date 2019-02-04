@@ -12,16 +12,11 @@ import {
 } from 'api/constants';
 import { typedKeys } from 'utils/ts';
 
-export interface Filters {
-  categories: string[];
-  stage: PROPOSAL_STAGE | null;
-}
-
 interface Props {
   sort: PROPOSAL_SORT;
-  filters: Filters;
+  filters: string[];
   handleChangeSort(sort: PROPOSAL_SORT): void;
-  handleChangeFilters(filters: Filters): void;
+  handleChangeFilters(filters: string[]): void;
 }
 
 export default class ProposalFilters extends React.Component<Props> {
@@ -47,9 +42,9 @@ export default class ProposalFilters extends React.Component<Props> {
           {typedKeys(PROPOSAL_CATEGORY).map(c => (
             <div key={c} style={{ marginBottom: '0.25rem' }}>
               <Checkbox
-                checked={filters.categories.includes(c)}
-                value={c}
-                onChange={this.handleCategoryChange}
+                checked={filters.includes('CAT_' + c)}
+                value={'CAT_' + c}
+                onChange={this.handleFilterChange}
               >
                 {CATEGORY_UI[c].label}
               </Checkbox>
@@ -62,10 +57,10 @@ export default class ProposalFilters extends React.Component<Props> {
           {typedKeys(PROPOSAL_STAGE).map(s => (
             <div key={s} style={{ marginBottom: '0.25rem' }}>
               <Radio
-                value={s}
+                value={'STAGE_' + s}
                 name="stage"
-                checked={s === filters.stage}
-                onChange={this.handleStageChange}
+                checked={filters.includes('STAGE_' + s)}
+                onChange={this.handleFilterChange}
               >
                 {STAGE_UI[s].label}
               </Radio>
@@ -76,24 +71,21 @@ export default class ProposalFilters extends React.Component<Props> {
     );
   }
 
-  private handleCategoryChange = (ev: RadioChangeEvent) => {
+  private handleFilterChange = (ev: RadioChangeEvent) => {
     const { filters } = this.props;
-    const category = ev.target.value as PROPOSAL_CATEGORY;
-    const categories = ev.target.checked
-      ? [...filters.categories, category]
-      : filters.categories.filter(c => c !== category);
+    const filter = ev.target.value;
+    let newFilters;
+    // only one stage at a time (radio)
+    if (filter.startsWith('STAGE_')) {
+      newFilters = [...filters.filter(s => !s.startsWith('STAGE_')), filter];
+    } else {
+      // allow multiple (checkbox)
+      newFilters = ev.target.checked
+        ? [...filters, filter]
+        : filters.filter(c => c !== filter);
+    }
 
-    this.props.handleChangeFilters({
-      ...filters,
-      categories,
-    });
-  };
-
-  private handleStageChange = (ev: RadioChangeEvent) => {
-    this.props.handleChangeFilters({
-      ...this.props.filters,
-      stage: ev.target.value as PROPOSAL_STAGE,
-    });
+    this.props.handleChangeFilters(newFilters);
   };
 
   private handleChangeSort = (sort: SelectValue) => {
@@ -104,10 +96,6 @@ export default class ProposalFilters extends React.Component<Props> {
     if (ev) {
       ev.preventDefault();
     }
-
-    this.props.handleChangeFilters({
-      categories: [],
-      stage: null,
-    });
+    this.props.handleChangeFilters([]);
   };
 }

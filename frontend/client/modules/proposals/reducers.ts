@@ -1,11 +1,21 @@
 import types from './types';
 import { findComment } from 'utils/helpers';
-import { Proposal, ProposalComments, ProposalUpdates, Comment, ProposalContributions } from 'types';
+import {
+  Proposal,
+  ProposalComments,
+  ProposalUpdates,
+  Comment,
+  ProposalContributions,
+  LoadableProposalPage,
+} from 'types';
+import { PROPOSAL_SORT } from 'api/constants';
 
 export interface ProposalState {
-  proposals: Proposal[];
-  proposalsError: null | string;
-  isFetchingProposals: boolean;
+  page: LoadableProposalPage;
+
+  detail: null | Proposal;
+  isFetchingDetail: boolean;
+  detailError: null | string;
 
   proposalComments: { [id: string]: ProposalComments };
   commentsError: null | string;
@@ -27,9 +37,23 @@ export interface ProposalState {
 }
 
 export const INITIAL_STATE: ProposalState = {
-  proposals: [],
-  proposalsError: null,
-  isFetchingProposals: false,
+  page: {
+    page: 1,
+    pageSize: 0,
+    total: 0,
+    search: '',
+    sort: PROPOSAL_SORT.NEWEST,
+    filters: [],
+    items: [],
+    hasFetched: false,
+    isFetching: false,
+    fetchError: null,
+    fetchTime: 0,
+  },
+
+  detail: null,
+  isFetchingDetail: false,
+  detailError: null,
 
   proposalComments: {},
   commentsError: null,
@@ -49,37 +73,6 @@ export const INITIAL_STATE: ProposalState = {
   isDeletingContribution: false,
   deleteContributionError: null,
 };
-
-function addProposal(state: ProposalState, payload: Proposal) {
-  let proposals = state.proposals;
-
-  const existingProposal = state.proposals.find(
-    (p: Proposal) => p.proposalId === payload.proposalId,
-  );
-
-  if (!existingProposal) {
-    proposals = proposals.concat(payload);
-  } else {
-    proposals = [...proposals];
-    const index = proposals.indexOf(existingProposal);
-    proposals[index] = payload;
-  }
-
-  return {
-    ...state,
-    ...{
-      proposals,
-    },
-  };
-}
-
-function addProposals(state: ProposalState, payload: Proposal[]) {
-  return {
-    ...state,
-    proposals: payload,
-    isFetchingProposals: false,
-  };
-}
 
 function addComments(state: ProposalState, payload: { data: ProposalComments }) {
   return {
@@ -157,25 +150,69 @@ function addPostedComment(state: ProposalState, payload: PostCommentPayload) {
 export default (state = INITIAL_STATE, action: any) => {
   const { payload } = action;
   switch (action.type) {
+    case types.SET_PROPOSAL_PAGE:
+      return {
+        ...state,
+        page: {
+          ...state.page,
+          ...payload,
+          page: payload.page || 1, // reset page to 1 for non-page changes
+        },
+      };
     case types.PROPOSALS_DATA_PENDING:
       return {
         ...state,
-        proposals: [],
-        proposalsError: null,
-        isFetchingProposals: true,
+        page: {
+          ...state.page,
+          isFetching: true,
+          fetchError: null,
+        },
       };
     case types.PROPOSALS_DATA_FULFILLED:
-      return addProposals(state, payload);
+      return {
+        ...state,
+        page: {
+          ...payload,
+          isFetching: false,
+          hasFetched: true,
+          fetchTime: Date.now(),
+        },
+      };
     case types.PROPOSALS_DATA_REJECTED:
       return {
         ...state,
-        // TODO: Get action to send real error
-        proposalsError: 'Failed to fetch proposal',
-        isFetchingProposals: false,
+        page: {
+          ...state.page,
+          isFetching: false,
+          hasFetched: false,
+          fetchError: (payload && payload.message) || payload.toString(),
+        },
       };
 
+    case types.PROPOSAL_DATA_PENDING:
+      return {
+        ...state,
+        detail:
+          // if requesting same proposal, leave the detail object
+          state.detail && state.detail.proposalId === payload.proposalId
+            ? state.detail
+            : null,
+        isFetchingDetail: true,
+        detailError: null,
+      };
     case types.PROPOSAL_DATA_FULFILLED:
-      return addProposal(state, payload);
+      return {
+        ...state,
+        detail: payload,
+        isFetchingDetail: false,
+      };
+    case types.PROPOSAL_DATA_REJECTED:
+      return {
+        ...state,
+        detail: null,
+        isFetchingDetail: false,
+        detailError: (payload && payload.message) || payload.toString(),
+      };
 
     case types.PROPOSAL_COMMENTS_PENDING:
       return {

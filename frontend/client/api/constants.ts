@@ -1,3 +1,4 @@
+// NOTE: sync with backend enum ProposalSortEnum
 export enum PROPOSAL_SORT {
   NEWEST = 'NEWEST',
   OLDEST = 'OLDEST',

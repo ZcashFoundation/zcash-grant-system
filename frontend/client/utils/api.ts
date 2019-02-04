@@ -78,8 +78,19 @@ export function extractIdFromSlug(slug: string) {
 
 // pre-hydration massage (BNify JSONed BNs)
 export function massageSerializedState(state: AppState) {
+  // proposal detail
+  if (state.proposal.detail) {
+    state.proposal.detail.target = new BN(
+      (state.proposal.detail.target as any) as string,
+      16,
+    );
+    state.proposal.detail.funded = new BN(
+      (state.proposal.detail.funded as any) as string,
+      16,
+    );
+  }
   // proposals
-  state.proposal.proposals = state.proposal.proposals.map(p => ({
+  state.proposal.page.items = state.proposal.page.items.map(p => ({
     ...p,
     target: new BN((p.target as any) as string, 16),
     funded: new BN((p.funded as any) as string, 16),

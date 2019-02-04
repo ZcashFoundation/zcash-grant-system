@@ -2,6 +2,7 @@ import axios from './axios';
 import {
   Proposal,
   ProposalDraft,
+  ProposalPage,
   User,
   Update,
   TeamInvite,
@@ -10,6 +11,7 @@ import {
   ContributionWithAddresses,
   EmailSubscriptions,
   RFP,
+  SettablePage,
 } from 'types';
 import {
   formatUserForPost,
@@ -18,9 +20,9 @@ import {
   formatRFPFromGet,
 } from 'utils/api';
 
-export function getProposals(): Promise<{ data: Proposal[] }> {
-  return axios.get('/api/v1/proposals/').then(res => {
-    res.data = res.data.map(formatProposalFromGet);
+export function getProposals(page?: SettablePage): Promise<{ data: ProposalPage }> {
+  return axios.get('/api/v1/proposals/', { params: page || {} }).then(res => {
+    res.data.items = res.data.items.map(formatProposalFromGet);
     return res;
   });
 }
