@@ -51,6 +51,8 @@ class ProposalPagination(Pagination):
         self.FILTERS.extend([f'CAT_{c}' for c in Category.list()])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
+            'CREATED:DESC': Proposal.date_created.desc(),
+            'CREATED:ASC': Proposal.date_created,
             'NEWEST': Proposal.date_published.desc(),
             'OLDEST': Proposal.date_published,
             # TODO: tricky due to hybrid fields & strings instead of floats
@@ -68,6 +70,7 @@ class ProposalPagination(Pagination):
         sort: str=ProposalSort.NEWEST,
     ):
         query = query or Proposal.query
+        sort = sort or ProposalSort.NEWEST
 
         # FILTER
         if filters:
@@ -86,8 +89,9 @@ class ProposalPagination(Pagination):
                 query = query.filter(Proposal.category.in_(cat_filters))
 
         # SORT (see self.SORT_MAP)
-        self.validate_sort(sort)
-        query = query.order_by(self.SORT_MAP[sort])
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
 
         # SEARCH
         if search:

@@ -1,8 +1,7 @@
 import React from 'react';
 import qs from 'query-string';
-import { uniq, without } from 'lodash';
 import { view } from 'react-easy-state';
-import { Icon, Button, Dropdown, Menu, Tag, List } from 'antd';
+import { Icon, Button, Dropdown, Menu, Tag, List, Input, Pagination } from 'antd';
 import { ClickParam } from 'antd/lib/menu';
 import { RouteComponentProps, withRouter } from 'react-router';
 import store from 'src/store';
@@ -11,29 +10,20 @@ import { PROPOSAL_STATUS, Proposal } from 'src/types';
 import { PROPOSAL_STATUSES, getStatusById } from 'util/statuses';
 import './index.less';
 
-interface Query {
-  status: PROPOSAL_STATUS[];
-}
-
 type Props = RouteComponentProps<any>;
 
-const STATE = {
-  statusFilters: [] as PROPOSAL_STATUS[],
-};
-
-type State = typeof STATE;
-
-class ProposalsNaked extends React.Component<Props, State> {
-  state = STATE;
+class ProposalsNaked extends React.Component<Props, {}> {
   componentDidMount() {
-    this.setStateFromQueryString();
-    this.fetchProposals();
+    this.setStoreFromQueryString();
+    store.fetchProposals();
   }
 
   render() {
-    const { proposals, proposalsFetching, proposalsFetched } = store;
-    const { statusFilters } = this.state;
-    const loading = !proposalsFetched || proposalsFetching;
+    const { page } = store.proposals;
+    const loading = !page.fetched || page.fetching;
+    const filters = page.filters
+      .filter(f => f.startsWith('STATUS_'))
+      .map(f => f.replace('STATUS_', '') as PROPOSAL_STATUS);
 
     const statusFilterMenu = (
       <Menu onClick={this.handleFilterClick}>
@@ -43,20 +33,46 @@ class ProposalsNaked extends React.Component<Props, State> {
       </Menu>
     );
 
+    const sortMenu = (
+      <Menu onClick={this.handleSortClick}>
+        {/* NOTE: sync with /backend ... pagination.py */}
+        {['CREATED:DESC', 'CREATED:ASC', 'NEWEST', 'OLDEST'].map(s => (
+          <Menu.Item key={s}>{s}</Menu.Item>
+        ))}
+      </Menu>
+    );
+
     return (
       <div className="Proposals">
         <div className="Proposals-controls">
+          <Input.Search
+            className="Proposals-controls-search"
+            placeholder="search titles"
+            onSearch={this.handleSearch}
+          />
           <Dropdown overlay={statusFilterMenu} trigger={['click']}>
             <Button>
               Filter <Icon type="down" />
             </Button>
           </Dropdown>
-          <Button title="refresh" icon="reload" onClick={this.fetchProposals} />
+          <Dropdown overlay={sortMenu} trigger={['click']}>
+            <Button>
+              {'Sort ' + store.proposals.page.sort} <Icon type="down" />
+            </Button>
+          </Dropdown>
+          <Button title="refresh" icon="reload" onClick={store.fetchProposals} />
         </div>
-        {!!statusFilters.length && (
+
+        {page.search && (
+          <div>
+            Search: <b>{page.search}</b>
+          </div>
+        )}
+
+        {!!page.filters.length && (
           <div className="Proposals-filters">
             Filters:{' '}
-            {statusFilters.map(sf => (
+            {filters.map(sf => (
               <Tag
                 key={sf}
                 onClose={() => this.handleFilterClose(sf)}
@@ -66,7 +82,7 @@ class ProposalsNaked extends React.Component<Props, State> {
                 status: {sf}
               </Tag>
             ))}
-            {statusFilters.length > 1 && (
+            {filters.length > 1 && (
               <Tag key="clear" onClick={this.handleFilterClear}>
                 clear
               </Tag>
@@ -77,67 +93,67 @@ class ProposalsNaked extends React.Component<Props, State> {
         <List
           className="Proposals-list"
           bordered
-          dataSource={proposals}
+          dataSource={page.items}
           loading={loading}
           renderItem={(p: Proposal) => <ProposalItem key={p.proposalId} {...p} />}
         />
+
+        <div className="Proposals-pagination">
+          <Pagination
+            current={page.page}
+            total={page.total}
+            pageSize={page.pageSize}
+            onChange={this.handlePageChange}
+            hideOnSinglePage={true}
+          />
+        </div>
       </div>
     );
   }
 
-  private fetchProposals = () => {
-    const statusFilters = this.getParsedQuery().status;
-    store.fetchProposals(statusFilters);
+  private setStoreFromQueryString = () => {
+    const parsed = qs.parse(this.props.history.location.search);
+
+    // status filter
+    if (parsed.status) {
+      if (getStatusById(PROPOSAL_STATUSES, parsed.status)) {
+        // here we reset to normal page query params, we might want
+        // to do this every time we load or leave the component
+        store.resetProposalPageQuery();
+        store.addProposalPageFilter('STATUS_' + parsed.status);
+      }
+      this.props.history.replace(this.props.match.url); // remove qs
+    }
   };
 
-  private getParsedQuery = () => {
-    const parsed = qs.parse(this.props.history.location.search) as Query;
-    let statusFilters = parsed.status || [];
-    // qs.parse returns non-array for single item
-    statusFilters = Array.isArray(statusFilters) ? statusFilters : [statusFilters];
-    parsed.status = statusFilters;
-    return parsed;
-  };
-
-  private setStateFromQueryString = () => {
-    const statusFilters = this.getParsedQuery().status;
-    this.setState({ statusFilters });
-  };
-
-  private updateHistoryStateAndProposals = (queryStringArgs: Query) => {
-    this.props.history.push(`${this.props.match.url}?${qs.stringify(queryStringArgs)}`);
-    this.setStateFromQueryString();
-    this.fetchProposals();
-  };
-
-  private addStatusFilter = (statusFilter: PROPOSAL_STATUS) => {
-    const parsed = this.getParsedQuery();
-    parsed.status = uniq([statusFilter, ...parsed.status]);
-    this.updateHistoryStateAndProposals(parsed);
-  };
-
-  private removeStatusFilter = (statusFilter: PROPOSAL_STATUS) => {
-    const parsed = this.getParsedQuery();
-    parsed.status = without(parsed.status, statusFilter);
-    this.updateHistoryStateAndProposals(parsed);
-  };
-
-  private clearStatusFilters = () => {
-    const parsed = this.getParsedQuery();
-    parsed.status = [];
-    this.updateHistoryStateAndProposals(parsed);
+  private handleSortClick = (e: ClickParam) => {
+    store.proposals.page.sort = e.key;
+    store.fetchProposals();
   };
 
   private handleFilterClick = (e: ClickParam) => {
-    this.addStatusFilter(e.key as PROPOSAL_STATUS);
+    store.addProposalPageFilter('STATUS_' + e.key);
+    store.fetchProposals();
   };
 
   private handleFilterClose = (filter: PROPOSAL_STATUS) => {
-    this.removeStatusFilter(filter);
+    store.removeProposalPageFilter('STATUS_' + filter);
+    store.fetchProposals();
   };
 
   private handleFilterClear = () => {
-    this.clearStatusFilters();
+    store.proposals.page.filters = [];
+    store.fetchProposals();
+  };
+
+  private handleSearch = (s: string) => {
+    store.proposals.page.search = s;
+    store.fetchProposals();
+  };
+
+  private handlePageChange = (p: number) => {
+    store.proposals.page.page = p;
+    store.fetchProposals();
   };
 }
 
