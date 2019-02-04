@@ -190,13 +190,17 @@ export default (state = INITIAL_STATE, action: any) => {
       };
 
     case types.PROPOSAL_DATA_PENDING:
+      // check if this proposal is in the page list, and optimistically set it
+      const loadedInPage = state.page.items.find(
+        p => p.proposalId === payload.proposalId,
+      );
       return {
         ...state,
         detail:
           // if requesting same proposal, leave the detail object
           state.detail && state.detail.proposalId === payload.proposalId
             ? state.detail
-            : null,
+            : loadedInPage || null,
         isFetchingDetail: true,
         detailError: null,
       };
