@@ -1,6 +1,4 @@
-Your proposal "{{ args.proposal.title }}" just received a comment from {{ args.author.display_name }}:
-
-> {{ args.preview }}
+Your proposal "{{ args.proposal.title }}" just received a comment from {{ args.author.display_name }}.
 
 Go here to see their comment: {{ args.comment_url }}
 Go here to see their profile: {{ args.author_url }}

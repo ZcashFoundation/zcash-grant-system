@@ -80,7 +80,6 @@ example_email_args = {
     'proposal_comment': {
         'author': user,
         'proposal': proposal,
-        'preview': 'Blah blah blah blah blah...',
         'comment_url': 'http://somecomment.com',
         'author_url': 'http://someuser.com',
     },
@@ -92,13 +91,11 @@ example_email_args = {
     'contribution_update': {
         'proposal': proposal,
         'proposal_update': update,
-        'preview': 'Blah blah blah blah blah blah blah blah blah blah blah blah blah blah...',
         'update_url': 'http://someupdate.com',
     },
     'comment_reply': {
         'author': user,
         'proposal': proposal,
-        'preview': 'Blah blah blah blah blah...',
         'comment_url': 'http://somecomment.com',
         'author_url': 'http://someuser.com',
     },
