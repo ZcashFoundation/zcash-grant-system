@@ -31,7 +31,8 @@ class Proposals extends React.Component<Props, State> {
   state: State = {
     isFiltersDrawered: false,
     isDrawerShowing: false,
-    searchQuery: '',
+    // partially controlled search - set it at construction from store
+    searchQuery: this.props.page.search,
   };
 
   private setSearch = debounce(search => this.props.setProposalPage({ search }), 1000);
