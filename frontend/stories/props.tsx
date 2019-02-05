@@ -147,6 +147,7 @@ export function generateProposal({
     payoutAddress: 'z123',
     dateCreated: created / 1000,
     datePublished: created / 1000,
+    dateApproved: created / 1000,
     deadlineDuration: 86400 * 60,
     target: amountBn,
     funded: fundedBn,
