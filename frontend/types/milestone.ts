@@ -13,11 +13,11 @@ export interface Milestone {
   amount: Zat;
   isPaid: boolean;
   immediatePayout: boolean;
+  dateEstimated: number;
 }
 
 export interface ProposalMilestone extends Milestone {
   content: string;
-  dateEstimated: string;
   payoutPercent: string;
   title: string;
 }
@@ -25,7 +25,7 @@ export interface ProposalMilestone extends Milestone {
 export interface CreateMilestone {
   title: string;
   content: string;
-  dateEstimated: string;
+  dateEstimated: number;
   payoutPercent: string;
   immediatePayout: boolean;
 }

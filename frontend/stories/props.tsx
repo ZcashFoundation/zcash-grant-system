@@ -8,6 +8,7 @@ import {
 } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import BN from 'bn.js';
+import moment from 'moment';
 
 const oneZec = new BN('100000000');
 
@@ -101,17 +102,17 @@ export function generateProposal({
   const genMilestone = (
     overrides: Partial<ProposalMilestone> = {},
   ): ProposalMilestone => {
-    const now = new Date();
     if (overrides.index) {
-      const estimate = new Date(now.setMonth(now.getMonth() + overrides.index));
-      overrides.dateEstimated = estimate.toISOString();
+      overrides.dateEstimated = moment()
+        .add(overrides.index, 'month')
+        .unix();
     }
 
     const defaults: ProposalMilestone = {
       title: 'Milestone A',
       content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
            tempor incididunt ut labore et dolore magna aliqua.`,
-      dateEstimated: '2018-10-01T00:00:00+00:00',
+      dateEstimated: moment().unix(),
       immediatePayout: true,
       index: 0,
       state: MILESTONE_STATE.WAITING,

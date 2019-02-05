@@ -18,7 +18,7 @@ const DEFAULT_STATE: State = {
     {
       title: '',
       content: '',
-      dateEstimated: '',
+      dateEstimated: moment().unix(),
       payoutPercent: '100',
       immediatePayout: false,
     },
@@ -159,10 +159,12 @@ const MilestoneFields = ({
       <DatePicker.MonthPicker
         style={{ flex: 1, marginRight: '0.5rem' }}
         placeholder="Expected completion date"
-        value={milestone.dateEstimated ? moment(milestone.dateEstimated) : undefined}
+        value={
+          milestone.dateEstimated ? moment(milestone.dateEstimated * 1000) : undefined
+        }
         format="MMMM YYYY"
         allowClear={false}
-        onChange={(_, dateEstimated) => onChange(index, { ...milestone, dateEstimated })}
+        onChange={time => onChange(index, { ...milestone, dateEstimated: time.unix() })}
         disabled={milestone.immediatePayout}
         disabledDate={current =>
           current
@@ -196,7 +198,7 @@ const MilestoneFields = ({
                 ...milestone,
                 immediatePayout: ev.target.checked,
                 dateEstimated: ev.target.checked
-                  ? moment().format('MMMM YYYY')
+                  ? moment().unix()
                   : milestone.dateEstimated,
               })
             }
