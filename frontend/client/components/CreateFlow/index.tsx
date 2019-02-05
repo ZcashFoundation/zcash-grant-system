@@ -103,7 +103,6 @@ interface StateProps {
   form: AppState['create']['form'];
   isSavingDraft: AppState['create']['isSavingDraft'];
   hasSavedDraft: AppState['create']['hasSavedDraft'];
-  accounts: string[];
 }
 
 interface DispatchProps {
@@ -161,7 +160,7 @@ class CreateFlow extends React.Component<Props, State> {
     let content;
     let showFooter = true;
     if (isSubmitting) {
-      content = <Final />;
+      content = <Final goBack={this.cancelSubmit} />;
       showFooter = false;
     } else if (isPreviewing) {
       content = <Preview />;
@@ -308,11 +307,12 @@ class CreateFlow extends React.Component<Props, State> {
     this.setState({ isShowingSubmitWarning: false });
   };
 
-  private fillInExample = () => {
-    const { accounts } = this.props;
-    const [payoutAddress] = accounts;
+  private cancelSubmit = () => {
+    this.setState({ isSubmitting: false });
+  };
 
-    this.updateForm(createExampleProposal(payoutAddress));
+  private fillInExample = () => {
+    this.updateForm(createExampleProposal());
     setTimeout(() => {
       this.setState({
         isExample: true,
@@ -324,12 +324,10 @@ class CreateFlow extends React.Component<Props, State> {
 
 const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
   (state: AppState) => {
-    console.warn('TODO - remove/refactor accounts');
     return {
       form: state.create.form,
       isSavingDraft: state.create.isSavingDraft,
       hasSavedDraft: state.create.hasSavedDraft,
-      accounts: ['notanaccount'],
     };
   },
   {

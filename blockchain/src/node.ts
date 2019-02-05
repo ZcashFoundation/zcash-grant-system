@@ -102,6 +102,12 @@ export interface DisclosedPayment {
   message?: string;
 }
 
+// Actually comes back with a bunch of args, but this is all we need
+export interface ValidationResponse {
+  isvalid: boolean;
+}
+
+
 // TODO: Type all methods with signatures from
 // https://github.com/zcash/zcash/blob/master/doc/payment-api.md
 interface ZCashNode {
@@ -113,6 +119,7 @@ interface ZCashNode {
     (numberOrHash: string | number, verbosity: 0): Promise<string>;
   }
   gettransaction: (txid: string) => Promise<Transaction>;
+  validateaddress: (address: string) => Promise<ValidationResponse>;
   z_getbalance: (address: string, minConf?: number) => Promise<number>;
   z_getnewaddress: (type?: 'sprout' | 'sapling') => Promise<string>;
   z_listaddresses: () => Promise<string[]>;
@@ -120,6 +127,7 @@ interface ZCashNode {
   z_importviewingkey: (key: string, rescan?: 'yes' | 'no' | 'whenkeyisnew', startHeight?: number) => Promise<void>;
   z_exportviewingkey: (zaddr: string) => Promise<string>;
   z_validatepaymentdisclosure: (disclosure: string) => Promise<DisclosedPayment>;
+  z_validateaddress: (address: string) => Promise<ValidationResponse>;
 }
 
 export const rpcOptions = {
