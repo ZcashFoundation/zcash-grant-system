@@ -64,3 +64,19 @@ mock_contribution_addresses = mock_request({
     'sprout': 'z123',
     'memo': '123',
 })
+
+mock_valid_address = mock_request({
+    'valid': True,
+})
+
+mock_invalid_address = mock_request({
+    'valid': False,
+})
+
+
+def mock_blockchain_api_requests(path, **kwargs):
+    if '/contribution/addresses' in path:
+        return mock_contribution_addresses()
+    if '/validate/address' in path:
+        return mock_valid_address()
+    raise Exception('No mock data defined for path {}'.format(path))
