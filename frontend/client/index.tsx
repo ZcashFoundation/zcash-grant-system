@@ -4,7 +4,6 @@ import { hot } from 'react-hot-loader';
 import { hydrate } from 'react-dom';
 import { Provider } from 'react-redux';
 import { Router } from 'react-router-dom';
-import { PersistGate } from 'redux-persist/integration/react';
 import * as Sentry from '@sentry/browser';
 import { I18nextProvider } from 'react-i18next';
 import { loadableReady } from '@loadable/component';
@@ -21,7 +20,7 @@ Sentry.init({
 });
 const initialState =
   window && massageSerializedState((window as any).__PRELOADED_STATE__);
-const { store, persistor } = configureStore(initialState);
+const { store } = configureStore(initialState);
 const i18nLanguage = window && (window as any).__PRELOADED_I18N__;
 i18n.changeLanguage(i18nLanguage.locale);
 i18n.addResourceBundle(i18nLanguage.locale, 'common', i18nLanguage.resources, true);
@@ -29,11 +28,9 @@ i18n.addResourceBundle(i18nLanguage.locale, 'common', i18nLanguage.resources, tr
 const App = hot(module)(() => (
   <I18nextProvider i18n={i18n}>
     <Provider store={store}>
-      <PersistGate persistor={persistor}>
-        <Router history={history}>
-          <Routes />
-        </Router>
-      </PersistGate>
+      <Router history={history}>
+        <Routes />
+      </Router>
     </Provider>
   </I18nextProvider>
 ));
