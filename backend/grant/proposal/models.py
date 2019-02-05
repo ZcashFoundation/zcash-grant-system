@@ -12,34 +12,6 @@ from grant.utils.requests import blockchain_get
 from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 
-# Proposal states
-DRAFT = 'DRAFT'
-PENDING = 'PENDING'
-STAKING = 'STAKING'
-APPROVED = 'APPROVED'
-REJECTED = 'REJECTED'
-LIVE = 'LIVE'
-DELETED = 'DELETED'
-STATUSES = [DRAFT, PENDING, STAKING, APPROVED, REJECTED, LIVE, DELETED]
-
-# Funding stages
-FUNDING_REQUIRED = 'FUNDING_REQUIRED'
-COMPLETED = 'COMPLETED'
-PROPOSAL_STAGES = [FUNDING_REQUIRED, COMPLETED]
-
-# Proposal categories
-DAPP = "DAPP"
-DEV_TOOL = "DEV_TOOL"
-CORE_DEV = "CORE_DEV"
-COMMUNITY = "COMMUNITY"
-DOCUMENTATION = "DOCUMENTATION"
-ACCESSIBILITY = "ACCESSIBILITY"
-CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
-
-# Contribution states
-# PENDING = 'PENDING'
-CONFIRMED = 'CONFIRMED'
-
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
@@ -278,7 +250,7 @@ class Proposal(db.Model):
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 amount=str(PROPOSAL_STAKING_AMOUNT),
-                status=PENDING,
+                status=ProposalStatus.PENDING,
             ).first()
             if not contribution:
                 contribution = self.create_contribution(user_id, PROPOSAL_STAKING_AMOUNT)
