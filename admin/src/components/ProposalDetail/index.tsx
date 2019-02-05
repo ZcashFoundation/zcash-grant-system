@@ -197,6 +197,29 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         />
       );
 
+    const renderSetArbiter = () =>
+      !p.arbiter &&
+      p.status === PROPOSAL_STATUS.LIVE && (
+        <Alert
+          showIcon
+          type="warning"
+          message="No Arbiter on Live Proposal"
+          description={
+            <div>
+              <p>An arbiter is required to review milestone payout requests.</p>
+              <Button
+                loading={store.proposalDetailApproving}
+                icon="crown"
+                type="primary"
+                onClick={this.handleApprove}
+              >
+                Set arbiter
+              </Button>
+            </div>
+          }
+        />
+      );
+
     const renderDeetItem = (name: string, val: any) => (
       <div className="ProposalDetail-deet">
         <span>{name}</span>
@@ -214,6 +237,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderApproved()}
             {renderReview()}
             {renderRejected()}
+            {renderSetArbiter()}
             <Collapse defaultActiveKey={['brief', 'content']}>
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
@@ -250,8 +274,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
               {p.rfp &&
-                renderDeetItem('rfp', <Link to={`/rfps/${p.rfp.id}`}>{p.rfp.title}</Link>)
-              }
+                renderDeetItem(
+                  'rfp',
+                  <Link to={`/rfps/${p.rfp.id}`}>{p.rfp.title}</Link>,
+                )}
             </Card>
 
             {/* TEAM */}

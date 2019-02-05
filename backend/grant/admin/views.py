@@ -56,10 +56,15 @@ def stats():
     proposal_pending_count = db.session.query(func.count(Proposal.id)) \
         .filter(Proposal.status == ProposalStatus.PENDING) \
         .scalar()
+    proposal_no_arbiter_count = db.session.query(func.count(Proposal.id)) \
+        .filter(Proposal.status == ProposalStatus.LIVE) \
+        .filter(Proposal.arbiter_id == None) \
+        .scalar()
     return {
         "userCount": user_count,
         "proposalCount": proposal_count,
         "proposalPendingCount": proposal_pending_count,
+        "proposalNoArbiterCount": proposal_no_arbiter_count,
     }
 
 

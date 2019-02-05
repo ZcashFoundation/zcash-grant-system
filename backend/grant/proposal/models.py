@@ -115,6 +115,7 @@ class Proposal(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
     rfp_id = db.Column(db.Integer(), db.ForeignKey('rfp.id'), nullable=True)
+    arbiter_id = db.Column(db.Integer(), db.ForeignKey('user.id'), nullable=True)
 
     # Content info
     status = db.Column(db.String(255), nullable=False)
@@ -141,6 +142,7 @@ class Proposal(db.Model):
     contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
     milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
+    arbiter = db.relationship("User", lazy=True, back_populates="arbitrated_proposals")
 
     def __init__(
             self,
@@ -359,7 +361,8 @@ class ProposalSchema(ma.Schema):
             "deadline_duration",
             "contribution_matching",
             "invites",
-            "rfp"
+            "rfp",
+            "arbiter"
         )
 
     date_created = ma.Method("get_date_created")
@@ -373,6 +376,7 @@ class ProposalSchema(ma.Schema):
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
     rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
+    arbiter = ma.Nested("UserSchema")  # exclude=["arbitrated_proposals"])
 
     def get_proposal_id(self, obj):
         return obj.id

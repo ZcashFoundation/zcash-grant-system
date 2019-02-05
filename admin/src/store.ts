@@ -112,6 +112,7 @@ const app = store({
     userCount: 0,
     proposalCount: 0,
     proposalPendingCount: 0,
+    proposalNoArbiterCount: 0,
   },
 
   usersFetching: false,
