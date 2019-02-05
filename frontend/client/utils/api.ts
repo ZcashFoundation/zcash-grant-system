@@ -63,7 +63,7 @@ export function formatProposalPageFromGet(page: any): ProposalPage {
   };
   // reverse map
   const serverSortToClient = Object.entries(proposalsSortMap).find(
-    ([k, v]) => v === page.sort,
+    ([_, v]) => v === page.sort,
   );
   if (!serverSortToClient) {
     throw Error(
