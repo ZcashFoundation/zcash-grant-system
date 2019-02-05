@@ -8,15 +8,40 @@ import {
   postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
-import { Proposal, Comment } from 'types';
+import { Proposal, Comment, ProposalPageParams } from 'types';
+import { AppState } from 'store/reducers';
+import { getProposalPageSettings } from './selectors';
 
-export type TFetchProposals = typeof fetchProposals;
-export function fetchProposals() {
-  return async (dispatch: Dispatch<any>) => {
+type GetState = () => AppState;
+
+// change page, sort, filter, search
+export function setProposalPage(pageParams: Partial<ProposalPageParams>) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
+    // 1. set page changes on state
+    await dispatch({
+      type: types.SET_PROPOSAL_PAGE,
+      payload: pageParams,
+    });
+    // 2. get full updated page settings
+    const page = getProposalPageSettings(getState());
+    // 3. fetch proposals list with new settings
     return dispatch({
       type: types.PROPOSALS_DATA,
       payload: async () => {
-        return (await getProposals()).data;
+        return (await getProposals(page)).data;
+      },
+    });
+  };
+}
+
+export type TFetchProposals = typeof fetchProposals;
+export function fetchProposals() {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
+    const page = getProposalPageSettings(getState());
+    return dispatch({
+      type: types.PROPOSALS_DATA,
+      payload: async () => {
+        return (await getProposals(page)).data;
       },
     });
   };
@@ -25,12 +50,22 @@ export function fetchProposals() {
 export type TFetchProposal = typeof fetchProposal;
 export function fetchProposal(proposalId: Proposal['proposalId']) {
   return async (dispatch: Dispatch<any>) => {
-    return dispatch({
-      type: types.PROPOSAL_DATA,
-      payload: async () => {
-        return (await getProposal(proposalId)).data;
-      },
+    dispatch({
+      type: types.PROPOSAL_DATA_PENDING,
+      payload: { proposalId },
     });
+    try {
+      const proposal = (await getProposal(proposalId)).data;
+      return dispatch({
+        type: types.PROPOSAL_DATA_FULFILLED,
+        payload: proposal,
+      });
+    } catch (error) {
+      dispatch({
+        type: types.PROPOSAL_DATA_REJECTED,
+        payload: error,
+      });
+    }
   };
 }
 

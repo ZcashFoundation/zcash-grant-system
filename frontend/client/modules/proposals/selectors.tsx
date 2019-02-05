@@ -1,31 +1,11 @@
 import { AppState } from 'store/reducers';
-import { Proposal, ProposalComments, ProposalUpdates, ProposalContributions } from 'types';
-
-export function getProposals(state: AppState) {
-  return state.proposal.proposals;
-}
-
-export function getProposal(
-  state: AppState,
-  proposalId: Proposal['proposalId'],
-): Proposal | null {
-  return (
-    state.proposal.proposals.find(
-      (p: Proposal) => p.proposalId === proposalId,
-    ) || null
-  );
-}
-
-export function getProposalByAddress(
-  state: AppState,
-  proposalAddress: Proposal['proposalAddress'],
-): Proposal | null {
-  return (
-    state.proposal.proposals.find(
-      (p: Proposal) => p.proposalAddress === proposalAddress,
-    ) || null
-  );
-}
+import {
+  Proposal,
+  ProposalComments,
+  ProposalUpdates,
+  ProposalContributions,
+  ProposalPageParams,
+} from 'types';
 
 export function getProposalComments(
   state: AppState,
@@ -89,4 +69,14 @@ export function getIsFetchingContributions(state: AppState) {
 
 export function getFetchContributionsError(state: AppState) {
   return state.proposal.fetchContributionsError;
+}
+
+export function getProposalPageSettings(state: AppState): ProposalPageParams {
+  const { page, search, sort, filters } = state.proposal.page;
+  return {
+    page,
+    search,
+    sort,
+    filters,
+  };
 }

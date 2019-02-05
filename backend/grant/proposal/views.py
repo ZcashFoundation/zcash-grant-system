@@ -1,5 +1,5 @@
 from dateutil.parser import parse
-from flask import Blueprint, g
+from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
@@ -17,6 +17,7 @@ from grant.utils.auth import (
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat
 from grant.utils.enums import ProposalStatus, ContributionStatus
+from grant.utils import pagination
 from sqlalchemy import or_
 
 from .models import (
@@ -129,23 +130,22 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 
 @blueprint.route("/", methods=["GET"])
 @endpoint.api(
-    parameter('stage', type=str, required=False)
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
 )
-def get_proposals(stage):
-    if stage:
-        proposals = (
-            Proposal.query.filter_by(status=ProposalStatus.LIVE, stage=stage)
-            .order_by(Proposal.date_created.desc())
-            .all()
-        )
-    else:
-        proposals = (
-            Proposal.query.filter_by(status=ProposalStatus.LIVE)
-            .order_by(Proposal.date_created.desc())
-            .all()
-        )
-    dumped_proposals = proposals_schema.dump(proposals)
-    return dumped_proposals
+def get_proposals(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.proposal(
+        schema=proposals_schema,
+        query=Proposal.query.filter_by(status=ProposalStatus.LIVE),
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
 
 
 @blueprint.route("/drafts", methods=["POST"])
