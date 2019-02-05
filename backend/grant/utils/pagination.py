@@ -2,7 +2,7 @@ import abc
 from sqlalchemy import or_, and_
 
 from grant.proposal.models import db, ma, Proposal
-from .enums import ProposalStatus, ProposalStage, ProposalSort, Category
+from .enums import ProposalStatus, ProposalStage, Category
 
 
 def extract_filters(sw, strings):
@@ -64,10 +64,10 @@ class ProposalPagination(Pagination):
         page: int=1,
         filters: list=None,
         search: str=None,
-        sort: str=ProposalSort.NEWEST,
+        sort: str='PUBLISHED:DESC',
     ):
         query = query or Proposal.query
-        sort = sort or ProposalSort.NEWEST
+        sort = sort or 'PUBLISHED:DESC'
 
         # FILTER
         if filters:
