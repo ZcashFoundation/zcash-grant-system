@@ -101,6 +101,19 @@ app.post('/contribution/disclosure', async (req, res) => {
   }
 });
 
+app.get('/validate/address', async (req, res) => {
+  const { address } = req.query;
+  const [tRes, zRes] = await Promise.all([
+    node.validateaddress(address as string),
+    node.z_validateaddress(address as string),
+  ]);
+  return res.json({
+    data: {
+      valid: tRes.isvalid || zRes.isvalid,
+    },
+  });
+});
+
 // Error handler after all routes to catch thrown exceptions
 app.use(errorHandlerMiddleware);
 

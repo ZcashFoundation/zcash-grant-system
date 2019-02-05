@@ -1,6 +1,7 @@
+import { uniq, without, pick } from 'lodash';
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal, RFP, RFPArgs, EmailExample, PROPOSAL_STATUS } from './types';
+import { User, Proposal, RFP, RFPArgs, EmailExample, PageQuery } from './types';
 
 // API
 const api = axios.create({
@@ -46,9 +47,9 @@ async function deleteUser(id: number) {
   return data;
 }
 
-async function fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
+async function fetchProposals(params: Partial<PageQuery>) {
   const { data } = await api.get('/admin/proposals', {
-    params: { statusFilters },
+    params,
   });
   return data;
 }
@@ -123,9 +124,20 @@ const app = store({
   userDeleting: false,
   userDeleted: false,
 
-  proposalsFetching: false,
-  proposalsFetched: false,
-  proposals: [] as Proposal[],
+  proposals: {
+    page: {
+      page: 1,
+      search: '',
+      sort: 'CREATED:DESC',
+      filters: [] as string[],
+      pageSize: 0,
+      total: 0,
+      items: [] as Proposal[],
+      fetching: false,
+      fetched: false,
+    },
+  },
+
   proposalDetailFetching: false,
   proposalDetail: null as null | Proposal,
   proposalDetailApproving: false,
@@ -145,9 +157,9 @@ const app = store({
   },
 
   updateProposalInStore(p: Proposal) {
-    const index = app.proposals.findIndex(x => x.proposalId === p.proposalId);
+    const index = app.proposals.page.items.findIndex(x => x.proposalId === p.proposalId);
     if (index > -1) {
-      app.proposals[index] = p;
+      app.proposals.page.items[index] = p;
     }
     if (app.proposalDetail && app.proposalDetail.proposalId === p.proposalId) {
       app.proposalDetail = p;
@@ -221,15 +233,40 @@ const app = store({
     app.userDeleting = false;
   },
 
-  async fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
-    app.proposalsFetching = true;
+  async fetchProposals() {
+    app.proposals.page.fetching = true;
     try {
-      app.proposals = await fetchProposals(statusFilters);
-      app.proposalsFetched = true;
+      const page = await fetchProposals(app.getProposalPageQuery());
+      app.proposals.page = {
+        ...app.proposals.page,
+        ...page,
+        fetched: true,
+      };
     } catch (e) {
       handleApiError(e);
     }
-    app.proposalsFetching = false;
+    app.proposals.page.fetching = false;
+  },
+
+  getProposalPageQuery() {
+    return pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+  },
+
+  resetProposalPageQuery() {
+    app.proposals.page.page = 1;
+    app.proposals.page.search = '';
+    app.proposals.page.sort = 'CREATED:DESC';
+    app.proposals.page.filters = [];
+  },
+
+  addProposalPageFilter(f: string) {
+    const current = app.proposals.page.filters;
+    app.proposals.page.filters = uniq([f, ...current]);
+  },
+
+  removeProposalPageFilter(f: string) {
+    const current = app.proposals.page.filters;
+    app.proposals.page.filters = without(current, f);
   },
 
   async fetchProposalDetail(id: number) {
@@ -260,7 +297,9 @@ const app = store({
   async deleteProposal(id: number) {
     try {
       await deleteProposal(id);
-      app.proposals = app.proposals.filter(p => p.proposalId === id);
+      app.proposals.page.items = app.proposals.page.items.filter(
+        p => p.proposalId === id,
+      );
     } catch (e) {
       handleApiError(e);
     }

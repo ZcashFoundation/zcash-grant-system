@@ -11,17 +11,13 @@ import {
   STAGE_UI,
 } from 'api/constants';
 import { typedKeys } from 'utils/ts';
-
-export interface Filters {
-  categories: string[];
-  stage: PROPOSAL_STAGE | null;
-}
+import { ProposalPage } from 'types';
 
 interface Props {
-  sort: PROPOSAL_SORT;
-  filters: Filters;
-  handleChangeSort(sort: PROPOSAL_SORT): void;
-  handleChangeFilters(filters: Filters): void;
+  sort: ProposalPage['sort'];
+  filters: ProposalPage['filters'];
+  handleChangeSort(sort: ProposalPage['sort']): void;
+  handleChangeFilters(filters: ProposalPage['filters']): void;
 }
 
 export default class ProposalFilters extends React.Component<Props> {
@@ -47,7 +43,7 @@ export default class ProposalFilters extends React.Component<Props> {
           {typedKeys(PROPOSAL_CATEGORY).map(c => (
             <div key={c} style={{ marginBottom: '0.25rem' }}>
               <Checkbox
-                checked={filters.categories.includes(c)}
+                checked={filters.category.includes(c as PROPOSAL_CATEGORY)}
                 value={c}
                 onChange={this.handleCategoryChange}
               >
@@ -64,7 +60,7 @@ export default class ProposalFilters extends React.Component<Props> {
               <Radio
                 value={s}
                 name="stage"
-                checked={s === filters.stage}
+                checked={filters.stage.includes(s as PROPOSAL_STAGE)}
                 onChange={this.handleStageChange}
               >
                 {STAGE_UI[s].label}
@@ -78,21 +74,21 @@ export default class ProposalFilters extends React.Component<Props> {
 
   private handleCategoryChange = (ev: RadioChangeEvent) => {
     const { filters } = this.props;
-    const category = ev.target.value as PROPOSAL_CATEGORY;
-    const categories = ev.target.checked
-      ? [...filters.categories, category]
-      : filters.categories.filter(c => c !== category);
+    const cat = ev.target.value as PROPOSAL_CATEGORY;
+    const category = ev.target.checked
+      ? [...filters.category, cat]
+      : filters.category.filter(c => c !== cat);
 
     this.props.handleChangeFilters({
       ...filters,
-      categories,
+      category,
     });
   };
 
   private handleStageChange = (ev: RadioChangeEvent) => {
     this.props.handleChangeFilters({
       ...this.props.filters,
-      stage: ev.target.value as PROPOSAL_STAGE,
+      stage: [ev.target.value as PROPOSAL_STAGE],
     });
   };
 
@@ -104,10 +100,9 @@ export default class ProposalFilters extends React.Component<Props> {
     if (ev) {
       ev.preventDefault();
     }
-
     this.props.handleChangeFilters({
-      categories: [],
-      stage: null,
+      category: [],
+      stage: [],
     });
   };
 }

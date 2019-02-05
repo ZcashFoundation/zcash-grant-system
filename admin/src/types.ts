@@ -117,3 +117,10 @@ export enum PROPOSAL_CATEGORY {
   DOCUMENTATION = 'DOCUMENTATION',
   ACCESSIBILITY = 'ACCESSIBILITY',
 }
+
+export interface PageQuery {
+  page: number;
+  filters: string[];
+  search: string;
+  sort: string;
+}

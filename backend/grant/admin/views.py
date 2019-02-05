@@ -15,6 +15,7 @@ from grant.user.models import User, users_schema, user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.enums import ProposalStatus
+from grant.utils import pagination
 from sqlalchemy import func, or_
 
 from .example_emails import example_email_args
@@ -115,18 +116,24 @@ def get_user(id):
 
 
 @blueprint.route("/proposals", methods=["GET"])
-@endpoint.api()
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
 @admin_auth_required
-def get_proposals():
-    # endpoint.api doesn't seem to handle GET query array input
-    status_filters = request.args.getlist('statusFilters[]')
-    or_filter = or_(Proposal.status == v for v in status_filters)
-    proposals = Proposal.query.filter(or_filter) \
-        .order_by(Proposal.date_created.desc()) \
-        .all()
-    # TODO: return partial data for list
-    dumped_proposals = proposals_schema.dump(proposals)
-    return dumped_proposals
+def get_proposals(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.proposal(
+        schema=proposals_schema,
+        query=Proposal.query,
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
 
 
 @blueprint.route('/proposals/<id>', methods=['GET'])

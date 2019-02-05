@@ -2,6 +2,7 @@ import axios from './axios';
 import {
   Proposal,
   ProposalDraft,
+  ProposalPage,
   User,
   Update,
   TeamInvite,
@@ -10,17 +11,24 @@ import {
   ContributionWithAddresses,
   EmailSubscriptions,
   RFP,
+  ProposalPageParams,
 } from 'types';
 import {
   formatUserForPost,
   formatProposalFromGet,
   formatUserFromGet,
   formatRFPFromGet,
+  formatProposalPageParamsForGet,
+  formatProposalPageFromGet,
 } from 'utils/api';
 
-export function getProposals(): Promise<{ data: Proposal[] }> {
-  return axios.get('/api/v1/proposals/').then(res => {
-    res.data = res.data.map(formatProposalFromGet);
+export function getProposals(page?: ProposalPageParams): Promise<{ data: ProposalPage }> {
+  let serverParams;
+  if (page) {
+    serverParams = formatProposalPageParamsForGet(page);
+  }
+  return axios.get('/api/v1/proposals/', { params: serverParams || {} }).then(res => {
+    res.data = formatProposalPageFromGet(res.data);
     return res;
   });
 }

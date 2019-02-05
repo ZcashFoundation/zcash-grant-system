@@ -3,77 +3,63 @@ import { AppState } from 'store/reducers';
 import { Row, Col, Pagination } from 'antd';
 import Loader from 'components/Loader';
 import ProposalCard from '../ProposalCard';
+import './index.less';
 
 interface Props {
-  proposals: AppState['proposal']['proposals'];
-  proposalsError: AppState['proposal']['proposalsError'];
-  isFetchingProposals: AppState['proposal']['isFetchingProposals'];
+  page: AppState['proposal']['page'];
+  onPageChange: (page: number) => void;
 }
 
-interface State {
-  page: number;
-}
-
-const PAGE_SIZE = 12;
-
-export default class ProposalResults extends React.Component<Props, State> {
-  state: State = {
-    page: 1,
-  };
-
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    if (nextProps.proposals !== this.props.proposals) {
-      this.setState({ page: 1 });
-    }
-  }
-
+export default class ProposalResults extends React.Component<Props, {}> {
   render() {
-    const { proposals, proposalsError, isFetchingProposals } = this.props;
-    const { page } = this.state;
+    const {
+      items,
+      fetchError,
+      hasFetched,
+      isFetching,
+      page,
+      total,
+      pageSize,
+      search,
+    } = this.props.page;
 
-    if (isFetchingProposals) {
+    if (!hasFetched && isFetching) {
       return <Loader size="large" />;
     }
 
-    if (proposalsError) {
+    if (fetchError) {
       return (
         <>
           <h2>Something went wrong</h2>
-          <p>{proposalsError}</p>
+          <p>{fetchError}</p>
         </>
       );
     }
 
-    const trimmedProposals = proposals.slice(
-      (page - 1) * PAGE_SIZE,
-      (page - 1) * PAGE_SIZE + PAGE_SIZE,
-    );
-
     return (
-      <Row gutter={20}>
-        {proposals.length &&
-          trimmedProposals.map(proposal => (
+      <Row gutter={20} className="ProposalsResults">
+        {!!items.length &&
+          items.map(proposal => (
             <Col xl={8} lg={12} md={24} key={proposal.proposalId}>
               <ProposalCard {...proposal} />
             </Col>
           ))}
-        {proposals.length && (
+        {!!items.length && (
           <Col span={24} style={{ display: 'flex', justifyContent: 'center' }}>
             <Pagination
               current={page}
-              total={proposals.length}
-              pageSize={PAGE_SIZE}
-              onChange={this.changePage}
+              total={total}
+              pageSize={pageSize}
+              onChange={this.props.onPageChange}
               hideOnSinglePage={true}
             />
           </Col>
         )}
-        {!proposals.length && <h2>No proposals found</h2>}
+        {!items.length && (
+          <h2>No proposals found {search && `for search term "${search}"`}</h2>
+        )}
+        {isFetching && <Loader overlay size="large" />}
       </Row>
     );
   }
-
-  private changePage = (page: number) => {
-    this.setState({ page });
-  };
 }
