@@ -117,7 +117,6 @@ export function generateProposal({
       state: MILESTONE_STATE.WAITING,
       amount: amountBn,
       isPaid: false,
-      isImmediatePayout: true,
       payoutPercent: '33',
     };
     return { ...defaults, ...overrides };
@@ -128,7 +127,6 @@ export function generateProposal({
       index: i,
       title: genMilestoneTitle(),
       immediatePayout: i === 0,
-      isImmediatePayout: i === 0,
       payoutRequestVoteDeadline: i !== 0 ? Date.now() + 3600000 : 0,
       payoutPercent: '' + (1 / milestoneCount) * 100,
     };
