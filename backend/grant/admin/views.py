@@ -67,11 +67,17 @@ def stats():
 # USERS
 
 
-@blueprint.route('/users/<id>', methods=['DELETE'])
+@blueprint.route('/users/<user_id>', methods=['DELETE'])
 @endpoint.api()
 @admin_auth_required
-def delete_user(id):
-    return {"message": "Not implemented."}, 400
+def delete_user(user_id):
+    user = User.query.filter(User.id == user_id).first()
+    if not user:
+        return {"message": "No user matching that id"}, 404
+
+    db.session.delete(user)
+    db.session.commit()
+    return None, 200
 
 
 @blueprint.route("/users", methods=["GET"])

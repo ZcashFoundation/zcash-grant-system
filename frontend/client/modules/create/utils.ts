@@ -1,6 +1,6 @@
 import { ProposalDraft, CreateMilestone, STATUS } from 'types';
 import { User } from 'types';
-import { getAmountError } from 'utils/validators';
+import { getAmountError, isValidAddress } from 'utils/validators';
 import { MILESTONE_STATE, Proposal } from 'types';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
@@ -81,8 +81,8 @@ export function getCreateErrors(
   }
 
   // Payout address
-  if (!payoutAddress) {
-    errors.payoutAddress = 'That doesn’t look like a valid address';
+  if (payoutAddress && !isValidAddress(payoutAddress)) {
+    errors.payoutAddress = 'That doesn’t look like a valid zcash address';
   }
 
   // Milestones

@@ -3,7 +3,7 @@ from grant.utils.admin import generate_admin_password_hash
 from mock import patch
 
 from ..config import BaseProposalCreatorConfig
-from ..mocks import mock_request
+from ..test_data import mock_blockchain_api_requests
 
 
 plaintext_mock_password = "p4ssw0rd"
@@ -96,7 +96,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 2})
         self.assert400(resp)
 
-    def test_approve_proposal(self):
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_approve_proposal(self, mock_get):
         self.login_admin()
 
         # proposal needs to be PENDING
@@ -110,7 +111,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.APPROVED)
 
-    def test_reject_proposal(self):
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_reject_proposal(self, mock_get):
         self.login_admin()
 
         # proposal needs to be PENDING

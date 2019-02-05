@@ -4,18 +4,12 @@ from mock import patch
 from grant.proposal.models import Proposal
 from grant.utils.enums import ProposalStatus
 from ..config import BaseProposalCreatorConfig
-from ..test_data import test_proposal
+from ..test_data import test_proposal, mock_blockchain_api_requests
 from ..mocks import mock_request
-
-mock_contribution_addresses = mock_request({
-    'transparent': 't123',
-    'sprout': 'z123',
-    'memo': '123',
-})
 
 
 class TestProposalContributionAPI(BaseProposalCreatorConfig):
-    @patch('requests.get', side_effect=mock_contribution_addresses)
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_create_proposal_contribution(self, mock_blockchain_get):
         self.login_default_user()
 
@@ -31,7 +25,7 @@ class TestProposalContributionAPI(BaseProposalCreatorConfig):
 
         self.assertStatus(post_res, 201)
 
-    @patch('requests.get', side_effect=mock_contribution_addresses)
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_create_duplicate_contribution(self, mock_blockchain_get):
         self.login_default_user()
 
@@ -55,7 +49,7 @@ class TestProposalContributionAPI(BaseProposalCreatorConfig):
         self.assert200(dupe_res)
         self.assertEqual(dupe_res.json['id'], post_res.json['id'])
 
-    @patch('requests.get', side_effect=mock_contribution_addresses)
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_get_proposal_contribution(self, mock_blockchain_get):
         self.login_default_user()
 
