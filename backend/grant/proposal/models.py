@@ -212,6 +212,11 @@ class Proposal(db.Model):
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
 
+        # Check with node that the address is kosher
+        res = blockchain_get('/validate/address', {'address': self.payout_address})
+        if not res['valid']:
+            raise ValidationException("Payout address is not a valid Zcash address")
+
         # Then run through regular validation
         Proposal.validate(vars(self))
 

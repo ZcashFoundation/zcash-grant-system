@@ -82,7 +82,7 @@ export function getCreateErrors(
 
   // Payout address
   if (payoutAddress && !isValidAddress(payoutAddress)) {
-    errors.payoutAddress = 'That doesn’t look like a valid address';
+    errors.payoutAddress = 'That doesn’t look like a valid zcash address';
   }
 
   // Milestones

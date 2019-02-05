@@ -24,7 +24,7 @@ export function isValidAddress(address: string): boolean {
     return true;
   }
   // Sprout address
-  if (/^z?[a-zA-Z0-9]{94}$/.test(address)) {
+  if (/^z[a-zA-Z0-9]{94}$/.test(address)) {
     return true;
   }
   // Sapling address

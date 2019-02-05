@@ -10,6 +10,10 @@ import './Final.less';
 import PaymentInfo from 'components/ContributionModal/PaymentInfo';
 import { ContributionWithAddresses } from 'types';
 
+interface OwnProps {
+  goBack(): void;
+}
+
 interface StateProps {
   form: AppState['create']['form'];
   submittedProposal: AppState['create']['submittedProposal'];
@@ -20,7 +24,7 @@ interface DispatchProps {
   submitProposal: typeof createActions['submitProposal'];
 }
 
-type Props = StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps;
 
 const STATE = {
   contribution: null as null | ContributionWithAddresses,
@@ -44,7 +48,7 @@ class CreateFinal extends React.Component<Props, State> {
   }
 
   render() {
-    const { submittedProposal, submitError } = this.props;
+    const { submittedProposal, submitError, goBack } = this.props;
     const { contribution } = this.state;
 
     const ready = submittedProposal && (submittedProposal.isStaked || contribution);
@@ -60,7 +64,7 @@ class CreateFinal extends React.Component<Props, State> {
               <b>Something went wrong during creation</b>
             </h3>
             <h5>{submitError}</h5>
-            <a onClick={this.submit}>Click here</a> to try again.
+            <a onClick={goBack}>Click here</a> to go back to the form and try again.
           </div>
         </div>
       );
@@ -138,7 +142,7 @@ class CreateFinal extends React.Component<Props, State> {
   };
 }
 
-export default connect<StateProps, DispatchProps, {}, AppState>(
+export default connect<StateProps, DispatchProps, OwnProps, AppState>(
   (state: AppState) => ({
     form: state.create.form,
     submittedProposal: state.create.submittedProposal,
