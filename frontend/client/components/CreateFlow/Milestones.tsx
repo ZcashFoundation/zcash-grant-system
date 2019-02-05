@@ -163,6 +163,15 @@ const MilestoneFields = ({
         format="MMMM YYYY"
         allowClear={false}
         onChange={(_, dateEstimated) => onChange(index, { ...milestone, dateEstimated })}
+        disabled={milestone.immediatePayout}
+        disabledDate={current =>
+          current
+            ? current <
+              moment()
+                .subtract(1, 'month')
+                .endOf('month')
+            : false
+        }
       />
       <Input
         min={1}
@@ -186,6 +195,9 @@ const MilestoneFields = ({
               onChange(index, {
                 ...milestone,
                 immediatePayout: ev.target.checked,
+                dateEstimated: ev.target.checked
+                  ? moment().format('MMMM YYYY')
+                  : milestone.dateEstimated,
               })
             }
           >
