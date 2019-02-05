@@ -214,7 +214,6 @@ class Proposal(db.Model):
 
         # Check with node that the address is kosher
         res = blockchain_get('/validate/address', {'address': self.payout_address})
-        print(res)
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 
