@@ -127,9 +127,10 @@ class CreateFlow extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const searchValues = qs.parse(props.location.search);
+    const queryStep = searchValues.step ? searchValues.step.toUpperCase() : null;
     const step =
-      searchValues.step && CREATE_STEP[searchValues.step]
-        ? (CREATE_STEP[searchValues.step] as CREATE_STEP)
+      queryStep && CREATE_STEP[queryStep]
+        ? (CREATE_STEP[queryStep] as CREATE_STEP)
         : CREATE_STEP.BASICS;
     this.state = {
       step,
@@ -140,10 +141,6 @@ class CreateFlow extends React.Component<Props, State> {
     };
     this.debouncedUpdateForm = debounce(this.updateForm, 800);
     this.historyUnlisten = this.props.history.listen(this.handlePop);
-  }
-
-  componentDidMount() {
-    console.warn('TODO - implement RESET_CROWDFUND if necessary');
   }
 
   componentWillUnmount() {
