@@ -8,19 +8,19 @@ import {
   postProposalComment as apiPostProposalComment,
 } from 'api/api';
 import { Dispatch } from 'redux';
-import { Proposal, Comment, SettablePage } from 'types';
+import { Proposal, Comment, ProposalPageParams } from 'types';
 import { AppState } from 'store/reducers';
 import { getProposalPageSettings } from './selectors';
 
 type GetState = () => AppState;
 
 // change page, sort, filter, search
-export function setProposalPage(pageChange: Partial<SettablePage>) {
+export function setProposalPage(pageParams: Partial<ProposalPageParams>) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     // 1. set page changes on state
     await dispatch({
       type: types.SET_PROPOSAL_PAGE,
-      payload: pageChange,
+      payload: pageParams,
     });
     // 2. get full updated page settings
     const page = getProposalPageSettings(getState());

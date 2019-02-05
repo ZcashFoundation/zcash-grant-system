@@ -43,7 +43,10 @@ export const INITIAL_STATE: ProposalState = {
     total: 0,
     search: '',
     sort: PROPOSAL_SORT.NEWEST,
-    filters: [],
+    filters: {
+      category: [],
+      stage: [],
+    },
     items: [],
     hasFetched: false,
     isFetching: false,

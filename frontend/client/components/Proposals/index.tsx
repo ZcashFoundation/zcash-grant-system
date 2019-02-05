@@ -117,7 +117,7 @@ class Proposals extends React.Component<Props, State> {
     this.props.setProposalPage({ sort });
   };
 
-  private handleChangeFilters = (filters: string[]) => {
+  private handleChangeFilters = (filters: StateProps['page']['filters']) => {
     this.props.setProposalPage({ filters });
   };
 

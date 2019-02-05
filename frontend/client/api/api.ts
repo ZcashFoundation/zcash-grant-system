@@ -11,18 +11,24 @@ import {
   ContributionWithAddresses,
   EmailSubscriptions,
   RFP,
-  SettablePage,
+  ProposalPageParams,
 } from 'types';
 import {
   formatUserForPost,
   formatProposalFromGet,
   formatUserFromGet,
   formatRFPFromGet,
+  formatProposalPageParamsForGet,
+  formatProposalPageFromGet,
 } from 'utils/api';
 
-export function getProposals(page?: SettablePage): Promise<{ data: ProposalPage }> {
-  return axios.get('/api/v1/proposals/', { params: page || {} }).then(res => {
-    res.data.items = res.data.items.map(formatProposalFromGet);
+export function getProposals(page?: ProposalPageParams): Promise<{ data: ProposalPage }> {
+  let serverParams;
+  if (page) {
+    serverParams = formatProposalPageParamsForGet(page);
+  }
+  return axios.get('/api/v1/proposals/', { params: serverParams || {} }).then(res => {
+    res.data = formatProposalPageFromGet(res.data);
     return res;
   });
 }

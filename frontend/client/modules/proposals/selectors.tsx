@@ -4,7 +4,7 @@ import {
   ProposalComments,
   ProposalUpdates,
   ProposalContributions,
-  SettablePage,
+  ProposalPageParams,
 } from 'types';
 
 export function getProposalComments(
@@ -71,7 +71,7 @@ export function getFetchContributionsError(state: AppState) {
   return state.proposal.fetchContributionsError;
 }
 
-export function getProposalPageSettings(state: AppState): SettablePage {
+export function getProposalPageSettings(state: AppState): ProposalPageParams {
   const { page, search, sort, filters } = state.proposal.page;
   return {
     page,

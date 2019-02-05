@@ -1,5 +1,14 @@
 import BN from 'bn.js';
-import { User, Proposal, UserProposal, RFP, MILESTONE_STATE } from 'types';
+import {
+  User,
+  Proposal,
+  ProposalPageParams,
+  PageParams,
+  UserProposal,
+  RFP,
+  MILESTONE_STATE,
+  ProposalPage,
+} from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 import { toZat } from './units';
@@ -26,6 +35,27 @@ export function formatUserFromGet(user: UserState) {
     return c;
   });
   return user;
+}
+
+export function formatProposalPageParamsForGet(params: ProposalPageParams): PageParams {
+  return {
+    ...params,
+    filters: [
+      ...params.filters.category.map(c => 'CAT_' + c),
+      ...params.filters.stage.map(s => 'STAGE_' + s),
+    ],
+  } as PageParams;
+}
+
+export function formatProposalPageFromGet(page: any): ProposalPage {
+  page.items = page.items.map(formatProposalFromGet);
+  const swf = (sw: string, a: string[]) =>
+    a.filter(x => x.startsWith(sw)).map(x => x.replace(sw, ''));
+  page.filters = {
+    category: swf('CAT_', page.filters),
+    stage: swf('STAGE_', page.filters),
+  };
+  return page as ProposalPage;
 }
 
 export function formatProposalFromGet(p: any): Proposal {
