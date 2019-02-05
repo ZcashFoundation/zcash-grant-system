@@ -17,7 +17,19 @@ export function isValidEmail(email: string): boolean {
   return /\S+@\S+\.\S+/.test(email);
 }
 
+// Uses simple regex to validate addresses, doesn't check checksum or network
 export function isValidAddress(address: string): boolean {
-  console.warn('TODO - implement utils.isValidAddress', address);
-  return true;
+  // T address
+  if (/^t[a-zA-Z0-9]{34}$/.test(address)) {
+    return true;
+  }
+  // Sprout address
+  if (/^z?[a-zA-Z0-9]{94}$/.test(address)) {
+    return true;
+  }
+  // Sapling address
+  if (/^z(s)?(reg)?(testsapling)?[a-zA-Z0-9]{76}$/.test(address)) {
+    return true;
+  }
+  return false;
 }
