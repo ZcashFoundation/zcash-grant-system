@@ -36,10 +36,16 @@ export function formatUserFromGet(user: UserState) {
   });
   return user;
 }
+// NOTE: sync with pagination.py ProposalPagination.SORT_MAP
+const proposalsSortMap = {
+  NEWEST: 'PUBLISHED:DESC',
+  OLDEST: 'PUBLISHED:ASC',
+};
 
 export function formatProposalPageParamsForGet(params: ProposalPageParams): PageParams {
   return {
     ...params,
+    sort: proposalsSortMap[params.sort],
     filters: [
       ...params.filters.category.map(c => 'CAT_' + c),
       ...params.filters.stage.map(s => 'STAGE_' + s),
@@ -55,6 +61,18 @@ export function formatProposalPageFromGet(page: any): ProposalPage {
     category: swf('CAT_', page.filters),
     stage: swf('STAGE_', page.filters),
   };
+  // reverse map
+  const serverSortToClient = Object.entries(proposalsSortMap).find(
+    ([k, v]) => v === page.sort,
+  );
+  if (!serverSortToClient) {
+    throw Error(
+      `formatProposalFromGet Unable to find mapping from server proposal sort: ${
+        page.sort
+      }`,
+    );
+  }
+  page.sort = serverSortToClient[0];
   return page as ProposalPage;
 }
 

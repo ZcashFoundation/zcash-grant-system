@@ -1,16 +1,11 @@
-// NOTE: sync with backend enum ProposalSortEnum
 export enum PROPOSAL_SORT {
   NEWEST = 'NEWEST',
   OLDEST = 'OLDEST',
-  MOST_FUNDED = 'MOST_FUNDED',
-  LEAST_FUNDED = 'LEAST_FUNDED',
 }
 
 export const SORT_LABELS: { [key in PROPOSAL_SORT]: string } = {
   NEWEST: 'Newest',
   OLDEST: 'Oldest',
-  MOST_FUNDED: 'Most funded',
-  LEAST_FUNDED: 'Least funded',
 };
 
 export enum PROPOSAL_CATEGORY {

@@ -35,8 +35,8 @@ class ProposalsNaked extends React.Component<Props, {}> {
 
     const sortMenu = (
       <Menu onClick={this.handleSortClick}>
-        {/* NOTE: sync with /backend ... pagination.py */}
-        {['CREATED:DESC', 'CREATED:ASC', 'NEWEST', 'OLDEST'].map(s => (
+        {/* NOTE: sync with /backend ... pagination.py ProposalPagination.SORT_MAP */}
+        {['CREATED:DESC', 'CREATED:ASC', 'PUBLISHED:DESC', 'PUBLISHED:ASC'].map(s => (
           <Menu.Item key={s}>{s}</Menu.Item>
         ))}
       </Menu>

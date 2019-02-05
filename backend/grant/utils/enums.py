@@ -27,8 +27,6 @@ ProposalStatus = ProposalStatusEnum()
 class ProposalSortEnum(CustomEnum):
     NEWEST = 'NEWEST'
     OLDEST = 'OLDEST'
-    MOST_FUNDED = 'MOST_FUNDED'
-    LEAST_FUNDED = 'LEAST_FUNDED'
 
 
 ProposalSort = ProposalSortEnum()

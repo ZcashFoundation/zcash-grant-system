@@ -53,11 +53,8 @@ class ProposalPagination(Pagination):
         self.SORT_MAP = {
             'CREATED:DESC': Proposal.date_created.desc(),
             'CREATED:ASC': Proposal.date_created,
-            'NEWEST': Proposal.date_published.desc(),
-            'OLDEST': Proposal.date_published,
-            # TODO: tricky due to hybrid fields & strings instead of floats
-            # 'MOST_FUNDED': ...
-            # 'LEAST_FUNDED': ...
+            'PUBLISHED:DESC': Proposal.date_published.desc(),  # NEWEST
+            'PUBLISHED:ASC': Proposal.date_published,  # OLDEST
         }
 
     def paginate(
