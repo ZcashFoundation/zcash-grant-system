@@ -249,22 +249,24 @@ export class ProposalDetail extends React.Component<Props, State> {
           </div>
         </div>
 
-        <LinkableTabs scrollToTabs defaultActiveKey="milestones">
-          <Tabs.TabPane tab="Milestones" key="milestones">
-            <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
-              <Milestones proposal={proposal} />
-            </div>
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Discussion" key="discussions" disabled={!isLive}>
-            <CommentsTab proposalId={proposal.proposalId} />
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
-            <UpdatesTab proposalId={proposal.proposalId} />
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
-            <ContributorsTab proposalId={proposal.proposalId} />
-          </Tabs.TabPane>
-        </LinkableTabs>
+        <div className="Proposal-bottom">
+          <LinkableTabs scrollToTabs defaultActiveKey="milestones">
+            <Tabs.TabPane tab="Milestones" key="milestones">
+              <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
+                <Milestones proposal={proposal} />
+              </div>
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Discussion" key="discussions" disabled={!isLive}>
+              <CommentsTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
+              <UpdatesTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
+              <ContributorsTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+          </LinkableTabs>
+        </div>
 
         {isTrustee && (
           <>
