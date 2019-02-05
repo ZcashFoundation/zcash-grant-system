@@ -1,6 +1,5 @@
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import { ProposalDraft } from 'types';
-import { typedKeys } from 'utils/ts';
 
 const createExampleProposal = (): Partial<ProposalDraft> => {
   const cats = Object.keys(PROPOSAL_CATEGORY);
