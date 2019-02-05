@@ -1,5 +1,14 @@
 import BN from 'bn.js';
-import { User, Proposal, UserProposal, RFP, MILESTONE_STATE } from 'types';
+import {
+  User,
+  Proposal,
+  ProposalPageParams,
+  PageParams,
+  UserProposal,
+  RFP,
+  MILESTONE_STATE,
+  ProposalPage,
+} from 'types';
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 import { toZat } from './units';
@@ -26,6 +35,45 @@ export function formatUserFromGet(user: UserState) {
     return c;
   });
   return user;
+}
+// NOTE: sync with pagination.py ProposalPagination.SORT_MAP
+const proposalsSortMap = {
+  NEWEST: 'PUBLISHED:DESC',
+  OLDEST: 'PUBLISHED:ASC',
+};
+
+export function formatProposalPageParamsForGet(params: ProposalPageParams): PageParams {
+  return {
+    ...params,
+    sort: proposalsSortMap[params.sort],
+    filters: [
+      ...params.filters.category.map(c => 'CAT_' + c),
+      ...params.filters.stage.map(s => 'STAGE_' + s),
+    ],
+  } as PageParams;
+}
+
+export function formatProposalPageFromGet(page: any): ProposalPage {
+  page.items = page.items.map(formatProposalFromGet);
+  const swf = (sw: string, a: string[]) =>
+    a.filter(x => x.startsWith(sw)).map(x => x.replace(sw, ''));
+  page.filters = {
+    category: swf('CAT_', page.filters),
+    stage: swf('STAGE_', page.filters),
+  };
+  // reverse map
+  const serverSortToClient = Object.entries(proposalsSortMap).find(
+    ([_, v]) => v === page.sort,
+  );
+  if (!serverSortToClient) {
+    throw Error(
+      `formatProposalFromGet Unable to find mapping from server proposal sort: ${
+        page.sort
+      }`,
+    );
+  }
+  page.sort = serverSortToClient[0];
+  return page as ProposalPage;
 }
 
 export function formatProposalFromGet(p: any): Proposal {
@@ -78,8 +126,19 @@ export function extractIdFromSlug(slug: string) {
 
 // pre-hydration massage (BNify JSONed BNs)
 export function massageSerializedState(state: AppState) {
+  // proposal detail
+  if (state.proposal.detail) {
+    state.proposal.detail.target = new BN(
+      (state.proposal.detail.target as any) as string,
+      16,
+    );
+    state.proposal.detail.funded = new BN(
+      (state.proposal.detail.funded as any) as string,
+      16,
+    );
+  }
   // proposals
-  state.proposal.proposals = state.proposal.proposals.map(p => ({
+  state.proposal.page.items = state.proposal.page.items.map(p => ({
     ...p,
     target: new BN((p.target as any) as string, 16),
     funded: new BN((p.funded as any) as string, 16),

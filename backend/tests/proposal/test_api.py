@@ -186,6 +186,6 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.test_publish_proposal_approved()
         resp = self.app.get("/api/v1/proposals/")
         self.assert200(resp)
-        for each_proposal in resp.json:
+        for each_proposal in resp.json['items']:
             for team_member in each_proposal["team"]:
                 self.assertIsNone(team_member.get('email_address'))

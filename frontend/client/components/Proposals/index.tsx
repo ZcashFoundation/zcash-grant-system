@@ -1,126 +1,41 @@
 import React from 'react';
+import { debounce } from 'lodash';
 import { connect } from 'react-redux';
 import { proposalActions } from 'modules/proposals';
-import { getProposals } from 'modules/proposals/selectors';
-import { Proposal } from 'types';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
 import { Input, Divider, Drawer, Icon, Button } from 'antd';
 import ProposalResults from './Results';
-import ProposalFilters, { Filters } from './Filters';
+import ProposalFilters from './Filters';
 import { PROPOSAL_SORT } from 'api/constants';
 import './style.less';
 
-type ProposalSortFn = (p1: Proposal, p2: Proposal) => number;
-const sortFunctions: { [key in PROPOSAL_SORT]: ProposalSortFn } = {
-  // TODO: Move sorts server side due to pagination
-  [PROPOSAL_SORT.NEWEST]: (p1, p2) => p2.dateCreated - p1.dateCreated,
-  [PROPOSAL_SORT.OLDEST]: (p1, p2) => p1.dateCreated - p2.dateCreated,
-  [PROPOSAL_SORT.LEAST_FUNDED]: (p1, p2) => {
-    // TODO: Fix least funded sort
-    return p1.proposalId - p2.proposalId;
-    // First show sub-100% funding
-    // const p1Pct = p1.crowdFund.percentFunded;
-    // const p2Pct = p2.crowdFund.percentFunded;
-    // if (p1Pct < 1 && p2Pct >= 1) {
-    //   return -1;
-    // } else if (p2Pct < 1 && p1Pct >= 1) {
-    //   return 1;
-    // } else if (p1Pct < 1 && p2Pct < 1) {
-    //   return p1Pct - p2Pct;
-    // }
-    // Then show most overall funds
-    // return p1.crowdFund.funded.cmp(p2.crowdFund.funded);
-  },
-  [PROPOSAL_SORT.MOST_FUNDED]: (p1, p2) => {
-    // TODO: Fix most funded sort
-    return p2.proposalId - p1.proposalId;
-    // First show sub-100% funding
-    // const p1Pct = p1.crowdFund.percentFunded;
-    // const p2Pct = p2.crowdFund.percentFunded;
-    // if (p1Pct < 1 && p2Pct >= 1) {
-    //   return 1;
-    // } else if (p2Pct < 1 && p1Pct >= 1) {
-    //   return -1;
-    // } else if (p1Pct < 1 && p2Pct < 1) {
-    //   return p2Pct - p1Pct;
-    // }
-    // Then show most overall funds
-    // return p2.crowdFund.funded.cmp(p1.crowdFund.funded);
-  },
-};
-
 interface StateProps {
-  proposals: ReturnType<typeof getProposals>;
-  proposalsError: AppState['proposal']['proposalsError'];
-  isFetchingProposals: AppState['proposal']['isFetchingProposals'];
+  page: AppState['proposal']['page'];
 }
 
 interface DispatchProps {
-  fetchProposals: proposalActions.TFetchProposals;
+  fetchProposals: typeof proposalActions['fetchProposals'];
+  setProposalPage: typeof proposalActions['setProposalPage'];
 }
 
 type Props = StateProps & DispatchProps;
 
 interface State {
-  processedProposals: Proposal[];
-  searchQuery: string;
-  sort: PROPOSAL_SORT;
-  filters: Filters;
   isFiltersDrawered: boolean;
   isDrawerShowing: boolean;
+  searchQuery: string;
 }
 
 class Proposals extends React.Component<Props, State> {
-  static getDerivedStateFromProps(props: Props, state: State) {
-    return {
-      ...state,
-      processedProposals: Proposals.processProposals(props.proposals, state),
-    };
-  }
-
-  // TODO: Move me server side / redux
-  static processProposals(proposals: Proposal[], state: State) {
-    let processedProposals = [...proposals];
-
-    // Categories
-    if (state.filters.categories.length) {
-      processedProposals = processedProposals.filter(p =>
-        state.filters.categories.includes(p.category),
-      );
-    }
-    // Stages
-    if (state.filters.stage) {
-      processedProposals = processedProposals.filter(
-        p => p.stage === state.filters.stage,
-      );
-    }
-    // Search text
-    if (state.searchQuery) {
-      processedProposals = processedProposals.filter(p =>
-        p.title.toLowerCase().includes(state.searchQuery.toLowerCase()),
-      );
-    }
-
-    // Sort
-    if (state.sort) {
-      processedProposals = processedProposals.sort(sortFunctions[state.sort]);
-    }
-
-    return processedProposals;
-  }
-
   state: State = {
-    processedProposals: [],
-    searchQuery: '',
-    sort: PROPOSAL_SORT.NEWEST,
-    filters: {
-      categories: [],
-      stage: null,
-    },
     isFiltersDrawered: false,
     isDrawerShowing: false,
+    // partially controlled search - set it at construction from store
+    searchQuery: this.props.page.search,
   };
+
+  private setSearch = debounce(search => this.props.setProposalPage({ search }), 1000);
 
   componentDidMount() {
     this.props.fetchProposals();
@@ -133,14 +48,8 @@ class Proposals extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposalsError, isFetchingProposals } = this.props;
-    const {
-      processedProposals,
-      sort,
-      filters,
-      isFiltersDrawered,
-      isDrawerShowing,
-    } = this.state;
+    const { isFiltersDrawered, isDrawerShowing } = this.state;
+    const { filters, sort } = this.props.page;
     const filtersComponent = (
       <ProposalFilters
         sort={sort}
@@ -178,6 +87,7 @@ class Proposals extends React.Component<Props, State> {
             <Input.Search
               placeholder="Search for a proposal"
               onChange={this.handleChangeSearch}
+              value={this.state.searchQuery}
               size="large"
             />
             <Button
@@ -190,29 +100,29 @@ class Proposals extends React.Component<Props, State> {
             </Button>
           </div>
           <Divider />
-          <ProposalResults
-            proposals={processedProposals}
-            proposalsError={proposalsError}
-            isFetchingProposals={isFetchingProposals}
-          />
+          <ProposalResults page={this.props.page} onPageChange={this.handlePageChange} />
         </div>
       </div>
     );
   }
 
-  // TODO: Move me to redux action for server request
   private handleChangeSearch = (ev: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ searchQuery: ev.currentTarget.value });
+    const searchQuery = ev.currentTarget.value;
+    this.setState({ searchQuery });
+    // debounced call to setProposalPage
+    this.setSearch(searchQuery);
   };
 
-  // TODO: Move me to redux action for server request
   private handleChangeSort = (sort: PROPOSAL_SORT) => {
-    this.setState({ sort });
+    this.props.setProposalPage({ sort });
   };
 
-  // TODO: Move me to redux action for server request
-  private handleChangeFilters = (filters: Filters) => {
-    this.setState({ filters });
+  private handleChangeFilters = (filters: StateProps['page']['filters']) => {
+    this.props.setProposalPage({ filters });
+  };
+
+  private handlePageChange = (page: number) => {
+    this.props.setProposalPage({ page });
   };
 
   private handleResize = () => {
@@ -235,9 +145,7 @@ class Proposals extends React.Component<Props, State> {
 
 function mapStateToProps(state: AppState) {
   return {
-    proposals: getProposals(state),
-    proposalsError: state.proposal.proposalsError,
-    isFetchingProposals: state.proposal.isFetchingProposals,
+    page: state.proposal.page,
   };
 }
 
