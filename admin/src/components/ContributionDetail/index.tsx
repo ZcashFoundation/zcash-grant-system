@@ -1,7 +1,7 @@
 import React from 'react';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { Row, Col, Card, Button, Collapse } from 'antd';
+import { Row, Col, Card, Button, Collapse, Input } from 'antd';
 import store from 'src/store';
 import { formatDateSeconds } from 'util/time';
 import { Link } from 'react-router-dom';
@@ -25,10 +25,14 @@ class ContributionDetail extends React.Component<Props> {
       return 'loading proposal...';
     }
 
-    const renderDeetItem = (name: string, val: any) => (
+    const renderDeetItem = (label: string, val: React.ReactNode) => (
       <div className="ContributionDetail-deet">
-        <span>{name}</span>
-        {val} &nbsp;
+        <div className="ContributionDetail-deet-value">
+          {val}
+        </div>
+        <div className="ContributionDetail-deet-label">
+          {label}
+        </div>
       </div>
     );
 
@@ -72,7 +76,10 @@ class ContributionDetail extends React.Component<Props> {
               {renderDeetItem('created', formatDateSeconds(c.dateCreated))}
               {renderDeetItem('status', c.status)}
               {renderDeetItem('amount', c.amount)}
-              {renderDeetItem('txid', c.txId || <em>N/A</em>)}
+              {renderDeetItem('txid', c.txId
+                ? <code>{c.txId}</code>
+                : <em>N/A</em>
+              )}
             </Card>
           </Col>
         </Row>
