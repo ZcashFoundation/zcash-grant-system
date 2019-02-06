@@ -76,6 +76,7 @@ class ProposalPagination(Pagination):
             status_filters = extract_filters('STATUS_', filters)
             stage_filters = extract_filters('STAGE_', filters)
             cat_filters = extract_filters('CAT_', filters)
+            other_filters = extract_filters('OTHER_', filters)
 
             if status_filters:
                 query = query.filter(Proposal.status.in_(status_filters))
@@ -85,6 +86,8 @@ class ProposalPagination(Pagination):
             #     query = query.filter(Proposal.stage.in_(stage_filters))
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
+            if other_filters:
+                query = query.filter(Proposal.arbiter_id == None)
 
         # SORT (see self.SORT_MAP)
         if sort:

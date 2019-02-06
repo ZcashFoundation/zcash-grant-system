@@ -112,6 +112,56 @@ def get_user(id):
     return {"message": f"Could not find user with id {id}"}, 404
 
 
+# ARBITERS
+
+
+@blueprint.route("/arbiters", methods=["GET"])
+@endpoint.api(
+    parameter('search', type=str, required=False),
+)
+@admin_auth_required
+def get_arbiters(search):
+    results = []
+    error = None
+    if len(search) < 3:
+        error = 'search query must be at least 3 characters long'
+    else:
+        users = User.query.filter(
+            User.email_address.ilike(f'%{search}%') | User.display_name.ilike(f'%{search}%')
+        ).all()
+        results = admin_users_schema.dump(users)
+
+    return {
+        'results': results,
+        'search': search,
+        'error': error
+    }
+
+
+@blueprint.route('/arbiters', methods=['PUT'])
+@endpoint.api(
+    parameter('proposalId', type=int, required=True),
+    parameter('userId', type=int, required=True)
+)
+@admin_auth_required
+def set_arbiter(proposal_id, user_id):
+    proposal = Proposal.query.filter(Proposal.id == proposal_id).first()
+    if not proposal:
+        return {"message": "Proposal not found"}, 404
+
+    user = User.query.filter(User.id == user_id).first()
+    if not user:
+        return {"message": "User not found"}, 404
+
+    proposal.arbiter_id = user.id
+    db.session.add(proposal)
+    db.session.commit()
+    return {
+        'proposal': proposal_schema.dump(proposal),
+        'user': admin_user_schema.dump(user)
+    }, 200
+
+
 # PROPOSALS
 
 
