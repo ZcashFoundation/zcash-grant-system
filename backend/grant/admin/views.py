@@ -128,7 +128,7 @@ def get_arbiters(search):
     else:
         users = User.query.filter(
             User.email_address.ilike(f'%{search}%') | User.display_name.ilike(f'%{search}%')
-        ).all()
+        ).order_by(User.display_name).all()
         results = admin_users_schema.dump(users)
 
     return {
