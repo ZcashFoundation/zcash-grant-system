@@ -1,5 +1,7 @@
 import React from 'react';
 import { view } from 'react-easy-state';
+import { Button } from 'antd';
+import { Link } from 'react-router-dom';
 import store from 'src/store';
 import Pageable from 'components/Pageable';
 import ContributionItem from './ContributionItem';
@@ -17,6 +19,11 @@ class Contributions extends React.Component<{}> {
         statuses={PROPOSAL_STATUSES}
         sorts={sorts}
         searchPlaceholder="Search amount or txid"
+        controlsExtra={
+          <Link to="/contributions/new">
+            <Button icon="plus">Create a contribution</Button>
+          </Link>
+        }
         renderItem={(c: Contribution) =>
           <ContributionItem key={c.id} contribution={c} />
         }

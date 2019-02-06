@@ -165,7 +165,7 @@ class ProposalContribution(db.Model):
         # Amount (must be a Decimal parseable)
         if amount:
             try:
-                contribution.amount = str(Decimal(amount).normalize)
+                contribution.amount = str(Decimal(amount))
             except:
                 raise ValidationException('Amount must be a number')
         else:

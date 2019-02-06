@@ -376,7 +376,7 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     # Amount (must be a Decimal parseable)
     if amount:
         try:
-            contribution.amount = str(Decimal(amount).normalize())
+            contribution.amount = str(Decimal(amount))
         except:
             return {"message": "Amount could not be parsed as number"}, 400
     # Transaction ID (no validation)

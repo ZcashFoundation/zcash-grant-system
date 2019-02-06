@@ -13,6 +13,7 @@ interface OwnProps<T> {
   statuses: Array<StatusSoT<any>>;
   sorts: string[];
   searchPlaceholder?: string;
+  controlsExtra?: React.ReactNode;
   renderItem(item: T): React.ReactNode;
   handleSearch(): void;
   handleChangeQuery(query: Partial<PageQuery>): void;
@@ -28,7 +29,7 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
   }
 
   render() {
-    const { page, statuses, sorts, renderItem, searchPlaceholder } = this.props;
+    const { page, statuses, sorts, renderItem, searchPlaceholder, controlsExtra } = this.props;
     const loading = !page.fetched || page.fetching;
     const filters = page.filters
       .filter(f => f.startsWith('STATUS_'))
@@ -69,6 +70,12 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
             </Button>
           </Dropdown>
           <Button title="refresh" icon="reload" onClick={this.props.handleSearch} />
+
+          {controlsExtra && (
+            <div className="Pageable-controls-extra">
+              {controlsExtra}
+            </div>
+          )}
         </div>
 
         {page.search && (
