@@ -2,6 +2,7 @@ import datetime
 
 from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
+from grant.utils.misc import dt_to_unix
 
 NOT_REQUESTED = 'NOT_REQUESTED'
 ONGOING_VOTE = 'ONGOING_VOTE'
@@ -63,6 +64,15 @@ class MilestoneSchema(ma.Schema):
             "immediate_payout",
             "date_created",
         )
+
+    date_created = ma.Method("get_date_created")
+    date_estimated = ma.Method("get_date_estimated")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+    def get_date_estimated(self, obj):
+        return dt_to_unix(obj.date_estimated) if obj.date_estimated else None
 
 
 milestone_schema = MilestoneSchema()

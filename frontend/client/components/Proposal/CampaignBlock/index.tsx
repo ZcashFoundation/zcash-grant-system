@@ -49,8 +49,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     let content;
     if (proposal) {
       const { target, funded, percentFunded } = proposal;
+      const datePublished = proposal.datePublished || Date.now() / 1000;
       const isRaiseGoalReached = funded.gte(target);
-      const deadline = (proposal.dateCreated + proposal.deadlineDuration) * 1000;
+      const deadline = (datePublished + proposal.deadlineDuration) * 1000;
       // TODO: Get values from proposal
       console.warn('TODO: Get isFrozen from proposal data');
       const isFrozen = false;
@@ -66,7 +67,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             <div className="ProposalCampaignBlock-info">
               <div className="ProposalCampaignBlock-info-label">Started</div>
               <div className="ProposalCampaignBlock-info-value">
-                {moment(proposal.datePublished * 1000).fromNow()}
+                {moment(datePublished * 1000).fromNow()}
               </div>
             </div>
           )}
