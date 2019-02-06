@@ -65,13 +65,15 @@ def get_me():
     parameter("withProposals", type=bool, required=False),
     parameter("withComments", type=bool, required=False),
     parameter("withFunded", type=bool, required=False),
-    parameter("withPending", type=bool, required=False)
+    parameter("withPending", type=bool, required=False),
+    parameter("withArbitrated", type=bool, required=False)
 )
-def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
+def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated):
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
         authed_user = get_authed_user()
+        is_self = authed_user and authed_user.id == user.id
         if with_proposals:
             proposals = Proposal.get_by_user(user)
             proposals_dump = user_proposals_schema.dump(proposals)
@@ -86,7 +88,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
             comments = Comment.get_by_user(user)
             comments_dump = user_comments_schema.dump(comments)
             result["comments"] = comments_dump
-        if with_pending and authed_user and authed_user.id == user.id:
+        if with_pending and is_self:
             pending = Proposal.get_by_user(user, [
                 ProposalStatus.STAKING,
                 ProposalStatus.PENDING,
@@ -95,6 +97,8 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
             ])
             pending_dump = user_proposals_schema.dump(pending)
             result["pendingProposals"] = pending_dump
+        if with_arbitrated and is_self:
+            result["arbitrated"] = user_proposals_schema.dump(user.arbitrated_proposals)
         return result
     else:
         message = "User with id matching {} not found".format(user_id)

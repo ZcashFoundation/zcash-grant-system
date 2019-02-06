@@ -26,6 +26,7 @@ import ContributionModal from 'components/ContributionModal';
 import LinkableTabs from 'components/LinkableTabs';
 import './style.less';
 import { UserContribution } from 'types';
+import ProfileArbitrated from './ProfileArbitrated';
 
 interface StateProps {
   usersMap: AppState['users']['map'];
@@ -86,11 +87,19 @@ class Profile extends React.Component<Props, State> {
       return <ExceptionPage code="404" desc="No user could be found" />;
     }
 
-    const { proposals, pendingProposals, contributions, comments, invites } = user;
+    const {
+      proposals,
+      pendingProposals,
+      contributions,
+      comments,
+      invites,
+      arbitrated,
+    } = user;
     const nonePending = pendingProposals.length === 0;
     const noneCreated = proposals.length === 0;
     const noneFunded = contributions.length === 0;
     const noneCommented = comments.length === 0;
+    const noneArbitrated = arbitrated.length === 0;
     const noneInvites = user.hasFetchedInvites && invites.length === 0;
 
     return (
@@ -183,6 +192,22 @@ class Profile extends React.Component<Props, State> {
                     <ProfileInvite key={invite.id} userId={user.userid} invite={invite} />
                   ))}
                 </div>
+              </Tabs.TabPane>
+            )}
+            {isAuthedUser && (
+              <Tabs.TabPane
+                tab={TabTitle('Arbitrations', arbitrated.length)}
+                key="arbitrations"
+              >
+                {noneArbitrated && (
+                  <Placeholder
+                    title="No arbitrations"
+                    subtitle="You are not an arbiter of any proposals"
+                  />
+                )}
+                {arbitrated.map(arb => (
+                  <ProfileArbitrated key={arb.proposalId} proposal={arb} />
+                ))}
               </Tabs.TabPane>
             )}
           </LinkableTabs>

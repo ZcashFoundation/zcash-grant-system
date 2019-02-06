@@ -29,6 +29,9 @@ export function formatUserFromGet(user: UserState) {
   if (user.pendingProposals) {
     user.pendingProposals = user.pendingProposals.map(bnUserProp);
   }
+  if (user.arbitrated) {
+    user.arbitrated = user.arbitrated.map(bnUserProp);
+  }
   user.proposals = user.proposals.map(bnUserProp);
   user.contributions = user.contributions.map(c => {
     c.amount = toZat((c.amount as any) as string);
