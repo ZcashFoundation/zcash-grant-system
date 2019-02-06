@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Info from 'components/Info';
 import Markdown from 'components/Markdown';
+import ArbiterControl from 'components/ArbiterControl';
 import './index.less';
 
 type Props = RouteComponentProps<any>;
@@ -47,7 +48,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       return 'loading proposal...';
     }
 
-    const renderDelete = () => (
+    const renderDeleteControl = () => (
       <Popconfirm
         onConfirm={this.handleDelete}
         title="Delete proposal?"
@@ -60,7 +61,18 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       </Popconfirm>
     );
 
-    const renderMatching = () => (
+    const renderArbiterControl = () => (
+      <ArbiterControl
+        {...p}
+        buttonProps={{
+          type: 'default',
+          className: 'ProposalDetail-controls-control',
+          block: true,
+        }}
+      />
+    );
+
+    const renderMatchingControl = () => (
       <div className="ProposalDetail-controls-control">
         <Popconfirm
           overlayClassName="ProposalDetail-popover-overlay"
@@ -207,14 +219,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           description={
             <div>
               <p>An arbiter is required to review milestone payout requests.</p>
-              <Button
-                loading={store.proposalDetailApproving}
-                icon="crown"
-                type="primary"
-                onClick={this.handleApprove}
-              >
-                Set arbiter
-              </Button>
+              <ArbiterControl {...p} />
             </div>
           }
         />
@@ -258,8 +263,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           <Col span={6}>
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
-              {renderDelete()}
-              {renderMatching()}
+              {renderDeleteControl()}
+              {renderArbiterControl()}
+              {renderMatchingControl()}
               {/* TODO - other actions */}
             </Card>
 
@@ -273,6 +279,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
+              {p.arbiter &&
+                renderDeetItem(
+                  'arbiter',
+                  <Link to={`/users/${p.arbiter.userid}`}>{p.arbiter.displayName}</Link>,
+                )}
               {p.rfp &&
                 renderDeetItem(
                   'rfp',

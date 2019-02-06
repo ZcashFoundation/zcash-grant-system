@@ -55,6 +55,16 @@ async function deleteUser(id: number) {
   return data;
 }
 
+async function fetchArbiters(search: string) {
+  const { data } = await api.get(`/admin/arbiters`, { params: { search } });
+  return data;
+}
+
+async function setArbiter(proposalId: number, userId: number) {
+  const { data } = await api.put(`/admin/arbiters`, { proposalId, userId });
+  return data;
+}
+
 async function fetchProposals(params: Partial<PageQuery>) {
   const { data } = await api.get('/admin/proposals', {
     params,
@@ -132,6 +142,13 @@ const app = store({
   userDeleting: false,
   userDeleted: false,
 
+  arbitersSearch: {
+    search: '',
+    results: [] as User[],
+    fetching: false,
+    error: null as string | null,
+  },
+
   proposals: {
     page: {
       page: 1,
@@ -174,6 +191,16 @@ const app = store({
     }
     if (app.proposalDetail && app.proposalDetail.proposalId === p.proposalId) {
       app.proposalDetail = p;
+    }
+  },
+
+  updateUserInStore(u: User) {
+    const index = app.users.findIndex(x => x.userid === u.userid);
+    if (index > -1) {
+      app.users[index] = u;
+    }
+    if (app.userDetail && app.userDetail.userid === u.userid) {
+      app.userDetail = u;
     }
   },
 
@@ -242,6 +269,40 @@ const app = store({
       handleApiError(e);
     }
     app.userDeleting = false;
+  },
+
+  async searchArbiters(search: string) {
+    app.arbitersSearch = {
+      ...app.arbitersSearch,
+      search,
+      fetching: true,
+    };
+    try {
+      const data = await fetchArbiters(search);
+      app.arbitersSearch = {
+        ...app.arbitersSearch,
+        ...data,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.arbitersSearch.fetching = false;
+  },
+
+  async searchArbitersClear() {
+    app.arbitersSearch = {
+      search: '',
+      results: [] as User[],
+      fetching: false,
+      error: null,
+    };
+  },
+
+  async setArbiter(proposalId: number, userId: number) {
+    // let component handle errors for this one
+    const { proposal, user } = await setArbiter(proposalId, userId);
+    this.updateProposalInStore(proposal);
+    this.updateUserInStore(user);
   },
 
   async fetchProposals() {
