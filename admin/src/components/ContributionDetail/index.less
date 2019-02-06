@@ -1,0 +1,29 @@
+.ContributionDetail {
+  &-controls {
+    &-control + &-control {
+      margin-top: 0.8rem;
+    }
+  }
+
+  &-deet {
+    position: relative;
+    margin-bottom: 1rem;
+
+    & > span {
+      font-size: 0.7rem;
+      position: absolute;
+      opacity: 0.8;
+      top: 1rem;
+    }
+  }
+
+  & .ant-card,
+  .ant-alert,
+  .ant-collapse {
+    margin-bottom: 16px;
+
+    button + button {
+      margin-left: 0.5rem;
+    }
+  }
+}

@@ -174,7 +174,6 @@ const app = store({
 
   contributionDetail: null as null | Contribution,
   contributionDetailFetching: false,
-  contributionDetailApproving: false,
   contributionSaving: false,
   contributionSaved: false,
 

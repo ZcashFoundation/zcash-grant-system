@@ -90,6 +90,11 @@ export interface Contribution {
   dateCreated: number;
   user: User;
   proposal: Proposal;
+  addresses: {
+    transparent: string;
+    sprout: string;
+    memo: string;
+  };
 }
 export interface ContributionArgs {
   proposalId: number;
