@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, user_comments_schema
-from grant.email.send import generate_email
+from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.proposal.models import (
     Proposal,
@@ -15,6 +15,7 @@ from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.enums import ProposalStatus
+from grant.utils.misc import make_url
 from grant.utils import pagination
 from sqlalchemy import func, or_
 
@@ -153,9 +154,17 @@ def set_arbiter(proposal_id, user_id):
     if not user:
         return {"message": "User not found"}, 404
 
-    proposal.arbiter_id = user.id
-    db.session.add(proposal)
-    db.session.commit()
+    if proposal.arbiter_id != user.id:
+        # send email
+        send_email(user.email_address, 'proposal_arbiter', {
+            'proposal': proposal,
+            'proposal_url': make_url(f'/proposals/{proposal.id}'),
+            'arbitration_url': make_url(f'/profile/{user.id}?tab=arbitration'),
+        })
+        proposal.arbiter_id = user.id
+        db.session.add(proposal)
+        db.session.commit()
+
     return {
         'proposal': proposal_schema.dump(proposal),
         'user': admin_user_schema.dump(user)

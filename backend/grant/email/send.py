@@ -154,6 +154,15 @@ def comment_reply(email_args):
     }
 
 
+def proposal_arbiter(email_args):
+    return {
+        'subject': f'You are now arbiter of {email_args["proposal"].title}',
+        'title': f'You are an Arbiter',
+        'preview': f'Congratulations, you have been promoted to arbiter of {email_args["proposal"].title}!',
+        'subscription': EmailSubscription.ARBITER,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -169,6 +178,7 @@ get_info_lookup = {
     'contribution_confirmed': contribution_confirmed,
     'contribution_update': contribution_update,
     'comment_reply': comment_reply,
+    'proposal_arbiter': proposal_arbiter
 }
 
 
