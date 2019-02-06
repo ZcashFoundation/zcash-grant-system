@@ -49,6 +49,7 @@ class ProposalPagination(Pagination):
         self.FILTERS = [f'STATUS_{s}' for s in ProposalStatus.list()]
         self.FILTERS.extend([f'STAGE_{s}' for s in ProposalStage.list()])
         self.FILTERS.extend([f'CAT_{c}' for c in Category.list()])
+        self.FILTERS.extend(['OTHER_ARBITER'])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': Proposal.date_created.desc(),

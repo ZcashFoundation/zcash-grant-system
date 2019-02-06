@@ -1,3 +1,4 @@
+import { uniq, without } from 'lodash';
 import React from 'react';
 import qs from 'query-string';
 import { view } from 'react-easy-state';
@@ -8,6 +9,7 @@ import store from 'src/store';
 import ProposalItem from './ProposalItem';
 import { PROPOSAL_STATUS, Proposal } from 'src/types';
 import { PROPOSAL_STATUSES, getStatusById } from 'util/statuses';
+import { PROPOSAL_OTHER_FILTERS, getProposalOtherFilterById } from 'util/filters';
 import './index.less';
 
 type Props = RouteComponentProps<any>;
@@ -21,14 +23,15 @@ class ProposalsNaked extends React.Component<Props, {}> {
   render() {
     const { page } = store.proposals;
     const loading = !page.fetched || page.fetching;
-    const filters = page.filters
-      .filter(f => f.startsWith('STATUS_'))
-      .map(f => f.replace('STATUS_', '') as PROPOSAL_STATUS);
+    const filterCount = page.filters.status.length + page.filters.other.length;
 
     const statusFilterMenu = (
       <Menu onClick={this.handleFilterClick}>
         {PROPOSAL_STATUSES.map(f => (
-          <Menu.Item key={f.id}>{f.filterDisplay}</Menu.Item>
+          <Menu.Item key={'s_' + f.id}>{f.filterDisplay}</Menu.Item>
+        ))}
+        {PROPOSAL_OTHER_FILTERS.map(f => (
+          <Menu.Item key={'o_' + f.id}>{f.filterDisplay}</Menu.Item>
         ))}
       </Menu>
     );
@@ -69,20 +72,30 @@ class ProposalsNaked extends React.Component<Props, {}> {
           </div>
         )}
 
-        {!!page.filters.length && (
+        {!!filterCount && (
           <div className="Proposals-filters">
             Filters:{' '}
-            {filters.map(sf => (
+            {page.filters.status.map(x => getStatusById(PROPOSAL_STATUSES, x)).map(sf => (
               <Tag
-                key={sf}
-                onClose={() => this.handleFilterClose(sf)}
-                color={getStatusById(PROPOSAL_STATUSES, sf).tagColor}
+                key={sf.id}
+                onClose={() => this.handleStatusFilterClose(sf.id)}
+                color={sf.tagColor}
                 closable
               >
-                status: {sf}
+                {sf.filterDisplay}
               </Tag>
             ))}
-            {filters.length > 1 && (
+            {page.filters.other.map(x => getProposalOtherFilterById(x)).map(of => (
+              <Tag
+                key={of.id}
+                onClose={() => this.handleOtherFilterClose(of.id)}
+                color={of.tagColor}
+                closable
+              >
+                {of.filterDisplay}
+              </Tag>
+            ))}
+            {filterCount > 1 && (
               <Tag key="clear" onClick={this.handleFilterClear}>
                 clear
               </Tag>
@@ -111,16 +124,39 @@ class ProposalsNaked extends React.Component<Props, {}> {
     );
   }
 
+  private addStatusFilter = (filter: PROPOSAL_STATUS) => {
+    const { status } = store.proposals.page.filters;
+    store.proposals.page.filters.status = uniq([...status, filter]);
+  };
+
+  private removeStatusFilter = (filter: PROPOSAL_STATUS) => {
+    const { status } = store.proposals.page.filters;
+    store.proposals.page.filters.status = without(status, filter);
+  };
+
+  private addOtherFilter = (filter: string) => {
+    const { other } = store.proposals.page.filters;
+    store.proposals.page.filters.other = uniq([...other, filter]);
+  };
+
+  private removeOtherFilter = (filter: string) => {
+    const { other } = store.proposals.page.filters;
+    store.proposals.page.filters.other = without(other, filter);
+  };
+
   private setStoreFromQueryString = () => {
     const parsed = qs.parse(this.props.history.location.search);
 
     // status filter
-    if (parsed.status) {
-      if (getStatusById(PROPOSAL_STATUSES, parsed.status)) {
-        // here we reset to normal page query params, we might want
-        // to do this every time we load or leave the component
-        store.resetProposalPageQuery();
-        store.addProposalPageFilter('STATUS_' + parsed.status);
+    if (parsed.status || parsed.other) {
+      // here we reset to normal page query params, we might want
+      // to do this every time we load or leave the component
+      store.resetProposalPageQuery();
+      if (parsed.status && getStatusById(PROPOSAL_STATUSES, parsed.status)) {
+        this.addStatusFilter(parsed.status);
+      }
+      if (parsed.other && getProposalOtherFilterById(parsed.other)) {
+        this.addOtherFilter(parsed.other);
       }
       this.props.history.replace(this.props.match.url); // remove qs
     }
@@ -132,17 +168,28 @@ class ProposalsNaked extends React.Component<Props, {}> {
   };
 
   private handleFilterClick = (e: ClickParam) => {
-    store.addProposalPageFilter('STATUS_' + e.key);
+    // tagged keys to differentiate filter types in antd dropdown
+    if (e.key.startsWith('s_')) {
+      this.addStatusFilter(e.key.replace('s_', '') as PROPOSAL_STATUS);
+      store.fetchProposals();
+    } else if (e.key.startsWith('o_')) {
+      this.addOtherFilter(e.key.replace('o_', ''));
+      store.fetchProposals();
+    }
+  };
+
+  private handleStatusFilterClose = (filter: PROPOSAL_STATUS) => {
+    this.removeStatusFilter(filter);
     store.fetchProposals();
   };
 
-  private handleFilterClose = (filter: PROPOSAL_STATUS) => {
-    store.removeProposalPageFilter('STATUS_' + filter);
+  private handleOtherFilterClose = (filter: string) => {
+    this.removeOtherFilter(filter);
     store.fetchProposals();
   };
 
   private handleFilterClear = () => {
-    store.proposals.page.filters = [];
+    store.proposals.page.filters = { status: [], other: [] };
     store.fetchProposals();
   };
 

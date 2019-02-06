@@ -1,7 +1,15 @@
-import { uniq, without, pick } from 'lodash';
+import { pick } from 'lodash';
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal, RFP, RFPArgs, EmailExample, PageQuery } from './types';
+import {
+  User,
+  Proposal,
+  RFP,
+  RFPArgs,
+  EmailExample,
+  PageQuery,
+  PROPOSAL_STATUS,
+} from './types';
 
 // API
 const api = axios.create({
@@ -129,7 +137,10 @@ const app = store({
       page: 1,
       search: '',
       sort: 'CREATED:DESC',
-      filters: [] as string[],
+      filters: {
+        status: [] as PROPOSAL_STATUS[],
+        other: [] as string[],
+      },
       pageSize: 0,
       total: 0,
       items: [] as Proposal[],
@@ -237,9 +248,16 @@ const app = store({
     app.proposals.page.fetching = true;
     try {
       const page = await fetchProposals(app.getProposalPageQuery());
+      // filter strings with prefix p, and remove the prefix
+      const swp = (p: string, a: string[]) =>
+        a.filter((s: string) => s.startsWith(p)).map(x => x.replace(p, ''));
       app.proposals.page = {
         ...app.proposals.page,
         ...page,
+        filters: {
+          status: swp('STATUS_', page.filters),
+          other: swp('OTHER_', page.filters),
+        },
         fetched: true,
       };
     } catch (e) {
@@ -249,24 +267,23 @@ const app = store({
   },
 
   getProposalPageQuery() {
-    return pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+    const pq = pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as any;
+    const pfx = (p: string) => (s: string) => p + s;
+    pq.filters = [
+      ...pq.filters.status.map(pfx('STATUS_')),
+      ...pq.filters.other.map(pfx('OTHER_')),
+    ];
+    return pq as PageQuery;
   },
 
   resetProposalPageQuery() {
-    app.proposals.page.page = 1;
-    app.proposals.page.search = '';
-    app.proposals.page.sort = 'CREATED:DESC';
-    app.proposals.page.filters = [];
-  },
-
-  addProposalPageFilter(f: string) {
-    const current = app.proposals.page.filters;
-    app.proposals.page.filters = uniq([f, ...current]);
-  },
-
-  removeProposalPageFilter(f: string) {
-    const current = app.proposals.page.filters;
-    app.proposals.page.filters = without(current, f);
+    app.proposals.page = {
+      ...app.proposals.page,
+      page: 1,
+      search: '',
+      sort: 'CREATED:DESC',
+      filters: { status: [], other: [] },
+    };
   },
 
   async fetchProposalDetail(id: number) {

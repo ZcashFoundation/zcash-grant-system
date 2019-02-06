@@ -29,9 +29,8 @@ class Home extends React.Component {
       !!proposalNoArbiterCount && (
         <div>
           <Icon type="exclamation-circle" /> There are <b>{proposalNoArbiterCount}</b>{' '}
-          live proposals <b>without an arbitor</b>. No one can approve their payout
-          requests! <Link to="/proposals?status=LIVE&arbiter=false">Click here</Link> to
-          view them.
+          live proposals <b>without an arbiter</b>.{' '}
+          <Link to="/proposals?status=LIVE&other=ARBITER">Click here</Link> to view them.
         </div>
       ),
     ].filter(Boolean);
