@@ -237,6 +237,7 @@ def delete_proposal(proposal_id):
         ProposalStatus.PENDING,
         ProposalStatus.APPROVED,
         ProposalStatus.REJECTED,
+        ProposalStatus.STAKING,
     ]
     status = g.current_proposal.status
     if status not in deleteable_statuses:
@@ -482,7 +483,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     if contribution.proposal.status == ProposalStatus.STAKING:
         # fully staked, set status PENDING & notify user
-        if contribution.proposal.is_staked:  # float(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
+        if contribution.proposal.is_staked:  # Decimal(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
             contribution.proposal.status = ProposalStatus.PENDING
             db.session.add(contribution.proposal)
             db.session.commit()
@@ -493,7 +494,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             'proposal': contribution.proposal,
             'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
             'fully_staked': contribution.proposal.is_staked,
-            'stake_target': PROPOSAL_STAKING_AMOUNT
+            'stake_target': str(PROPOSAL_STAKING_AMOUNT.normalize()),
         })
 
     else:

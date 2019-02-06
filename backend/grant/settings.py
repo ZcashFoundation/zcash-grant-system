@@ -7,6 +7,7 @@ For local development, use a .env file to set
 environment variables.
 """
 from environs import Env
+from decimal import Decimal
 
 env = Env()
 env.read_env()
@@ -54,7 +55,7 @@ ADMIN_PASS_HASH = env.str("ADMIN_PASS_HASH")
 
 EXPLORER_URL = env.str("EXPLORER_URL", default="https://explorer.zcha.in/")
 
-PROPOSAL_STAKING_AMOUNT = env.float("PROPOSAL_STAKING_AMOUNT")
+PROPOSAL_STAKING_AMOUNT = Decimal(env.str("PROPOSAL_STAKING_AMOUNT"))
 
 UI = {
     'NAME': 'ZF Grants',

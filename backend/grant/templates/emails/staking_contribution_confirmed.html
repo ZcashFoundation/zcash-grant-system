@@ -5,9 +5,10 @@
     will now be forwarded to administrators for approval. 
   {% else %}
     <strong>{{ args.proposal.title }}</strong> has been partially staked for
-    <strong>{{ args.contribution.amount }} ZEC</strong>. This is not enough to
-    fully stake the proposal. You must send at least
-    <strong>{{ args.stake_target }} ZEC</strong>. 
+    <strong>{{ args.contribution.amount }} ZEC</strong> of the required
+    <strong>{{ args.stake_target}} ZEC</strong>.
+    You can send the remaining amount by going to your profile's "Pending" tab,
+    and clicking the "Stake" button next to the proposal.
   {% endif %} 
   You can view your transaction below:
 </p>

@@ -3,9 +3,9 @@
 Your proposal will now be forwarded to administrators for approval.
 {% else %}
 {{ args.proposal.title }} has been partially staked for
-{{ args.contribution.amount }} ZEC. This is not enough to
-fully stake the proposal. You must send at least
-{{ args.stake_target }} ZEC. 
+{{ args.contribution.amount }} ZEC of the required {{ args.stake_target}} ZEC.
+You can send the remaining amount by going to your profile's "Pending" tab,
+and clicking the "Stake" button next to the proposal.
 {% endif %} 
 You can view your transaction here:
 
