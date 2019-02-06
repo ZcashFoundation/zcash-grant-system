@@ -11,7 +11,7 @@ from grant.proposal.models import (
     proposal_schema,
     user_proposal_contributions_schema,
 )
-from grant.user.models import User, users_schema, user_schema
+from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.enums import ProposalStatus
@@ -90,7 +90,7 @@ def delete_user(user_id):
 @admin_auth_required
 def get_users():
     users = User.query.all()
-    result = users_schema.dump(users)
+    result = admin_users_schema.dump(users)
     return result
 
 
@@ -100,7 +100,7 @@ def get_users():
 def get_user(id):
     user_db = User.query.filter(User.id == id).first()
     if user_db:
-        user = user_schema.dump(user_db)
+        user = admin_user_schema.dump(user_db)
         user_proposals = Proposal.query.filter(Proposal.team.any(id=user['userid'])).all()
         user['proposals'] = proposals_schema.dump(user_proposals)
         user_comments = Comment.get_by_user(user_db)

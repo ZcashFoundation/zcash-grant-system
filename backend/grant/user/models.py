@@ -244,7 +244,7 @@ class SelfUserSchema(ma.Schema):
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
     email_verified = ma.Method("get_email_verified")
-    arbitrated_proposals = ma.Nested("Proposals", many=True, exclude=["arbitor"])
+    arbitrated_proposals = ma.Nested("ProposalSchema", many=True, exclude=["arbiter"])
 
     def get_userid(self, obj):
         return obj.id
@@ -255,6 +255,10 @@ class SelfUserSchema(ma.Schema):
 
 self_user_schema = SelfUserSchema()
 self_users_schema = SelfUserSchema(many=True)
+
+# differentiate from self, same for now
+admin_user_schema = self_user_schema
+admin_users_schema = self_users_schema
 
 
 class UserSchema(ma.Schema):
