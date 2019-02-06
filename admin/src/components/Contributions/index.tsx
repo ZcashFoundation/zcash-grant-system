@@ -16,7 +16,7 @@ class Contributions extends React.Component<{}> {
         page={page}
         statuses={PROPOSAL_STATUSES}
         sorts={sorts}
-        searchPlaceholder="Search proposal titles"
+        searchPlaceholder="Search amount or txid"
         renderItem={(c: Contribution) =>
           <ContributionItem key={c.id} contribution={c} />
         }

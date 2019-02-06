@@ -307,21 +307,23 @@ def get_contributions(page, filters, search, sort):
 
 @blueprint.route('/contributions', methods=['POST'])
 @endpoint.api(
-    parameter('proposal_id', type=int, required=True),
-    parameter('user_id', type=int, required=True),
+    parameter('proposalId', type=int, required=True),
+    parameter('userId', type=int, required=True),
     parameter('status', type=str, required=True),
     parameter('amount', type=str, required=True),
-    parameter('tx_id', type=str, required=False),
+    parameter('txId', type=str, required=False),
 )
 @admin_auth_required
 def create_contribution(proposal_id, user_id, status, amount, tx_id):
+    # Some fields set manually since we're admin, and normally don't do this
     contribution = ProposalContribution(
         proposal_id=proposal_id,
         user_id=user_id,
-        status=status,
         amount=amount,
-        tx_id=tx_id,
     )
+    contribution.status = status
+    contribution.tx_id = tx_id
+
     db.session.add(contribution)
     db.session.commit()
     return proposal_contribution_schema.dump(contribution), 200
@@ -340,17 +342,19 @@ def get_contribution(contribution_id):
 
 @blueprint.route('/contributions/<contribution_id>', methods=['PUT'])
 @endpoint.api(
-    parameter('proposal_id', type=int, required=False),
-    parameter('user_id', type=int, required=False),
+    parameter('proposalId', type=int, required=False),
+    parameter('userId', type=int, required=False),
     parameter('status', type=str, required=False),
     parameter('amount', type=str, required=False),
-    parameter('tx_id', type=str, required=False),
+    parameter('txId', type=str, required=False),
 )
 @admin_auth_required
 def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id):
     contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
     if not contribution:
         return {"message": "No contribution matching that id"}, 404
+
+    print((contribution_id, proposal_id, user_id, status, amount, tx_id))
 
     # Proposal ID (must belong to an existing proposal)
     if proposal_id:
@@ -372,7 +376,7 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     # Amount (must be a Decimal parseable)
     if amount:
         try:
-            contribution.amount = str(Decimal(amount).normalize)
+            contribution.amount = str(Decimal(amount).normalize())
         except:
             return {"message": "Amount could not be parsed as number"}, 400
     # Transaction ID (no validation)

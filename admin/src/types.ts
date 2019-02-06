@@ -97,11 +97,11 @@ export interface Contribution {
   };
 }
 export interface ContributionArgs {
-  proposalId: number;
-  userId: number;
+  proposalId: string | number;
+  userId: string | number;
   amount: string;
+  status: string;
   txId?: string;
-  status: CONTRIBUTION_STATUS;
 }
 export interface User {
   accountAddress: string;
