@@ -297,7 +297,6 @@ def delete_rfp(rfp_id):
 def get_contributions(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.contribution(
-        schema=proposal_contribution_schema,
         page=page,
         filters=filters_workaround,
         search=search,

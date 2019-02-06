@@ -1,7 +1,7 @@
 import abc
 from sqlalchemy import or_, and_
 
-from grant.proposal.models import db, ma, Proposal, ProposalContribution
+from grant.proposal.models import db, ma, Proposal, ProposalContribution, proposal_contributions_schema
 from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus
 
 
@@ -119,7 +119,7 @@ class ContributionPagination(Pagination):
 
     def paginate(
         self,
-        schema: ma.Schema,
+        schema: ma.Schema=proposal_contributions_schema,
         query: db.Query=None,
         page: int=1,
         filters: list=None,

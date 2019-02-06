@@ -1,7 +1,17 @@
-import { uniq, without, pick } from 'lodash';
+import { pick } from 'lodash';
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal, RFP, RFPArgs, EmailExample, PageQuery } from './types';
+import {
+  User,
+  Proposal,
+  Contribution,
+  ContributionArgs,
+  RFP,
+  RFPArgs,
+  EmailExample,
+  PageQuery,
+  PageData,
+} from './types';
 
 // API
 const api = axios.create({
@@ -48,9 +58,7 @@ async function deleteUser(id: number) {
 }
 
 async function fetchProposals(params: Partial<PageQuery>) {
-  const { data } = await api.get('/admin/proposals', {
-    params,
-  });
+  const { data } = await api.get('/admin/proposals', { params });
   return data;
 }
 
@@ -101,8 +109,29 @@ async function deleteRFP(id: number) {
   await api.delete(`/admin/rfps/${id}`);
 }
 
+async function getContributions(params: PageQuery) {
+  const { data } = await api.get('/admin/contributions', { params });
+  return data;
+}
+
+async function getContribution(id: number) {
+  const { data } = await api.get(`/admin/contributions/${id}`);
+  return data;
+}
+
+async function createContribution(args: ContributionArgs) {
+  const { data } = await api.post('/admin/contributions', args);
+  return data;
+}
+
+async function editContribution(id: number, args: ContributionArgs) {
+  const { data } = await api.put(`/admin/contributions/${id}`, args);
+  return data;
+}
+
 // STORE
 const app = store({
+  /*** DATA ***/
   hasCheckedLogin: false,
   isLoggedIn: false,
   loginError: '',
@@ -124,21 +153,11 @@ const app = store({
   userDeleted: false,
 
   proposals: {
-    page: {
-      page: 1,
-      search: '',
-      sort: 'CREATED:DESC',
-      filters: [] as string[],
-      pageSize: 0,
-      total: 0,
-      items: [] as Proposal[],
-      fetching: false,
-      fetched: false,
-    },
+    page: createDefaultPageData<Proposal>('CREATED:DESC'),
   },
 
-  proposalDetailFetching: false,
   proposalDetail: null as null | Proposal,
+  proposalDetailFetching: false,
   proposalDetailApproving: false,
 
   rfps: [] as RFP[],
@@ -149,7 +168,19 @@ const app = store({
   rfpDeleting: false,
   rfpDeleted: false,
 
+  contributions: {
+    page: createDefaultPageData<Contribution>('CREATED:DESC'),
+  },
+
+  contributionDetail: null as null | Contribution,
+  contributionDetailFetching: false,
+  contributionDetailApproving: false,
+  contributionSaving: false,
+  contributionSaved: false,
+
   emailExamples: {} as { [type: string]: EmailExample },
+
+  /*** ACTIONS ***/
 
   removeGeneralError(i: number) {
     app.generalError.splice(i, 1);
@@ -164,6 +195,8 @@ const app = store({
       app.proposalDetail = p;
     }
   },
+
+  // Auth
 
   async checkLogin() {
     app.isLoggedIn = await checkLogin();
@@ -196,6 +229,8 @@ const app = store({
     }
     app.statsFetching = false;
   },
+
+  // Users
 
   async fetchUsers() {
     app.usersFetching = true;
@@ -232,6 +267,8 @@ const app = store({
     app.userDeleting = false;
   },
 
+  // Proposals
+
   async fetchProposals() {
     app.proposals.page.fetching = true;
     try {
@@ -247,6 +284,13 @@ const app = store({
     app.proposals.page.fetching = false;
   },
 
+  setProposalPageQuery(query: Partial<PageQuery>) {
+    app.proposals.page = {
+      ...app.proposals.page,
+      ...query,
+    };
+  },
+
   getProposalPageQuery() {
     return pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
   },
@@ -256,16 +300,6 @@ const app = store({
     app.proposals.page.search = '';
     app.proposals.page.sort = 'CREATED:DESC';
     app.proposals.page.filters = [];
-  },
-
-  addProposalPageFilter(f: string) {
-    const current = app.proposals.page.filters;
-    app.proposals.page.filters = uniq([f, ...current]);
-  },
-
-  removeProposalPageFilter(f: string) {
-    const current = app.proposals.page.filters;
-    app.proposals.page.filters = without(current, f);
   },
 
   async fetchProposalDetail(id: number) {
@@ -322,6 +356,8 @@ const app = store({
     app.proposalDetailApproving = false;
   },
 
+  // Email
+
   async getEmailExample(type: string) {
     try {
       const example = await getEmailExample(type);
@@ -333,6 +369,8 @@ const app = store({
       handleApiError(e);
     }
   },
+
+  // RFPs
 
   async fetchRFPs() {
     app.rfpsFetching = true;
@@ -382,8 +420,78 @@ const app = store({
     }
     app.rfpDeleting = false;
   },
+
+  // Contributions
+
+  async fetchContributions() {
+    app.contributions.page.fetching = true;
+    try {
+      const page = await getContributions(app.getContributionPageQuery());
+      app.contributions.page = {
+        ...app.contributions.page,
+        ...page,
+        fetched: true,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributions.page.fetching = false;
+  },
+
+  setContributionPageQuery(query: Partial<PageQuery>) {
+    app.contributions.page = {
+      ...app.contributions.page,
+      ...query,
+    };
+  },
+
+  getContributionPageQuery() {
+    return pick(app.contributions.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+  },
+
+  resetContributionPageQuery() {
+    app.contributions.page.page = 1;
+    app.contributions.page.search = '';
+    app.contributions.page.sort = 'CREATED:DESC';
+    app.contributions.page.filters = [];
+  },
+
+  async fetchContributionDetail(id: number) {
+    app.contributionDetailFetching = true;
+    try {
+      app.contributionDetail = await getContribution(id);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributionDetailFetching = false;
+  },
+
+  async editContribution(id: number, args: ContributionArgs) {
+    app.contributionSaving = true;
+    app.contributionSaved = false;
+    try {
+      await editContribution(id, args);
+      app.contributionSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributionSaving = false;
+  },
+
+  async createContribution(args: ContributionArgs) {
+    app.contributionSaving = true;
+    app.contributionSaved = false;
+    try {
+      await createContribution(args);
+      app.contributionSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributionSaving = false;
+  }
 });
 
+// Utils
 function handleApiError(e: AxiosError) {
   if (e.response && e.response.data!.message) {
     app.generalError.push(e.response!.data.message);
@@ -394,6 +502,21 @@ function handleApiError(e: AxiosError) {
   }
 }
 
+function createDefaultPageData<T>(sort: string): PageData<T> {
+  return {
+    sort,
+    page: 1,
+    search: '',
+    filters: [] as string[],
+    pageSize: 0,
+    total: 0,
+    items: [] as T[],
+    fetching: false,
+    fetched: false,
+  }
+}
+
+// Attach to window for inspection
 (window as any).appStore = app;
 
 // check login status periodically

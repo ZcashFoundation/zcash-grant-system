@@ -76,14 +76,27 @@ export interface Comment {
   dateCreated: number;
   content: string;
 }
+// NOTE: sync with backend/utils/enums.py
+export enum CONTRIBUTION_STATUS {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  DELETED = 'DELETED',
+}
 export interface Contribution {
   id: number;
-  status: string;
+  status: CONTRIBUTION_STATUS;
   txId: null | string;
   amount: string;
   dateCreated: number;
   user: User;
   proposal: Proposal;
+}
+export interface ContributionArgs {
+  proposalId: number;
+  userId: number;
+  amount: string;
+  txId?: string;
+  status: CONTRIBUTION_STATUS;
 }
 export interface User {
   accountAddress: string;
@@ -122,4 +135,12 @@ export interface PageQuery {
   filters: string[];
   search: string;
   sort: string;
+}
+
+export interface PageData<T> extends PageQuery {
+  pageSize: number;
+  total: number;
+  items: T[];
+  fetching: boolean;
+  fetched: boolean;
 }
