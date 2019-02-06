@@ -77,7 +77,7 @@ class ContributionDetail extends React.Component<Props> {
               {renderDeetItem('status', c.status)}
               {renderDeetItem('amount', c.amount)}
               {renderDeetItem('txid', c.txId
-                ? <code>{c.txId}</code>
+                ? <Input size="small" value={c.txId} readOnly />
                 : <em>N/A</em>
               )}
             </Card>
