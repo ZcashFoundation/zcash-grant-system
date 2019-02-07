@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from grant.extensions import ma, db
 from grant.utils.enums import RFPStatus
 from grant.utils.misc import dt_to_unix
@@ -15,6 +15,11 @@ class RFP(db.Model):
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(255), nullable=False)
+    matching = db.Column(db.Boolean, default=False, nullable=False)
+    bounty = db.Column(db.String(255), nullable=True)
+    date_closes = db.Column(db.DateTime, nullable=True)
+    date_opened = db.Column(db.DateTime, nullable=True)
+    date_closed = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     proposals = db.relationship(
@@ -36,13 +41,19 @@ class RFP(db.Model):
         brief: str,
         content: str,
         category: str,
+        bounty: str,
+        date_closes: datetime,
+        matching: bool = False,
         status: str = RFPStatus.DRAFT,
     ):
-        self.date_created = datetime.datetime.now()
+        self.date_created = datetime.now()
         self.title = title
         self.brief = brief
         self.content = content
         self.category = category
+        self.bounty = bounty
+        self.date_closes = date_closes
+        self.matching = matching
         self.status = status
 
 
@@ -87,10 +98,22 @@ class AdminRFPSchema(ma.Schema):
         )
 
     date_created = ma.Method("get_date_created")
+    date_closes = ma.Method("get_date_closes")
+    date_opened = ma.Method("get_date_opened")
+    date_closed = ma.Method("get_date_closed")
     proposals = ma.Nested("ProposalSchema", many=True, exclude=["rfp"])
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
+    
+    def get_date_closes(self, obj):
+        return dt_to_unix(obj.date_closes)
+    
+    def get_date_opened(self, obj):
+        return dt_to_unix(obj.date_opened)
+    
+    def get_date_closed(self, obj):
+        return dt_to_unix(obj.date_closes)
 
 admin_rfp_schema = AdminRFPSchema()
 admin_rfps_schema = AdminRFPSchema(many=True)

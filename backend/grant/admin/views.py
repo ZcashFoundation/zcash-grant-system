@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
+from datetime import datetime
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
@@ -17,7 +18,7 @@ from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.misc import make_url
-from grant.utils.enums import ProposalStatus, ContributionStatus
+from grant.utils.enums import ProposalStatus, ContributionStatus, RFPStatus
 from grant.utils import pagination
 from sqlalchemy import func, or_
 
@@ -284,15 +285,13 @@ def get_rfps():
     parameter('brief', type=str),
     parameter('content', type=str),
     parameter('category', type=str),
+    parameter('bounty', type=str),
+    parameter('matching', type=bool),
+    parameter('dateCloses', type=int),
 )
 @admin_auth_required
-def create_rfp(title, brief, content, category):
-    rfp = RFP(
-        title=title,
-        brief=brief,
-        content=content,
-        category=category,
-    )
+def create_rfp(**kwargs):
+    rfp = RFP(**kwargs)
     db.session.add(rfp)
     db.session.commit()
     return admin_rfp_schema.dump(rfp), 201
@@ -315,19 +314,33 @@ def get_rfp(rfp_id):
     parameter('brief', type=str),
     parameter('content', type=str),
     parameter('category', type=str),
+    parameter('bounty', type=str),
+    parameter('matching', type=bool),
+    parameter('dateCloses', type=int),
     parameter('status', type=str),
 )
 @admin_auth_required
-def update_rfp(rfp_id, title, brief, content, category, status):
+def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_closes, status):
     rfp = RFP.query.filter(RFP.id == rfp_id).first()
     if not rfp:
         return {"message": "No RFP matching that id"}, 404
 
+    # Update fields
     rfp.title = title
     rfp.brief = brief
     rfp.content = content
     rfp.category = category
-    rfp.status = status
+    rfp.bounty = bounty
+    rfp.matching = matching
+    rfp.date_closes = date_closes
+
+    # Update timestamps if status changed
+    if rfp.status != status:
+        if status == RFPStatus.LIVE:
+            rfp.date_opened = datetime.now()
+        if status == RFPStatus.CLOSED:
+            rfp.date_closed = datetime.now()
+        rfp.status = status
 
     db.session.add(rfp)
     db.session.commit()
