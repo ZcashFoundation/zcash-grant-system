@@ -1,4 +1,4 @@
-import { PROPOSAL_STATUS, RFP_STATUS } from 'src/types';
+import { PROPOSAL_STATUS, RFP_STATUS, CONTRIBUTION_STATUS } from 'src/types';
 
 export interface StatusSoT<E> {
   id: E;
@@ -85,6 +85,30 @@ export const RFP_STATUSES: Array<StatusSoT<RFP_STATUS>> = [
       'RFP has been closed to new submissions and will no longer be listed, but can still be viewed, and associated proposals will remain open.',
   },
 ];
+
+export const CONTRIBUTION_STATUSES: Array<StatusSoT<CONTRIBUTION_STATUS>> = [
+  {
+    id: CONTRIBUTION_STATUS.PENDING,
+    filterDisplay: 'Status: pending',
+    tagDisplay: 'Pending',
+    tagColor: '#ffaa00',
+    hint: 'Contribution is currently waiting to be sent and confirmed on chain',
+  },
+  {
+    id: CONTRIBUTION_STATUS.CONFIRMED,
+    filterDisplay: 'Status: confirmed',
+    tagDisplay: 'Confirmed',
+    tagColor: '#108ee9',
+    hint: 'Contribution was confirmed on chain with multiple block confirmations',
+  },
+  {
+    id: CONTRIBUTION_STATUS.DELETED,
+    filterDisplay: 'Status: deleted',
+    tagDisplay: 'Closed',
+    tagColor: '#eb4118',
+    hint: 'User deleted the contribution before it was sent or confirmed',
+  },
+]
 
 export function getStatusById<E>(statuses: Array<StatusSoT<E>>, id: E) {
   const result = statuses.find(s => s.id === id);

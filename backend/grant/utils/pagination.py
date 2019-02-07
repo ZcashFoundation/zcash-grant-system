@@ -1,8 +1,8 @@
 import abc
 from sqlalchemy import or_, and_
 
-from grant.proposal.models import db, ma, Proposal
-from .enums import ProposalStatus, ProposalStage, Category
+from grant.proposal.models import db, ma, Proposal, ProposalContribution, proposal_contributions_schema
+from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus
 
 
 def extract_filters(sw, strings):
@@ -106,7 +106,63 @@ class ProposalPagination(Pagination):
         }
 
 
+class ContributionPagination(Pagination):
+    def __init__(self):
+        self.FILTERS = [f'STATUS_{s}' for s in ContributionStatus.list()]
+        self.PAGE_SIZE = 9
+        self.SORT_MAP = {
+            'CREATED:DESC': ProposalContribution.date_created.desc(),
+            'CREATED:ASC': ProposalContribution.date_created,
+            'AMOUNT:DESC': ProposalContribution.amount.desc(),
+            'AMOUNT:ASC': ProposalContribution.amount,
+        }
+
+    def paginate(
+        self,
+        schema: ma.Schema=proposal_contributions_schema,
+        query: db.Query=None,
+        page: int=1,
+        filters: list=None,
+        search: str=None,
+        sort: str='PUBLISHED:DESC',
+    ):
+        query = query or ProposalContribution.query
+        sort = sort or 'CREATED:DESC'
+
+        # FILTER
+        if filters:
+            self.validate_filters(filters)
+            status_filters = extract_filters('STATUS_', filters)
+
+            if status_filters:
+                query = query.filter(ProposalContribution.status.in_(status_filters))
+
+        # SORT (see self.SORT_MAP)
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
+
+        # SEARCH can match txids or amounts
+        if search:
+            query = query.filter(or_(
+                ProposalContribution.amount.ilike(f'%{search}%'),
+                ProposalContribution.tx_id.ilike(f'%{search}%'),
+            ))
+
+        res = query.paginate(page, self.PAGE_SIZE, False)
+        return {
+            'page': res.page,
+            'total': res.total,
+            'page_size': self.PAGE_SIZE,
+            'items': schema.dump(res.items),
+            'filters': filters,
+            'search': search,
+            'sort': sort
+        }
+
+
 # expose pagination methods here
 proposal = ProposalPagination().paginate
+contribution = ContributionPagination().paginate
 # comment = CommentPagination().paginate
 # user = UserPagination().paginate

@@ -132,6 +132,46 @@ class ProposalContribution(db.Model):
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
 
+    @staticmethod
+    def validate(contribution):
+        proposal_id = contribution.get('proposal_id')
+        user_id = contribution.get('user_id')
+        status = contribution.get('status')
+        amount = contribution.get('amount')
+        tx_id = contribution.get('tx_id')
+
+        # Proposal ID (must belong to an existing proposal)
+        if proposal_id:
+            proposal = Proposal.query.filter(Proposal.id == proposal_id).first()
+            if not proposal:
+                raise ValidationException('No proposal matching that ID')
+            contribution.proposal_id = proposal_id
+        else:
+            raise ValidationException('Proposal ID is required')
+        # User ID (must belong to an existing user)
+        if user_id:
+            user = User.query.filter(User.id == user_id).first()
+            if not user:
+                raise ValidationException('No user matching that ID')
+            contribution.user_id = user_id
+        else:
+            raise ValidationException('User ID is required')
+        # Status (must be in list of statuses)
+        if status:
+            if not ContributionStatus.includes(status):
+                raise ValidationException('Invalid status')
+            contribution.status = status
+        else:
+            raise ValidationException('Status is required')
+        # Amount (must be a Decimal parseable)
+        if amount:
+            try:
+                contribution.amount = str(Decimal(amount))
+            except:
+                raise ValidationException('Amount must be a number')
+        else:
+            raise ValidationException('Amount is required')
+
     def confirm(self, tx_id: str, amount: str):
         self.status = ContributionStatus.CONFIRMED
         self.tx_id = tx_id
