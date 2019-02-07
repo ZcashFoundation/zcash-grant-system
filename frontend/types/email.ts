@@ -11,6 +11,7 @@ export interface EmailSubscriptions {
   myProposalContribution: boolean;
   myProposalFunded: boolean;
   myProposalRefund: boolean;
+  arbiter: boolean;
 }
 
 export enum EMAIL_SUBSCRIPTION_CATEGORY {

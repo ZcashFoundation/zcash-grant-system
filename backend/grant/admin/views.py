@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
 from grant.comment.models import Comment, user_comments_schema
-from grant.email.send import generate_email
+from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.proposal.models import (
     Proposal,
@@ -13,9 +13,10 @@ from grant.proposal.models import (
     proposal_contribution_schema,
     user_proposal_contributions_schema,
 )
-from grant.user.models import User, users_schema, user_schema
+from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
+from grant.utils.misc import make_url
 from grant.utils.enums import ProposalStatus, ContributionStatus
 from grant.utils import pagination
 from sqlalchemy import func, or_
@@ -59,10 +60,15 @@ def stats():
     proposal_pending_count = db.session.query(func.count(Proposal.id)) \
         .filter(Proposal.status == ProposalStatus.PENDING) \
         .scalar()
+    proposal_no_arbiter_count = db.session.query(func.count(Proposal.id)) \
+        .filter(Proposal.status == ProposalStatus.LIVE) \
+        .filter(Proposal.arbiter_id == None) \
+        .scalar()
     return {
         "userCount": user_count,
         "proposalCount": proposal_count,
         "proposalPendingCount": proposal_pending_count,
+        "proposalNoArbiterCount": proposal_no_arbiter_count,
     }
 
 
@@ -87,7 +93,7 @@ def delete_user(user_id):
 @admin_auth_required
 def get_users():
     users = User.query.all()
-    result = users_schema.dump(users)
+    result = admin_users_schema.dump(users)
     return result
 
 
@@ -97,7 +103,7 @@ def get_users():
 def get_user(id):
     user_db = User.query.filter(User.id == id).first()
     if user_db:
-        user = user_schema.dump(user_db)
+        user = admin_user_schema.dump(user_db)
         user_proposals = Proposal.query.filter(Proposal.team.any(id=user['userid'])).all()
         user['proposals'] = proposals_schema.dump(user_proposals)
         user_comments = Comment.get_by_user(user_db)
@@ -107,6 +113,64 @@ def get_user(id):
         user["contributions"] = contributions_dump
         return user
     return {"message": f"Could not find user with id {id}"}, 404
+
+
+# ARBITERS
+
+
+@blueprint.route("/arbiters", methods=["GET"])
+@endpoint.api(
+    parameter('search', type=str, required=False),
+)
+@admin_auth_required
+def get_arbiters(search):
+    results = []
+    error = None
+    if len(search) < 3:
+        error = 'search query must be at least 3 characters long'
+    else:
+        users = User.query.filter(
+            User.email_address.ilike(f'%{search}%') | User.display_name.ilike(f'%{search}%')
+        ).order_by(User.display_name).all()
+        results = admin_users_schema.dump(users)
+
+    return {
+        'results': results,
+        'search': search,
+        'error': error
+    }
+
+
+@blueprint.route('/arbiters', methods=['PUT'])
+@endpoint.api(
+    parameter('proposalId', type=int, required=True),
+    parameter('userId', type=int, required=True)
+)
+@admin_auth_required
+def set_arbiter(proposal_id, user_id):
+    proposal = Proposal.query.filter(Proposal.id == proposal_id).first()
+    if not proposal:
+        return {"message": "Proposal not found"}, 404
+
+    user = User.query.filter(User.id == user_id).first()
+    if not user:
+        return {"message": "User not found"}, 404
+
+    if proposal.arbiter_id != user.id:
+        # send email
+        send_email(user.email_address, 'proposal_arbiter', {
+            'proposal': proposal,
+            'proposal_url': make_url(f'/proposals/{proposal.id}'),
+            'arbitration_url': make_url(f'/profile/{user.id}?tab=arbitration'),
+        })
+        proposal.arbiter_id = user.id
+        db.session.add(proposal)
+        db.session.commit()
+
+    return {
+        'proposal': proposal_schema.dump(proposal),
+        'user': admin_user_schema.dump(user)
+    }, 200
 
 
 # PROPOSALS
@@ -382,8 +446,7 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     # Transaction ID (no validation)
     if tx_id:
         contribution.tx_id = tx_id
-    
+
     db.session.add(contribution)
     db.session.commit()
     return proposal_contribution_schema.dump(contribution), 200
-

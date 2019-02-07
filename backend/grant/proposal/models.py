@@ -13,34 +13,6 @@ from grant.utils.requests import blockchain_get
 from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 
-# Proposal states
-DRAFT = 'DRAFT'
-PENDING = 'PENDING'
-STAKING = 'STAKING'
-APPROVED = 'APPROVED'
-REJECTED = 'REJECTED'
-LIVE = 'LIVE'
-DELETED = 'DELETED'
-STATUSES = [DRAFT, PENDING, STAKING, APPROVED, REJECTED, LIVE, DELETED]
-
-# Funding stages
-FUNDING_REQUIRED = 'FUNDING_REQUIRED'
-COMPLETED = 'COMPLETED'
-PROPOSAL_STAGES = [FUNDING_REQUIRED, COMPLETED]
-
-# Proposal categories
-DAPP = "DAPP"
-DEV_TOOL = "DEV_TOOL"
-CORE_DEV = "CORE_DEV"
-COMMUNITY = "COMMUNITY"
-DOCUMENTATION = "DOCUMENTATION"
-ACCESSIBILITY = "ACCESSIBILITY"
-CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
-
-# Contribution states
-# PENDING = 'PENDING'
-CONFIRMED = 'CONFIRMED'
-
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
@@ -184,6 +156,7 @@ class Proposal(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
     rfp_id = db.Column(db.Integer(), db.ForeignKey('rfp.id'), nullable=True)
+    arbiter_id = db.Column(db.Integer(), db.ForeignKey('user.id'), nullable=True)
 
     # Content info
     status = db.Column(db.String(255), nullable=False)
@@ -210,6 +183,7 @@ class Proposal(db.Model):
     contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
     milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
+    arbiter = db.relationship("User", lazy=True, back_populates="arbitrated_proposals")
 
     def __init__(
             self,
@@ -322,7 +296,7 @@ class Proposal(db.Model):
             # find pending contribution for any user of remaining amount
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
-                status=PENDING,
+                status=ProposalStatus.PENDING,
             ).first()
             if not contribution:
                 contribution = self.create_contribution(user_id, str(remaining.normalize()))
@@ -431,7 +405,8 @@ class ProposalSchema(ma.Schema):
             "deadline_duration",
             "contribution_matching",
             "invites",
-            "rfp"
+            "rfp",
+            "arbiter"
         )
 
     date_created = ma.Method("get_date_created")
@@ -445,6 +420,7 @@ class ProposalSchema(ma.Schema):
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
     rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
+    arbiter = ma.Nested("UserSchema")  # exclude=["arbitrated_proposals"])
 
     def get_proposal_id(self, obj):
         return obj.id

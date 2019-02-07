@@ -57,6 +57,16 @@ async function deleteUser(id: number) {
   return data;
 }
 
+async function fetchArbiters(search: string) {
+  const { data } = await api.get(`/admin/arbiters`, { params: { search } });
+  return data;
+}
+
+async function setArbiter(proposalId: number, userId: number) {
+  const { data } = await api.put(`/admin/arbiters`, { proposalId, userId });
+  return data;
+}
+
 async function fetchProposals(params: Partial<PageQuery>) {
   const { data } = await api.get('/admin/proposals', { params });
   return data;
@@ -132,6 +142,7 @@ async function editContribution(id: number, args: ContributionArgs) {
 // STORE
 const app = store({
   /*** DATA ***/
+
   hasCheckedLogin: false,
   isLoggedIn: false,
   loginError: '',
@@ -142,6 +153,7 @@ const app = store({
     userCount: 0,
     proposalCount: 0,
     proposalPendingCount: 0,
+    proposalNoArbiterCount: 0,
   },
 
   usersFetching: false,
@@ -151,6 +163,13 @@ const app = store({
   userDetail: null as null | User,
   userDeleting: false,
   userDeleted: false,
+
+  arbitersSearch: {
+    search: '',
+    results: [] as User[],
+    fetching: false,
+    error: null as string | null,
+  },
 
   proposals: {
     page: createDefaultPageData<Proposal>('CREATED:DESC'),
@@ -192,6 +211,16 @@ const app = store({
     }
     if (app.proposalDetail && app.proposalDetail.proposalId === p.proposalId) {
       app.proposalDetail = p;
+    }
+  },
+
+  updateUserInStore(u: User) {
+    const index = app.users.findIndex(x => x.userid === u.userid);
+    if (index > -1) {
+      app.users[index] = u;
+    }
+    if (app.userDetail && app.userDetail.userid === u.userid) {
+      app.userDetail = u;
     }
   },
 
@@ -266,6 +295,42 @@ const app = store({
     app.userDeleting = false;
   },
 
+  // Arbiters
+
+  async searchArbiters(search: string) {
+    app.arbitersSearch = {
+      ...app.arbitersSearch,
+      search,
+      fetching: true,
+    };
+    try {
+      const data = await fetchArbiters(search);
+      app.arbitersSearch = {
+        ...app.arbitersSearch,
+        ...data,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.arbitersSearch.fetching = false;
+  },
+
+  async searchArbitersClear() {
+    app.arbitersSearch = {
+      search: '',
+      results: [] as User[],
+      fetching: false,
+      error: null,
+    };
+  },
+
+  async setArbiter(proposalId: number, userId: number) {
+    // let component handle errors for this one
+    const { proposal, user } = await setArbiter(proposalId, userId);
+    this.updateProposalInStore(proposal);
+    this.updateUserInStore(user);
+  },
+
   // Proposals
 
   async fetchProposals() {
@@ -284,6 +349,10 @@ const app = store({
   },
 
   setProposalPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
     app.proposals.page = {
       ...app.proposals.page,
       ...query,
@@ -438,6 +507,10 @@ const app = store({
   },
 
   setContributionPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
     app.contributions.page = {
       ...app.contributions.page,
       ...query,
@@ -445,7 +518,12 @@ const app = store({
   },
 
   getContributionPageQuery() {
-    return pick(app.contributions.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+    return pick(app.contributions.page, [
+      'page',
+      'search',
+      'filters',
+      'sort',
+    ]) as PageQuery;
   },
 
   resetContributionPageQuery() {
@@ -487,7 +565,7 @@ const app = store({
       handleApiError(e);
     }
     app.contributionSaving = false;
-  }
+  },
 });
 
 // Utils
@@ -512,7 +590,7 @@ function createDefaultPageData<T>(sort: string): PageData<T> {
     items: [] as T[],
     fetching: false,
     fetched: false,
-  }
+  };
 }
 
 // Attach to window for inspection

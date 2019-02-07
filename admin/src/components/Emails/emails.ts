@@ -72,4 +72,9 @@ export default [
     title: 'Comment reply',
     description: 'Sent if someone makes a direct reply to your comment',
   },
+  {
+    id: 'proposal_arbiter',
+    title: 'Arbiter assignment',
+    description: 'Sent if someone is made arbiter of a proposal',
+  },
 ] as Email[];

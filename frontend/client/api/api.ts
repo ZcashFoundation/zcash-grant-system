@@ -68,6 +68,7 @@ export function getUser(address: string): Promise<{ data: User }> {
         withComments: true,
         withFunded: true,
         withPending: true,
+        withArbitrated: true,
       },
     })
     .then(res => {

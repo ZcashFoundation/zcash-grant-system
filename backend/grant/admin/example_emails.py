@@ -99,4 +99,9 @@ example_email_args = {
         'comment_url': 'http://somecomment.com',
         'author_url': 'http://someuser.com',
     },
+    'proposal_arbiter': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+        'arbitration_url': 'http://arbitrationtab.com',
+    }
 }

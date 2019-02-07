@@ -18,7 +18,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 def is_current_authed_user_id(user_id):
     return current_user.is_authenticated and \
-           current_user.id == user_id
+        current_user.id == user_id
 
 
 class RolesUsers(db.Model):
@@ -118,6 +118,7 @@ class User(db.Model, UserMixin):
                                      lazy=True, cascade="all, delete-orphan")
     roles = db.relationship('Role', secondary='roles_users',
                             backref=db.backref('users', lazy='dynamic'))
+    arbitrated_proposals = db.relationship("Proposal", lazy=True, back_populates="arbiter")
 
     # TODO - add create and validate methods
 
@@ -235,13 +236,15 @@ class SelfUserSchema(ma.Schema):
             "avatar",
             "display_name",
             "userid",
-            "email_verified"
+            "email_verified",
+            "arbitrated_proposals"
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
     email_verified = ma.Method("get_email_verified")
+    arbitrated_proposals = ma.Nested("ProposalSchema", many=True, exclude=["arbiter"])
 
     def get_userid(self, obj):
         return obj.id
@@ -252,6 +255,10 @@ class SelfUserSchema(ma.Schema):
 
 self_user_schema = SelfUserSchema()
 self_users_schema = SelfUserSchema(many=True)
+
+# differentiate from self, same for now
+admin_user_schema = self_user_schema
+admin_users_schema = self_users_schema
 
 
 class UserSchema(ma.Schema):
