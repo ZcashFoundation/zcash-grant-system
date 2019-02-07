@@ -8,10 +8,12 @@ import PaymentInfo from './PaymentInfo';
 
 interface OwnProps {
   isVisible: boolean;
+  contribution?: ContributionWithAddresses | Falsy;
   proposalId?: number;
   contributionId?: number;
   amount?: string;
   hasNoButtons?: boolean;
+  text?: React.ReactNode;
   handleClose(): void;
 }
 
@@ -30,22 +32,32 @@ export default class ContributionModal extends React.Component<Props, State> {
     error: null,
   };
 
+  constructor(props: Props) {
+    super(props);
+    if (props.contribution) {
+      this.state = {
+        ...this.state,
+        contribution: props.contribution,
+      };
+    }
+  }
+
   componentWillUpdate(nextProps: Props) {
-    const { isVisible, proposalId, contributionId } = nextProps;
+    const { isVisible, proposalId, contributionId, contribution } = nextProps;
     // When modal is opened and proposalId is provided or changed
     if (isVisible && proposalId) {
-      if (
-        this.props.isVisible !== isVisible ||
-        proposalId !== this.props.proposalId
-      ) {
+      if (this.props.isVisible !== isVisible || proposalId !== this.props.proposalId) {
         this.fetchAddresses(proposalId, contributionId);
       }
     }
-    
+    // If contribution is provided
+    if (contribution !== this.props.contribution) {
+      this.setState({ contribution: contribution || null });
+    }
   }
 
   render() {
-    const { isVisible, handleClose, hasNoButtons } = this.props;
+    const { isVisible, handleClose, hasNoButtons, text } = this.props;
     const { hasSent, contribution, error } = this.state;
     let content;
 
@@ -68,7 +80,7 @@ export default class ContributionModal extends React.Component<Props, State> {
       if (error) {
         content = error;
       } else {
-        content = <PaymentInfo contribution={contribution} />;
+        content = <PaymentInfo contribution={contribution} text={text} />;
       }
     }
 
@@ -89,22 +101,16 @@ export default class ContributionModal extends React.Component<Props, State> {
     );
   }
 
-  private async fetchAddresses(
-    proposalId: number,
-    contributionId?: number,
-  ) {
+  private async fetchAddresses(proposalId: number, contributionId?: number) {
     try {
       let res;
       if (contributionId) {
         res = await getProposalContribution(proposalId, contributionId);
       } else {
-        res = await postProposalContribution(
-          proposalId,
-          this.props.amount || '0',
-        );
+        res = await postProposalContribution(proposalId, this.props.amount || '0');
       }
       this.setState({ contribution: res.data });
-    } catch(err) {
+    } catch (err) {
       this.setState({ error: err.message });
     }
   }

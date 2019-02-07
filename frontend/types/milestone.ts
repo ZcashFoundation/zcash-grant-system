@@ -12,13 +12,12 @@ export interface Milestone {
   state: MILESTONE_STATE;
   amount: Zat;
   isPaid: boolean;
-  isImmediatePayout: boolean;
+  immediatePayout: boolean;
+  dateEstimated: number;
 }
 
 export interface ProposalMilestone extends Milestone {
   content: string;
-  immediatePayout: boolean;
-  dateEstimated: string;
   payoutPercent: string;
   title: string;
 }
@@ -26,7 +25,7 @@ export interface ProposalMilestone extends Milestone {
 export interface CreateMilestone {
   title: string;
   content: string;
-  dateEstimated: string;
+  dateEstimated: number;
   payoutPercent: string;
   immediatePayout: boolean;
 }

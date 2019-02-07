@@ -98,7 +98,7 @@ class ProposalMilestones extends React.Component<Props, State> {
           : milestoneStateToStepState[milestone.state];
 
       const className = this.state.step === i ? 'is-active' : 'is-inactive';
-      const estimatedDate = moment(milestone.dateEstimated).format('MMMM YYYY');
+      const estimatedDate = moment(milestone.dateEstimated * 1000).format('MMMM YYYY');
       const reward = (
         <UnitDisplay value={milestone.amount} symbol="ZEC" displayShortBalance={4} />
       );
@@ -121,7 +121,7 @@ class ProposalMilestones extends React.Component<Props, State> {
               message={
                 <span>
                   The team was awarded <strong>{reward}</strong>{' '}
-                  {milestone.isImmediatePayout
+                  {milestone.immediatePayout
                     ? 'as an initial payout'
                     : // TODO: Add property for payout date on milestones
                       `on ${moment().format('MMM Do, YYYY')}`}
@@ -164,7 +164,7 @@ class ProposalMilestones extends React.Component<Props, State> {
 
       const statuses = (
         <div className="ProposalMilestones-milestone-status">
-          {!milestone.isImmediatePayout && (
+          {!milestone.immediatePayout && (
             <div>
               Estimate: <strong>{estimatedDate}</strong>
             </div>

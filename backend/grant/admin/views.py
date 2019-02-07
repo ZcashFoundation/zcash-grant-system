@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
+from decimal import Decimal
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
@@ -9,13 +10,14 @@ from grant.proposal.models import (
     ProposalContribution,
     proposals_schema,
     proposal_schema,
+    proposal_contribution_schema,
     user_proposal_contributions_schema,
 )
 from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
-from grant.utils.enums import ProposalStatus
 from grant.utils.misc import make_url
+from grant.utils.enums import ProposalStatus, ContributionStatus
 from grant.utils import pagination
 from sqlalchemy import func, or_
 
@@ -343,3 +345,108 @@ def delete_rfp(rfp_id):
     db.session.delete(rfp)
     db.session.commit()
     return None, 200
+
+
+# Contributions
+
+
+@blueprint.route('/contributions', methods=['GET'])
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
+@admin_auth_required
+def get_contributions(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.contribution(
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
+
+
+@blueprint.route('/contributions', methods=['POST'])
+@endpoint.api(
+    parameter('proposalId', type=int, required=True),
+    parameter('userId', type=int, required=True),
+    parameter('status', type=str, required=True),
+    parameter('amount', type=str, required=True),
+    parameter('txId', type=str, required=False),
+)
+@admin_auth_required
+def create_contribution(proposal_id, user_id, status, amount, tx_id):
+    # Some fields set manually since we're admin, and normally don't do this
+    contribution = ProposalContribution(
+        proposal_id=proposal_id,
+        user_id=user_id,
+        amount=amount,
+    )
+    contribution.status = status
+    contribution.tx_id = tx_id
+
+    db.session.add(contribution)
+    db.session.commit()
+    return proposal_contribution_schema.dump(contribution), 200
+
+
+@blueprint.route('/contributions/<contribution_id>', methods=['GET'])
+@endpoint.api()
+@admin_auth_required
+def get_contribution(contribution_id):
+    contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
+    if not contribution:
+        return {"message": "No contribution matching that id"}, 404
+
+    return proposal_contribution_schema.dump(contribution), 200
+
+
+@blueprint.route('/contributions/<contribution_id>', methods=['PUT'])
+@endpoint.api(
+    parameter('proposalId', type=int, required=False),
+    parameter('userId', type=int, required=False),
+    parameter('status', type=str, required=False),
+    parameter('amount', type=str, required=False),
+    parameter('txId', type=str, required=False),
+)
+@admin_auth_required
+def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id):
+    contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
+    if not contribution:
+        return {"message": "No contribution matching that id"}, 404
+
+    print((contribution_id, proposal_id, user_id, status, amount, tx_id))
+
+    # Proposal ID (must belong to an existing proposal)
+    if proposal_id:
+        proposal = Proposal.query.filter(Proposal.id == proposal_id).first()
+        if not proposal:
+            return {"message": "No proposal matching that id"}, 400
+        contribution.proposal_id = proposal_id
+    # User ID (must belong to an existing user)
+    if user_id:
+        user = User.query.filter(User.id == user_id).first()
+        if not user:
+            return {"message": "No user matching that id"}, 400
+        contribution.user_id = user_id
+    # Status (must be in list of statuses)
+    if status:
+        if not ContributionStatus.includes(status):
+            return {"message": "Invalid status"}, 400
+        contribution.status = status
+    # Amount (must be a Decimal parseable)
+    if amount:
+        try:
+            contribution.amount = str(Decimal(amount))
+        except:
+            return {"message": "Amount could not be parsed as number"}, 400
+    # Transaction ID (no validation)
+    if tx_id:
+        contribution.tx_id = tx_id
+
+    db.session.add(contribution)
+    db.session.commit()
+    return proposal_contribution_schema.dump(contribution), 200

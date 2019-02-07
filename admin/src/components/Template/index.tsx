@@ -57,6 +57,12 @@ class Template extends React.Component<Props> {
                 <span className="nav-text">RFPs</span>
               </Link>
             </Menu.Item>
+            <Menu.Item key="contributions">
+              <Link to="/contributions">
+                <Icon type="dollar" />
+                <span className="nav-text">Contributions</span>
+              </Link>
+            </Menu.Item>
             <Menu.Item key="emails">
               <Link to="/emails">
                 <Icon type="mail" />

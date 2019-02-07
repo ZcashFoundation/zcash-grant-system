@@ -2,6 +2,7 @@ import datetime
 from functools import reduce
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from decimal import Decimal
 
 from grant.comment.models import Comment
 from grant.email.send import send_email
@@ -102,6 +103,46 @@ class ProposalContribution(db.Model):
             .filter(ProposalContribution.status != ContributionStatus.DELETED) \
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
+
+    @staticmethod
+    def validate(contribution):
+        proposal_id = contribution.get('proposal_id')
+        user_id = contribution.get('user_id')
+        status = contribution.get('status')
+        amount = contribution.get('amount')
+        tx_id = contribution.get('tx_id')
+
+        # Proposal ID (must belong to an existing proposal)
+        if proposal_id:
+            proposal = Proposal.query.filter(Proposal.id == proposal_id).first()
+            if not proposal:
+                raise ValidationException('No proposal matching that ID')
+            contribution.proposal_id = proposal_id
+        else:
+            raise ValidationException('Proposal ID is required')
+        # User ID (must belong to an existing user)
+        if user_id:
+            user = User.query.filter(User.id == user_id).first()
+            if not user:
+                raise ValidationException('No user matching that ID')
+            contribution.user_id = user_id
+        else:
+            raise ValidationException('User ID is required')
+        # Status (must be in list of statuses)
+        if status:
+            if not ContributionStatus.includes(status):
+                raise ValidationException('Invalid status')
+            contribution.status = status
+        else:
+            raise ValidationException('Status is required')
+        # Amount (must be a Decimal parseable)
+        if amount:
+            try:
+                contribution.amount = str(Decimal(amount))
+            except:
+                raise ValidationException('Amount must be a number')
+        else:
+            raise ValidationException('Amount is required')
 
     def confirm(self, tx_id: str, amount: str):
         self.status = ContributionStatus.CONFIRMED
@@ -237,7 +278,7 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def create_contribution(self, user_id: int, amount: float):
+    def create_contribution(self, user_id: int, amount):
         contribution = ProposalContribution(
             proposal_id=self.id,
             user_id=user_id,
@@ -249,18 +290,16 @@ class Proposal(db.Model):
 
     def get_staking_contribution(self, user_id: int):
         contribution = None
-        remaining = PROPOSAL_STAKING_AMOUNT - float(self.contributed)
+        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.contributed)
         # check funding
         if remaining > 0:
-            # find pending contribution for any user
-            # (always use full staking amout so we can find it)
+            # find pending contribution for any user of remaining amount
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
-                amount=str(PROPOSAL_STAKING_AMOUNT),
                 status=ProposalStatus.PENDING,
             ).first()
             if not contribution:
-                contribution = self.create_contribution(user_id, PROPOSAL_STAKING_AMOUNT)
+                contribution = self.create_contribution(user_id, str(remaining.normalize()))
 
         return contribution
 
@@ -319,14 +358,14 @@ class Proposal(db.Model):
         contributions = ProposalContribution.query \
             .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
             .all()
-        funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
 
     @hybrid_property
     def funded(self):
-        target = float(self.target)
+        target = Decimal(self.target)
         # apply matching multiplier
-        funded = float(self.contributed) * (1 + self.contribution_matching)
+        funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
         # if funded > target, just set as target
         if funded > target:
             return str(target)
@@ -335,7 +374,7 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_staked(self):
-        return float(self.contributed) >= PROPOSAL_STAKING_AMOUNT
+        return Decimal(self.contributed) >= PROPOSAL_STAKING_AMOUNT
 
 
 class ProposalSchema(ma.Schema):
