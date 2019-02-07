@@ -89,6 +89,11 @@ To create a proposal, run
 
     flask create_proposal "FUNDING_REQUIRED" 1 123 "My Awesome Proposal" "### Hi! I have a great proposal"
 
+To seed many proposals, run
+
+    flask create_proposals <number_of_proposals:int>
+
+
 ## S3 Storage Setup
 
 1. create bucket, keep the `bucket name` and `region` handy
