@@ -87,11 +87,11 @@ For a full migration command reference, run `flask db --help`.
 
 To create a proposal, run
 
-    flask create_proposal "FUNDING_REQUIRED" 1 123 "My Awesome Proposal" "### Hi! I have a great proposal"
+    flask create-proposal "FUNDING_REQUIRED" 1 123 "My Awesome Proposal" "### Hi! I have a great proposal"
 
 To seed many proposals, run
 
-    flask create_proposals <number_of_proposals:int>
+    flask create-proposals <number_of_proposals:int>
 
 
 ## S3 Storage Setup
