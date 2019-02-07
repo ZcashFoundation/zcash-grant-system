@@ -1,15 +1,17 @@
 import React, { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popconfirm, message, Tag } from 'antd';
-import { UserProposal, STATUS } from 'types';
+import { UserProposal, STATUS, ContributionWithAddresses } from 'types';
+import ContributionModal from 'components/ContributionModal';
+import { getProposalStakingContribution } from 'api/api';
 import { deletePendingProposal, publishPendingProposal } from 'modules/users/actions';
-import './ProfilePending.less';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
+import './ProfilePending.less';
 
 interface OwnProps {
   proposal: UserProposal;
-  onPublish: (id: UserProposal['proposalId']) => void;
+  onPublish(id: UserProposal['proposalId']): void;
 }
 
 interface StateProps {
@@ -23,18 +25,24 @@ interface DispatchProps {
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-const STATE = {
-  isDeleting: false,
-  isPublishing: false,
-};
-
-type State = typeof STATE;
+interface State {
+  isDeleting: boolean;
+  isPublishing: boolean;
+  isLoadingStake: boolean;
+  stakeContribution: ContributionWithAddresses | null;
+}
 
 class ProfilePending extends React.Component<Props, State> {
-  state = STATE;
+  state: State = {
+    isDeleting: false,
+    isPublishing: false,
+    isLoadingStake: false,
+    stakeContribution: null,
+  };
+
   render() {
     const { status, title, proposalId, rejectReason } = this.props.proposal;
-    const { isDeleting, isPublishing } = this.state;
+    const { isDeleting, isPublishing, isLoadingStake, stakeContribution } = this.state;
 
     const isDisableActions = isDeleting || isPublishing;
 
@@ -105,6 +113,15 @@ class ProfilePending extends React.Component<Props, State> {
               </Button>
             </Link>
           )}
+          {STATUS.STAKING === status && (
+            <Button
+              type="primary"
+              loading={isLoadingStake}
+              onClick={this.openStakingModal}
+            >
+              Stake
+            </Button>
+          )}
 
           <Popconfirm
             key="delete"
@@ -116,6 +133,22 @@ class ProfilePending extends React.Component<Props, State> {
             </Button>
           </Popconfirm>
         </div>
+
+        {STATUS.STAKING && (
+          <ContributionModal
+            isVisible={!!stakeContribution}
+            contribution={stakeContribution}
+            handleClose={this.closeStakingModal}
+            text={
+              <p>
+                Please send the staking contribution of{' '}
+                <b>{stakeContribution && stakeContribution.amount} ZEC</b> using the
+                instructions below. Once your payment has been sent and confirmed, you
+                will receive an email.
+              </p>
+            }
+          />
+        )}
       </div>
     );
   }
@@ -152,6 +185,25 @@ class ProfilePending extends React.Component<Props, State> {
       this.setState({ isDeleting: false });
     }
   };
+
+  private openStakingModal = async () => {
+    try {
+      this.setState({ isLoadingStake: true });
+      const res = await getProposalStakingContribution(this.props.proposal.proposalId);
+      this.setState({ stakeContribution: res.data }, () => {
+        this.setState({ isLoadingStake: false });
+      });
+    } catch (err) {
+      message.error(err.message, 3);
+      this.setState({ isLoadingStake: false });
+    }
+  };
+
+  private closeStakingModal = () =>
+    this.setState({
+      isLoadingStake: false,
+      stakeContribution: null,
+    });
 }
 
 export default connect<StateProps, DispatchProps, OwnProps, AppState>(
