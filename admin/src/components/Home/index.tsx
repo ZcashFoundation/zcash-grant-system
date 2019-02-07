@@ -23,14 +23,17 @@ class Home extends React.Component {
         <div>
           <Icon type="exclamation-circle" /> There are <b>{proposalPendingCount}</b>{' '}
           proposals <b>waiting for review</b>.{' '}
-          <Link to="/proposals?status=PENDING">Click here</Link> to view them.
+          <Link to="/proposals?filters[]=STATUS_PENDING">Click here</Link> to view them.
         </div>
       ),
       !!proposalNoArbiterCount && (
         <div>
           <Icon type="exclamation-circle" /> There are <b>{proposalNoArbiterCount}</b>{' '}
           live proposals <b>without an arbiter</b>.{' '}
-          <Link to="/proposals?status=LIVE&other=ARBITER">Click here</Link> to view them.
+          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=OTHER_ARBITER">
+            Click here
+          </Link>{' '}
+          to view them.
         </div>
       ),
     ].filter(Boolean);

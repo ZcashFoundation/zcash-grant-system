@@ -4,7 +4,7 @@ import store from 'src/store';
 import ProposalItem from './ProposalItem';
 import Pageable from 'components/Pageable';
 import { Proposal } from 'src/types';
-import { PROPOSAL_STATUSES } from 'util/statuses';
+import { proposalFilters } from 'util/filters';
 
 class Proposals extends React.Component<{}> {
   render() {
@@ -14,7 +14,7 @@ class Proposals extends React.Component<{}> {
     return (
       <Pageable
         page={page}
-        statuses={PROPOSAL_STATUSES}
+        filters={proposalFilters}
         sorts={sorts}
         searchPlaceholder="Search proposal titles"
         renderItem={(p: Proposal) => <ProposalItem key={p.proposalId} {...p} />}

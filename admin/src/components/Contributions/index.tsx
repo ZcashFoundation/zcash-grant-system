@@ -6,7 +6,7 @@ import store from 'src/store';
 import Pageable from 'components/Pageable';
 import ContributionItem from './ContributionItem';
 import { Contribution } from 'src/types';
-import { PROPOSAL_STATUSES } from 'util/statuses';
+import { contributionFilters } from 'util/filters';
 
 class Contributions extends React.Component<{}> {
   render() {
@@ -16,7 +16,7 @@ class Contributions extends React.Component<{}> {
     return (
       <Pageable
         page={page}
-        statuses={PROPOSAL_STATUSES}
+        filters={contributionFilters}
         sorts={sorts}
         searchPlaceholder="Search amount or txid"
         controlsExtra={
@@ -24,9 +24,7 @@ class Contributions extends React.Component<{}> {
             <Button icon="plus">Create a contribution</Button>
           </Link>
         }
-        renderItem={(c: Contribution) =>
-          <ContributionItem key={c.id} contribution={c} />
-        }
+        renderItem={(c: Contribution) => <ContributionItem key={c.id} contribution={c} />}
         handleSearch={store.fetchContributions}
         handleChangeQuery={store.setContributionPageQuery}
         handleResetQuery={store.resetContributionPageQuery}

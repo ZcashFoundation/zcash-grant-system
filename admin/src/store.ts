@@ -10,7 +10,6 @@ import {
   RFPArgs,
   EmailExample,
   PageQuery,
-  PROPOSAL_STATUS,
   PageData,
 } from './types';
 
@@ -143,6 +142,7 @@ async function editContribution(id: number, args: ContributionArgs) {
 // STORE
 const app = store({
   /*** DATA ***/
+
   hasCheckedLogin: false,
   isLoggedIn: false,
   loginError: '',
@@ -337,16 +337,9 @@ const app = store({
     app.proposals.page.fetching = true;
     try {
       const page = await fetchProposals(app.getProposalPageQuery());
-      // filter strings with prefix p, and remove the prefix
-      const swp = (p: string, a: string[]) =>
-        a.filter((s: string) => s.startsWith(p)).map(x => x.replace(p, ''));
       app.proposals.page = {
         ...app.proposals.page,
         ...page,
-        filters: {
-          status: swp('STATUS_', page.filters),
-          other: swp('OTHER_', page.filters),
-        },
         fetched: true,
       };
     } catch (e) {
@@ -356,6 +349,10 @@ const app = store({
   },
 
   setProposalPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
     app.proposals.page = {
       ...app.proposals.page,
       ...query,
@@ -363,13 +360,7 @@ const app = store({
   },
 
   getProposalPageQuery() {
-    const pq = pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as any;
-    const pfx = (p: string) => (s: string) => p + s;
-    pq.filters = [
-      ...pq.filters.status.map(pfx('STATUS_')),
-      ...pq.filters.other.map(pfx('OTHER_')),
-    ];
-    return pq as PageQuery;
+    return pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
   },
 
   resetProposalPageQuery() {
@@ -516,6 +507,10 @@ const app = store({
   },
 
   setContributionPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
     app.contributions.page = {
       ...app.contributions.page,
       ...query,

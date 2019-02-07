@@ -5,12 +5,12 @@ import { Icon, Button, Dropdown, Menu, Tag, List, Input, Pagination } from 'antd
 import { ClickParam } from 'antd/lib/menu';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { PageData, PageQuery } from 'src/types';
-import { StatusSoT, getStatusById } from 'util/statuses';
+import { Filters } from 'util/filters';
 import './index.less';
 
 interface OwnProps<T> {
   page: PageData<T>;
-  statuses: Array<StatusSoT<any>>;
+  filters: Filters;
   sorts: string[];
   searchPlaceholder?: string;
   controlsExtra?: React.ReactNode;
@@ -29,16 +29,20 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
   }
 
   render() {
-    const { page, statuses, sorts, renderItem, searchPlaceholder, controlsExtra } = this.props;
+    const {
+      page,
+      filters,
+      sorts,
+      renderItem,
+      searchPlaceholder,
+      controlsExtra,
+    } = this.props;
     const loading = !page.fetched || page.fetching;
-    const filters = page.filters
-      .filter(f => f.startsWith('STATUS_'))
-      .map(f => f.replace('STATUS_', ''));
 
     const statusFilterMenu = (
       <Menu onClick={this.handleFilterClick}>
-        {statuses.map(s => (
-          <Menu.Item key={s.id}>{s.filterDisplay}</Menu.Item>
+        {filters.list.map(f => (
+          <Menu.Item key={f.id}>{f.display}</Menu.Item>
         ))}
       </Menu>
     );
@@ -72,9 +76,7 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
           <Button title="refresh" icon="reload" onClick={this.props.handleSearch} />
 
           {controlsExtra && (
-            <div className="Pageable-controls-extra">
-              {controlsExtra}
-            </div>
+            <div className="Pageable-controls-extra">{controlsExtra}</div>
           )}
         </div>
 
@@ -87,17 +89,20 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
         {!!page.filters.length && (
           <div className="Pageable-filters">
             Filters:{' '}
-            {filters.map(sf => (
-              <Tag
-                key={sf}
-                onClose={() => this.handleFilterClose(sf)}
-                color={getStatusById(statuses, sf).tagColor}
-                closable
-              >
-                status: {sf}
-              </Tag>
-            ))}
-            {filters.length > 1 && (
+            {page.filters.map(fId => {
+              const f = filters.getById(fId);
+              return (
+                <Tag
+                  key={fId}
+                  onClose={() => this.handleFilterClose(fId)}
+                  color={f.color}
+                  closable
+                >
+                  {f.display}
+                </Tag>
+              );
+            })}
+            {page.filters.length > 1 && (
               <Tag key="clear" onClick={this.handleFilterClear}>
                 clear
               </Tag>
@@ -127,17 +132,13 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
   }
 
   private setQueryFromUrl = () => {
-    const { history, statuses, match, handleResetQuery, handleChangeQuery } = this.props;
-    const parsed = qs.parse(history.location.search);
+    const { history, match, handleResetQuery, handleChangeQuery } = this.props;
+    const parsed = qs.parse(history.location.search, { arrayFormat: 'bracket' });
 
-    // status filter
-    if (parsed.status) {
-      if (getStatusById(statuses, parsed.status)) {
-        // here we reset to normal page query params, we might want
-        // to do this every time we load or leave the component
-        handleResetQuery();
-        handleChangeQuery({ filters: [`STATUS_${parsed.status}`] });
-      }
+    // filters
+    if (parsed.filters) {
+      handleResetQuery();
+      handleChangeQuery({ filters: parsed.filters });
       history.replace(match.url); // remove qs
     }
   };
@@ -150,14 +151,14 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
   private handleFilterClick = (e: ClickParam) => {
     const { page, handleChangeQuery, handleSearch } = this.props;
     handleChangeQuery({
-      filters: uniq([`STATUS_${e.key}`, ...page.filters])
+      filters: uniq([e.key, ...page.filters]),
     });
     handleSearch();
   };
 
   private handleFilterClose = (filter: string) => {
     const { page, handleChangeQuery, handleSearch } = this.props;
-    handleChangeQuery({ filters: without(page.filters, `STATUS_${filter}`) });
+    handleChangeQuery({ filters: without(page.filters, filter) });
     handleSearch();
   };
 
