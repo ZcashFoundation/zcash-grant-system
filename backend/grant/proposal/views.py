@@ -19,7 +19,7 @@ from grant.utils.misc import is_email, make_url, from_zat
 from grant.utils.enums import ProposalStatus, ContributionStatus
 from grant.utils import pagination
 from sqlalchemy import or_
-import datetime
+from datetime import datetime
 
 from .models import (
     Proposal,
@@ -217,7 +217,7 @@ def update_proposal(milestones, proposal_id, **kwargs):
             m = Milestone(
                 title=mdata["title"],
                 content=mdata["content"],
-                date_estimated=datetime.datetime.fromtimestamp(mdata["dateEstimated"]),
+                date_estimated=datetime.fromtimestamp(mdata["dateEstimated"]),
                 payout_percent=str(mdata["payoutPercent"]),
                 immediate_payout=mdata["immediatePayout"],
                 proposal_id=g.current_proposal.id
