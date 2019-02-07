@@ -115,7 +115,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
         print(resp)
         self.assert200(resp)
-        self.assertEquals(resp.json['amount'], str(PROPOSAL_STAKING_AMOUNT))
+        self.assertEquals(resp.json['amount'], str(PROPOSAL_STAKING_AMOUNT.normalize()))
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_proposal_stake_no_auth(self, mock_get):

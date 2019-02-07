@@ -182,7 +182,7 @@ const ReviewMilestones = ({
         <div className="ReviewMilestone">
           <div className="ReviewMilestone-title">{m.title}</div>
           <div className="ReviewMilestone-info">
-            {moment(m.dateEstimated, 'MMMM YYYY').format('MMMM YYYY')}
+            {moment(m.dateEstimated * 1000).format('MMMM YYYY')}
             {' – '}
             {m.payoutPercent}% of funds
           </div>

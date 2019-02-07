@@ -8,6 +8,7 @@ import {
 } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import BN from 'bn.js';
+import moment from 'moment';
 
 const oneZec = new BN('100000000');
 
@@ -101,23 +102,22 @@ export function generateProposal({
   const genMilestone = (
     overrides: Partial<ProposalMilestone> = {},
   ): ProposalMilestone => {
-    const now = new Date();
     if (overrides.index) {
-      const estimate = new Date(now.setMonth(now.getMonth() + overrides.index));
-      overrides.dateEstimated = estimate.toISOString();
+      overrides.dateEstimated = moment()
+        .add(overrides.index, 'month')
+        .unix();
     }
 
     const defaults: ProposalMilestone = {
       title: 'Milestone A',
       content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
            tempor incididunt ut labore et dolore magna aliqua.`,
-      dateEstimated: '2018-10-01T00:00:00+00:00',
+      dateEstimated: moment().unix(),
       immediatePayout: true,
       index: 0,
       state: MILESTONE_STATE.WAITING,
       amount: amountBn,
       isPaid: false,
-      isImmediatePayout: true,
       payoutPercent: '33',
     };
     return { ...defaults, ...overrides };
@@ -128,7 +128,6 @@ export function generateProposal({
       index: i,
       title: genMilestoneTitle(),
       immediatePayout: i === 0,
-      isImmediatePayout: i === 0,
       payoutRequestVoteDeadline: i !== 0 ? Date.now() + 3600000 : 0,
       payoutPercent: '' + (1 / milestoneCount) * 100,
     };
@@ -149,6 +148,7 @@ export function generateProposal({
     payoutAddress: 'z123',
     dateCreated: created / 1000,
     datePublished: created / 1000,
+    dateApproved: created / 1000,
     deadlineDuration: 86400 * 60,
     target: amountBn,
     funded: fundedBn,

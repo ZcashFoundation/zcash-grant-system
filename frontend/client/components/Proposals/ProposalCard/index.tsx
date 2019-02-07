@@ -19,6 +19,7 @@ export class ProposalCard extends React.Component<Proposal> {
       proposalAddress,
       proposalUrlId,
       category,
+      datePublished,
       dateCreated,
       team,
       target,
@@ -28,11 +29,7 @@ export class ProposalCard extends React.Component<Proposal> {
     } = this.props;
 
     return (
-      <Card
-        className="ProposalCard"
-        to={`/proposals/${proposalUrlId}`}
-        title={title}
-      >
+      <Card className="ProposalCard" to={`/proposals/${proposalUrlId}`} title={title}>
         {contributionMatching > 0 && (
           <div className="ProposalCard-ribbon">
             <span>
@@ -77,7 +74,7 @@ export class ProposalCard extends React.Component<Proposal> {
           </div>
         </div>
         <div className="ProposalCard-address">{proposalAddress}</div>
-        <Card.Info category={category} time={dateCreated * 1000} />
+        <Card.Info category={category} time={(datePublished || dateCreated) * 1000} />
       </Card>
     );
   }
