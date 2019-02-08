@@ -170,8 +170,15 @@ def update_user_password(current_password, password):
 def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
-    print('set_email')
     g.current_user.set_email(email)
+    return None, 200
+
+
+@blueprint.route("/me/resend-verification", methods=["PUT"])
+@requires_auth
+@endpoint.api()
+def resend_email_verification():
+    g.current_user.send_verification_email()
     return None, 200
 
 
