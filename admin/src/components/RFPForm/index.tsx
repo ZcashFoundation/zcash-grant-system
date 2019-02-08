@@ -36,7 +36,7 @@ class RFPForm extends React.Component<Props, State> {
 
   render() {
     const { isShowingPreview } = this.state;
-    const { getFieldDecorator, getFieldValue } = this.props.form;
+    const { getFieldDecorator, getFieldValue, isFieldsTouched } = this.props.form;
 
     let defaults: RFPArgs = {
       title: '',
@@ -70,8 +70,10 @@ class RFPForm extends React.Component<Props, State> {
         return <Exception type="404" desc="This RFP does not exist" />;
       }
     }
-
-    const dateCloses: Moment = getFieldValue('dateCloses');
+    
+    const dateCloses = isFieldsTouched(['dateCloses'])
+      ? getFieldValue('dateCloses')
+      : defaults.dateCloses && moment(defaults.dateCloses * 1000);
     const forceClosed = dateCloses && dateCloses.isBefore(moment.now());
 
     return (
@@ -98,7 +100,7 @@ class RFPForm extends React.Component<Props, State> {
         {rfpId && (
           <Form.Item
             label="Status"
-            help={forceClosed && 'Status is forced to closed when close date is in the past'}
+            help={forceClosed && 'Status is forced to "Closed" when close date is in the past'}
           >
             {getFieldDecorator('status', {
               initialValue: defaults.status,
