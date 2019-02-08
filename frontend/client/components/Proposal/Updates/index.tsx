@@ -82,9 +82,6 @@ class ProposalUpdates extends React.Component<Props, State> {
             </div>
             <div className="ProposalUpdates-update-controls">
               <a className="ProposalUpdates-update-controls-button">Read more</a>
-              <a className="ProposalUpdates-update-controls-button">
-                {update.totalComments} comments
-              </a>
             </div>
           </div>
         ));
