@@ -161,9 +161,9 @@ def make_proposal_draft(rfp_id):
         rfp = RFP.query.filter_by(id=rfp_id).first()
         if not rfp:
             return {"message": "The request this proposal was made for doesn’t exist"}, 400
-        proposal.title = rfp.title
-        proposal.brief = rfp.brief
         proposal.category = rfp.category
+        if rfp.matching:
+            proposal.matching = 1.0
         rfp.proposals.append(proposal)
         db.session.add(rfp)
 

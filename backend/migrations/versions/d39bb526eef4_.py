@@ -8,7 +8,7 @@ Create Date: 2019-02-07 15:09:11.548655
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import expression
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # revision identifiers, used by Alembic.
@@ -29,10 +29,9 @@ def upgrade():
     # ### end Alembic commands ###
 
     # Set columns for times based on status.
-    now = datetime.now()
     connection = op.get_bind()
+    connection.execute("UPDATE rfp SET date_opened = now() - INTERVAL '1 DAY' WHERE status = 'LIVE' OR status = 'CLOSED'")
     connection.execute("UPDATE rfp SET date_closed = now() WHERE status = 'CLOSED'")
-    connection.execute("UPDATE rfp SET date_opened = now() WHERE status = 'LIVE'")
     
 
 

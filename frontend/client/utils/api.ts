@@ -103,6 +103,9 @@ export function formatProposalFromGet(p: any): Proposal {
 }
 
 export function formatRFPFromGet(rfp: RFP): RFP {
+  if (rfp.bounty) {
+    rfp.bounty = toZat(rfp.bounty as any);
+  }
   rfp.acceptedProposals = rfp.acceptedProposals.map(formatProposalFromGet);
   return rfp;
 }

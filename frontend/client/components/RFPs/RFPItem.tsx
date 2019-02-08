@@ -13,7 +13,16 @@ interface Props {
 export default class RFPItem extends React.Component<Props> {
   render() {
     const { rfp, isSmall } = this.props;
-    const { id, title, brief, acceptedProposals, dateCreated } = rfp;
+    const {
+      id,
+      title,
+      brief,
+      acceptedProposals,
+      dateOpened,
+      dateCloses,
+      dateClosed,
+    } = rfp;
+    const closeDate = dateCloses || dateClosed;
 
     return (
       <Link
@@ -25,7 +34,8 @@ export default class RFPItem extends React.Component<Props> {
 
         <div className="RFPItem-details">
           <div className="RFPItem-details-detail">
-            {moment(dateCreated * 1000).format('LL')}
+            {moment(dateOpened * 1000).format('LL')}
+            {closeDate && <> – {moment(closeDate * 1000).format('LL')}</>}
           </div>
           <div className="RFPItem-details-detail">
             {acceptedProposals.length} proposals approved

@@ -253,7 +253,7 @@ class RFPForm extends React.Component<Props, State> {
       const rfpId = this.getRFPId();
       const values = {
         ...rawValues,
-        dateCloses: rawValues.dateCloses.unix(),
+        dateCloses: rawValues.dateCloses && rawValues.dateCloses.unix(),
       };
       let msg;
       if (rfpId) {

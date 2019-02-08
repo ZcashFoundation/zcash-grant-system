@@ -286,12 +286,15 @@ def get_rfps():
     parameter('content', type=str),
     parameter('category', type=str),
     parameter('bounty', type=str),
-    parameter('matching', type=bool),
+    parameter('matching', type=bool, default=False),
     parameter('dateCloses', type=int),
 )
 @admin_auth_required
-def create_rfp(**kwargs):
-    rfp = RFP(**kwargs)
+def create_rfp(date_closes, **kwargs):
+    rfp = RFP(
+        **kwargs,
+        date_closes=datetime.fromtimestamp(date_closes) if date_closes else None,
+    )
     db.session.add(rfp)
     db.session.commit()
     return admin_rfp_schema.dump(rfp), 201
@@ -336,7 +339,7 @@ def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_c
 
     # Update timestamps if status changed
     if rfp.status != status:
-        if status == RFPStatus.LIVE:
+        if status == RFPStatus.LIVE and not rfp.date_opened:
             rfp.date_opened = datetime.now()
         if status == RFPStatus.CLOSED:
             rfp.date_closed = datetime.now()
