@@ -125,10 +125,17 @@ class ProposalComments extends React.Component<Props, State> {
               </Button>
             </>
           ) : (
-            <Placeholder
-              title="Your email is not verified"
-              subtitle="Please verify your email to post a comment."
-            />
+            <>
+              <h4 className="ProposalComments-verify">
+                Please verify your email to post a comment.
+              </h4>
+              <MarkdownEditor
+                ref={el => (this.editor = el)}
+                onChange={this.handleCommentChange}
+                type={MARKDOWN_TYPE.REDUCED}
+                readOnly={true}
+              />
+            </>
           )}
         </div>
         {content}
