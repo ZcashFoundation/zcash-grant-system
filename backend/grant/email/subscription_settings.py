@@ -49,6 +49,10 @@ class EmailSubscription(Enum):
         'bit': 10,
         'key': 'funded_proposal_payout_request'
     }
+    ARBITER = {
+        'bit': 11,
+        'key': 'arbiter'
+    }
 
 
 def is_email_sub_key(k: str):

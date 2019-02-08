@@ -68,6 +68,7 @@ export interface Proposal {
   rejectReason: string;
   contributionMatching: number;
   rfp?: RFP;
+  arbiter?: User;
 }
 export interface Comment {
   commentId: string;

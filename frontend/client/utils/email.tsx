@@ -13,6 +13,11 @@ export const EMAIL_SUBSCRIPTIONS: { [key in ESKey]: EmailSubscriptionInfo } = {
     category: EMAIL_SUBSCRIPTION_CATEGORY.GENERAL,
     value: false,
   },
+  arbiter: {
+    description: 'arbitration',
+    category: EMAIL_SUBSCRIPTION_CATEGORY.GENERAL,
+    value: false,
+  },
 
   // FUNDED
   fundedProposalCanceled: {

@@ -20,6 +20,7 @@ export interface UserState extends User {
   isUpdating: boolean;
   updateError: string | null;
   pendingProposals: UserProposal[];
+  arbitrated: UserProposal[];
   proposals: UserProposal[];
   contributions: UserContribution[];
   comments: UserComment[];
@@ -51,6 +52,7 @@ export const INITIAL_USER_STATE: UserState = {
   isUpdating: false,
   updateError: null,
   pendingProposals: [],
+  arbitrated: [],
   proposals: [],
   contributions: [],
   comments: [],

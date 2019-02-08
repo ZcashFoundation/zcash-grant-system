@@ -1,0 +1,4 @@
+You have been made arbiter of {{ args.proposal.title }}. You will be responsible 
+for reviewing milestone payout requests.
+
+View your arbitrations: {{ args.arbitration_url }}

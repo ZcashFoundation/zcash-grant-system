@@ -11,17 +11,41 @@ class Home extends React.Component {
   }
 
   render() {
-    const { userCount, proposalCount, proposalPendingCount } = store.stats;
+    const {
+      userCount,
+      proposalCount,
+      proposalPendingCount,
+      proposalNoArbiterCount,
+    } = store.stats;
+
+    const actionItems = [
+      !!proposalPendingCount && (
+        <div>
+          <Icon type="exclamation-circle" /> There are <b>{proposalPendingCount}</b>{' '}
+          proposals <b>waiting for review</b>.{' '}
+          <Link to="/proposals?filters[]=STATUS_PENDING">Click here</Link> to view them.
+        </div>
+      ),
+      !!proposalNoArbiterCount && (
+        <div>
+          <Icon type="exclamation-circle" /> There are <b>{proposalNoArbiterCount}</b>{' '}
+          live proposals <b>without an arbiter</b>.{' '}
+          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=OTHER_ARBITER">
+            Click here
+          </Link>{' '}
+          to view them.
+        </div>
+      ),
+    ].filter(Boolean);
+
     return (
       <div className="Home">
-        {!!proposalPendingCount && (
+        {!!actionItems.length && (
           <div className="Home-actionItems">
             <Divider orientation="left">Action Items</Divider>
-            <div>
-              <Icon type="exclamation-circle" /> There are <b>{proposalPendingCount}</b>{' '}
-              proposals waiting for review.{' '}
-              <Link to="/proposals?status=PENDING">Click here</Link> to view them.
-            </div>
+            {actionItems.map((ai, i) => (
+              <div key={i}>{ai}</div>
+            ))}
           </div>
         )}
 

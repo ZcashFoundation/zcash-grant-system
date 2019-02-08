@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Info from 'components/Info';
 import Markdown from 'components/Markdown';
+import ArbiterControl from 'components/ArbiterControl';
 import './index.less';
 
 type Props = RouteComponentProps<any>;
@@ -47,7 +48,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       return 'loading proposal...';
     }
 
-    const renderDelete = () => (
+    const renderDeleteControl = () => (
       <Popconfirm
         onConfirm={this.handleDelete}
         title="Delete proposal?"
@@ -60,7 +61,18 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       </Popconfirm>
     );
 
-    const renderMatching = () => (
+    const renderArbiterControl = () => (
+      <ArbiterControl
+        {...p}
+        buttonProps={{
+          type: 'default',
+          className: 'ProposalDetail-controls-control',
+          block: true,
+        }}
+      />
+    );
+
+    const renderMatchingControl = () => (
       <div className="ProposalDetail-controls-control">
         <Popconfirm
           overlayClassName="ProposalDetail-popover-overlay"
@@ -197,6 +209,22 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         />
       );
 
+    const renderSetArbiter = () =>
+      !p.arbiter &&
+      p.status === PROPOSAL_STATUS.LIVE && (
+        <Alert
+          showIcon
+          type="warning"
+          message="No Arbiter on Live Proposal"
+          description={
+            <div>
+              <p>An arbiter is required to review milestone payout requests.</p>
+              <ArbiterControl {...p} />
+            </div>
+          }
+        />
+      );
+
     const renderDeetItem = (name: string, val: any) => (
       <div className="ProposalDetail-deet">
         <span>{name}</span>
@@ -214,6 +242,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderApproved()}
             {renderReview()}
             {renderRejected()}
+            {renderSetArbiter()}
             <Collapse defaultActiveKey={['brief', 'content']}>
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
@@ -234,8 +263,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           <Col span={6}>
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
-              {renderDelete()}
-              {renderMatching()}
+              {renderDeleteControl()}
+              {renderArbiterControl()}
+              {renderMatchingControl()}
               {/* TODO - other actions */}
             </Card>
 
@@ -249,9 +279,16 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
+              {p.arbiter &&
+                renderDeetItem(
+                  'arbiter',
+                  <Link to={`/users/${p.arbiter.userid}`}>{p.arbiter.displayName}</Link>,
+                )}
               {p.rfp &&
-                renderDeetItem('rfp', <Link to={`/rfps/${p.rfp.id}`}>{p.rfp.title}</Link>)
-              }
+                renderDeetItem(
+                  'rfp',
+                  <Link to={`/rfps/${p.rfp.id}`}>{p.rfp.title}</Link>,
+                )}
             </Card>
 
             {/* TEAM */}
