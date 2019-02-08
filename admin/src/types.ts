@@ -22,19 +22,27 @@ export enum RFP_STATUS {
 export interface RFP {
   id: number;
   dateCreated: number;
+  dateOpened: number | null;
+  dateClosed: number | null;
   title: string;
   brief: string;
   content: string;
   category: string;
   status: string;
   proposals: Proposal[];
+  matching: boolean;
+  bounty: string | null;
+  dateCloses: number | null;
 }
 export interface RFPArgs {
   title: string;
   brief: string;
   content: string;
   category: string;
-  status?: string;
+  matching: boolean;
+  dateCloses: number | null | undefined;
+  bounty: string | null | undefined;
+  status: string;
 }
 // NOTE: sync with backend/grant/utils/enums.py ProposalStatus
 export enum PROPOSAL_STATUS {

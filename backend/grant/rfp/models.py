@@ -93,27 +93,39 @@ class AdminRFPSchema(ma.Schema):
             "content",
             "category",
             "status",
+            "matching",
+            "bounty",
             "date_created",
+            "date_closes",
+            "date_opened",
+            "date_closed",
             "proposals",
         )
 
+    status = ma.Method("get_status")
     date_created = ma.Method("get_date_created")
     date_closes = ma.Method("get_date_closes")
     date_opened = ma.Method("get_date_opened")
     date_closed = ma.Method("get_date_closed")
     proposals = ma.Nested("ProposalSchema", many=True, exclude=["rfp"])
 
+    def get_status(self, obj):
+        # Force it into closed state if date_closes is in the past
+        if obj.date_closes and obj.date_closes <= datetime.today():
+            return RFPStatus.CLOSED
+        return obj.status
+
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
     
     def get_date_closes(self, obj):
-        return dt_to_unix(obj.date_closes)
+        return dt_to_unix(obj.date_closes) if obj.date_closes else None
     
     def get_date_opened(self, obj):
-        return dt_to_unix(obj.date_opened)
+        return dt_to_unix(obj.date_opened) if obj.date_opened else None
     
     def get_date_closed(self, obj):
-        return dt_to_unix(obj.date_closes)
+        return dt_to_unix(obj.date_closes) if obj.date_closes else None
 
 admin_rfp_schema = AdminRFPSchema()
 admin_rfps_schema = AdminRFPSchema(many=True)

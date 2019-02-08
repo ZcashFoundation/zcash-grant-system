@@ -315,7 +315,7 @@ def get_rfp(rfp_id):
     parameter('content', type=str),
     parameter('category', type=str),
     parameter('bounty', type=str),
-    parameter('matching', type=bool),
+    parameter('matching', type=bool, default=False),
     parameter('dateCloses', type=int),
     parameter('status', type=str),
 )
@@ -332,7 +332,7 @@ def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_c
     rfp.category = category
     rfp.bounty = bounty
     rfp.matching = matching
-    rfp.date_closes = date_closes
+    rfp.date_closes = datetime.fromtimestamp(date_closes) if date_closes else None
 
     # Update timestamps if status changed
     if rfp.status != status:
