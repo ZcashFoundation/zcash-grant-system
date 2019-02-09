@@ -156,10 +156,7 @@ class User(db.Model, UserMixin):
         db.session.commit()
 
         if _send_email:
-            send_email(user.email_address, 'signup', {
-                'display_name': user.display_name,
-                'confirm_url': make_url(f'/email/verify?code={ev.code}')
-            })
+            user.send_verification_email()
 
         return user
 
@@ -211,6 +208,12 @@ class User(db.Model, UserMixin):
 
     def login(self):
         login_user(self)
+
+    def send_verification_email(self):
+        send_email(self.email_address, 'signup', {
+            'display_name': self.display_name,
+            'confirm_url': make_url(f'/email/verify?code={self.email_verification.code}')
+        })
 
     def send_recovery_email(self):
         existing = self.email_recovery

@@ -294,3 +294,7 @@ export function getRFP(rfpId: number | string): Promise<{ data: RFP }> {
     return res;
   });
 }
+
+export function resendEmailVerification(): Promise<{ data: void }> {
+  return axios.put(`/api/v1/users/me/resend-verification`);
+}
