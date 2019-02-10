@@ -156,9 +156,9 @@ def comment_reply(email_args):
 
 def proposal_arbiter(email_args):
     return {
-        'subject': f'You are now arbiter of {email_args["proposal"].title}',
-        'title': f'You are an Arbiter',
-        'preview': f'Congratulations, you have been promoted to arbiter of {email_args["proposal"].title}!',
+        'subject': f'You have been nominated for arbiter of {email_args["proposal"].title}',
+        'title': f'Arbiter Nomination',
+        'preview': f'Congratulations, you have been nominated for arbiter of {email_args["proposal"].title}!',
         'subscription': EmailSubscription.ARBITER,
     }
 

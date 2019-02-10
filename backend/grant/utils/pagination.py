@@ -1,8 +1,8 @@
 import abc
 from sqlalchemy import or_, and_
 
-from grant.proposal.models import db, ma, Proposal, ProposalContribution, proposal_contributions_schema
-from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus
+from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
+from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus
 
 
 def extract_filters(sw, strings):
@@ -49,7 +49,7 @@ class ProposalPagination(Pagination):
         self.FILTERS = [f'STATUS_{s}' for s in ProposalStatus.list()]
         self.FILTERS.extend([f'STAGE_{s}' for s in ProposalStage.list()])
         self.FILTERS.extend([f'CAT_{c}' for c in Category.list()])
-        self.FILTERS.extend(['OTHER_ARBITER'])
+        self.FILTERS.extend([f'ARBITER_{c}' for c in ProposalArbiterStatus.list()])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': Proposal.date_created.desc(),
@@ -76,7 +76,7 @@ class ProposalPagination(Pagination):
             status_filters = extract_filters('STATUS_', filters)
             stage_filters = extract_filters('STAGE_', filters)
             cat_filters = extract_filters('CAT_', filters)
-            other_filters = extract_filters('OTHER_', filters)
+            arbiter_filters = extract_filters('ARBITER_', filters)
 
             if status_filters:
                 query = query.filter(Proposal.status.in_(status_filters))
@@ -86,8 +86,8 @@ class ProposalPagination(Pagination):
             #     query = query.filter(Proposal.stage.in_(stage_filters))
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
-            if other_filters:
-                query = query.filter(Proposal.arbiter_id == None)
+            if arbiter_filters:
+                query = query.filter(ProposalArbiter.status.in_(arbiter_filters))
 
         # SORT (see self.SORT_MAP)
         if sort:

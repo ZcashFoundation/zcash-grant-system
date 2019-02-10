@@ -7,6 +7,7 @@ from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.proposal.models import (
     Proposal,
+    ProposalArbiter,
     ProposalContribution,
     proposals_schema,
     proposal_schema,
@@ -17,7 +18,7 @@ from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.misc import make_url
-from grant.utils.enums import ProposalStatus, ContributionStatus
+from grant.utils.enums import ProposalStatus, ContributionStatus, ProposalArbiterStatus
 from grant.utils import pagination
 from sqlalchemy import func, or_
 
@@ -62,7 +63,7 @@ def stats():
         .scalar()
     proposal_no_arbiter_count = db.session.query(func.count(Proposal.id)) \
         .filter(Proposal.status == ProposalStatus.LIVE) \
-        .filter(Proposal.arbiter_id == None) \
+        .filter(ProposalArbiter.status == ProposalArbiterStatus.MISSING) \
         .scalar()
     return {
         "userCount": user_count,
@@ -156,16 +157,17 @@ def set_arbiter(proposal_id, user_id):
     if not user:
         return {"message": "User not found"}, 404
 
-    if proposal.arbiter_id != user.id:
-        # send email
-        send_email(user.email_address, 'proposal_arbiter', {
-            'proposal': proposal,
-            'proposal_url': make_url(f'/proposals/{proposal.id}'),
-            'arbitration_url': make_url(f'/profile/{user.id}?tab=arbitration'),
-        })
-        proposal.arbiter_id = user.id
-        db.session.add(proposal)
-        db.session.commit()
+    # send email
+    code = user.email_verification.code
+    send_email(user.email_address, 'proposal_arbiter', {
+        'proposal': proposal,
+        'proposal_url': make_url(f'/proposals/{proposal.id}'),
+        'accept_url': make_url(f'/email/arbiter?code={code}&proposalId={proposal.id}'),
+    })
+    proposal.arbiter.user = user
+    proposal.arbiter.status = ProposalArbiterStatus.NOMINATED
+    db.session.add(proposal.arbiter)
+    db.session.commit()
 
     return {
         'proposal': proposal_schema.dump(proposal),

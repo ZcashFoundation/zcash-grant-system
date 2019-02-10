@@ -118,7 +118,7 @@ class User(db.Model, UserMixin):
                                      lazy=True, cascade="all, delete-orphan")
     roles = db.relationship('Role', secondary='roles_users',
                             backref=db.backref('users', lazy='dynamic'))
-    arbitrated_proposals = db.relationship("Proposal", lazy=True, back_populates="arbiter")
+    arbiter_proposals = db.relationship("ProposalArbiter", lazy=True, back_populates="user")
 
     # TODO - add create and validate methods
 
@@ -237,14 +237,14 @@ class SelfUserSchema(ma.Schema):
             "display_name",
             "userid",
             "email_verified",
-            "arbitrated_proposals"
+            "arbiter_proposals",
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
+    arbiter_proposals = ma.Nested("ProposalArbiterSchema", many=True, exclude=["user"])
     userid = ma.Method("get_userid")
     email_verified = ma.Method("get_email_verified")
-    arbitrated_proposals = ma.Nested("ProposalSchema", many=True, exclude=["arbiter"])
 
     def get_userid(self, obj):
         return obj.id

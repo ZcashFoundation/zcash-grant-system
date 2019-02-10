@@ -10,7 +10,7 @@ from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
-from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
+from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 
 proposal_team = db.Table(
@@ -150,13 +150,46 @@ class ProposalContribution(db.Model):
         self.amount = amount
 
 
+class ProposalArbiter(db.Model):
+    __tablename__ = "proposal_arbiter"
+
+    id = db.Column(db.Integer(), primary_key=True)
+    proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    status = db.Column(db.String(255), nullable=False)
+
+    proposal = db.relationship("Proposal", lazy=True, back_populates="arbiter")
+    user = db.relationship("User", uselist=False, lazy=True, back_populates="arbiter_proposals")
+
+    def __init__(self, proposal_id: int, user_id: int = None, status: str = ProposalArbiterStatus.MISSING):
+        self.proposal_id = proposal_id
+        self.user_id = user_id
+        self.status = status
+
+    def accept_nomination(self, user_id: int):
+        if self.user_id == user_id:
+            self.status = ProposalArbiterStatus.ACCEPTED
+            db.session.add(self)
+            db.session.commit()
+            return
+        raise ValidationException('User not nominated for arbiter')
+
+    def reject_nomination(self, user_id: int):
+        if self.user_id == user_id:
+            self.status = ProposalArbiterStatus.MISSING
+            self.user = None
+            db.session.add(self)
+            db.session.commit()
+            return
+        raise ValidationException('User is not arbiter')
+
+
 class Proposal(db.Model):
     __tablename__ = "proposal"
 
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
     rfp_id = db.Column(db.Integer(), db.ForeignKey('rfp.id'), nullable=True)
-    arbiter_id = db.Column(db.Integer(), db.ForeignKey('user.id'), nullable=True)
 
     # Content info
     status = db.Column(db.String(255), nullable=False)
@@ -183,7 +216,7 @@ class Proposal(db.Model):
     contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
     milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
-    arbiter = db.relationship("User", lazy=True, back_populates="arbitrated_proposals")
+    arbiter = db.relationship(ProposalArbiter, uselist=False, back_populates="proposal", cascade="all, delete-orphan")
 
     def __init__(
             self,
@@ -238,9 +271,18 @@ class Proposal(db.Model):
     @staticmethod
     def create(**kwargs):
         Proposal.validate(kwargs)
-        return Proposal(
+        proposal = Proposal(
             **kwargs
         )
+
+        # arbiter needs proposal.id
+        db.session.add(proposal)
+        db.session.commit()
+
+        arbiter = ProposalArbiter(proposal_id=proposal.id)
+        db.session.add(arbiter)
+
+        return proposal
 
     @staticmethod
     def get_by_user(user, statuses=[ProposalStatus.LIVE]):
@@ -420,7 +462,7 @@ class ProposalSchema(ma.Schema):
     milestones = ma.Nested("MilestoneSchema", many=True)
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
     rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
-    arbiter = ma.Nested("UserSchema")  # exclude=["arbitrated_proposals"])
+    arbiter = ma.Nested("ProposalArbiterSchema", exclude=["proposal"])
 
     def get_proposal_id(self, obj):
         return obj.id
@@ -564,3 +606,21 @@ user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 
 user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
 proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
 proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
+
+
+class ProposalArbiterSchema(ma.Schema):
+    class Meta:
+        model = ProposalArbiter
+        fields = (
+            "id",
+            "user",
+            "proposal",
+            "status"
+        )
+
+    user = ma.Nested("UserSchema")  # , exclude=['arbiter_proposals'] (if UserSchema ever includes it)
+    proposal = ma.Nested("ProposalSchema", exclude=['arbiter'])
+
+
+user_proposal_arbiter_schema = ProposalArbiterSchema(exclude=['user'])
+user_proposal_arbiters_schema = ProposalArbiterSchema(many=True, exclude=['user'])
