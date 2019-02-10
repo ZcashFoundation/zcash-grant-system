@@ -9,7 +9,6 @@ export const SORT_LABELS: { [key in PROPOSAL_SORT]: string } = {
 };
 
 export enum PROPOSAL_CATEGORY {
-  DAPP = 'DAPP',
   DEV_TOOL = 'DEV_TOOL',
   CORE_DEV = 'CORE_DEV',
   COMMUNITY = 'COMMUNITY',
@@ -24,11 +23,6 @@ interface CategoryUI {
 }
 
 export const CATEGORY_UI: { [key in PROPOSAL_CATEGORY]: CategoryUI } = {
-  DAPP: {
-    label: 'DApp',
-    color: '#8e44ad',
-    icon: 'appstore',
-  },
   DEV_TOOL: {
     label: 'Developer tool',
     color: '#2c3e50',

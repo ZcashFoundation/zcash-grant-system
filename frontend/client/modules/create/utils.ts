@@ -190,7 +190,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
     contributionMatching: 0,
     percentFunded: 0,
     stage: 'preview',
-    category: draft.category || PROPOSAL_CATEGORY.DAPP,
+    category: draft.category || PROPOSAL_CATEGORY.CORE_DEV,
     isStaked: true,
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
