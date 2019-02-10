@@ -133,6 +133,14 @@ export function updateUserSettings(
   return axios.put(`/api/v1/users/${userId}/settings`, { emailSubscriptions });
 }
 
+export function updateUserArbiter(
+  userId: number,
+  proposalId: number,
+  isAccept: boolean,
+): Promise<any> {
+  return axios.put(`/api/v1/users/${userId}/arbiter/${proposalId}`, { isAccept });
+}
+
 export function requestUserRecoveryEmail(email: string): Promise<any> {
   return axios.post(`/api/v1/users/recover`, { email });
 }
@@ -147,6 +155,10 @@ export function verifyEmail(code: string): Promise<any> {
 
 export function unsubscribeEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/unsubscribe`);
+}
+
+export function arbiterEmail(code: string, proposalId: number): Promise<any> {
+  return axios.post(`/api/v1/email/${code}/arbiter/${proposalId}`);
 }
 
 export function getSocialAuthUrl(service: SOCIAL_SERVICE): Promise<any> {

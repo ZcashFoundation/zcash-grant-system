@@ -30,7 +30,10 @@ export function formatUserFromGet(user: UserState) {
     user.pendingProposals = user.pendingProposals.map(bnUserProp);
   }
   if (user.arbitrated) {
-    user.arbitrated = user.arbitrated.map(bnUserProp);
+    user.arbitrated = user.arbitrated.map(a => {
+      a.proposal = bnUserProp(a.proposal);
+      return a;
+    });
   }
   user.proposals = user.proposals.map(bnUserProp);
   user.contributions = user.contributions.map(c => {

@@ -20,6 +20,15 @@ export interface Contributor {
   milestoneNoVotes: boolean[];
 }
 
+export interface ProposalArbiter {
+  user?: User; // only set if there is nomination/acceptance
+  proposal: Proposal;
+  status: PROPOSAL_ARBITER_STATUS;
+}
+
+export type ProposalProposalArbiter = Omit<ProposalArbiter, 'proposal'>;
+export type UserProposalArbiter = Omit<ProposalArbiter, 'user'>;
+
 export interface ProposalDraft {
   proposalId: number;
   dateCreated: number;
@@ -49,6 +58,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   milestones: ProposalMilestone[];
   datePublished: number | null;
   dateApproved: number | null;
+  arbiter: ProposalProposalArbiter;
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {
@@ -95,4 +105,10 @@ export enum STATUS {
   REJECTED = 'REJECTED',
   LIVE = 'LIVE',
   DELETED = 'DELETED',
+}
+
+export enum PROPOSAL_ARBITER_STATUS {
+  MISSING = 'MISSING',
+  NOMINATED = 'NOMINATED',
+  ACCEPTED = 'ACCEPTED',
 }
