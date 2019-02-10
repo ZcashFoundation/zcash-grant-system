@@ -41,6 +41,7 @@ def accept_arbiter(code, proposal_id):
             if ap.proposal_id == int(proposal_id):
                 ap.accept_nomination(ev.user.id)
                 return {"message": "You are now the Arbiter"}, 200
-            return {"message": "No nomination for this code"}, 404
+
+        return {"message": "No nomination for this code"}, 404
 
     return {"message": "Invalid email code"}, 400
