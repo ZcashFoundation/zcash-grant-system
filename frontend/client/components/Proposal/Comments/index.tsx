@@ -9,7 +9,7 @@ import {
   getIsFetchingComments,
   getProposalComments,
 } from 'modules/proposals/selectors';
-import { getIsVerified } from 'modules/auth/selectors';
+import { getIsVerified, getIsSignedIn } from 'modules/auth/selectors';
 import Comments from 'components/Comments';
 import Placeholder from 'components/Placeholder';
 import Loader from 'components/Loader';
@@ -27,6 +27,7 @@ interface StateProps {
   isPostCommentPending: AppState['proposal']['isPostCommentPending'];
   postCommentError: AppState['proposal']['postCommentError'];
   isVerified: ReturnType<typeof getIsVerified>;
+  isSignedIn: ReturnType<typeof getIsSignedIn>;
 }
 
 interface DispatchProps {
@@ -79,6 +80,7 @@ class ProposalComments extends React.Component<Props, State> {
       commentsError,
       isPostCommentPending,
       isVerified,
+      isSignedIn,
     } = this.props;
     const { comment } = this.state;
     let content = null;
@@ -108,7 +110,7 @@ class ProposalComments extends React.Component<Props, State> {
     return (
       <div>
         <div className="ProposalComments-post">
-          {isVerified ? (
+          {isVerified && (
             <>
               <MarkdownEditor
                 ref={el => (this.editor = el)}
@@ -124,12 +126,20 @@ class ProposalComments extends React.Component<Props, State> {
                 Submit comment
               </Button>
             </>
-          ) : (
-            <Placeholder
-              title="Your email is not verified"
-              subtitle="Please verify your email to post a comment."
-            />
           )}
+          {isSignedIn &&
+            !isVerified && (
+              <>
+                <h4 className="ProposalComments-verify">
+                  Please verify your email to post a comment.
+                </h4>
+                <MarkdownEditor
+                  onChange={this.handleCommentChange}
+                  type={MARKDOWN_TYPE.REDUCED}
+                  readOnly={true}
+                />
+              </>
+            )}
         </div>
         {content}
       </div>
@@ -153,6 +163,7 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
     isPostCommentPending: state.proposal.isPostCommentPending,
     postCommentError: state.proposal.postCommentError,
     isVerified: getIsVerified(state),
+    isSignedIn: getIsSignedIn(state),
   }),
   {
     fetchProposalComments,

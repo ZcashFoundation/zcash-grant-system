@@ -33,6 +33,7 @@ const commands: { [key in MARKDOWN_TYPE]: ReactMdeProps['commands'] } = {
 };
 
 interface Props {
+  readOnly?: boolean | null;
   type?: MARKDOWN_TYPE;
   initialMarkdown?: string;
   onChange(markdown: string): void;
@@ -62,6 +63,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
 
   render() {
     const type = this.props.type || MARKDOWN_TYPE.FULL;
+    const { readOnly } = this.props;
     const { mdeState, randomKey } = this.state;
     return (
       <div
@@ -76,6 +78,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
           editorState={mdeState as ReactMdeTypes.MdeState}
           generateMarkdownPreview={this.generatePreview}
           commands={commands[type]}
+          readOnly={!!readOnly}
           layout="tabbed"
         />
       </div>
