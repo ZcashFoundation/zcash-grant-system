@@ -68,6 +68,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           type: 'default',
           className: 'ProposalDetail-controls-control',
           block: true,
+          disabled: p.status !== PROPOSAL_STATUS.LIVE
         }}
       />
     );
