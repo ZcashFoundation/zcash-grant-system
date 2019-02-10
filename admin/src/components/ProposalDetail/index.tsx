@@ -16,7 +16,7 @@ import {
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { formatDateSeconds } from 'util/time';
-import { PROPOSAL_STATUS } from 'src/types';
+import { PROPOSAL_STATUS, PROPOSAL_ARBITER_STATUS } from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Info from 'components/Info';
@@ -209,16 +209,35 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         />
       );
 
-    const renderSetArbiter = () =>
-      !p.arbiter &&
+    const renderNominateArbiter = () =>
+      PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
       p.status === PROPOSAL_STATUS.LIVE && (
         <Alert
           showIcon
           type="warning"
-          message="No Arbiter on Live Proposal"
+          message="No arbiter on live proposal"
           description={
             <div>
               <p>An arbiter is required to review milestone payout requests.</p>
+              <ArbiterControl {...p} />
+            </div>
+          }
+        />
+      );
+
+    const renderNominatedArbiter = () =>
+      PROPOSAL_ARBITER_STATUS.NOMINATED === p.arbiter.status &&
+      p.status === PROPOSAL_STATUS.LIVE && (
+        <Alert
+          showIcon
+          type="info"
+          message="Arbiter has been nominated"
+          description={
+            <div>
+              <p>
+                <b>{p.arbiter.user!.displayName}</b> has been nominated for arbiter of
+                this proposal but has not yet accepted.
+              </p>
               <ArbiterControl {...p} />
             </div>
           }
@@ -242,7 +261,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderApproved()}
             {renderReview()}
             {renderRejected()}
-            {renderSetArbiter()}
+            {renderNominateArbiter()}
+            {renderNominatedArbiter()}
             <Collapse defaultActiveKey={['brief', 'content']}>
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
@@ -279,11 +299,18 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
-              {p.arbiter &&
-                renderDeetItem(
-                  'arbiter',
-                  <Link to={`/users/${p.arbiter.userid}`}>{p.arbiter.displayName}</Link>,
-                )}
+
+              {renderDeetItem(
+                'arbiter',
+                <>
+                  {p.arbiter.user && (
+                    <Link to={`/users/${p.arbiter.user.userid}`}>
+                      {p.arbiter.user.displayName}
+                    </Link>
+                  )}
+                  ({p.arbiter.status})
+                </>,
+              )}
               {p.rfp &&
                 renderDeetItem(
                   'rfp',
