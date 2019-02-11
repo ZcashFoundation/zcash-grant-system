@@ -68,3 +68,14 @@ class RFPStatusEnum(CustomEnum):
 
 
 RFPStatus = RFPStatusEnum()
+
+
+class MilestoneStageEnum(CustomEnum):
+    IDLE = 'IDLE'
+    REQUESTED = 'REQUESTED'
+    REJECTED = 'REJECTED'
+    ACCEPTED = 'ACCEPTED'
+    PAID = 'PAID'
+
+
+MilestoneStage = MilestoneStageEnum()

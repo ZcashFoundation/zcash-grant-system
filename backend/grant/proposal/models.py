@@ -10,7 +10,7 @@ from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
-from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
+from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus, MilestoneStage
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 
 proposal_team = db.Table(
@@ -376,6 +376,20 @@ class Proposal(db.Model):
     def is_staked(self):
         return Decimal(self.contributed) >= PROPOSAL_STAKING_AMOUNT
 
+    @hybrid_property
+    def current_milestone(self):
+        if self.milestones:
+            for ms in self.milestones:
+                if ms.stage != MilestoneStage.PAID:
+                    return ms
+        return None
+
+        # contributions = ProposalContribution.query \
+        #     .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
+        #     .all()
+        # funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        # return str(funded)
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -399,6 +413,7 @@ class ProposalSchema(ma.Schema):
             "comments",
             "updates",
             "milestones",
+            "current_milestone",
             "category",
             "team",
             "payout_address",
@@ -418,6 +433,7 @@ class ProposalSchema(ma.Schema):
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
+    current_milestone = ma.Nested("MilestoneSchema")
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
     rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
     arbiter = ma.Nested("UserSchema")  # exclude=["arbitrated_proposals"])

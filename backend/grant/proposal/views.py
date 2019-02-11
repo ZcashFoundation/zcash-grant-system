@@ -213,14 +213,15 @@ def update_proposal(milestones, proposal_id, **kwargs):
     # Delete & re-add milestones
     [db.session.delete(x) for x in g.current_proposal.milestones]
     if milestones:
-        for mdata in milestones:
+        for i, mdata in enumerate(milestones):
             m = Milestone(
                 title=mdata["title"],
                 content=mdata["content"],
                 date_estimated=datetime.fromtimestamp(mdata["dateEstimated"]),
                 payout_percent=str(mdata["payoutPercent"]),
                 immediate_payout=mdata["immediatePayout"],
-                proposal_id=g.current_proposal.id
+                proposal_id=g.current_proposal.id,
+                index=i
             )
             db.session.add(m)
 
