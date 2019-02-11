@@ -1,7 +1,7 @@
-import { ProposalDraft, CreateMilestone, STATUS } from 'types';
+import { ProposalDraft, CreateMilestone, STATUS, MILESTONE_STAGE } from 'types';
 import { User } from 'types';
 import { getAmountError, isValidAddress } from 'utils/validators';
-import { MILESTONE_STATE, Proposal } from 'types';
+import { Proposal } from 'types';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY } from 'api/constants';
@@ -199,9 +199,8 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
       amount: toZat(target * (parseInt(m.payoutPercent, 10) / 100)),
       dateEstimated: m.dateEstimated,
       immediatePayout: m.immediatePayout,
-      isPaid: false,
       payoutPercent: m.payoutPercent.toString(),
-      state: MILESTONE_STATE.WAITING,
+      stage: MILESTONE_STAGE.IDLE,
     })),
   };
 }

@@ -1,11 +1,4 @@
-import {
-  Contributor,
-  Milestone,
-  MILESTONE_STATE,
-  Proposal,
-  ProposalMilestone,
-  STATUS,
-} from 'types';
+import { Contributor, MILESTONE_STAGE, Proposal, ProposalMilestone, STATUS } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import BN from 'bn.js';
 import moment from 'moment';
@@ -40,7 +33,7 @@ export function generateProposal({
   funded?: number;
   created?: number;
   deadline?: number;
-  milestoneOverrides?: Array<Partial<Milestone>>;
+  milestoneOverrides?: Array<Partial<ProposalMilestone>>;
   contributorOverrides?: Array<Partial<Contributor>>;
   milestoneCount?: number;
 }) {
@@ -115,9 +108,8 @@ export function generateProposal({
       dateEstimated: moment().unix(),
       immediatePayout: true,
       index: 0,
-      state: MILESTONE_STATE.WAITING,
+      stage: MILESTONE_STAGE.IDLE,
       amount: amountBn,
-      isPaid: false,
       payoutPercent: '33',
     };
     return { ...defaults, ...overrides };

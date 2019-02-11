@@ -14,6 +14,19 @@ import { getProposalPageSettings } from './selectors';
 
 type GetState = () => AppState;
 
+function addProposalUserRoles(p: Proposal, state: AppState) {
+  if (state.auth.user) {
+    const authUserId = state.auth.user.userid;
+    // TODO: add arbiter roll
+    // user.arbitratedProposals...
+    console.warn('TODO: add user arbitration role to Proposal');
+    if (p.team.find(t => t.userid === authUserId)) {
+      p.isTeamMember = true;
+    }
+  }
+  return p;
+}
+
 // change page, sort, filter, search
 export function setProposalPage(pageParams: Partial<ProposalPageParams>) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
@@ -49,7 +62,7 @@ export function fetchProposals() {
 
 export type TFetchProposal = typeof fetchProposal;
 export function fetchProposal(proposalId: Proposal['proposalId']) {
-  return async (dispatch: Dispatch<any>) => {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.PROPOSAL_DATA_PENDING,
       payload: { proposalId },
@@ -58,7 +71,7 @@ export function fetchProposal(proposalId: Proposal['proposalId']) {
       const proposal = (await getProposal(proposalId)).data;
       return dispatch({
         type: types.PROPOSAL_DATA_FULFILLED,
-        payload: proposal,
+        payload: addProposalUserRoles(proposal, getState()),
       });
     } catch (error) {
       dispatch({

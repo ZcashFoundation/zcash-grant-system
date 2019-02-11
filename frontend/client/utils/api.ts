@@ -6,7 +6,6 @@ import {
   PageParams,
   UserProposal,
   RFP,
-  MILESTONE_STATE,
   ProposalPage,
 } from 'types';
 import { UserState } from 'modules/users/reducers';
@@ -88,16 +87,12 @@ export function formatProposalFromGet(p: any): Proposal {
     ? 0
     : proposal.funded.div(proposal.target.divn(100)).toNumber();
   if (proposal.milestones) {
-    proposal.milestones = proposal.milestones.map((m: any, index: number) => {
-      return {
-        ...m,
-        index,
-        amount: proposal.target.mul(new BN(m.payoutPercent)).divn(100),
-        // TODO: Get data from backend
-        state: MILESTONE_STATE.WAITING,
-        isPaid: false,
-      };
+    const msToFe = (m: any) => ({
+      ...m,
+      amount: proposal.target.mul(new BN(m.payoutPercent)).divn(100),
     });
+    proposal.milestones = proposal.milestones.map(msToFe);
+    proposal.currentMilestone = msToFe(proposal.currentMilestone);
   }
   return proposal;
 }

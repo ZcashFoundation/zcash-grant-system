@@ -2,7 +2,7 @@ import lodash from 'lodash';
 import React from 'react';
 import moment from 'moment';
 import { Alert, Steps } from 'antd';
-import { Proposal, MILESTONE_STATE } from 'types';
+import { Proposal, Milestone, ProposalMilestone, MILESTONE_STAGE } from 'types';
 import UnitDisplay from 'components/UnitDisplay';
 import Loader from 'components/Loader';
 import { AppState } from 'store/reducers';
@@ -10,22 +10,24 @@ import { connect } from 'react-redux';
 import classnames from 'classnames';
 import './style.less';
 import Placeholder from 'components/Placeholder';
+import { AlertProps } from 'antd/lib/alert';
+import { StepProps } from 'antd/lib/steps';
 
-const { WAITING, ACTIVE, PAID, REJECTED } = MILESTONE_STATE;
+// const { WAITING, ACTIVE, PAID, REJECTED } = MILESTONE_STATE;
 
-enum STEP_STATUS {
-  WAIT = 'wait',
-  PROCESS = 'process',
-  FINISH = 'finish',
-  ERROR = 'error',
-}
+// enum STEP_STATUS {
+//   WAIT = 'wait',
+//   PROCESS = 'process',
+//   FINISH = 'finish',
+//   ERROR = 'error',
+// }
 
-const milestoneStateToStepState = {
-  [WAITING]: STEP_STATUS.WAIT,
-  [ACTIVE]: STEP_STATUS.PROCESS,
-  [PAID]: STEP_STATUS.FINISH,
-  [REJECTED]: STEP_STATUS.ERROR,
-};
+// const milestoneStateToStepState = {
+//   [WAITING]: STEP_STATUS.WAIT,
+//   [ACTIVE]: STEP_STATUS.PROCESS,
+//   [PAID]: STEP_STATUS.FINISH,
+//   [REJECTED]: STEP_STATUS.ERROR,
+// };
 
 interface OwnProps {
   proposal: Proposal;
@@ -87,107 +89,20 @@ class ProposalMilestones extends React.Component<Props, State> {
       return <Loader />;
     }
     const { milestones } = proposal;
-
-    const isTrustee = false; // TODO: Replace with being on the team
     const milestoneCount = milestones.length;
-
     const milestoneSteps = milestones.map((milestone, i) => {
-      const status =
-        this.state.activeMilestoneIdx === i && milestone.state === WAITING
-          ? STEP_STATUS.PROCESS
-          : milestoneStateToStepState[milestone.state];
-
+      const status: StepProps['status'] = 'wait';
+      // this.state.activeMilestoneIdx === i && milestone.state === WAITING
+      //   ? STEP_STATUS.PROCESS
+      //   : milestoneStateToStepState[milestone.state];
       const className = this.state.step === i ? 'is-active' : 'is-inactive';
-      const estimatedDate = moment(milestone.dateEstimated * 1000).format('MMMM YYYY');
-      const reward = (
-        <UnitDisplay value={milestone.amount} symbol="ZEC" displayShortBalance={4} />
-      );
-      const alertStyle = { width: 'fit-content', margin: '0 0 1rem 0' };
-
       const stepProps = {
         title: <div ref={this.stepTitleRefs[i]}>{milestone.title}</div>,
         status,
         className,
         onClick: () => this.setState({ step: i }),
       };
-
-      let notification;
-
-      switch (milestone.state) {
-        case PAID:
-          notification = (
-            <Alert
-              type="success"
-              message={
-                <span>
-                  The team was awarded <strong>{reward}</strong>{' '}
-                  {milestone.immediatePayout
-                    ? 'as an initial payout'
-                    : // TODO: Add property for payout date on milestones
-                      `on ${moment().format('MMM Do, YYYY')}`}
-                  .
-                </span>
-              }
-              style={alertStyle}
-            />
-          );
-          break;
-        case ACTIVE:
-          notification = (
-            <Alert
-              type="info"
-              message={`
-                The team has requested a payout for this milestone. It is
-                currently under review.
-              `}
-              style={alertStyle}
-            />
-          );
-          break;
-        case REJECTED:
-          notification = (
-            <Alert
-              type="warning"
-              message={
-                <span>
-                  Payout for this milestone was rejected on{' '}
-                  {/* TODO: add property for payout rejection date on milestones */}
-                  {moment().format('MMM Do, YYYY')}.{isTrustee ? ' You ' : ' The team '}{' '}
-                  can request another review for payout at any time.
-                </span>
-              }
-              style={alertStyle}
-            />
-          );
-          break;
-      }
-
-      const statuses = (
-        <div className="ProposalMilestones-milestone-status">
-          {!milestone.immediatePayout && (
-            <div>
-              Estimate: <strong>{estimatedDate}</strong>
-            </div>
-          )}
-          <div>
-            Reward: <strong>{reward}</strong>
-          </div>
-        </div>
-      );
-
-      const content = (
-        <div className="ProposalMilestones-milestone">
-          <div className="ProposalMilestones-milestone-body">
-            <div className="ProposalMilestones-milestone-description">
-              <h3 className="ProposalMilestones-milestone-title">{milestone.title}</h3>
-              {statuses}
-              {notification}
-              {milestone.content}
-            </div>
-          </div>
-        </div>
-      );
-      return { key: i, stepProps, content };
+      return { key: i, stepProps };
     });
 
     const stepSize = milestoneCount > 5 ? 'small' : 'default';
@@ -198,7 +113,6 @@ class ProposalMilestones extends React.Component<Props, State> {
         className={classnames({
           ['ProposalMilestones']: true,
           ['do-titles-overflow']: this.state.doTitlesOverflow,
-          [`is-count-${milestoneCount}`]: true,
         })}
       >
         {!!milestoneSteps.length ? (
@@ -208,7 +122,10 @@ class ProposalMilestones extends React.Component<Props, State> {
                 <Steps.Step key={mss.key} {...mss.stepProps} />
               ))}
             </Steps>
-            {milestoneSteps[this.state.step].content}
+            <Milestone
+              {...proposal.milestones[this.state.step]}
+              isTeamMember={proposal.isTeamMember || false}
+            />
           </>
         ) : (
           <Placeholder
@@ -221,16 +138,17 @@ class ProposalMilestones extends React.Component<Props, State> {
   }
 
   private getActiveMilestoneIdx = () => {
-    const { milestones } = this.props.proposal;
-    const activeMilestone =
-      milestones.find(
-        m =>
-          m.state === WAITING ||
-          m.state === ACTIVE ||
-          (m.state === PAID && !m.isPaid) ||
-          m.state === REJECTED,
-      ) || milestones[0];
-    return milestones.indexOf(activeMilestone);
+    return 0;
+    // const { milestones } = this.props.proposal;
+    // const activeMilestone =
+    //   milestones.find(
+    //     m =>
+    //       m.state === WAITING ||
+    //       m.state === ACTIVE ||
+    //       (m.state === PAID && !m.isPaid) ||
+    //       m.state === REJECTED,
+    //   ) || milestones[0];
+    // return milestones.indexOf(activeMilestone);
   };
 
   private updateDoTitlesOverflow = () => {
@@ -267,6 +185,81 @@ class ProposalMilestones extends React.Component<Props, State> {
     this.setState({ doTitlesOverflow });
   };
 }
+
+const Milestone: React.SFC<ProposalMilestone & { isTeamMember: boolean }> = p => {
+  const estimatedDate = moment(p.dateEstimated * 1000).format('MMMM YYYY');
+  const reward = <UnitDisplay value={p.amount} symbol="ZEC" displayShortBalance={4} />;
+  const fmtDate = (n: undefined | number) =>
+    (n && moment(n * 1000).format('MMM Do, YYYY')) || undefined;
+  const getAlertProps = {
+    [MILESTONE_STAGE.IDLE]: () => null,
+    [MILESTONE_STAGE.REQUESTED]: () => ({
+      type: 'info',
+      message: (
+        <>
+          The team has requested a payout for this milestone. It is currently under
+          review.
+        </>
+      ),
+    }),
+    [MILESTONE_STAGE.REJECTED]: () => ({
+      type: 'warning',
+      message: (
+        <span>
+          Payout for this milestone was rejected on {fmtDate(p.dateRejected)}.
+          {p.isTeamMember ? ' You ' : ' The team '} can request another review for payout
+          at any time.
+        </span>
+      ),
+    }),
+    [MILESTONE_STAGE.ACCEPTED]: () => ({
+      type: 'info',
+      message: (
+        <span>
+          Payout for this milestone was accepted on {fmtDate(p.dateAccepted)}.
+          <strong>{reward}</strong> will be sent to{' '}
+          {p.isTeamMember ? ' you ' : ' the team '} soon.
+        </span>
+      ),
+    }),
+    [MILESTONE_STAGE.PAID]: () => ({
+      type: 'success',
+      message: (
+        <span>
+          The team was awarded <strong>{reward}</strong>{' '}
+          {p.immediatePayout && ` as an initial payout `} on ${fmtDate(p.datePaid)}
+          `.
+        </span>
+      ),
+    }),
+  } as { [key in MILESTONE_STAGE]: () => AlertProps | null };
+
+  const alertProps = getAlertProps[p.stage]();
+
+  return (
+    <div className="ProposalMilestones-milestone">
+      <div className="ProposalMilestones-milestone-body">
+        <div className="ProposalMilestones-milestone-description">
+          <h3 className="ProposalMilestones-milestone-title">{p.title}</h3>
+          <div className="ProposalMilestones-milestone-status">
+            {!p.immediatePayout && (
+              <div>
+                Estimate: <strong>{estimatedDate}</strong>
+              </div>
+            )}
+            <div>
+              Reward: <strong>{reward}</strong>
+            </div>
+          </div>
+          {alertProps && (
+            <Alert {...alertProps} className="ProposalMilestones-milestone-alert" />
+          )}
+          {p.content}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ConnectedProposalMilestones = connect((state: AppState) => {
   console.warn('TODO - new redux accounts/user-role-for-proposal', state);
