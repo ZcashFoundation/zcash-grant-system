@@ -277,7 +277,7 @@ class Proposal(db.Model):
 
         # arbiter needs proposal.id
         db.session.add(proposal)
-        db.session.commit()
+        db.session.flush()
 
         arbiter = ProposalArbiter(proposal_id=proposal.id)
         db.session.add(arbiter)

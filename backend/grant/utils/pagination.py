@@ -87,7 +87,8 @@ class ProposalPagination(Pagination):
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
             if arbiter_filters:
-                query = query.filter(ProposalArbiter.status.in_(arbiter_filters))
+                query = query.join(Proposal.arbiter) \
+                    .filter(ProposalArbiter.status.in_(arbiter_filters))
 
         # SORT (see self.SORT_MAP)
         if sort:
