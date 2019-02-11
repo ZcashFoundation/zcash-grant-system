@@ -1,7 +1,7 @@
 """milestone payment fields
 
 Revision ID: 3793d9a71e27
-Revises: 310dca400b81
+Revises: 86d300cb6d69
 Create Date: 2019-02-11 11:01:44.703413
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '3793d9a71e27'
-down_revision = '310dca400b81'
+down_revision = '86d300cb6d69'
 branch_labels = None
 depends_on = None
 
