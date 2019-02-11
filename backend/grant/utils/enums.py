@@ -41,7 +41,6 @@ ProposalStage = ProposalStageEnum()
 
 
 class CategoryEnum(CustomEnum):
-    DAPP = 'DAPP'
     DEV_TOOL = 'DEV_TOOL'
     CORE_DEV = 'CORE_DEV'
     COMMUNITY = 'COMMUNITY'
