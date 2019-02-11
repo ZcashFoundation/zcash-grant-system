@@ -79,3 +79,12 @@ class MilestoneStageEnum(CustomEnum):
 
 
 MilestoneStage = MilestoneStageEnum()
+
+
+class ProposalArbiterStatusEnum(CustomEnum):
+    MISSING = 'MISSING'
+    NOMINATED = 'NOMINATED'
+    ACCEPTED = 'ACCEPTED'
+
+
+ProposalArbiterStatus = ProposalArbiterStatusEnum()

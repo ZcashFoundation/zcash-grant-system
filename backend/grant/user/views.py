@@ -11,6 +11,7 @@ from grant.proposal.models import (
     ProposalContribution,
     user_proposal_contributions_schema,
     user_proposals_schema,
+    user_proposal_arbiters_schema
 )
 from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
 from grant.utils.exceptions import ValidationException
@@ -98,7 +99,8 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
             pending_dump = user_proposals_schema.dump(pending)
             result["pendingProposals"] = pending_dump
         if with_arbitrated and is_self:
-            result["arbitrated"] = user_proposals_schema.dump(user.arbitrated_proposals)
+            result["arbitrated"] = user_proposal_arbiters_schema.dump(user.arbiter_proposals)
+
         return result
     else:
         message = "User with id matching {} not found".format(user_id)
@@ -371,4 +373,28 @@ def set_user_settings(user_id, email_subscriptions):
     except ValidationException as e:
         return {"message": str(e)}, 400
     db.session.commit()
+    return user_settings_schema.dump(g.current_user.settings)
+
+
+@blueprint.route("/<user_id>/arbiter/<proposal_id>", methods=["PUT"])
+@requires_same_user_auth
+@endpoint.api(
+    parameter('isAccept', type=bool)
+)
+def set_user_arbiter(user_id, proposal_id, is_accept):
+    try:
+        proposal = Proposal.query.filter_by(id=int(proposal_id)).first()
+        if not proposal:
+            return {"message": "No such proposal"}, 404
+
+        if is_accept:
+            proposal.arbiter.accept_nomination(g.current_user.id)
+            return {"message": "Accepted nomination"}, 200
+        else:
+            proposal.arbiter.reject_nomination(g.current_user.id)
+            return {"message": "Rejected nomination"}, 200
+
+    except ValidationException as e:
+        return {"message": str(e)}, 400
+
     return user_settings_schema.dump(g.current_user.settings)

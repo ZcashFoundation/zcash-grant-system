@@ -3,7 +3,7 @@ import React from 'react';
 import { view } from 'react-easy-state';
 import { Button, Modal, Input, Icon, List, Avatar, message } from 'antd';
 import store from 'src/store';
-import { Proposal, User } from 'src/types';
+import { Proposal, User, PROPOSAL_ARBITER_STATUS } from 'src/types';
 import Search from 'antd/lib/input/Search';
 import { ButtonProps } from 'antd/lib/button';
 import './index.less';
@@ -34,6 +34,13 @@ class ArbiterControlNaked extends React.Component<Props, State> {
     const { showSearch, searching } = this.state;
     const { results, search, error } = store.arbitersSearch;
     const showEmpty = !results.length && !searching;
+
+    const disp = {
+      [PROPOSAL_ARBITER_STATUS.MISSING]: 'Nominate arbiter',
+      [PROPOSAL_ARBITER_STATUS.NOMINATED]: 'Change nomination',
+      [PROPOSAL_ARBITER_STATUS.ACCEPTED]: 'Change arbiter',
+    };
+
     return (
       <>
         {/* CONTROL */}
@@ -45,14 +52,14 @@ class ArbiterControlNaked extends React.Component<Props, State> {
           onClick={this.handleShowSearch}
           {...this.props.buttonProps}
         >
-          {arbiter ? 'Change arbiter' : 'Set arbiter'}
+          {disp[arbiter.status]}
         </Button>
         {/* SEARCH MODAL */}
         {showSearch && (
           <Modal
             title={
               <>
-                <Icon type="crown" /> Select an arbiter
+                <Icon type="crown" /> Nominate an arbiter
               </>
             }
             visible={true}
@@ -96,7 +103,7 @@ class ArbiterControlNaked extends React.Component<Props, State> {
                             key="select"
                             onClick={() => this.handleSelect(u)}
                           >
-                            Select
+                            Nominate
                           </Button>,
                         ]}
                       >
@@ -143,7 +150,7 @@ class ArbiterControlNaked extends React.Component<Props, State> {
       await store.setArbiter(this.props.proposalId, user.userid);
       message.success(
         <>
-          Arbiter set for <b>{this.props.title}</b>
+          Arbiter nominated for <b>{this.props.title}</b>
         </>,
       );
     } catch (e) {

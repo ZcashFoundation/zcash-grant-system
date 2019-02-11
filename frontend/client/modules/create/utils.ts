@@ -1,4 +1,10 @@
-import { ProposalDraft, CreateMilestone, STATUS, MILESTONE_STAGE } from 'types';
+import {
+  ProposalDraft,
+  CreateMilestone,
+  STATUS,
+  MILESTONE_STAGE,
+  PROPOSAL_ARBITER_STATUS,
+} from 'types';
 import { User } from 'types';
 import { getAmountError, isValidAddress } from 'utils/validators';
 import { Proposal } from 'types';
@@ -192,6 +198,9 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
     stage: 'preview',
     category: draft.category || PROPOSAL_CATEGORY.DAPP,
     isStaked: true,
+    arbiter: {
+      status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
+    },
     milestones: draft.milestones.map((m, idx) => ({
       index: idx,
       title: m.title,

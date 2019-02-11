@@ -24,9 +24,9 @@ import Loader from 'components/Loader';
 import ExceptionPage from 'components/ExceptionPage';
 import ContributionModal from 'components/ContributionModal';
 import LinkableTabs from 'components/LinkableTabs';
-import './style.less';
 import { UserContribution } from 'types';
 import ProfileArbitrated from './ProfileArbitrated';
+import './style.less';
 
 interface StateProps {
   usersMap: AppState['users']['map'];
@@ -206,7 +206,7 @@ class Profile extends React.Component<Props, State> {
                   />
                 )}
                 {arbitrated.map(arb => (
-                  <ProfileArbitrated key={arb.proposalId} proposal={arb} />
+                  <ProfileArbitrated key={arb.proposal.proposalId} arbiter={arb} />
                 ))}
               </Tabs.TabPane>
             )}
