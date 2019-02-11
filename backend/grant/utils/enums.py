@@ -68,3 +68,12 @@ class RFPStatusEnum(CustomEnum):
 
 
 RFPStatus = RFPStatusEnum()
+
+
+class ProposalArbiterStatusEnum(CustomEnum):
+    MISSING = 'MISSING'
+    NOMINATED = 'NOMINATED'
+    ACCEPTED = 'ACCEPTED'
+
+
+ProposalArbiterStatus = ProposalArbiterStatusEnum()

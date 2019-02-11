@@ -1,5 +1,7 @@
 from grant.utils.enums import ProposalStatus
 from grant.utils.admin import generate_admin_password_hash
+from grant.user.models import admin_user_schema
+from grant.proposal.models import proposal_schema
 from mock import patch
 
 from ..config import BaseProposalCreatorConfig
@@ -126,3 +128,19 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
         self.assertEqual(resp.json["rejectReason"], "Funnzies.")
+
+    @patch('grant.email.send.send_email')
+    def test_nominate_arbiter(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+        self.login_admin()
+
+        # nominate arbiter
+        resp = self.app.put(
+            "/api/v1/admin/arbiters",
+            data={
+                'proposalId': self.proposal.id,
+                'userId': self.user.id
+            }
+        )
+        self.assert200(resp)
+        # TODO - more tests

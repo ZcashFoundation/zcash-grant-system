@@ -1,4 +1,9 @@
-import { PROPOSAL_STATUS, RFP_STATUS, CONTRIBUTION_STATUS } from 'src/types';
+import {
+  PROPOSAL_STATUS,
+  RFP_STATUS,
+  CONTRIBUTION_STATUS,
+  PROPOSAL_ARBITER_STATUS,
+} from 'src/types';
 
 export interface StatusSoT<E> {
   id: E;
@@ -50,6 +55,27 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     tagDisplay: 'Staking',
     tagColor: '#722ed1',
     hint: 'This proposal is awaiting a staking contribution.',
+  },
+];
+
+export const PROPOSAL_ARBITER_STATUSES: Array<StatusSoT<PROPOSAL_ARBITER_STATUS>> = [
+  {
+    id: PROPOSAL_ARBITER_STATUS.MISSING,
+    tagDisplay: 'Missing',
+    tagColor: '#cf00d5',
+    hint: 'Proposal does not have an arbiter.',
+  },
+  {
+    id: PROPOSAL_ARBITER_STATUS.NOMINATED,
+    tagDisplay: 'Nominated',
+    tagColor: '#cf00d5',
+    hint: 'An arbiter has been nominated for this proposal.',
+  },
+  {
+    id: PROPOSAL_ARBITER_STATUS.ACCEPTED,
+    tagDisplay: 'Accepted',
+    tagColor: '#cf00d5',
+    hint: 'Proposal has an arbiter.',
   },
 ];
 

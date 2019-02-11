@@ -5,6 +5,7 @@ import {
   Proposal,
   ProposalMilestone,
   STATUS,
+  PROPOSAL_ARBITER_STATUS,
 } from 'types';
 import { PROPOSAL_CATEGORY } from 'api/constants';
 import BN from 'bn.js';
@@ -160,6 +161,17 @@ export function generateProposal({
     stage: 'FUNDING_REQUIRED',
     category: PROPOSAL_CATEGORY.COMMUNITY,
     isStaked: true,
+    arbiter: {
+      status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
+      user: {
+        userid: 999,
+        displayName: 'Test Arbiter',
+        title: '',
+        emailAddress: 'test@arbiter.com',
+        avatar: null,
+        socialMedias: [],
+      },
+    },
     team: [
       {
         userid: 123,

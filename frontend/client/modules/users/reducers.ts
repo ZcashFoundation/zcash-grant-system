@@ -5,6 +5,7 @@ import {
   UserComment,
   UserContribution,
   TeamInviteWithProposal,
+  UserProposalArbiter,
 } from 'types';
 import types from './types';
 
@@ -20,7 +21,7 @@ export interface UserState extends User {
   isUpdating: boolean;
   updateError: string | null;
   pendingProposals: UserProposal[];
-  arbitrated: UserProposal[];
+  arbitrated: UserProposalArbiter[];
   proposals: UserProposal[];
   contributions: UserContribution[];
   comments: UserComment[];

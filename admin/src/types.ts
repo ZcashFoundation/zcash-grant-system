@@ -36,6 +36,17 @@ export interface RFPArgs {
   category: string;
   status?: string;
 }
+// NOTE: sync with backend/grant/utils/enums.py ProposalArbiterStatus
+export enum PROPOSAL_ARBITER_STATUS {
+  MISSING = 'MISSING',
+  NOMINATED = 'NOMINATED',
+  ACCEPTED = 'ACCEPTED',
+}
+export interface ProposalArbiter {
+  user?: User;
+  proposal: Proposal;
+  status: PROPOSAL_ARBITER_STATUS;
+}
 // NOTE: sync with backend/grant/utils/enums.py ProposalStatus
 export enum PROPOSAL_STATUS {
   DRAFT = 'DRAFT',
@@ -68,7 +79,7 @@ export interface Proposal {
   rejectReason: string;
   contributionMatching: number;
   rfp?: RFP;
-  arbiter?: User;
+  arbiter: ProposalArbiter;
 }
 export interface Comment {
   commentId: string;

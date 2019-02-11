@@ -1,4 +1,9 @@
-import { PROPOSAL_STATUSES, RFP_STATUSES, CONTRIBUTION_STATUSES } from './statuses';
+import {
+  PROPOSAL_STATUSES,
+  RFP_STATUSES,
+  CONTRIBUTION_STATUSES,
+  PROPOSAL_ARBITER_STATUSES,
+} from './statuses';
 
 export interface Filter {
   id: string;
@@ -29,14 +34,14 @@ const PROPOSAL_FILTERS = PROPOSAL_STATUSES.map(s => ({
   group: 'Status',
 }))
   // proposal has extra filters
-  .concat([
-    {
-      id: `OTHER_ARBITER`,
-      display: `Other: Arbiter`,
-      color: '#cf00d5',
-      group: 'Other',
-    },
-  ]);
+  .concat(
+    PROPOSAL_ARBITER_STATUSES.map(s => ({
+      id: `ARBITER_${s.id}`,
+      display: `Arbiter: ${s.tagDisplay}`,
+      color: s.tagColor,
+      group: 'Arbiter',
+    })),
+  );
 
 export const proposalFilters: Filters = {
   list: PROPOSAL_FILTERS,
