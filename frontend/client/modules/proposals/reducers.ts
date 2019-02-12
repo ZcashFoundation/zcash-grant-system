@@ -22,7 +22,7 @@ export interface ProposalDetail extends Proposal {
 export interface ProposalState {
   page: LoadableProposalPage;
 
-  detail: null | Proposal;
+  detail: null | ProposalDetail;
   isFetchingDetail: boolean;
   detailError: null | string;
 
@@ -45,7 +45,7 @@ export interface ProposalState {
   deleteContributionError: null | string;
 }
 
-const PROPOSAL_DETAIL_INITIAL_STATE: Partial<ProposalDetail> = {
+export const PROPOSAL_DETAIL_INITIAL_STATE = {
   isRequestingPayout: false,
   requestPayoutError: '',
   isRejectingPayout: false,

@@ -109,6 +109,7 @@ export function generateProposal({
     }
 
     const defaults: ProposalMilestone = {
+      id: 0,
       title: 'Milestone A',
       content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
            tempor incididunt ut labore et dolore magna aliqua.`,
@@ -124,6 +125,7 @@ export function generateProposal({
 
   const milestones = [...Array(milestoneCount).keys()].map(i => {
     const overrides = {
+      id: i,
       index: i,
       title: genMilestoneTitle(),
       immediatePayout: i === 0,

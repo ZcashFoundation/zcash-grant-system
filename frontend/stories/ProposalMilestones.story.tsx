@@ -21,9 +21,9 @@ const msRejected = { stage: REJECTED };
 const trustee = 'z123';
 const contributor = 'z456';
 
-const geometryCases = [...Array(10).keys()].map(i =>
-  generateProposal({ milestoneCount: i + 1 }),
-);
+// const geometryCases = [...Array(10).keys()].map(i =>
+//   generateProposal({ milestoneCount: i + 1 }),
+// );
 
 const cases: { [index: string]: any } = {
   // trustee - first
@@ -149,14 +149,14 @@ for (const key of Object.keys(cases)) {
   ));
 }
 
-const geometryStories = storiesOf('Proposal/Milestones/geometry', module);
+// const geometryStories = storiesOf('Proposal/Milestones/geometry', module);
 
-geometryCases.forEach((gc, idx) =>
-  geometryStories.add(`${idx + 1} steps`, () => (
-    <div key={idx} style={{ padding: '3em', display: 'flex' }}>
-      <Provider store={storeOutsider}>
-        <Milestones {...gc} />
-      </Provider>
-    </div>
-  )),
-);
+// geometryCases.forEach((gc, idx) =>
+//   geometryStories.add(`${idx + 1} steps`, () => (
+//     <div key={idx} style={{ padding: '3em', display: 'flex' }}>
+//       <Provider store={storeOutsider}>
+//         <Milestones {...gc} />
+//       </Provider>
+//     </div>
+//   )),
+// );

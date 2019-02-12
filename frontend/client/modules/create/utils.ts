@@ -7,10 +7,13 @@ import {
 } from 'types';
 import { User } from 'types';
 import { getAmountError, isValidAddress } from 'utils/validators';
-import { Proposal } from 'types';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY } from 'api/constants';
+import {
+  ProposalDetail,
+  PROPOSAL_DETAIL_INITIAL_STATE,
+} from 'modules/proposals/reducers';
 
 export const TARGET_ZEC_LIMIT = 1000;
 
@@ -176,7 +179,7 @@ export function proposalToContractData(form: ProposalDraft): any {
 }
 
 // This is kind of a disgusting function, sorry.
-export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
+export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDetail {
   const { invites, ...rest } = draft;
   const target = parseFloat(draft.target);
 
@@ -202,6 +205,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
     },
     milestones: draft.milestones.map((m, idx) => ({
+      id: idx,
       index: idx,
       title: m.title,
       content: m.content,
@@ -211,5 +215,6 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
       payoutPercent: m.payoutPercent.toString(),
       stage: MILESTONE_STAGE.IDLE,
     })),
+    ...PROPOSAL_DETAIL_INITIAL_STATE,
   };
 }
