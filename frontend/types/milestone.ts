@@ -26,9 +26,12 @@ export interface Milestone {
   dateRejected?: number;
   dateAccepted?: number;
   datePaid?: number;
+  rejectReason?: string;
+  paidTxId?: string;
 }
 
 export interface ProposalMilestone extends Milestone {
+  id: number;
   content: string;
   payoutPercent: string;
   title: string;

@@ -10,13 +10,14 @@ from grant.rfp.models import RFP
 from grant.utils.auth import (
     requires_auth,
     requires_team_member_auth,
+    requires_arbiter_auth,
     requires_email_verified_auth,
     get_authed_user,
     internal_webhook
 )
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat
-from grant.utils.enums import ProposalStatus, ContributionStatus
+from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
 from grant.utils import pagination
 from sqlalchemy import or_
 from datetime import datetime
@@ -484,7 +485,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     db.session.commit()
 
     if contribution.proposal.status == ProposalStatus.STAKING:
-        # fully staked, set status PENDING & notify user
+        # fully staked, set status PENDING
         if contribution.proposal.is_staked:  # Decimal(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
             contribution.proposal.status = ProposalStatus.PENDING
             db.session.add(contribution.proposal)
@@ -520,6 +521,9 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
     # on funding target reached.
+    if contribution.proposal.status == ProposalStatus.LIVE:
+        if contribution.proposal.is_funded:
+            contribution.proposal.stage = ProposalStage.IN_PROGRESS
 
     return None, 200
 
@@ -543,3 +547,53 @@ def delete_proposal_contribution(contribution_id):
     db.session.add(contribution)
     db.session.commit()
     return None, 202
+
+
+# TODO
+# request MS payout
+@blueprint.route("/<proposal_id>/milestone/<milestone_id>/request", methods=["PUT"])
+@requires_team_member_auth
+@endpoint.api()
+def request_milestone_payout(proposal_id, milestone_id):
+    for ms in g.current_proposal.milestones:
+        if ms.id == int(milestone_id) :
+            ms.request_payout(g.current_user.id)
+            # TODO: email ARBITER to review payout request
+            db.session.add(ms)
+            db.session.commit()
+            return proposal_schema.dump(g.current_proposal), 200
+        return {"message": "No milestone matching id"}, 404
+
+
+# accept MS payout (arbiter)
+@blueprint.route("/<proposal_id>/milestone/<milestone_id>/accept", methods=["PUT"])
+@requires_arbiter_auth
+@endpoint.api()
+def accept_milestone_payout_request(proposal_id, milestone_id):
+    for ms in g.current_proposal.milestones:
+        if ms.id == int(milestone_id) :
+            ms.accept_request(g.current_user.id)
+            # TODO: email TEAM that payout request accepted (maybe, or wait until paid?)
+            db.session.add(ms)
+            db.session.commit()
+            return proposal_schema.dump(g.current_proposal), 200
+        return {"message": "No milestone matching id"}, 404
+
+
+# reject MS payout (arbiter) (reason)
+@blueprint.route("/<proposal_id>/milestone/<milestone_id>/reject", methods=["PUT"])
+@requires_arbiter_auth
+@endpoint.api(
+    parameter('reason', type=str, required=True),
+)
+def reject_milestone_payout_request(proposal_id, milestone_id, reason):
+    for ms in g.current_proposal.milestones:
+        if ms.id == int(milestone_id) :
+            ms.reject_request(g.current_user.id, reason)
+            # TODO: email TEAM that payout request was rejected
+            db.session.add(ms)
+            db.session.commit()
+            return proposal_schema.dump(g.current_proposal), 200
+        return {"message": "No milestone matching id"}, 404
+
+# (ADMIN) MS payout (txid)

@@ -10,6 +10,15 @@ import {
 } from 'types';
 import { PROPOSAL_SORT } from 'api/constants';
 
+export interface ProposalDetail extends Proposal {
+  isRequestingPayout: boolean;
+  requestPayoutError: string;
+  isRejectingPayout: boolean;
+  rejectPayoutError: string;
+  isAcceptingPayout: boolean;
+  acceptPayoutError: string;
+}
+
 export interface ProposalState {
   page: LoadableProposalPage;
 
@@ -35,6 +44,15 @@ export interface ProposalState {
   isDeletingContribution: boolean;
   deleteContributionError: null | string;
 }
+
+const PROPOSAL_DETAIL_INITIAL_STATE: Partial<ProposalDetail> = {
+  isRequestingPayout: false,
+  requestPayoutError: '',
+  isRejectingPayout: false,
+  rejectPayoutError: '',
+  isAcceptingPayout: false,
+  acceptPayoutError: '',
+};
 
 export const INITIAL_STATE: ProposalState = {
   page: {
@@ -203,14 +221,14 @@ export default (state = INITIAL_STATE, action: any) => {
           // if requesting same proposal, leave the detail object
           state.detail && state.detail.proposalId === payload.proposalId
             ? state.detail
-            : loadedInPage || null,
+            : { ...loadedInPage, ...PROPOSAL_DETAIL_INITIAL_STATE } || null,
         isFetchingDetail: true,
         detailError: null,
       };
     case types.PROPOSAL_DATA_FULFILLED:
       return {
         ...state,
-        detail: payload,
+        detail: { ...payload, ...PROPOSAL_DETAIL_INITIAL_STATE },
         isFetchingDetail: false,
       };
     case types.PROPOSAL_DATA_REJECTED:
@@ -219,6 +237,78 @@ export default (state = INITIAL_STATE, action: any) => {
         detail: null,
         isFetchingDetail: false,
         detailError: (payload && payload.message) || payload.toString(),
+      };
+
+    case types.PROPOSAL_PAYOUT_REQUEST_PENDING:
+      return {
+        ...state,
+        detail: {
+          ...state.detail,
+          isRequestingPayout: true,
+          requestPayoutError: '',
+        },
+      };
+    case types.PROPOSAL_PAYOUT_REQUEST_FULFILLED:
+      return {
+        ...state,
+        detail: { ...payload, ...PROPOSAL_DETAIL_INITIAL_STATE },
+      };
+    case types.PROPOSAL_PAYOUT_REQUEST_REJECTED:
+      return {
+        ...state,
+        detail: {
+          ...state.detail,
+          isRequestingPayout: false,
+          requestPayoutError: (payload && payload.message) || payload.toString(),
+        },
+      };
+
+    case types.PROPOSAL_PAYOUT_REJECT_PENDING:
+      return {
+        ...state,
+        detail: {
+          ...state.detail,
+          isRejectingPayout: true,
+          rejectPayoutError: '',
+        },
+      };
+    case types.PROPOSAL_PAYOUT_REJECT_FULFILLED:
+      return {
+        ...state,
+        detail: { ...payload, ...PROPOSAL_DETAIL_INITIAL_STATE },
+      };
+    case types.PROPOSAL_PAYOUT_REJECT_REJECTED:
+      return {
+        ...state,
+        detail: {
+          ...state.detail,
+          isRejectingPayout: false,
+          rejectPayoutError: (payload && payload.message) || payload.toString(),
+        },
+      };
+
+    case types.PROPOSAL_PAYOUT_ACCEPT_PENDING:
+      return {
+        ...state,
+        detail: {
+          ...state.detail,
+          isAcceptingPayout: true,
+          acceptingPayoutError: '',
+        },
+      };
+    case types.PROPOSAL_PAYOUT_ACCEPT_FULFILLED:
+      return {
+        ...state,
+        detail: { ...payload, ...PROPOSAL_DETAIL_INITIAL_STATE },
+      };
+    case types.PROPOSAL_PAYOUT_ACCEPT_REJECTED:
+      return {
+        ...state,
+        detail: {
+          ...state.detail,
+          isAcceptingPayout: false,
+          acceptingPayoutError: (payload && payload.message) || payload.toString(),
+        },
       };
 
     case types.PROPOSAL_COMMENTS_PENDING:

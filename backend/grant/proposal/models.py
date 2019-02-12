@@ -221,7 +221,7 @@ class Proposal(db.Model):
     comments = db.relationship(Comment, backref="proposal", lazy=True, cascade="all, delete-orphan")
     updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True, cascade="all, delete-orphan")
     contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
-    milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
+    milestones = db.relationship("Milestone", backref="proposal", order_by="asc(Milestone.index)", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
     arbiter = db.relationship(ProposalArbiter, uselist=False, back_populates="proposal", cascade="all, delete-orphan")
 
@@ -401,6 +401,7 @@ class Proposal(db.Model):
 
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
+        self.stage = ProposalStage.FUNDING_REQUIRED
 
     @hybrid_property
     def contributed(self):
@@ -426,18 +427,16 @@ class Proposal(db.Model):
         return Decimal(self.contributed) >= PROPOSAL_STAKING_AMOUNT
 
     @hybrid_property
+    def is_funded(self):
+        return Decimal(self.contributed) >= Decimal(self.target)
+
+    @hybrid_property
     def current_milestone(self):
         if self.milestones:
             for ms in self.milestones:
                 if ms.stage != MilestoneStage.PAID:
                     return ms
         return None
-
-        # contributions = ProposalContribution.query \
-        #     .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
-        #     .all()
-        # funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
-        # return str(funded)
 
 
 class ProposalSchema(ma.Schema):

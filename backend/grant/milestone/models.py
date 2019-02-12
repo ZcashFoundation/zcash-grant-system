@@ -68,7 +68,7 @@ class Milestone(db.Model):
             raise ValidationException("Milestone title must be no more than 60 chars")
 
     def request_payout(self, user_id: int):
-        if self.stage not in [MilestoneStage.IDLE, MilestonStage.REJECTED]:
+        if self.stage not in [MilestoneStage.IDLE, MilestoneStage.REJECTED]:
             raise MilestoneException(f'Cannot request payout for milestone at {self.stage} stage')
         self.stage = MilestoneStage.REQUESTED
         self.date_requested = datetime.datetime.now()

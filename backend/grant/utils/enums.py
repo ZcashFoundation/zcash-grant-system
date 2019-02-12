@@ -34,6 +34,7 @@ ProposalSort = ProposalSortEnum()
 
 class ProposalStageEnum(CustomEnum):
     FUNDING_REQUIRED = 'FUNDING_REQUIRED'
+    IN_PROGRESS = 'IN_PROGRESS'
     COMPLETED = 'COMPLETED'
 
 
