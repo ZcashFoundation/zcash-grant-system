@@ -7,7 +7,12 @@ import { Alert, Steps, Button, message, Modal, Input } from 'antd';
 import { AlertProps } from 'antd/lib/alert';
 import { StepProps } from 'antd/lib/steps';
 import TextArea from 'antd/lib/input/TextArea';
-import { Milestone, ProposalMilestone, MILESTONE_STAGE } from 'types';
+import {
+  Milestone,
+  ProposalMilestone,
+  MILESTONE_STAGE,
+  PROPOSAL_ARBITER_STATUS,
+} from 'types';
 import { PROPOSAL_STAGE } from 'api/constants';
 import UnitDisplay from 'components/UnitDisplay';
 import Loader from 'components/Loader';
@@ -16,6 +21,7 @@ import Placeholder from 'components/Placeholder';
 import { proposalActions } from 'modules/proposals';
 import { ProposalDetail } from 'modules/proposals/reducers';
 import './index.less';
+import { Link } from 'react-router-dom';
 
 enum STEP_STATUS {
   WAIT = 'wait',
@@ -230,6 +236,10 @@ class ProposalMilestones extends React.Component<Props, State> {
               isCurrent={activeIsCurrent}
               isTeamMember={proposal.isTeamMember || false}
               isArbiter={proposal.isArbiter || false}
+              hasArbiter={
+                !!proposal.arbiter.user &&
+                proposal.arbiter.status === PROPOSAL_ARBITER_STATUS.ACCEPTED
+              }
             />
           </>
         ) : (
@@ -301,6 +311,7 @@ interface MilestoneProps extends MSProps {
   showRejectPayout: (milestoneId: number) => void;
   isTeamMember: boolean;
   isArbiter: boolean;
+  hasArbiter: boolean;
   isCurrent: boolean;
   proposalId: number;
   isFunded: boolean;
@@ -382,7 +393,11 @@ const MilestoneAction: React.SFC<MilestoneProps> = p => {
   if (!p.isCurrent || !p.isFunded || p.stage === MILESTONE_STAGE.PAID) {
     return null;
   }
+  if (!p.hasArbiter && !p.isTeamMember) {
+    return null;
+  }
 
+  // TEAM INFO
   const team = {
     [MILESTONE_STAGE.IDLE]: () => (
       <>
@@ -439,6 +454,7 @@ const MilestoneAction: React.SFC<MilestoneProps> = p => {
     [MILESTONE_STAGE.PAID]: () => <></>,
   } as { [key in MILESTONE_STAGE]: () => ReactNode };
 
+  // OUTSIDERS/OTHERS INFO
   const others = {
     [MILESTONE_STAGE.IDLE]: () => (
       <>
@@ -473,6 +489,7 @@ const MilestoneAction: React.SFC<MilestoneProps> = p => {
     [MILESTONE_STAGE.PAID]: () => <></>,
   } as { [key in MILESTONE_STAGE]: () => ReactNode };
 
+  // ARBITER INFO
   const arbiter = {
     [MILESTONE_STAGE.IDLE]: () => (
       <>
@@ -526,6 +543,26 @@ const MilestoneAction: React.SFC<MilestoneProps> = p => {
     content = arbiter[p.stage]();
   } else {
     content = others[p.stage]();
+  }
+
+  // special warning if no arbiter is set for team members
+  if (!p.hasArbiter && p.isTeamMember) {
+    content = (
+      <Alert
+        type="error"
+        message="Arbiter not assigned"
+        description={
+          <p>
+            We are sorry for the inconvenience, but in order to have milestone payouts
+            reviewed an arbiter must be assigned. Please{' '}
+            <Link target="_blank" to="/contact">
+              contact support
+            </Link>{' '}
+            for help.
+          </p>
+        }
+      />
+    );
   }
 
   return (

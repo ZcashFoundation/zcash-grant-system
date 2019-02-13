@@ -1,4 +1,5 @@
 from dateutil.parser import parse
+from decimal import Decimal
 from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
@@ -562,9 +563,13 @@ def request_milestone_payout(proposal_id, milestone_id):
     for ms in g.current_proposal.milestones:
         if ms.id == int(milestone_id):
             ms.request_payout(g.current_user.id)
-            # TODO: email ARBITER to review payout request
             db.session.add(ms)
             db.session.commit()
+            # email ARBITER to review payout request
+            send_email(g.current_proposal.arbiter.user.email_address, 'milestone_request', {
+                'proposal': g.current_proposal,
+                'proposal_milestones_url': make_url(f'/proposals/{g.current_proposal.id}?tab=milestones'),
+            })
             return proposal_schema.dump(g.current_proposal), 200
 
     return {"message": "No milestone matching id"}, 404
@@ -580,9 +585,16 @@ def accept_milestone_payout_request(proposal_id, milestone_id):
     for ms in g.current_proposal.milestones:
         if ms.id == int(milestone_id):
             ms.accept_request(g.current_user.id)
-            # TODO: email TEAM that payout request accepted (maybe, or wait until paid?)
             db.session.add(ms)
             db.session.commit()
+            # email TEAM that payout request accepted
+            amount = Decimal(ms.payout_percent) * Decimal(g.current_proposal.target) / 100
+            for member in g.current_proposal.team:
+                send_email(member.email_address, 'milestone_accept', {
+                    'proposal': g.current_proposal,
+                    'amount': amount,
+                    'proposal_milestones_url': make_url(f'/proposals/{g.current_proposal.id}?tab=milestones'),
+                })
             return proposal_schema.dump(g.current_proposal), 200
 
     return {"message": "No milestone matching id"}, 404
@@ -600,9 +612,15 @@ def reject_milestone_payout_request(proposal_id, milestone_id, reason):
     for ms in g.current_proposal.milestones:
         if ms.id == int(milestone_id):
             ms.reject_request(g.current_user.id, reason)
-            # TODO: email TEAM that payout request was rejected
             db.session.add(ms)
             db.session.commit()
+            # email TEAM that payout request was rejected
+            for member in g.current_proposal.team:
+                send_email(member.email_address, 'milestone_reject', {
+                    'proposal': g.current_proposal,
+                    'admin_note': reason,
+                    'proposal_milestones_url': make_url(f'/proposals/{g.current_proposal.id}?tab=milestones'),
+                })
             return proposal_schema.dump(g.current_proposal), 200
 
     return {"message": "No milestone matching id"}, 404

@@ -163,6 +163,52 @@ def proposal_arbiter(email_args):
     }
 
 
+def milestone_request(email_args):
+    p = email_args['proposal']
+    ms = p.current_milestone
+    return {
+        'subject': f'Payout request for {p.title} - {ms.title} has been made',
+        'title': f'Milestone payout requested',
+        'preview': f'A payout request for milestone {ms.title} has been made.',
+        'subscription': EmailSubscription.ARBITER,
+    }
+
+
+def milestone_reject(email_args):
+    p = email_args['proposal']
+    ms = p.current_milestone
+    return {
+        'subject': f'Payout rejected for {p.title} - {ms.title}',
+        'title': f'Milestone payout rejected',
+        'preview': f'The payout for milestone {ms.title} has been rejected.',
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL,
+    }
+
+
+def milestone_accept(email_args):
+    p = email_args['proposal']
+    a = email_args['amount']
+    ms = p.current_milestone
+    return {
+        'subject': f'Payout approved for {p.title} - {ms.title}!',
+        'title': f'Milestone payout approved',
+        'preview': f'The payout of {a} ZEC for milestone {ms.title} has been approved.',
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL,
+    }
+
+
+def milestone_paid(email_args):
+    p = email_args['proposal']
+    a = email_args['amount']
+    ms = p.current_milestone
+    return {
+        'subject': f'{p.title} - {ms.title} has been paid!',
+        'title': f'Milestone paid',
+        'preview': f'The milestone {ms.title} payout of {a} ZEC has been paid!',
+        'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -178,7 +224,11 @@ get_info_lookup = {
     'contribution_confirmed': contribution_confirmed,
     'contribution_update': contribution_update,
     'comment_reply': comment_reply,
-    'proposal_arbiter': proposal_arbiter
+    'proposal_arbiter': proposal_arbiter,
+    'milestone_request': milestone_request,
+    'milestone_reject': milestone_reject,
+    'milestone_accept': milestone_accept,
+    'milestone_paid': milestone_paid
 }
 
 

@@ -1,0 +1,12 @@
+The payout request for proposal milestone "{{ args.proposal.title }} - {{args.proposal.current_milestone.title }}" 
+has been rejected. 
+
+{% if args.admin_note %}
+The following reason was provided:
+
+> {{ args.admin_note }}
+{% endif %}
+
+Another request for payment can be made when the above concerns have been addressed.
+
+View milestone: {{ args.proposal_milestones_url }}

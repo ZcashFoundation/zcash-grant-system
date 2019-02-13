@@ -293,7 +293,7 @@ export default (state = INITIAL_STATE, action: any) => {
         detail: {
           ...state.detail,
           isAcceptingPayout: true,
-          acceptingPayoutError: '',
+          acceptPayoutError: '',
         },
       };
     case types.PROPOSAL_PAYOUT_ACCEPT_FULFILLED:
@@ -307,7 +307,7 @@ export default (state = INITIAL_STATE, action: any) => {
         detail: {
           ...state.detail,
           isAcceptingPayout: false,
-          acceptingPayoutError: (payload && payload.message) || payload.toString(),
+          acceptPayoutError: (payload && payload.message) || payload.toString(),
         },
       };
 

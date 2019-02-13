@@ -21,6 +21,7 @@ from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login,
 from grant.utils.misc import make_url
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, ProposalArbiterStatus, MilestoneStage
 from grant.utils import pagination
+from grant.settings import EXPLORER_URL
 from sqlalchemy import func, or_
 
 from .example_emails import example_email_args
@@ -277,15 +278,24 @@ def paid_milestone_payout_request(id, mid, tx_id):
     for ms in proposal.milestones:
         if ms.id == int(mid):
             ms.mark_paid(tx_id)
-            # TODO: email TEAM that payout request was PAID
             db.session.add(ms)
             db.session.flush()
+            # check if this is the final ms, and update proposal.stage
             num_paid = reduce(lambda a, x: a + (1 if x.stage == MilestoneStage.PAID else 0), proposal.milestones, 0)
             if num_paid == len(proposal.milestones):
                 proposal.stage = ProposalStage.COMPLETED  # WIP -> COMPLETED
                 db.session.add(proposal)
                 db.session.flush()
             db.session.commit()
+            # email TEAM that payout request was PAID
+            amount = Decimal(ms.payout_percent) * Decimal(proposal.target) / 100
+            for member in proposal.team:
+                send_email(member.email_address, 'milestone_paid', {
+                    'proposal': proposal,
+                    'amount': amount,
+                    'tx_explorer_url': f'{EXPLORER_URL}transactions/{tx_id}',
+                    'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
+                })
             return proposal_schema.dump(proposal), 200
 
     return {"message": "No milestone matching id"}, 404
