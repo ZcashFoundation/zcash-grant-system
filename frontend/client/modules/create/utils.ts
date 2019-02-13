@@ -9,7 +9,7 @@ import { User } from 'types';
 import { getAmountError, isValidAddress } from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import {
   ProposalDetail,
   PROPOSAL_DETAIL_INITIAL_STATE,
@@ -198,7 +198,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     funded: Zat('0'),
     contributionMatching: 0,
     percentFunded: 0,
-    stage: 'preview',
+    stage: PROPOSAL_STAGE.PREVIEW,
     category: draft.category || PROPOSAL_CATEGORY.DAPP,
     isStaked: true,
     arbiter: {

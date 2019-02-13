@@ -221,7 +221,8 @@ class Proposal(db.Model):
     comments = db.relationship(Comment, backref="proposal", lazy=True, cascade="all, delete-orphan")
     updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True, cascade="all, delete-orphan")
     contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
-    milestones = db.relationship("Milestone", backref="proposal", order_by="asc(Milestone.index)", lazy=True, cascade="all, delete-orphan")
+    milestones = db.relationship("Milestone", backref="proposal",
+                                 order_by="asc(Milestone.index)", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
     arbiter = db.relationship(ProposalArbiter, uselist=False, back_populates="proposal", cascade="all, delete-orphan")
 
@@ -231,7 +232,7 @@ class Proposal(db.Model):
             title: str = '',
             brief: str = '',
             content: str = '',
-            stage: str = '',
+            stage: str = ProposalStage.PREVIEW,
             target: str = '0',
             payout_address: str = '',
             deadline_duration: int = 5184000,  # 60 days
@@ -436,6 +437,7 @@ class Proposal(db.Model):
             for ms in self.milestones:
                 if ms.stage != MilestoneStage.PAID:
                     return ms
+            return self.milestones[-1]  # return last one if all PAID
         return None
 
 

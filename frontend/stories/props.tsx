@@ -6,7 +6,7 @@ import {
   STATUS,
   PROPOSAL_ARBITER_STATUS,
 } from 'types';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import BN from 'bn.js';
 import moment from 'moment';
 
@@ -158,7 +158,7 @@ export function generateProposal({
     title: 'Crowdfund Title',
     brief: 'A cool test crowdfund',
     content: 'body',
-    stage: 'FUNDING_REQUIRED',
+    stage: PROPOSAL_STAGE.WIP,
     category: PROPOSAL_CATEGORY.COMMUNITY,
     isStaked: true,
     arbiter: {

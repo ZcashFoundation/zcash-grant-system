@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { UserProposalArbiter, PROPOSAL_ARBITER_STATUS } from 'types';
+import moment from 'moment';
+import { UserProposalArbiter, PROPOSAL_ARBITER_STATUS, MILESTONE_STAGE } from 'types';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
 import { updateUserArbiter } from 'api/api';
@@ -27,15 +28,32 @@ type Props = OwnProps & StateProps & DispatchProps;
 class ProfileArbitrated extends React.Component<Props, {}> {
   render() {
     const { status } = this.props.arbiter;
-    const { title, proposalId } = this.props.arbiter.proposal;
+    const { title, proposalId, currentMilestone } = this.props.arbiter.proposal;
+    const isMsPayoutReq =
+      currentMilestone && currentMilestone.stage === MILESTONE_STAGE.REQUESTED;
+    const msTitle = currentMilestone && currentMilestone.title;
 
     const info = {
       [PAS.MISSING]: <>{/* nada */}</>,
       [PAS.NOMINATED]: <>You have been nominated to be the arbiter for this proposal.</>,
       [PAS.ACCEPTED]: (
         <>
-          As arbiter of this proposal, you are responsible for reviewing milestone payout
-          requests. You may{' '}
+          {isMsPayoutReq && (
+            <>
+              The team has requested payout for <b>{msTitle}</b>{' '}
+              {moment((currentMilestone!.dateRequested || 0) * 1000).fromNow()}. Please
+              click the button to proceed.
+            </>
+          )}
+          {!isMsPayoutReq && (
+            <>
+              As arbiter of this proposal, you are responsible for reviewing milestone
+              payout requests.{' '}
+            </>
+          )}
+          <br />
+          <br />
+          You may{' '}
           <Popconfirm
             title="Stop acting as arbiter?"
             onConfirm={() => this.acceptArbiter(false)}
@@ -57,7 +75,15 @@ class ProfileArbitrated extends React.Component<Props, {}> {
           <Button onClick={() => this.acceptArbiter(false)}>Reject</Button>
         </>
       ),
-      [PAS.ACCEPTED]: <>{/* TODO - milestone payout approvals */}</>,
+      [PAS.ACCEPTED]: (
+        <>
+          {isMsPayoutReq && (
+            <Link to={`/proposals/${proposalId}?tab=milestones`}>
+              <Button type="primary">Review Milestone</Button>
+            </Link>
+          )}
+        </>
+      ),
     };
 
     return (

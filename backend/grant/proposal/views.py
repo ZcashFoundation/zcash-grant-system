@@ -482,14 +482,14 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     contribution.confirm(tx_id=txid, amount=zec_amount)
     db.session.add(contribution)
-    db.session.commit()
+    db.session.flush()
 
     if contribution.proposal.status == ProposalStatus.STAKING:
         # fully staked, set status PENDING
         if contribution.proposal.is_staked:  # Decimal(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
             contribution.proposal.status = ProposalStatus.PENDING
             db.session.add(contribution.proposal)
-            db.session.commit()
+            db.session.flush()
 
         # email progress of staking, partial or complete
         send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
@@ -523,8 +523,11 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     # on funding target reached.
     if contribution.proposal.status == ProposalStatus.LIVE:
         if contribution.proposal.is_funded:
-            contribution.proposal.stage = ProposalStage.IN_PROGRESS
+            contribution.proposal.stage = ProposalStage.WIP
+            db.session.add(contribution.proposal)
+            db.session.flush()
 
+    db.session.commit()
     return None, 200
 
 
@@ -549,20 +552,22 @@ def delete_proposal_contribution(contribution_id):
     return None, 202
 
 
-# TODO
 # request MS payout
 @blueprint.route("/<proposal_id>/milestone/<milestone_id>/request", methods=["PUT"])
 @requires_team_member_auth
 @endpoint.api()
 def request_milestone_payout(proposal_id, milestone_id):
+    if not g.current_proposal.is_funded:
+        return {"message": "Proposal is not fully funded"}, 400
     for ms in g.current_proposal.milestones:
-        if ms.id == int(milestone_id) :
+        if ms.id == int(milestone_id):
             ms.request_payout(g.current_user.id)
             # TODO: email ARBITER to review payout request
             db.session.add(ms)
             db.session.commit()
             return proposal_schema.dump(g.current_proposal), 200
-        return {"message": "No milestone matching id"}, 404
+
+    return {"message": "No milestone matching id"}, 404
 
 
 # accept MS payout (arbiter)
@@ -570,14 +575,17 @@ def request_milestone_payout(proposal_id, milestone_id):
 @requires_arbiter_auth
 @endpoint.api()
 def accept_milestone_payout_request(proposal_id, milestone_id):
+    if not g.current_proposal.is_funded:
+        return {"message": "Proposal is not fully funded"}, 400
     for ms in g.current_proposal.milestones:
-        if ms.id == int(milestone_id) :
+        if ms.id == int(milestone_id):
             ms.accept_request(g.current_user.id)
             # TODO: email TEAM that payout request accepted (maybe, or wait until paid?)
             db.session.add(ms)
             db.session.commit()
             return proposal_schema.dump(g.current_proposal), 200
-        return {"message": "No milestone matching id"}, 404
+
+    return {"message": "No milestone matching id"}, 404
 
 
 # reject MS payout (arbiter) (reason)
@@ -587,13 +595,14 @@ def accept_milestone_payout_request(proposal_id, milestone_id):
     parameter('reason', type=str, required=True),
 )
 def reject_milestone_payout_request(proposal_id, milestone_id, reason):
+    if not g.current_proposal.is_funded:
+        return {"message": "Proposal is not fully funded"}, 400
     for ms in g.current_proposal.milestones:
-        if ms.id == int(milestone_id) :
+        if ms.id == int(milestone_id):
             ms.reject_request(g.current_user.id, reason)
             # TODO: email TEAM that payout request was rejected
             db.session.add(ms)
             db.session.commit()
             return proposal_schema.dump(g.current_proposal), 200
-        return {"message": "No milestone matching id"}, 404
 
-# (ADMIN) MS payout (txid)
+    return {"message": "No milestone matching id"}, 404

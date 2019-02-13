@@ -3,6 +3,7 @@ import {
   RFP_STATUS,
   CONTRIBUTION_STATUS,
   PROPOSAL_ARBITER_STATUS,
+  MILESTONE_STAGE,
 } from 'src/types';
 
 export interface StatusSoT<E> {
@@ -11,6 +12,39 @@ export interface StatusSoT<E> {
   tagColor: string;
   hint: string;
 }
+
+export const MILESTONE_STAGES: Array<StatusSoT<MILESTONE_STAGE>> = [
+  {
+    id: MILESTONE_STAGE.IDLE,
+    tagDisplay: 'Idle',
+    tagColor: '#e9c510',
+    hint: 'Proposal has has an idle milestone.',
+  },
+  {
+    id: MILESTONE_STAGE.REQUESTED,
+    tagDisplay: 'Requested',
+    tagColor: '#e9c510',
+    hint: 'Proposal has has a milestone with a requested payout.',
+  },
+  {
+    id: MILESTONE_STAGE.REJECTED,
+    tagDisplay: 'Rejected',
+    tagColor: '#e9c510',
+    hint: 'Proposal has has a milestone with a rejected payout.',
+  },
+  {
+    id: MILESTONE_STAGE.ACCEPTED,
+    tagDisplay: 'Accepted',
+    tagColor: '#e9c510',
+    hint: 'Proposal has an accepted milestone, and awaits payment.',
+  },
+  {
+    id: MILESTONE_STAGE.PAID,
+    tagDisplay: 'Paid',
+    tagColor: '#e9c510',
+    hint: 'Proposal has a paid milestone.',
+  },
+];
 
 export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
   {

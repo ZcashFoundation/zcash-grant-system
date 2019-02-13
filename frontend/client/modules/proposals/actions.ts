@@ -44,7 +44,7 @@ export function requestPayout(proposalId: number, milestoneId: number) {
 export function acceptPayout(proposalId: number, milestoneId: number) {
   return async (dispatch: Dispatch<any>) => {
     return dispatch({
-      type: types.PROPOSAL_PAYOUT_REQUEST,
+      type: types.PROPOSAL_PAYOUT_ACCEPT,
       payload: async () => {
         return (await acceptProposalPayout(proposalId, milestoneId)).data;
       },
@@ -55,7 +55,7 @@ export function acceptPayout(proposalId: number, milestoneId: number) {
 export function rejectPayout(proposalId: number, milestoneId: number, reason: string) {
   return async (dispatch: Dispatch<any>) => {
     return dispatch({
-      type: types.PROPOSAL_PAYOUT_REQUEST,
+      type: types.PROPOSAL_PAYOUT_REJECT,
       payload: async () => {
         return (await rejectProposalPayout(proposalId, milestoneId, reason)).data;
       },

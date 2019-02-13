@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from functools import reduce
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
@@ -14,11 +14,12 @@ from grant.proposal.models import (
     proposal_contribution_schema,
     user_proposal_contributions_schema,
 )
+from grant.milestone.models import Milestone
 from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.misc import make_url
-from grant.utils.enums import ProposalStatus, ContributionStatus, ProposalArbiterStatus
+from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, ProposalArbiterStatus, MilestoneStage
 from grant.utils import pagination
 from sqlalchemy import func, or_
 
@@ -66,11 +67,17 @@ def stats():
         .filter(Proposal.status == ProposalStatus.LIVE) \
         .filter(ProposalArbiter.status == ProposalArbiterStatus.MISSING) \
         .scalar()
+    proposal_milestone_payouts_count = db.session.query(func.count(Proposal.id)) \
+        .join(Proposal.milestones) \
+        .filter(Proposal.status == ProposalStatus.LIVE) \
+        .filter(Milestone.stage == MilestoneStage.ACCEPTED) \
+        .scalar()
     return {
         "userCount": user_count,
         "proposalCount": proposal_count,
         "proposalPendingCount": proposal_pending_count,
         "proposalNoArbiterCount": proposal_no_arbiter_count,
+        "proposalMilestonePayoutsCount": proposal_milestone_payouts_count,
     }
 
 
@@ -253,7 +260,35 @@ def approve_proposal(id, is_approve, reject_reason=None):
         db.session.commit()
         return proposal_schema.dump(proposal)
 
-    return {"message": "Not implemented."}, 400
+    return {"message": "No proposal found."}, 404
+
+
+@blueprint.route("/proposals/<id>/milestone/<mid>/paid", methods=["PUT"])
+@endpoint.api(
+    parameter('txId', type=str, required=True),
+)
+@admin_auth_required
+def paid_milestone_payout_request(id, mid, tx_id):
+    proposal = Proposal.query.filter_by(id=id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+    if not proposal.is_funded:
+        return {"message": "Proposal is not fully funded"}, 400
+    for ms in proposal.milestones:
+        if ms.id == int(mid):
+            ms.mark_paid(tx_id)
+            # TODO: email TEAM that payout request was PAID
+            db.session.add(ms)
+            db.session.flush()
+            num_paid = reduce(lambda a, x: a + (1 if x.stage == MilestoneStage.PAID else 0), proposal.milestones, 0)
+            if num_paid == len(proposal.milestones):
+                proposal.stage = ProposalStage.COMPLETED  # WIP -> COMPLETED
+                db.session.add(proposal)
+                db.session.flush()
+            db.session.commit()
+            return proposal_schema.dump(proposal), 200
+
+    return {"message": "No milestone matching id"}, 404
 
 
 # EMAIL

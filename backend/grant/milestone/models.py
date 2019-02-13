@@ -85,7 +85,7 @@ class Milestone(db.Model):
     def accept_request(self, arbiter_id: int):
         if self.stage != MilestoneStage.REQUESTED:
             raise MilestoneException(f'Cannot accept payout request for milestone at {self.stage} stage')
-        self.stage = MilestoneStage.PAID
+        self.stage = MilestoneStage.ACCEPTED
         self.date_accepted = datetime.datetime.now()
         self.accept_arbiter_id = arbiter_id
 

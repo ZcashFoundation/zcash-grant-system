@@ -1,19 +1,21 @@
 import { throttle } from 'lodash';
 import React, { ReactNode } from 'react';
 import moment from 'moment';
-import { Alert, Steps, Button, message } from 'antd';
+import classnames from 'classnames';
+import { connect } from 'react-redux';
+import { Alert, Steps, Button, message, Modal, Input } from 'antd';
+import { AlertProps } from 'antd/lib/alert';
+import { StepProps } from 'antd/lib/steps';
+import TextArea from 'antd/lib/input/TextArea';
 import { Milestone, ProposalMilestone, MILESTONE_STAGE } from 'types';
+import { PROPOSAL_STAGE } from 'api/constants';
 import UnitDisplay from 'components/UnitDisplay';
 import Loader from 'components/Loader';
 import { AppState } from 'store/reducers';
-import { connect } from 'react-redux';
-import classnames from 'classnames';
 import Placeholder from 'components/Placeholder';
-import { AlertProps } from 'antd/lib/alert';
-import { StepProps } from 'antd/lib/steps';
 import { proposalActions } from 'modules/proposals';
-import './index.less';
 import { ProposalDetail } from 'modules/proposals/reducers';
+import './index.less';
 
 enum STEP_STATUS {
   WAIT = 'wait',
@@ -31,7 +33,9 @@ const milestoneStageToStepState = {
 } as { [key in MILESTONE_STAGE]: StepProps['status'] };
 
 const fmtDate = (n: undefined | number) =>
-  (n && moment(n * 1000).format('MMM Do, YYYY')) || undefined;
+  (n && moment(n * 1000).format('MMM Do, YYYY, h:mm a')) || undefined;
+
+const fmtDateFromNow = (n: undefined | number) => (n && moment(n * 1000).fromNow()) || '';
 
 interface OwnProps {
   proposal: ProposalDetail;
@@ -49,29 +53,39 @@ interface State {
   step: number;
   activeMilestoneIdx: number;
   doTitlesOverflow: boolean;
+  showRejectModal: boolean;
+  rejectReason: string;
+  rejectMilestoneId: number;
 }
 
 class ProposalMilestones extends React.Component<Props, State> {
   stepTitleRefs: Array<React.RefObject<HTMLDivElement>> = [];
   ref: React.RefObject<HTMLDivElement>;
+  rejectInput: null | TextArea;
   throttledUpdateDoTitlesOverflow: () => void;
+
   constructor(props: Props) {
     super(props);
+    this.rejectInput = null;
     this.stepTitleRefs = this.props.proposal.milestones.map(() => React.createRef());
     this.ref = React.createRef();
     this.throttledUpdateDoTitlesOverflow = throttle(this.updateDoTitlesOverflow, 500);
+    const step =
+      (this.props.proposal &&
+        this.props.proposal.currentMilestone &&
+        this.props.proposal.currentMilestone.index) ||
+      0;
     this.state = {
-      step: 0,
+      step,
       activeMilestoneIdx: 0,
       doTitlesOverflow: true,
+      showRejectModal: false,
+      rejectReason: '',
+      rejectMilestoneId: -1,
     };
   }
 
   componentDidMount() {
-    if (this.props.proposal) {
-      const { currentMilestone } = this.props.proposal;
-      this.setState({ step: (currentMilestone && currentMilestone.index) || 0 });
-    }
     this.updateDoTitlesOverflow();
     window.addEventListener('resize', this.throttledUpdateDoTitlesOverflow);
   }
@@ -89,27 +103,86 @@ class ProposalMilestones extends React.Component<Props, State> {
     }
     const {
       requestPayoutError,
+      isRequestingPayout,
       acceptPayoutError,
+      isAcceptingPayout,
       rejectPayoutError,
+      isRejectingPayout,
     } = this.props.proposal;
+
     if (!prevProps.proposal.requestPayoutError && requestPayoutError) {
       message.error(requestPayoutError);
     }
+    if (
+      prevProps.proposal.isRequestingPayout &&
+      !isRequestingPayout &&
+      !requestPayoutError
+    ) {
+      message.success('Payout requested.');
+    }
+
     if (!prevProps.proposal.acceptPayoutError && acceptPayoutError) {
       message.error(acceptPayoutError);
     }
+    if (
+      prevProps.proposal.isAcceptingPayout &&
+      !isAcceptingPayout &&
+      !acceptPayoutError
+    ) {
+      message.success('Payout approved.');
+    }
+
     if (!prevProps.proposal.rejectPayoutError && rejectPayoutError) {
       message.error(rejectPayoutError);
+    }
+    if (
+      prevProps.proposal.isRejectingPayout &&
+      !isRejectingPayout &&
+      !rejectPayoutError
+    ) {
+      message.info('Payout rejected.');
     }
   }
 
   render() {
     const { proposal, requestPayout, acceptPayout, rejectPayout } = this.props;
+    const { rejectReason, showRejectModal } = this.state;
     if (!proposal) {
       return <Loader />;
     }
-    const { milestones, currentMilestone } = proposal;
+    const { milestones, currentMilestone, isRejectingPayout } = proposal;
     const milestoneCount = milestones.length;
+
+    // arbiter reject modal
+    const rejectModal = (
+      <Modal
+        visible={showRejectModal}
+        title="Reject this milestone payout"
+        onOk={this.handleReject}
+        onCancel={() => this.setState({ showRejectModal: false })}
+        okButtonProps={{
+          disabled: rejectReason.length === 0,
+          loading: isRejectingPayout,
+        }}
+        cancelButtonProps={{
+          loading: isRejectingPayout,
+        }}
+      >
+        Please provide a reason:
+        <Input.TextArea
+          ref={ta => (this.rejectInput = ta)}
+          rows={4}
+          maxLength={250}
+          required={true}
+          value={rejectReason}
+          onChange={e => {
+            this.setState({ rejectReason: e.target.value });
+          }}
+        />
+      </Modal>
+    );
+
+    // generate steps
     const milestoneSteps = milestones.map((ms, i) => {
       const status =
         currentMilestone &&
@@ -147,7 +220,11 @@ class ProposalMilestones extends React.Component<Props, State> {
               ))}
             </Steps>
             <Milestone
+              isFunded={[PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(
+                proposal.stage,
+              )}
               proposalId={proposal.proposalId}
+              showRejectPayout={this.handleShowRejectPayout}
               {...{ requestPayout, acceptPayout, rejectPayout }}
               {...activeMilestone}
               isCurrent={activeIsCurrent}
@@ -161,9 +238,27 @@ class ProposalMilestones extends React.Component<Props, State> {
             subtitle="The creator of this proposal has not setup any milestones"
           />
         )}
+        {rejectModal}
       </div>
     );
   }
+
+  private handleShowRejectPayout = (milestoneId: number) => {
+    this.setState({ showRejectModal: true, rejectMilestoneId: milestoneId });
+    // try to focus on text-area after modal loads
+    setTimeout(() => {
+      if (this.rejectInput) this.rejectInput.focus();
+    }, 200);
+  };
+
+  private handleReject = () => {
+    const { proposalId } = this.props.proposal;
+    const { rejectMilestoneId, rejectReason } = this.state;
+
+    this.props.rejectPayout(proposalId, rejectMilestoneId, rejectReason);
+
+    this.setState({ showRejectModal: false, rejectMilestoneId: -1, rejectReason: '' });
+  };
 
   private updateDoTitlesOverflow = () => {
     // hmr can sometimes muck up refs, let's make sure they all exist
@@ -203,10 +298,12 @@ class ProposalMilestones extends React.Component<Props, State> {
 // Milestone
 type MSProps = ProposalMilestone & DispatchProps;
 interface MilestoneProps extends MSProps {
+  showRejectPayout: (milestoneId: number) => void;
   isTeamMember: boolean;
   isArbiter: boolean;
   isCurrent: boolean;
   proposalId: number;
+  isFunded: boolean;
 }
 const Milestone: React.SFC<MilestoneProps> = p => {
   const estimatedDate = moment(p.dateEstimated * 1000).format('MMMM YYYY');
@@ -217,8 +314,8 @@ const Milestone: React.SFC<MilestoneProps> = p => {
       type: 'info',
       message: (
         <>
-          The team has requested a payout for this milestone. It is currently under
-          review.
+          The team requested a payout for this milestone {fmtDateFromNow(p.dateRequested)}
+          . It is currently under review.
         </>
       ),
     }),
@@ -226,7 +323,7 @@ const Milestone: React.SFC<MilestoneProps> = p => {
       type: 'warning',
       message: (
         <span>
-          Payout for this milestone was rejected on {fmtDate(p.dateRejected)}.
+          Payout for this milestone was rejected {fmtDateFromNow(p.dateRejected)}.
           {p.isTeamMember ? ' You ' : ' The team '} can request another review for payout
           at any time.
         </span>
@@ -236,7 +333,7 @@ const Milestone: React.SFC<MilestoneProps> = p => {
       type: 'info',
       message: (
         <span>
-          Payout for this milestone was accepted on {fmtDate(p.dateAccepted)}.
+          Payout for this milestone was accepted {fmtDateFromNow(p.dateAccepted)}.{' '}
           <strong>{reward}</strong> will be sent to{' '}
           {p.isTeamMember ? ' you ' : ' the team '} soon.
         </span>
@@ -247,8 +344,7 @@ const Milestone: React.SFC<MilestoneProps> = p => {
       message: (
         <span>
           The team was awarded <strong>{reward}</strong>{' '}
-          {p.immediatePayout && ` as an initial payout `} on ${fmtDate(p.datePaid)}
-          `.
+          {p.immediatePayout && ` as an initial payout `} on {fmtDate(p.datePaid)}.
         </span>
       ),
     }),
@@ -283,13 +379,14 @@ const Milestone: React.SFC<MilestoneProps> = p => {
 };
 
 const MilestoneAction: React.SFC<MilestoneProps> = p => {
-  if (!p.isCurrent) {
+  if (!p.isCurrent || !p.isFunded || p.stage === MILESTONE_STAGE.PAID) {
     return null;
   }
 
   const team = {
     [MILESTONE_STAGE.IDLE]: () => (
       <>
+        <h3>Payment Request</h3>
         {p.immediatePayout && (
           <p>
             Congratulations on getting funded! You can now begin the process of receiving
@@ -306,99 +403,123 @@ const MilestoneAction: React.SFC<MilestoneProps> = p => {
           )}
         {!p.immediatePayout &&
           p.index > 0 && <p>You can request a payment for this milestone.</p>}
-        <Button type="primary" onClick={() => p.requestPayout(p.proposalId, p.id)}>
+        <Button type="primary" onClick={() => p.requestPayout(p.proposalId, p.id)} block>
           {(p.immediatePayout && 'Request initial payout') || 'Request payout'}
         </Button>
       </>
     ),
     [MILESTONE_STAGE.REQUESTED]: () => (
-      <p>
-        The milestone payout was requested on {fmtDate(p.dateRequested)}. You will be
-        notified when it has been reviewed.
-      </p>
+      <>
+        <h3>Payment Requested</h3>
+        <p>
+          The milestone payout was requested on {fmtDate(p.dateRequested)}. You will be
+          notified when it has been reviewed.
+        </p>
+      </>
     ),
     [MILESTONE_STAGE.REJECTED]: () => (
       <>
-        <p>
-          The request for payout was rejected for the following reason:
-          <q>{p.rejectReason}</q>
-          You may request payout again when you are ready.
-        </p>
-        <Button type="primary" onClick={() => p.requestPayout(p.proposalId, p.id)}>
+        <h3>Payment Rejected</h3>
+        <p>The request for payout was rejected for the following reason:</p>
+        <q>{p.rejectReason}</q>
+        <p>You may request payout again when you are ready.</p>
+        <Button type="primary" onClick={() => p.requestPayout(p.proposalId, p.id)} block>
           Request payout
         </Button>
       </>
     ),
     [MILESTONE_STAGE.ACCEPTED]: () => (
-      <p>
-        Payout approved on {fmtDate(p.dateAccepted)}! You will receive payment shortly.
-      </p>
+      <>
+        <h3>Awaiting Payment</h3>
+        <p>
+          Payout approved on {fmtDate(p.dateAccepted)}! You will receive payment shortly.
+        </p>
+      </>
     ),
     [MILESTONE_STAGE.PAID]: () => <></>,
   } as { [key in MILESTONE_STAGE]: () => ReactNode };
 
   const others = {
     [MILESTONE_STAGE.IDLE]: () => (
-      <p>The team may request a payout for this milestone at any time.</p>
+      <>
+        <h3>Payment Request</h3>
+        <p>The team may request a payout for this milestone at any time.</p>
+      </>
     ),
     [MILESTONE_STAGE.REQUESTED]: () => (
-      <p>
-        The team requested a payout on {fmtDate(p.dateRequested)}, and awaits approval.
-      </p>
+      <>
+        <h3>Payment Requested</h3>
+        <p>
+          The team requested a payout on {fmtDate(p.dateRequested)}, and awaits approval.
+        </p>
+      </>
     ),
     [MILESTONE_STAGE.REJECTED]: () => (
-      <p>
-        The payout request was denied on {fmtDate(p.dateRejected)} for the following
-        reason:
+      <>
+        <h3>Payment Rejected</h3>
+        <p>
+          The payout request was denied on {fmtDate(p.dateRejected)} for the following
+          reason:
+        </p>
         <q>{p.rejectReason}</q>
-      </p>
+      </>
     ),
     [MILESTONE_STAGE.ACCEPTED]: () => (
-      <>The payout request was approved on {fmtDate(p.dateAccepted)}.</>
+      <>
+        <h3>Awaiting Payment</h3>
+        <p>The payout request was approved on {fmtDate(p.dateAccepted)}.</p>
+      </>
     ),
     [MILESTONE_STAGE.PAID]: () => <></>,
   } as { [key in MILESTONE_STAGE]: () => ReactNode };
 
   const arbiter = {
     [MILESTONE_STAGE.IDLE]: () => (
-      <p>
-        The team may request a payout for this milestone at any time. As arbiter you will
-        be responsible for reviewing these requests.
-      </p>
+      <>
+        <h3>Payment Request</h3>
+        <p>
+          The team may request a payout for this milestone at any time. As arbiter you
+          will be responsible for reviewing these requests.
+        </p>
+      </>
     ),
     [MILESTONE_STAGE.REQUESTED]: () => (
       <>
+        <h3>Payment Requested</h3>
         <p>
           The team requested a payout on {fmtDate(p.dateRequested)}, and awaits your
           approval.
         </p>
-        <Button type="primary" onClick={() => p.acceptPayout(p.proposalId, p.id)}>
-          Accept
-        </Button>
-        <Button
-          type="danger"
-          onClick={() =>
-            p.rejectPayout(p.proposalId, p.id, 'Test reason. (TODO: modal w/ text input)')
-          }
-        >
-          Reject
-        </Button>
+        <div className="ProposalMilestones-milestone-action-controls">
+          <Button type="primary" onClick={() => p.acceptPayout(p.proposalId, p.id)}>
+            Accept
+          </Button>
+          <Button type="danger" onClick={() => p.showRejectPayout(p.id)}>
+            Reject
+          </Button>
+        </div>
       </>
     ),
     [MILESTONE_STAGE.REJECTED]: () => (
-      <p>
-        The payout request was denied on {fmtDate(p.dateRejected)} for the following
-        reason:
+      <>
+        <h3>Payment Rejected</h3>
+        <p>
+          You rejected this payment request on {fmtDate(p.dateRejected)} for the following
+          reason:
+        </p>
         <q>{p.rejectReason}</q>
-      </p>
+      </>
     ),
     [MILESTONE_STAGE.ACCEPTED]: () => (
-      <>The payout request was approved on {fmtDate(p.dateAccepted)}.</>
+      <>
+        <h3>Awaiting Payment</h3>
+        <p>You approved this payment request on {fmtDate(p.dateAccepted)}.</p>
+      </>
     ),
     [MILESTONE_STAGE.PAID]: () => <></>,
   } as { [key in MILESTONE_STAGE]: () => ReactNode };
 
-  let content: ReactNode = null;
+  let content = null;
   if (p.isTeamMember) {
     content = team[p.stage]();
   } else if (p.isArbiter) {
