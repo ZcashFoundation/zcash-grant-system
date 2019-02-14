@@ -1,13 +1,12 @@
 import {
   Contributor,
-  Milestone,
-  MILESTONE_STATE,
+  MILESTONE_STAGE,
   Proposal,
   ProposalMilestone,
   STATUS,
   PROPOSAL_ARBITER_STATUS,
 } from 'types';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import BN from 'bn.js';
 import moment from 'moment';
 
@@ -41,7 +40,7 @@ export function generateProposal({
   funded?: number;
   created?: number;
   deadline?: number;
-  milestoneOverrides?: Array<Partial<Milestone>>;
+  milestoneOverrides?: Array<Partial<ProposalMilestone>>;
   contributorOverrides?: Array<Partial<Contributor>>;
   milestoneCount?: number;
 }) {
@@ -110,15 +109,15 @@ export function generateProposal({
     }
 
     const defaults: ProposalMilestone = {
+      id: 0,
       title: 'Milestone A',
       content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
            tempor incididunt ut labore et dolore magna aliqua.`,
       dateEstimated: moment().unix(),
       immediatePayout: true,
       index: 0,
-      state: MILESTONE_STATE.WAITING,
+      stage: MILESTONE_STAGE.IDLE,
       amount: amountBn,
-      isPaid: false,
       payoutPercent: '33',
     };
     return { ...defaults, ...overrides };
@@ -126,6 +125,7 @@ export function generateProposal({
 
   const milestones = [...Array(milestoneCount).keys()].map(i => {
     const overrides = {
+      id: i,
       index: i,
       title: genMilestoneTitle(),
       immediatePayout: i === 0,
@@ -158,7 +158,7 @@ export function generateProposal({
     title: 'Crowdfund Title',
     brief: 'A cool test crowdfund',
     content: 'body',
-    stage: 'FUNDING_REQUIRED',
+    stage: PROPOSAL_STAGE.WIP,
     category: PROPOSAL_CATEGORY.COMMUNITY,
     isStaked: true,
     arbiter: {

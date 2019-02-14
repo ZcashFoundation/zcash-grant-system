@@ -16,6 +16,7 @@ class Home extends React.Component {
       proposalCount,
       proposalPendingCount,
       proposalNoArbiterCount,
+      proposalMilestonePayoutsCount,
     } = store.stats;
 
     const actionItems = [
@@ -34,6 +35,14 @@ class Home extends React.Component {
             Click here
           </Link>{' '}
           to view them.
+        </div>
+      ),
+      !!proposalMilestonePayoutsCount && (
+        <div>
+          <Icon type="exclamation-circle" /> There are{' '}
+          <b>{proposalMilestonePayoutsCount}</b> proposals <b>with approved payouts</b>.{' '}
+          <Link to="/proposals?filters[]=MILESTONE_ACCEPTED">Click here</Link> to view
+          them.
         </div>
       ),
     ].filter(Boolean);

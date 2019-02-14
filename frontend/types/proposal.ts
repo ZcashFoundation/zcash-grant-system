@@ -1,5 +1,5 @@
 import { Zat } from 'utils/units';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import { CreateMilestone, Update, User, Comment, ContributionWithUser } from 'types';
 import { ProposalMilestone } from './milestone';
 import { RFP } from './rfp';
@@ -36,7 +36,7 @@ export interface ProposalDraft {
   brief: string;
   category: PROPOSAL_CATEGORY;
   content: string;
-  stage: string;
+  stage: PROPOSAL_STAGE;
   target: string;
   payoutAddress: string;
   deadlineDuration: number;
@@ -56,9 +56,12 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   percentFunded: number;
   contributionMatching: number;
   milestones: ProposalMilestone[];
+  currentMilestone?: ProposalMilestone;
   datePublished: number | null;
   dateApproved: number | null;
   arbiter: ProposalProposalArbiter;
+  isTeamMember?: boolean; // FE derived
+  isArbiter?: boolean; // FE derived
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {

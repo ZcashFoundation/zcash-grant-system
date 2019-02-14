@@ -6,12 +6,19 @@ class FakeUser(object):
     title = 'Email Example Dude'
 
 
+class FakeMilestone(object):
+    id = 123
+    index = 0
+    title = 'Example Milestone'
+
+
 class FakeProposal(object):
     id = 123
     title = 'Example proposal'
     brief = 'This is an example proposal'
     content = 'Example example example example'
     target = "100"
+    current_milestone = FakeMilestone()
 
 
 class FakeContribution(object):
@@ -101,7 +108,27 @@ example_email_args = {
     },
     'proposal_arbiter': {
         'proposal': proposal,
-        'proposal_url': 'http://someproposal.com',
-        'arbitration_url': 'http://arbitrationtab.com',
+        'proposal_url': 'http://zfnd.org/proposals/999',
+        'accept_url': 'http://zfnd.org/email/arbiter?code=blah&proposalId=999',
+    },
+    'milestone_request': {
+        'proposal': proposal,
+        'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
+    },
+    'milestone_reject': {
+        'proposal': proposal,
+        'admin_note': 'We noticed that the tests were failing for the features outlined in this milestone. Please address these issues.',
+        'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
+    },
+    'milestone_accept': {
+        'proposal': proposal,
+        'amount': '33',
+        'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
+    },
+    'milestone_paid': {
+        'proposal': proposal,
+        'amount': '33',
+        'tx_explorer_url': 'http://someblockexplorer.com/tx/271857129857192579125',
+        'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
     }
 }

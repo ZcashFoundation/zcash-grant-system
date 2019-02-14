@@ -4,10 +4,24 @@ export interface SocialMedia {
   service: string;
   username: string;
 }
+// NOTE: sync with backend/grant/utils/enums.py MilestoneStage
+export enum MILESTONE_STAGE {
+  IDLE = 'IDLE',
+  REQUESTED = 'REQUESTED',
+  REJECTED = 'REJECTED',
+  ACCEPTED = 'ACCEPTED',
+  PAID = 'PAID',
+}
 export interface Milestone {
+  id: number;
+  index: number;
   content: string;
-  dateCreated: string;
-  dateEstimated: string;
+  dateCreated: number;
+  dateEstimated: number;
+  dateRequested: number;
+  dateAccepted: number;
+  dateRejected: number;
+  datePaid: number;
   immediatePayout: boolean;
   payoutPercent: string;
   stage: string;
@@ -61,7 +75,7 @@ export interface Proposal {
   proposalId: number;
   brief: string;
   status: PROPOSAL_STATUS;
-  proposalAddress: string;
+  payoutAddress: string;
   dateCreated: number;
   dateApproved: number;
   datePublished: number;
@@ -70,6 +84,7 @@ export interface Proposal {
   stage: string;
   category: string;
   milestones: Milestone[];
+  currentMilestone?: Milestone;
   team: User[];
   comments: Comment[];
   contractStatus: string;

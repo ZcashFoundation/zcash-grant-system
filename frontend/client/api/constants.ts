@@ -51,6 +51,7 @@ export const CATEGORY_UI: { [key in PROPOSAL_CATEGORY]: CategoryUI } = {
 };
 
 export enum PROPOSAL_STAGE {
+  PREVIEW = 'PREVIEW',
   FUNDING_REQUIRED = 'FUNDING_REQUIRED',
   WIP = 'WIP',
   COMPLETED = 'COMPLETED',
@@ -62,6 +63,10 @@ interface StageUI {
 }
 
 export const STAGE_UI: { [key in PROPOSAL_STAGE]: StageUI } = {
+  PREVIEW: {
+    label: 'Preview',
+    color: '#8e44ad',
+  },
   FUNDING_REQUIRED: {
     label: 'Funding required',
     color: '#8e44ad',

@@ -228,6 +228,41 @@ export async function putProposalPublish(
   });
 }
 
+export async function requestProposalPayout(
+  proposalId: number,
+  milestoneId: number,
+): Promise<{ data: Proposal }> {
+  return axios
+    .put(`/api/v1/proposals/${proposalId}/milestone/${milestoneId}/request`)
+    .then(res => {
+      res.data = formatProposalFromGet(res.data);
+      return res;
+    });
+}
+export async function acceptProposalPayout(
+  proposalId: number,
+  milestoneId: number,
+): Promise<{ data: Proposal }> {
+  return axios
+    .put(`/api/v1/proposals/${proposalId}/milestone/${milestoneId}/accept`)
+    .then(res => {
+      res.data = formatProposalFromGet(res.data);
+      return res;
+    });
+}
+export async function rejectProposalPayout(
+  proposalId: number,
+  milestoneId: number,
+  reason: string,
+): Promise<{ data: Proposal }> {
+  return axios
+    .put(`/api/v1/proposals/${proposalId}/milestone/${milestoneId}/reject`, { reason })
+    .then(res => {
+      res.data = formatProposalFromGet(res.data);
+      return res;
+    });
+}
+
 export function postProposalInvite(
   proposalId: number,
   address: string,
