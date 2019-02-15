@@ -173,6 +173,9 @@ const app = store({
   userDeleting: false,
   userDeleted: false,
 
+  arbiterSaving: false,
+  arbiterSaved: false,
+
   arbitersSearch: {
     search: '',
     results: [] as User[],
@@ -335,10 +338,17 @@ const app = store({
   },
 
   async setArbiter(proposalId: number, userId: number) {
-    // let component handle errors for this one
-    const { proposal, user } = await setArbiter(proposalId, userId);
-    this.updateProposalInStore(proposal);
-    this.updateUserInStore(user);
+    app.arbiterSaving = true;
+    app.arbiterSaved = false;
+    try {
+      const { proposal, user } = await setArbiter(proposalId, userId);
+      this.updateProposalInStore(proposal);
+      this.updateUserInStore(user);
+      app.arbiterSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.arbiterSaving = false;
   },
 
   // Proposals

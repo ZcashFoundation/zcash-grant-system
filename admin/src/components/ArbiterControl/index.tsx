@@ -146,15 +146,13 @@ class ArbiterControlNaked extends React.Component<Props, State> {
   private handleSelect = async (user: User) => {
     this.setState({ showSearch: false });
     store.searchArbitersClear();
-    try {
-      await store.setArbiter(this.props.proposalId, user.userid);
+    await store.setArbiter(this.props.proposalId, user.userid);
+    if (store.arbiterSaved) {
       message.success(
         <>
-          Arbiter nominated for <b>{this.props.title}</b>
+          <b>{user.displayName}</b> nominated as arbiter of <b>{this.props.title}</b>
         </>,
       );
-    } catch (e) {
-      message.error(`Could not set arbiter: ${e}`);
     }
   };
 
