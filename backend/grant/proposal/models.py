@@ -479,6 +479,14 @@ class Proposal(db.Model):
         return Decimal(self.funded) >= Decimal(self.target)
 
     @hybrid_property
+    def is_failed(self):
+        if not self.status == ProposalStatus.LIVE or not self.date_published:
+            return False
+        deadline = self.date_published + datetime.timedelta(seconds=self.deadline_duration)
+        passed = deadline < datetime.datetime.now()
+        return passed and not self.is_funded
+
+    @hybrid_property
     def current_milestone(self):
         if self.milestones:
             for ms in self.milestones:
@@ -505,6 +513,7 @@ class ProposalSchema(ma.Schema):
             "target",
             "contributed",
             "is_staked",
+            "is_failed",
             "funded",
             "content",
             "comments",
