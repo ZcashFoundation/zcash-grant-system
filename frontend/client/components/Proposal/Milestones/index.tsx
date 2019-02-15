@@ -546,7 +546,7 @@ const MilestoneAction: React.SFC<MilestoneProps> = p => {
   }
 
   // special warning if no arbiter is set for team members
-  if (!p.hasArbiter && p.isTeamMember) {
+  if (!p.hasArbiter && p.isTeamMember && p.stage === MILESTONE_STAGE.IDLE) {
     content = (
       <Alert
         type="info"

@@ -435,6 +435,8 @@ class Proposal(db.Model):
         self.stage = ProposalStage.WIP
         db.session.add(self)
         db.session.flush()
+        # check the first step, if immediate payout bump it to accepted
+        self.current_milestone.accept_immediate()
 
     def set_contribution_matching(self, matching: float):
         # do not allow on funded/WIP proposals
