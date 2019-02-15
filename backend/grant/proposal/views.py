@@ -100,7 +100,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 
     # Make sure user is not silenced
     if g.current_user.silenced:
-        return {"message": "User is silenced, cannot comment"}, 403
+        return {"message": "Your account has been silenced, commenting is disabled."}, 403
 
     # Make the comment
     comment = Comment(

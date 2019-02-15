@@ -23,7 +23,7 @@ def get_authed_user():
 
 def throw_on_banned(user):
     if user.banned:
-        raise AuthException("User is banned")
+        raise AuthException("You are banned")
 
 
 def requires_auth(f):
