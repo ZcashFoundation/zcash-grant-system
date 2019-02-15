@@ -10,11 +10,6 @@ interface EnumUIWithIcon extends EnumUI {
 }
 
 export const CATEGORY_UI: { [key in PROPOSAL_CATEGORY]: EnumUIWithIcon } = {
-  DAPP: {
-    label: 'DApp',
-    color: '#8e44ad',
-    icon: 'appstore',
-  },
   DEV_TOOL: {
     label: 'Developer tool',
     color: '#2c3e50',
