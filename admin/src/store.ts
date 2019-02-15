@@ -42,13 +42,18 @@ async function fetchStats() {
   return data;
 }
 
-async function fetchUsers() {
-  const { data } = await api.get('/admin/users');
+async function fetchUsers(params: Partial<PageQuery>) {
+  const { data } = await api.get('/admin/users', { params });
   return data;
 }
 
 async function fetchUserDetail(id: number) {
   const { data } = await api.get(`/admin/users/${id}`);
+  return data;
+}
+
+async function editUser(id: number, args: Partial<User>) {
+  const { data } = await api.put(`/admin/users/${id}`, args);
   return data;
 }
 
@@ -165,9 +170,12 @@ const app = store({
     proposalMilestonePayoutsCount: 0,
   },
 
-  usersFetching: false,
-  usersFetched: false,
-  users: [] as User[],
+  users: {
+    page: createDefaultPageData<User>('EMAIL:DESC'),
+  },
+  userSaving: false,
+  userSaved: false,
+
   userDetailFetching: false,
   userDetail: null as null | User,
   userDeleting: false,
@@ -225,12 +233,15 @@ const app = store({
   },
 
   updateUserInStore(u: User) {
-    const index = app.users.findIndex(x => x.userid === u.userid);
+    const index = app.users.page.items.findIndex(x => x.userid === u.userid);
     if (index > -1) {
-      app.users[index] = u;
+      app.users.page.items[index] = u;
     }
     if (app.userDetail && app.userDetail.userid === u.userid) {
-      app.userDetail = u;
+      app.userDetail = {
+        ...app.userDetail,
+        ...u,
+      };
     }
   },
 
@@ -271,14 +282,40 @@ const app = store({
   // Users
 
   async fetchUsers() {
-    app.usersFetching = true;
+    app.users.page.fetching = true;
     try {
-      app.users = await fetchUsers();
-      app.usersFetched = true;
+      const page = await fetchUsers(app.getUserPageQuery());
+      app.users.page = {
+        ...app.users.page,
+        ...page,
+        fetched: true,
+      };
     } catch (e) {
       handleApiError(e);
     }
-    app.usersFetching = false;
+    app.users.page.fetching = false;
+  },
+
+  getUserPageQuery() {
+    return pick(app.users.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+  },
+
+  setUserPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
+    app.users.page = {
+      ...app.users.page,
+      ...query,
+    };
+  },
+
+  resetUserPageQuery() {
+    app.users.page.page = 1;
+    app.users.page.search = '';
+    app.users.page.sort = 'CREATED:DESC';
+    app.users.page.filters = [];
   },
 
   async fetchUserDetail(id: number) {
@@ -291,12 +328,25 @@ const app = store({
     app.userDetailFetching = false;
   },
 
+  async editUser(id: number, args: Partial<User>) {
+    app.userSaving = true;
+    app.userSaved = false;
+    try {
+      const user = await editUser(id, args);
+      app.updateUserInStore(user);
+      app.userSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.userSaving = false;
+  },
+
   async deleteUser(id: number) {
     app.userDeleting = false;
     app.userDeleted = false;
     try {
       await deleteUser(id);
-      app.users = app.users.filter(u => u.userid !== id);
+      app.users.page.items = app.users.page.items.filter(u => u.userid !== id);
       app.userDeleted = true;
       app.userDetail = null;
     } catch (e) {

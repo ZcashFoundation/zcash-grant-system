@@ -96,8 +96,11 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 
     # Make sure user has verified their email
     if not g.current_user.email_verification.has_verified:
-        message = "Please confirm your email before commenting."
-        return {"message": message}, 401
+        return {"message": "Please confirm your email before commenting"}, 401
+
+    # Make sure user is not silenced
+    if g.current_user.silenced:
+        return {"message": "Your account has been silenced, commenting is disabled."}, 403
 
     # Make the comment
     comment = Comment(

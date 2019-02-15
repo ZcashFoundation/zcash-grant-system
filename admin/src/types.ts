@@ -149,6 +149,9 @@ export interface User {
   proposals: Proposal[];
   comments: Comment[];
   contributions: Contribution[];
+  silenced: boolean;
+  banned: boolean;
+  bannedReason: string;
 }
 
 export interface EmailExample {

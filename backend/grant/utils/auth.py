@@ -8,8 +8,22 @@ from grant.settings import BLOCKCHAIN_API_SECRET
 from grant.user.models import User
 
 
+class AuthException(Exception):
+    pass
+
+
+# use with: @blueprint.errorhandler(AuthException)
+def handle_auth_error(e):
+    return jsonify(message=str(e)), 403
+
+
 def get_authed_user():
     return current_user if current_user.is_authenticated else None
+
+
+def throw_on_banned(user):
+    if user.banned:
+        raise AuthException("You are banned")
 
 
 def requires_auth(f):
@@ -17,6 +31,7 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated:
             return jsonify(message="Authentication is required to access this resource"), 401
+        throw_on_banned(current_user)
         g.current_user = current_user
         with sentry_sdk.configure_scope() as scope:
             scope.user = {

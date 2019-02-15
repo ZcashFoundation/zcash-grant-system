@@ -84,3 +84,30 @@ export const contributionFilters: Filters = {
   list: CONTRIBUTION_FILTERS,
   getById: getFilterById(CONTRIBUTION_FILTERS),
 };
+
+// User
+const USER_FILTERS = [
+  {
+    id: `BANNED`,
+    display: `Banned`,
+    color: 'rgb(235, 65, 24)',
+    group: 'Misc',
+  },
+  {
+    id: `SILENCED`,
+    display: `Silenced`,
+    color: 'rgb(255, 170, 0)',
+    group: 'Misc',
+  },
+  {
+    id: `ARBITER`,
+    display: `Arbiter`,
+    color: 'rgb(16, 142, 233)',
+    group: 'Misc',
+  },
+];
+
+export const userFilters: Filters = {
+  list: USER_FILTERS,
+  getById: getFilterById(USER_FILTERS),
+};
