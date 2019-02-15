@@ -3,6 +3,7 @@ import {
   RFP_STATUSES,
   CONTRIBUTION_STATUSES,
   PROPOSAL_ARBITER_STATUSES,
+  MILESTONE_STAGES,
 } from './statuses';
 
 export interface Filter {
@@ -40,6 +41,14 @@ const PROPOSAL_FILTERS = PROPOSAL_STATUSES.map(s => ({
       display: `Arbiter: ${s.tagDisplay}`,
       color: s.tagColor,
       group: 'Arbiter',
+    })),
+  )
+  .concat(
+    MILESTONE_STAGES.map(s => ({
+      id: `MILESTONE_${s.id}`,
+      display: `Milestone: ${s.tagDisplay}`,
+      color: s.tagColor,
+      group: 'Milestone',
     })),
   );
 

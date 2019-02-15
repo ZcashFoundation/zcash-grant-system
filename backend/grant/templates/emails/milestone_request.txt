@@ -1,0 +1,4 @@
+A payout request for the proposal milestone "{{ args.proposal.title }} - {{args.proposal.current_milestone.title }}" 
+has been made. As arbiter, you are responsible for reviewing this request.
+
+Review the request: {{ args.proposal_milestones_url }}

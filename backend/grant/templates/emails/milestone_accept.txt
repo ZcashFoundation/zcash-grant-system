@@ -1,0 +1,6 @@
+The proposal milestone "{{ args.proposal.title }} - {{args.proposal.current_milestone.title }}" 
+payout of {{args.amount}} ZEC has been approved! 
+
+You will receive payment shortly!
+
+View the milestone: {{ args.proposal_milestones_url }}

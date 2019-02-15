@@ -3,7 +3,8 @@ from sqlalchemy import or_, and_
 
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
 from grant.user.models import User, users_schema
-from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus
+from grant.milestone.models import Milestone
+from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, MilestoneStage
 
 
 def extract_filters(sw, strings):
@@ -51,6 +52,7 @@ class ProposalPagination(Pagination):
         self.FILTERS.extend([f'STAGE_{s}' for s in ProposalStage.list()])
         self.FILTERS.extend([f'CAT_{c}' for c in Category.list()])
         self.FILTERS.extend([f'ARBITER_{c}' for c in ProposalArbiterStatus.list()])
+        self.FILTERS.extend([f'MILESTONE_{c}' for c in MilestoneStage.list()])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': Proposal.date_created.desc(),
@@ -78,6 +80,7 @@ class ProposalPagination(Pagination):
             stage_filters = extract_filters('STAGE_', filters)
             cat_filters = extract_filters('CAT_', filters)
             arbiter_filters = extract_filters('ARBITER_', filters)
+            milestone_filters = extract_filters('MILESTONE_', filters)
 
             if status_filters:
                 query = query.filter(Proposal.status.in_(status_filters))
@@ -90,6 +93,9 @@ class ProposalPagination(Pagination):
             if arbiter_filters:
                 query = query.join(Proposal.arbiter) \
                     .filter(ProposalArbiter.status.in_(arbiter_filters))
+            if milestone_filters:
+                query = query.join(Proposal.milestones) \
+                    .filter(Milestone.stage.in_(milestone_filters))
 
         # SORT (see self.SORT_MAP)
         if sort:

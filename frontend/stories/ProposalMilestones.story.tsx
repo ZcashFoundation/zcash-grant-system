@@ -5,25 +5,25 @@ import { Provider } from 'react-redux';
 import { configureStore } from 'store/configure';
 import { combineInitialState } from 'store/reducers';
 import Milestones from 'components/Proposal/Milestones';
-import { MILESTONE_STATE } from 'types';
-const { WAITING, ACTIVE, PAID, REJECTED } = MILESTONE_STATE;
+import { MILESTONE_STAGE } from 'types';
+const { IDLE, ACCEPTED, PAID, REJECTED } = MILESTONE_STAGE;
 
 import 'styles/style.less';
 import 'components/Proposal/style.less';
 import 'components/Proposal/Governance/style.less';
 import { generateProposal } from './props';
 
-const msWaiting = { state: WAITING, isPaid: false };
-const msPaid = { state: PAID, isPaid: true };
-const msActive = { state: ACTIVE, isPaid: false };
-const msRejected = { state: REJECTED, isPaid: false };
+const msWaiting = { stage: IDLE };
+const msPaid = { stage: PAID };
+const msActive = { stage: ACCEPTED };
+const msRejected = { stage: REJECTED };
 
 const trustee = 'z123';
 const contributor = 'z456';
 
-const geometryCases = [...Array(10).keys()].map(i =>
-  generateProposal({ milestoneCount: i + 1 }),
-);
+// const geometryCases = [...Array(10).keys()].map(i =>
+//   generateProposal({ milestoneCount: i + 1 }),
+// );
 
 const cases: { [index: string]: any } = {
   // trustee - first
@@ -38,11 +38,7 @@ const cases: { [index: string]: any } = {
   ['first - not paid']: generateProposal({
     amount: 5,
     funded: 5,
-    milestoneOverrides: [
-      { state: PAID, isPaid: false },
-      msWaiting,
-      msWaiting,
-    ],
+    milestoneOverrides: [{ stage: PAID }, msWaiting, msWaiting],
   }),
 
   // trustee - second
@@ -59,20 +55,12 @@ const cases: { [index: string]: any } = {
   ['second - not paid']: generateProposal({
     amount: 5,
     funded: 5,
-    milestoneOverrides: [
-      msPaid,
-      { state: PAID, isPaid: false },
-      msWaiting,
-    ],
+    milestoneOverrides: [msPaid, { stage: PAID }, msWaiting],
   }),
   ['second - no vote']: generateProposal({
     amount: 5,
     funded: 5,
-    milestoneOverrides: [
-      msPaid,
-      { state: ACTIVE, isPaid: false },
-      msWaiting,
-    ],
+    milestoneOverrides: [msPaid, { stage: ACCEPTED }, msWaiting],
     contributorOverrides: [{ milestoneNoVotes: [false, true, false] }],
   }),
   ['second - rejected']: generateProposal({
@@ -95,20 +83,12 @@ const cases: { [index: string]: any } = {
   ['final - not paid']: generateProposal({
     amount: 5,
     funded: 5,
-    milestoneOverrides: [
-      msPaid,
-      msPaid,
-      { state: PAID, isPaid: false },
-    ],
+    milestoneOverrides: [msPaid, msPaid, { stage: PAID }],
   }),
   ['final - no vote']: generateProposal({
     amount: 5,
     funded: 5,
-    milestoneOverrides: [
-      msPaid,
-      msPaid,
-      { state: ACTIVE, isPaid: false },
-    ],
+    milestoneOverrides: [msPaid, msPaid, { stage: ACCEPTED }],
     contributorOverrides: [{ milestoneNoVotes: [false, true, false] }],
   }),
   ['final - rejected']: generateProposal({
@@ -169,14 +149,14 @@ for (const key of Object.keys(cases)) {
   ));
 }
 
-const geometryStories = storiesOf('Proposal/Milestones/geometry', module);
+// const geometryStories = storiesOf('Proposal/Milestones/geometry', module);
 
-geometryCases.forEach((gc, idx) =>
-  geometryStories.add(`${idx + 1} steps`, () => (
-    <div key={idx} style={{ padding: '3em', display: 'flex' }}>
-      <Provider store={storeOutsider}>
-        <Milestones {...gc} />
-      </Provider>
-    </div>
-  )),
-);
+// geometryCases.forEach((gc, idx) =>
+//   geometryStories.add(`${idx + 1} steps`, () => (
+//     <div key={idx} style={{ padding: '3em', display: 'flex' }}>
+//       <Provider store={storeOutsider}>
+//         <Milestones {...gc} />
+//       </Provider>
+//     </div>
+//   )),
+// );

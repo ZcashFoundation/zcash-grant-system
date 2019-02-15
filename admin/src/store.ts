@@ -100,6 +100,14 @@ async function approveProposal(id: number, isApprove: boolean, rejectReason?: st
   return data;
 }
 
+async function markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
+  const { data } = await api.put(
+    `/admin/proposals/${proposalId}/milestone/${milestoneId}/paid`,
+    { txId },
+  );
+  return data;
+}
+
 async function getEmailExample(type: string) {
   const { data } = await api.get(`/admin/email/example/${type}`);
   return data;
@@ -159,6 +167,7 @@ const app = store({
     proposalCount: 0,
     proposalPendingCount: 0,
     proposalNoArbiterCount: 0,
+    proposalMilestonePayoutsCount: 0,
   },
 
   users: {
@@ -186,6 +195,7 @@ const app = store({
   proposalDetail: null as null | Proposal,
   proposalDetailFetching: false,
   proposalDetailApproving: false,
+  proposalDetailMarkingMilestonePaid: false,
 
   rfps: [] as RFP[],
   rfpsFetching: false,
@@ -472,6 +482,17 @@ const app = store({
       handleApiError(e);
     }
     app.proposalDetailApproving = false;
+  },
+
+  async markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
+    app.proposalDetailMarkingMilestonePaid = true;
+    try {
+      const res = await markMilestonePaid(proposalId, milestoneId, txId);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailMarkingMilestonePaid = false;
   },
 
   // Email
