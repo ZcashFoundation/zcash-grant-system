@@ -1,7 +1,7 @@
 """user banned & silenced fields
 
 Revision ID: 27975c4a04a4
-Revises: 86d300cb6d69
+Revises: 3793d9a71e27
 Create Date: 2019-02-14 10:30:47.596818
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '27975c4a04a4'
-down_revision = '86d300cb6d69'
+down_revision = '3793d9a71e27'
 branch_labels = None
 depends_on = None
 
