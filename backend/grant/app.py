@@ -9,6 +9,7 @@ from grant import commands, proposal, user, comment, milestone, admin, email, bl
 from grant.extensions import bcrypt, migrate, db, ma, security
 from grant.settings import SENTRY_RELEASE, ENV
 from sentry_sdk.integrations.flask import FlaskIntegration
+from grant.utils.auth import AuthException, handle_auth_error
 
 
 def create_app(config_objects=["grant.settings"]):
@@ -20,12 +21,18 @@ def create_app(config_objects=["grant.settings"]):
     register_blueprints(app)
     register_shellcontext(app)
     register_commands(app)
+
     if not app.config.get("TESTING"):
         sentry_sdk.init(
             environment=ENV,
             release=SENTRY_RELEASE,
             integrations=[FlaskIntegration()]
         )
+
+    # handle all AuthExceptions thusly
+    # NOTE: testing mode does not honor this handler, and instead returns the generic 500 response
+    app.register_error_handler(AuthException, handle_auth_error)
+
     return app
 
 

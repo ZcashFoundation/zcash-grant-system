@@ -2,6 +2,7 @@ from functools import reduce
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
+from datetime import datetime
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
@@ -19,7 +20,14 @@ from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.misc import make_url
-from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, ProposalArbiterStatus, MilestoneStage
+from grant.utils.enums import (
+    ProposalStatus,
+    ProposalStage,
+    ContributionStatus,
+    ProposalArbiterStatus,
+    MilestoneStage,
+    RFPStatus,
+)
 from grant.utils import pagination
 from grant.settings import EXPLORER_URL
 from sqlalchemy import func, or_
@@ -99,12 +107,24 @@ def delete_user(user_id):
 
 
 @blueprint.route("/users", methods=["GET"])
-@endpoint.api()
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
 @admin_auth_required
-def get_users():
-    users = User.query.all()
-    result = admin_users_schema.dump(users)
-    return result
+def get_users(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.user(
+        schema=admin_users_schema,
+        query=User.query,
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
 
 
 @blueprint.route('/users/<id>', methods=['GET'])
@@ -123,6 +143,33 @@ def get_user(id):
         user["contributions"] = contributions_dump
         return user
     return {"message": f"Could not find user with id {id}"}, 404
+
+
+@blueprint.route('/users/<user_id>', methods=['PUT'])
+@endpoint.api(
+    parameter('silenced', type=bool, required=False),
+    parameter('banned', type=bool, required=False),
+    parameter('bannedReason', type=str, required=False),
+)
+@admin_auth_required
+def edit_user(user_id, silenced, banned, banned_reason):
+    user = User.query.filter(User.id == user_id).first()
+    if not user:
+        return {"message": f"Could not find user with id {id}"}, 404
+
+    if silenced is not None:
+        user.silenced = silenced
+        db.session.add(user)
+
+    if banned is not None:
+        if banned and not banned_reason:  # if banned true, provide reason
+            return {"message": "Please include reason for banning"}, 417
+        user.banned = banned
+        user.banned_reason = banned_reason
+        db.session.add(user)
+
+    db.session.commit()
+    return admin_user_schema.dump(user)
 
 
 # ARBITERS
@@ -333,14 +380,15 @@ def get_rfps():
     parameter('brief', type=str),
     parameter('content', type=str),
     parameter('category', type=str),
+    parameter('bounty', type=str),
+    parameter('matching', type=bool, default=False),
+    parameter('dateCloses', type=int),
 )
 @admin_auth_required
-def create_rfp(title, brief, content, category):
+def create_rfp(date_closes, **kwargs):
     rfp = RFP(
-        title=title,
-        brief=brief,
-        content=content,
-        category=category,
+        **kwargs,
+        date_closes=datetime.fromtimestamp(date_closes) if date_closes else None,
     )
     db.session.add(rfp)
     db.session.commit()
@@ -364,19 +412,33 @@ def get_rfp(rfp_id):
     parameter('brief', type=str),
     parameter('content', type=str),
     parameter('category', type=str),
+    parameter('bounty', type=str),
+    parameter('matching', type=bool, default=False),
+    parameter('dateCloses', type=int),
     parameter('status', type=str),
 )
 @admin_auth_required
-def update_rfp(rfp_id, title, brief, content, category, status):
+def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_closes, status):
     rfp = RFP.query.filter(RFP.id == rfp_id).first()
     if not rfp:
         return {"message": "No RFP matching that id"}, 404
 
+    # Update fields
     rfp.title = title
     rfp.brief = brief
     rfp.content = content
     rfp.category = category
-    rfp.status = status
+    rfp.bounty = bounty
+    rfp.matching = matching
+    rfp.date_closes = datetime.fromtimestamp(date_closes) if date_closes else None
+
+    # Update timestamps if status changed
+    if rfp.status != status:
+        if status == RFPStatus.LIVE and not rfp.date_opened:
+            rfp.date_opened = datetime.now()
+        if status == RFPStatus.CLOSED:
+            rfp.date_closed = datetime.now()
+        rfp.status = status
 
     db.session.add(rfp)
     db.session.commit()

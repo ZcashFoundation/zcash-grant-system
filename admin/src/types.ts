@@ -36,19 +36,27 @@ export enum RFP_STATUS {
 export interface RFP {
   id: number;
   dateCreated: number;
+  dateOpened: number | null;
+  dateClosed: number | null;
   title: string;
   brief: string;
   content: string;
   category: string;
   status: string;
   proposals: Proposal[];
+  matching: boolean;
+  bounty: string | null;
+  dateCloses: number | null;
 }
 export interface RFPArgs {
   title: string;
   brief: string;
   content: string;
   category: string;
-  status?: string;
+  matching: boolean;
+  dateCloses: number | null | undefined;
+  bounty: string | null | undefined;
+  status: string;
 }
 // NOTE: sync with backend/grant/utils/enums.py ProposalArbiterStatus
 export enum PROPOSAL_ARBITER_STATUS {
@@ -150,6 +158,9 @@ export interface User {
   proposals: Proposal[];
   comments: Comment[];
   contributions: Contribution[];
+  silenced: boolean;
+  banned: boolean;
+  bannedReason: string;
 }
 
 export interface EmailExample {
@@ -163,7 +174,6 @@ export interface EmailExample {
 }
 
 export enum PROPOSAL_CATEGORY {
-  DAPP = 'DAPP',
   DEV_TOOL = 'DEV_TOOL',
   CORE_DEV = 'CORE_DEV',
   COMMUNITY = 'COMMUNITY',

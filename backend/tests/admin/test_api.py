@@ -69,8 +69,9 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.login_admin()
         resp = self.app.get("/api/v1/admin/users")
         self.assert200(resp)
+        print(resp.json)
         # 2 users created by BaseProposalCreatorConfig
-        self.assertEqual(len(resp.json), 2)
+        self.assertEqual(len(resp.json['items']), 2)
 
     def test_get_proposals(self):
         self.login_admin()
