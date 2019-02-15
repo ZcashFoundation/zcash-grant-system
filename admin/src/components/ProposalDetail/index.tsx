@@ -18,7 +18,12 @@ import {
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { formatDateSeconds } from 'util/time';
-import { PROPOSAL_STATUS, PROPOSAL_ARBITER_STATUS, MILESTONE_STAGE } from 'src/types';
+import {
+  PROPOSAL_STATUS,
+  PROPOSAL_ARBITER_STATUS,
+  MILESTONE_STAGE,
+  PROPOSAL_STAGE,
+} from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Info from 'components/Info';
@@ -98,7 +103,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           okText="ok"
           cancelText="cancel"
         >
-          <Switch checked={p.contributionMatching === 1} loading={false} />{' '}
+          <Switch
+            checked={p.contributionMatching === 1}
+            loading={false}
+            disabled={[PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)}
+          />{' '}
         </Popconfirm>
         <span>
           matching{' '}
@@ -108,6 +117,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               <span>
                 <b>Contribution matching</b>
                 <br /> Funded amount will be multiplied by 2.
+                <br /> <i>Disabled after proposal is fully-funded.</i>
               </span>
             }
           />

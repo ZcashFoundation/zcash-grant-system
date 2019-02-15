@@ -234,13 +234,7 @@ def update_proposal(id, contribution_matching):
     proposal = Proposal.query.filter(Proposal.id == id).first()
     if proposal:
         if contribution_matching is not None:
-            # enforce 1 or 0 for now
-            if contribution_matching == 0.0 or contribution_matching == 1.0:
-                proposal.contribution_matching = contribution_matching
-                # TODO: trigger check if funding target reached OR make sure
-                # job schedule checks for funding completion include matching funds
-            else:
-                return {"message": f"Bad value for contributionMatching: {contribution_matching}"}, 400
+            proposal.set_contribution_matching(contribution_matching)
 
         db.session.commit()
         return proposal_schema.dump(proposal)
@@ -437,6 +431,11 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
     contribution.tx_id = tx_id
 
     db.session.add(contribution)
+    db.session.flush()
+
+    contribution.proposal.set_pending_when_ready()
+    contribution.proposal.set_funded_when_ready()
+
     db.session.commit()
     return proposal_contribution_schema.dump(contribution), 200
 
@@ -465,6 +464,10 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
     if not contribution:
         return {"message": "No contribution matching that id"}, 404
+
+    # do not allow editing contributions once a proposal has become funded
+    if contribution.proposal.is_funded:
+        return {"message": "Cannot edit contributions to fully-funded proposals"}, 400
 
     print((contribution_id, proposal_id, user_id, status, amount, tx_id))
 
@@ -496,5 +499,10 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
         contribution.tx_id = tx_id
 
     db.session.add(contribution)
+    db.session.flush()
+
+    contribution.proposal.set_pending_when_ready()
+    contribution.proposal.set_funded_when_ready()
+
     db.session.commit()
     return proposal_contribution_schema.dump(contribution), 200

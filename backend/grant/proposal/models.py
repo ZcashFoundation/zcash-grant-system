@@ -353,6 +353,7 @@ class Proposal(db.Model):
 
         return contribution
 
+    # state: status (DRAFT || REJECTED) -> (PENDING || STAKING)
     def submit_for_approval(self):
         self.validate_publishable()
         allowed_statuses = [ProposalStatus.DRAFT, ProposalStatus.REJECTED]
@@ -365,6 +366,21 @@ class Proposal(db.Model):
         else:
             self.status = ProposalStatus.STAKING
 
+    def set_pending_when_ready(self):
+        if self.status == ProposalStatus.STAKING and self.is_staked:
+            self.set_pending()
+
+    # state: status STAKING -> PENDING
+    def set_pending(self):
+        if self.status != ProposalStatus.STAKING:
+            raise ValidationException(f"Proposal status must be staking in order to be set to pending")
+        if not self.is_staked:
+            raise ValidationException(f"Proposal is not fully staked, cannot set to pending")
+        self.status = ProposalStatus.PENDING
+        db.session.add(self)
+        db.session.flush()
+
+    # state: status PENDING -> (APPROVED || REJECTED)
     def approve_pending(self, is_approve, reject_reason=None):
         self.validate_publishable()
         # specific validation
@@ -394,15 +410,44 @@ class Proposal(db.Model):
                     'admin_note': reject_reason
                 })
 
+    # state: status APPROVE -> LIVE, stage PREVIEW -> FUNDING_REQUIRED
     def publish(self):
         self.validate_publishable()
         # specific validation
         if not self.status == ProposalStatus.APPROVED:
             raise ValidationException(f"Proposal status must be approved")
-
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
         self.stage = ProposalStage.FUNDING_REQUIRED
+
+    def set_funded_when_ready(self):
+        if self.status == ProposalStatus.LIVE and self.is_funded:
+            self.set_funded()
+
+    # state: stage FUNDING_REQUIRED -> WIP
+    def set_funded(self):
+        if self.status != ProposalStatus.LIVE:
+            raise ValidationException(f"Proposal status must be live in order transition to funded state")
+        if self.stage != ProposalStage.FUNDING_REQUIRED:
+            raise ValidationException(f"Proposal stage must be funding_required in order transition to funded state")
+        if not self.is_funded:
+            raise ValidationException(f"Proposal is not fully funded, cannot set to funded state")
+        self.stage = ProposalStage.WIP
+        db.session.add(self)
+        db.session.flush()
+
+    def set_contribution_matching(self, matching: float):
+        # do not allow on funded/WIP proposals
+        if self.is_funded:
+            raise ValidationException("Cannot set contribution matching on fully-funded proposal")
+        # enforce 1 or 0 for now
+        if matching == 0.0 or matching == 1.0:
+            self.contribution_matching = matching
+            db.session.add(self)
+            db.session.flush()
+            self.set_funded_when_ready()
+        else:
+            raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
 
     @hybrid_property
     def contributed(self):
@@ -429,7 +474,7 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_funded(self):
-        return Decimal(self.contributed) >= Decimal(self.target)
+        return Decimal(self.funded) >= Decimal(self.target)
 
     @hybrid_property
     def current_milestone(self):
