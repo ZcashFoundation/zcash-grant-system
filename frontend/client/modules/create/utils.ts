@@ -127,13 +127,15 @@ export function getCreateErrors(
   return errors;
 }
 
-export function getCreateTeamMemberError(user: User) {
+export function getCreateTeamMemberError(user: User, noEmail?: boolean | null) {
   if (user.displayName.length > 30) {
     return 'Display name can only be 30 characters maximum';
   } else if (user.title.length > 30) {
     return 'Title can only be 30 characters maximum';
-  } else if (!user.emailAddress || !/.+\@.+\..+/.test(user.emailAddress)) {
-    return 'That doesn’t look like a valid email address';
+  } else if (!noEmail) {
+    if (!user.emailAddress || !/.+\@.+\..+/.test(user.emailAddress)) {
+      return 'That doesn’t look like a valid email address';
+    }
   }
 
   return '';
