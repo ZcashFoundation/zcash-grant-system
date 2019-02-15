@@ -1,0 +1,6 @@
+Hooray! {{args.amount}} ZEC has been paid out for "{{ args.proposal.title }} - {{args.proposal.current_milestone.title }}"!
+You can view the transaction below:
+
+{{ args.tx_explorer_url }}
+
+View the milestone: {{ args.proposal_milestones_url }}

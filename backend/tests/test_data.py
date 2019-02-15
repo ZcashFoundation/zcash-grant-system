@@ -31,7 +31,7 @@ milestones = [
     {
         "title": "All the money straightaway",
         "content": "cool stuff with it",
-        "dateEstimated": "Fri, 30 Nov 2018 01:42:23 GMT",
+        "dateEstimated": 1549505307,
         "payoutPercent": "100",
         "immediatePayout": False
     }

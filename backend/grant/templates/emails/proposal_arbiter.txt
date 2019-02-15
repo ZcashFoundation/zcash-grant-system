@@ -1,4 +1,4 @@
-You have been made arbiter of {{ args.proposal.title }}. You will be responsible 
+You have been nominated for arbiter of {{ args.proposal.title }}. You will be responsible 
 for reviewing milestone payout requests.
 
-View your arbitrations: {{ args.arbitration_url }}
+Accept nomination by visiting: {{ args.accept_url }}

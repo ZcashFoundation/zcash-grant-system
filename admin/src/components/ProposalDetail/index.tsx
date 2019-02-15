@@ -1,4 +1,5 @@
 import React from 'react';
+import BN from 'bn.js';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
 import {
@@ -12,23 +13,26 @@ import {
   Modal,
   Input,
   Switch,
+  message,
 } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { formatDateSeconds } from 'util/time';
-import { PROPOSAL_STATUS } from 'src/types';
+import { PROPOSAL_STATUS, PROPOSAL_ARBITER_STATUS, MILESTONE_STAGE } from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Info from 'components/Info';
 import Markdown from 'components/Markdown';
 import ArbiterControl from 'components/ArbiterControl';
 import './index.less';
+import { toZat, fromZat } from 'src/util/units';
 
 type Props = RouteComponentProps<any>;
 
 const STATE = {
   showRejectModal: false,
   rejectReason: '',
+  paidTxId: '',
 };
 
 type State = typeof STATE;
@@ -68,6 +72,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           type: 'default',
           className: 'ProposalDetail-controls-control',
           block: true,
+          disabled: p.status !== PROPOSAL_STATUS.LIVE,
         }}
       />
     );
@@ -209,13 +214,13 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         />
       );
 
-    const renderSetArbiter = () =>
-      !p.arbiter &&
+    const renderNominateArbiter = () =>
+      PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
       p.status === PROPOSAL_STATUS.LIVE && (
         <Alert
           showIcon
           type="warning"
-          message="No Arbiter on Live Proposal"
+          message="No arbiter on live proposal"
           description={
             <div>
               <p>An arbiter is required to review milestone payout requests.</p>
@@ -224,6 +229,73 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           }
         />
       );
+
+    const renderNominatedArbiter = () =>
+      PROPOSAL_ARBITER_STATUS.NOMINATED === p.arbiter.status &&
+      p.status === PROPOSAL_STATUS.LIVE && (
+        <Alert
+          showIcon
+          type="info"
+          message="Arbiter has been nominated"
+          description={
+            <div>
+              <p>
+                <b>{p.arbiter.user!.displayName}</b> has been nominated for arbiter of
+                this proposal but has not yet accepted.
+              </p>
+              <ArbiterControl {...p} />
+            </div>
+          }
+        />
+      );
+
+    const renderMilestoneAccepted = () => {
+      if (
+        !(
+          p.status === PROPOSAL_STATUS.LIVE &&
+          p.currentMilestone &&
+          p.currentMilestone.stage === MILESTONE_STAGE.ACCEPTED
+        )
+      ) {
+        return;
+      }
+      const ms = p.currentMilestone;
+      const amount = fromZat(
+        toZat(p.target)
+          .mul(new BN(ms.payoutPercent))
+          .divn(100),
+      );
+      return (
+        <Alert
+          className="ProposalDetail-alert"
+          showIcon
+          type="warning"
+          message={null}
+          description={
+            <div>
+              <p>
+                <b>
+                  Milestone {ms.index + 1} - {ms.title}
+                </b>{' '}
+                was accepted on {formatDateSeconds(ms.dateAccepted)}.
+              </p>
+              <p>
+                {' '}
+                Please make a payment of <b>{amount.toString()} ZEC</b> to:
+              </p>{' '}
+              <pre>{p.payoutAddress}</pre>
+              <Input.Search
+                placeholder="please enter payment txid"
+                value={this.state.paidTxId}
+                enterButton="Mark Paid"
+                onChange={e => this.setState({ paidTxId: e.target.value })}
+                onSearch={this.handlePaidMilestone}
+              />
+            </div>
+          }
+        />
+      );
+    };
 
     const renderDeetItem = (name: string, val: any) => (
       <div className="ProposalDetail-deet">
@@ -242,7 +314,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderApproved()}
             {renderReview()}
             {renderRejected()}
-            {renderSetArbiter()}
+            {renderNominateArbiter()}
+            {renderNominatedArbiter()}
+            {renderMilestoneAccepted()}
             <Collapse defaultActiveKey={['brief', 'content']}>
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
@@ -274,16 +348,23 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('id', p.proposalId)}
               {renderDeetItem('created', formatDateSeconds(p.dateCreated))}
               {renderDeetItem('status', p.status)}
+              {renderDeetItem('stage', p.stage)}
               {renderDeetItem('category', p.category)}
               {renderDeetItem('target', p.target)}
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
-              {p.arbiter &&
-                renderDeetItem(
-                  'arbiter',
-                  <Link to={`/users/${p.arbiter.userid}`}>{p.arbiter.displayName}</Link>,
-                )}
+              {renderDeetItem(
+                'arbiter',
+                <>
+                  {p.arbiter.user && (
+                    <Link to={`/users/${p.arbiter.user.userid}`}>
+                      {p.arbiter.user.displayName}
+                    </Link>
+                  )}
+                  ({p.arbiter.status})
+                </>,
+              )}
               {p.rfp &&
                 renderDeetItem(
                   'rfp',
@@ -336,6 +417,13 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         store.proposalDetail.contributionMatching === 0 ? 1 : 0;
       store.updateProposalDetail({ contributionMatching });
     }
+  };
+
+  private handlePaidMilestone = async () => {
+    const pid = store.proposalDetail!.proposalId;
+    const mid = store.proposalDetail!.currentMilestone!.id;
+    await store.markMilestonePaid(pid, mid, this.state.paidTxId);
+    message.success('Marked milestone paid.');
   };
 }
 

@@ -33,7 +33,9 @@ ProposalSort = ProposalSortEnum()
 
 
 class ProposalStageEnum(CustomEnum):
+    PREVIEW = 'PREVIEW'
     FUNDING_REQUIRED = 'FUNDING_REQUIRED'
+    WIP = 'WIP'
     COMPLETED = 'COMPLETED'
 
 
@@ -41,7 +43,6 @@ ProposalStage = ProposalStageEnum()
 
 
 class CategoryEnum(CustomEnum):
-    DAPP = 'DAPP'
     DEV_TOOL = 'DEV_TOOL'
     CORE_DEV = 'CORE_DEV'
     COMMUNITY = 'COMMUNITY'
@@ -68,3 +69,23 @@ class RFPStatusEnum(CustomEnum):
 
 
 RFPStatus = RFPStatusEnum()
+
+
+class MilestoneStageEnum(CustomEnum):
+    IDLE = 'IDLE'
+    REQUESTED = 'REQUESTED'
+    REJECTED = 'REJECTED'
+    ACCEPTED = 'ACCEPTED'
+    PAID = 'PAID'
+
+
+MilestoneStage = MilestoneStageEnum()
+
+
+class ProposalArbiterStatusEnum(CustomEnum):
+    MISSING = 'MISSING'
+    NOMINATED = 'NOMINATED'
+    ACCEPTED = 'ACCEPTED'
+
+
+ProposalArbiterStatus = ProposalArbiterStatusEnum()

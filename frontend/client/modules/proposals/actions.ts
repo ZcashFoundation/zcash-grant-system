@@ -6,6 +6,9 @@ import {
   getProposalUpdates,
   getProposalContributions,
   postProposalComment as apiPostProposalComment,
+  requestProposalPayout,
+  acceptProposalPayout,
+  rejectProposalPayout,
 } from 'api/api';
 import { Dispatch } from 'redux';
 import { Proposal, Comment, ProposalPageParams } from 'types';
@@ -13,6 +16,52 @@ import { AppState } from 'store/reducers';
 import { getProposalPageSettings } from './selectors';
 
 type GetState = () => AppState;
+
+function addProposalUserRoles(p: Proposal, state: AppState) {
+  if (state.auth.user) {
+    const authUserId = state.auth.user.userid;
+    if (p.arbiter.user) {
+      p.isArbiter = p.arbiter.user.userid === authUserId;
+    }
+    if (p.team.find(t => t.userid === authUserId)) {
+      p.isTeamMember = true;
+    }
+  }
+  return p;
+}
+
+export function requestPayout(proposalId: number, milestoneId: number) {
+  return async (dispatch: Dispatch<any>) => {
+    return dispatch({
+      type: types.PROPOSAL_PAYOUT_REQUEST,
+      payload: async () => {
+        return (await requestProposalPayout(proposalId, milestoneId)).data;
+      },
+    });
+  };
+}
+
+export function acceptPayout(proposalId: number, milestoneId: number) {
+  return async (dispatch: Dispatch<any>) => {
+    return dispatch({
+      type: types.PROPOSAL_PAYOUT_ACCEPT,
+      payload: async () => {
+        return (await acceptProposalPayout(proposalId, milestoneId)).data;
+      },
+    });
+  };
+}
+
+export function rejectPayout(proposalId: number, milestoneId: number, reason: string) {
+  return async (dispatch: Dispatch<any>) => {
+    return dispatch({
+      type: types.PROPOSAL_PAYOUT_REJECT,
+      payload: async () => {
+        return (await rejectProposalPayout(proposalId, milestoneId, reason)).data;
+      },
+    });
+  };
+}
 
 // change page, sort, filter, search
 export function setProposalPage(pageParams: Partial<ProposalPageParams>) {
@@ -49,7 +98,7 @@ export function fetchProposals() {
 
 export type TFetchProposal = typeof fetchProposal;
 export function fetchProposal(proposalId: Proposal['proposalId']) {
-  return async (dispatch: Dispatch<any>) => {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
     dispatch({
       type: types.PROPOSAL_DATA_PENDING,
       payload: { proposalId },
@@ -58,7 +107,7 @@ export function fetchProposal(proposalId: Proposal['proposalId']) {
       const proposal = (await getProposal(proposalId)).data;
       return dispatch({
         type: types.PROPOSAL_DATA_FULFILLED,
-        payload: proposal,
+        payload: addProposalUserRoles(proposal, getState()),
       });
     } catch (error) {
       dispatch({

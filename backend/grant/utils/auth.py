@@ -76,6 +76,26 @@ def requires_team_member_auth(f):
     return requires_email_verified_auth(decorated)
 
 
+def requires_arbiter_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        proposal_id = kwargs["proposal_id"]
+        if not proposal_id:
+            return jsonify(message="Decorator requires_arbiter_auth requires path variable <proposal_id>"), 500
+
+        proposal = Proposal.query.filter_by(id=proposal_id).first()
+        if not proposal:
+            return jsonify(message="No proposal exists with id {}".format(proposal_id)), 404
+
+        if g.current_user != proposal.arbiter.user:
+            return jsonify(message="You are not arbiter this proposal"), 403
+
+        g.current_proposal = proposal
+        return f(*args, **kwargs)
+
+    return requires_email_verified_auth(decorated)
+
+
 def internal_webhook(f):
     @wraps(f)
     def decorated(*args, **kwargs):

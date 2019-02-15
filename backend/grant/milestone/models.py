@@ -2,39 +2,55 @@ import datetime
 
 from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import dt_to_unix
+from grant.utils.ma_fields import UnixDate
+from grant.utils.enums import MilestoneStage
 
-NOT_REQUESTED = 'NOT_REQUESTED'
-ONGOING_VOTE = 'ONGOING_VOTE'
-PAID = 'PAID'
-MILESTONE_STAGES = [NOT_REQUESTED, ONGOING_VOTE, PAID]
+
+class MilestoneException(Exception):
+    pass
 
 
 class Milestone(db.Model):
     __tablename__ = "milestone"
 
     id = db.Column(db.Integer(), primary_key=True)
+    index = db.Column(db.Integer(), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False)
 
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    stage = db.Column(db.String(255), nullable=False)
     payout_percent = db.Column(db.String(255), nullable=False)
     immediate_payout = db.Column(db.Boolean)
-
+    # TODO: change to estimated_duration (sec or ms) -- FE can calc from dates on draft
     date_estimated = db.Column(db.DateTime, nullable=False)
+
+    stage = db.Column(db.String(255), nullable=False)
+
+    date_requested = db.Column(db.DateTime, nullable=True)
+    requested_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+    date_rejected = db.Column(db.DateTime, nullable=True)
+    reject_reason = db.Column(db.String(255))
+    reject_arbiter_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+    date_accepted = db.Column(db.DateTime, nullable=True)
+    accept_arbiter_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+    date_paid = db.Column(db.DateTime, nullable=True)
+    paid_tx_id = db.Column(db.String(255))
 
     proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
 
     def __init__(
             self,
+            index: int,
             title: str,
             content: str,
             date_estimated: datetime,
             payout_percent: str,
             immediate_payout: bool,
-            stage: str = NOT_REQUESTED,
-            proposal_id=int
+            stage: str = MilestoneStage.IDLE,
+            proposal_id=int,
     ):
         self.title = title
         self.content = content
@@ -44,11 +60,41 @@ class Milestone(db.Model):
         self.immediate_payout = immediate_payout
         self.proposal_id = proposal_id
         self.date_created = datetime.datetime.now()
+        self.index = index
 
     @staticmethod
     def validate(milestone):
         if len(milestone.title) > 60:
             raise ValidationException("Milestone title must be no more than 60 chars")
+
+    def request_payout(self, user_id: int):
+        if self.stage not in [MilestoneStage.IDLE, MilestoneStage.REJECTED]:
+            raise MilestoneException(f'Cannot request payout for milestone at {self.stage} stage')
+        self.stage = MilestoneStage.REQUESTED
+        self.date_requested = datetime.datetime.now()
+        self.requested_user_id = user_id
+
+    def reject_request(self, arbiter_id: int, reason: str):
+        if self.stage != MilestoneStage.REQUESTED:
+            raise MilestoneException(f'Cannot reject payout request for milestone at {self.stage} stage')
+        self.stage = MilestoneStage.REJECTED
+        self.date_rejected = datetime.datetime.now()
+        self.reject_reason = reason
+        self.reject_arbiter_id = arbiter_id
+
+    def accept_request(self, arbiter_id: int):
+        if self.stage != MilestoneStage.REQUESTED:
+            raise MilestoneException(f'Cannot accept payout request for milestone at {self.stage} stage')
+        self.stage = MilestoneStage.ACCEPTED
+        self.date_accepted = datetime.datetime.now()
+        self.accept_arbiter_id = arbiter_id
+
+    def mark_paid(self, tx_id: str):
+        if self.stage != MilestoneStage.ACCEPTED:
+            raise MilestoneException(f'Cannot pay a milestone at {self.stage} stage')
+        self.stage = MilestoneStage.PAID
+        self.date_paid = datetime.datetime.now()
+        self.paid_tx_id = tx_id
 
 
 class MilestoneSchema(ma.Schema):
@@ -57,22 +103,28 @@ class MilestoneSchema(ma.Schema):
         # Fields to expose
         fields = (
             "title",
+            "index",
+            "id",
             "content",
             "stage",
-            "date_estimated",
             "payout_percent",
             "immediate_payout",
+            "reject_reason",
+            "paid_tx_id",
             "date_created",
+            "date_estimated",
+            "date_requested",
+            "date_rejected",
+            "date_accepted",
+            "date_paid",
         )
 
-    date_created = ma.Method("get_date_created")
-    date_estimated = ma.Method("get_date_estimated")
-
-    def get_date_created(self, obj):
-        return dt_to_unix(obj.date_created)
-
-    def get_date_estimated(self, obj):
-        return dt_to_unix(obj.date_estimated) if obj.date_estimated else None
+    date_created = UnixDate(attribute='date_created')
+    date_estimated = UnixDate(attribute='date_estimated')
+    date_requested = UnixDate(attribute='date_requested')
+    date_rejected = UnixDate(attribute='date_rejected')
+    date_accepted = UnixDate(attribute='date_accepted')
+    date_paid = UnixDate(attribute='date_paid')
 
 
 milestone_schema = MilestoneSchema()

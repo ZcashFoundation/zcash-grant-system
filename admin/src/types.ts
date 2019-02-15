@@ -4,10 +4,24 @@ export interface SocialMedia {
   service: string;
   username: string;
 }
+// NOTE: sync with backend/grant/utils/enums.py MilestoneStage
+export enum MILESTONE_STAGE {
+  IDLE = 'IDLE',
+  REQUESTED = 'REQUESTED',
+  REJECTED = 'REJECTED',
+  ACCEPTED = 'ACCEPTED',
+  PAID = 'PAID',
+}
 export interface Milestone {
+  id: number;
+  index: number;
   content: string;
-  dateCreated: string;
-  dateEstimated: string;
+  dateCreated: number;
+  dateEstimated: number;
+  dateRequested: number;
+  dateAccepted: number;
+  dateRejected: number;
+  datePaid: number;
   immediatePayout: boolean;
   payoutPercent: string;
   stage: string;
@@ -44,6 +58,17 @@ export interface RFPArgs {
   bounty: string | null | undefined;
   status: string;
 }
+// NOTE: sync with backend/grant/utils/enums.py ProposalArbiterStatus
+export enum PROPOSAL_ARBITER_STATUS {
+  MISSING = 'MISSING',
+  NOMINATED = 'NOMINATED',
+  ACCEPTED = 'ACCEPTED',
+}
+export interface ProposalArbiter {
+  user?: User;
+  proposal: Proposal;
+  status: PROPOSAL_ARBITER_STATUS;
+}
 // NOTE: sync with backend/grant/utils/enums.py ProposalStatus
 export enum PROPOSAL_STATUS {
   DRAFT = 'DRAFT',
@@ -58,7 +83,7 @@ export interface Proposal {
   proposalId: number;
   brief: string;
   status: PROPOSAL_STATUS;
-  proposalAddress: string;
+  payoutAddress: string;
   dateCreated: number;
   dateApproved: number;
   datePublished: number;
@@ -67,6 +92,7 @@ export interface Proposal {
   stage: string;
   category: string;
   milestones: Milestone[];
+  currentMilestone?: Milestone;
   team: User[];
   comments: Comment[];
   contractStatus: string;
@@ -76,7 +102,7 @@ export interface Proposal {
   rejectReason: string;
   contributionMatching: number;
   rfp?: RFP;
-  arbiter?: User;
+  arbiter: ProposalArbiter;
 }
 export interface Comment {
   commentId: string;

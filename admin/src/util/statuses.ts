@@ -1,4 +1,10 @@
-import { PROPOSAL_STATUS, RFP_STATUS, CONTRIBUTION_STATUS } from 'src/types';
+import {
+  PROPOSAL_STATUS,
+  RFP_STATUS,
+  CONTRIBUTION_STATUS,
+  PROPOSAL_ARBITER_STATUS,
+  MILESTONE_STAGE,
+} from 'src/types';
 
 export interface StatusSoT<E> {
   id: E;
@@ -6,6 +12,39 @@ export interface StatusSoT<E> {
   tagColor: string;
   hint: string;
 }
+
+export const MILESTONE_STAGES: Array<StatusSoT<MILESTONE_STAGE>> = [
+  {
+    id: MILESTONE_STAGE.IDLE,
+    tagDisplay: 'Idle',
+    tagColor: '#e9c510',
+    hint: 'Proposal has has an idle milestone.',
+  },
+  {
+    id: MILESTONE_STAGE.REQUESTED,
+    tagDisplay: 'Requested',
+    tagColor: '#e9c510',
+    hint: 'Proposal has has a milestone with a requested payout.',
+  },
+  {
+    id: MILESTONE_STAGE.REJECTED,
+    tagDisplay: 'Rejected',
+    tagColor: '#e9c510',
+    hint: 'Proposal has has a milestone with a rejected payout.',
+  },
+  {
+    id: MILESTONE_STAGE.ACCEPTED,
+    tagDisplay: 'Accepted',
+    tagColor: '#e9c510',
+    hint: 'Proposal has an accepted milestone, and awaits payment.',
+  },
+  {
+    id: MILESTONE_STAGE.PAID,
+    tagDisplay: 'Paid',
+    tagColor: '#e9c510',
+    hint: 'Proposal has a paid milestone.',
+  },
+];
 
 export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
   {
@@ -50,6 +89,27 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     tagDisplay: 'Staking',
     tagColor: '#722ed1',
     hint: 'This proposal is awaiting a staking contribution.',
+  },
+];
+
+export const PROPOSAL_ARBITER_STATUSES: Array<StatusSoT<PROPOSAL_ARBITER_STATUS>> = [
+  {
+    id: PROPOSAL_ARBITER_STATUS.MISSING,
+    tagDisplay: 'Missing',
+    tagColor: '#cf00d5',
+    hint: 'Proposal does not have an arbiter.',
+  },
+  {
+    id: PROPOSAL_ARBITER_STATUS.NOMINATED,
+    tagDisplay: 'Nominated',
+    tagColor: '#cf00d5',
+    hint: 'An arbiter has been nominated for this proposal.',
+  },
+  {
+    id: PROPOSAL_ARBITER_STATUS.ACCEPTED,
+    tagDisplay: 'Accepted',
+    tagColor: '#cf00d5',
+    hint: 'Proposal has an arbiter.',
   },
 ];
 

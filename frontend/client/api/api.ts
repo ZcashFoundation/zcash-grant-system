@@ -133,6 +133,14 @@ export function updateUserSettings(
   return axios.put(`/api/v1/users/${userId}/settings`, { emailSubscriptions });
 }
 
+export function updateUserArbiter(
+  userId: number,
+  proposalId: number,
+  isAccept: boolean,
+): Promise<any> {
+  return axios.put(`/api/v1/users/${userId}/arbiter/${proposalId}`, { isAccept });
+}
+
 export function requestUserRecoveryEmail(email: string): Promise<any> {
   return axios.post(`/api/v1/users/recover`, { email });
 }
@@ -147,6 +155,10 @@ export function verifyEmail(code: string): Promise<any> {
 
 export function unsubscribeEmail(code: string): Promise<any> {
   return axios.post(`/api/v1/email/${code}/unsubscribe`);
+}
+
+export function arbiterEmail(code: string, proposalId: number): Promise<any> {
+  return axios.post(`/api/v1/email/${code}/arbiter/${proposalId}`);
 }
 
 export function getSocialAuthUrl(service: SOCIAL_SERVICE): Promise<any> {
@@ -214,6 +226,41 @@ export async function putProposalPublish(
     res.data = formatProposalFromGet(res.data);
     return res;
   });
+}
+
+export async function requestProposalPayout(
+  proposalId: number,
+  milestoneId: number,
+): Promise<{ data: Proposal }> {
+  return axios
+    .put(`/api/v1/proposals/${proposalId}/milestone/${milestoneId}/request`)
+    .then(res => {
+      res.data = formatProposalFromGet(res.data);
+      return res;
+    });
+}
+export async function acceptProposalPayout(
+  proposalId: number,
+  milestoneId: number,
+): Promise<{ data: Proposal }> {
+  return axios
+    .put(`/api/v1/proposals/${proposalId}/milestone/${milestoneId}/accept`)
+    .then(res => {
+      res.data = formatProposalFromGet(res.data);
+      return res;
+    });
+}
+export async function rejectProposalPayout(
+  proposalId: number,
+  milestoneId: number,
+  reason: string,
+): Promise<{ data: Proposal }> {
+  return axios
+    .put(`/api/v1/proposals/${proposalId}/milestone/${milestoneId}/reject`, { reason })
+    .then(res => {
+      res.data = formatProposalFromGet(res.data);
+      return res;
+    });
 }
 
 export function postProposalInvite(
@@ -293,4 +340,8 @@ export function getRFP(rfpId: number | string): Promise<{ data: RFP }> {
     res.data = formatRFPFromGet(res.data);
     return res;
   });
+}
+
+export function resendEmailVerification(): Promise<{ data: void }> {
+  return axios.put(`/api/v1/users/me/resend-verification`);
 }
