@@ -549,17 +549,22 @@ const MilestoneAction: React.SFC<MilestoneProps> = p => {
   if (!p.hasArbiter && p.isTeamMember) {
     content = (
       <Alert
-        type="error"
+        type="info"
         message="Arbiter not assigned"
         description={
-          <p>
-            We are sorry for the inconvenience, but in order to have milestone payouts
-            reviewed an arbiter must be assigned. Please{' '}
-            <Link target="_blank" to="/contact">
-              contact support
-            </Link>{' '}
-            for help.
-          </p>
+          <>
+            <p>
+              Arbiters are users who review requests for payment. When they have approved
+              a payment the grant administrators are then notified to make payment.
+            </p>
+            <p>
+              It typically takes a couple of days to have an arbiter assigned. Please{' '}
+              <Link target="_blank" to="/contact">
+                contact support
+              </Link>{' '}
+              if you have waited longer than three days.
+            </p>
+          </>
         }
       />
     );
