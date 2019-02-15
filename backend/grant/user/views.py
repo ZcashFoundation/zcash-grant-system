@@ -13,12 +13,12 @@ from grant.proposal.models import (
     user_proposals_schema,
     user_proposal_arbiters_schema
 )
-from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
+from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user, throw_on_banned
 from grant.utils.exceptions import ValidationException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from grant.utils.enums import ProposalStatus, ContributionStatus
-
+from flask import current_app
 from .models import (
     User,
     SocialMedia,
@@ -146,6 +146,7 @@ def auth_user(email, password):
         return {"message": "No user exists with that email"}, 400
     if not existing_user.check_password(password):
         return {"message": "Invalid password"}, 403
+    throw_on_banned(existing_user)
     existing_user.login()
     return self_user_schema.dump(existing_user)
 
@@ -238,6 +239,7 @@ def recover_user(email):
     existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
+    throw_on_banned(existing_user)
     existing_user.send_recovery_email()
     return None, 200
 
@@ -251,6 +253,7 @@ def recover_email(code, password):
     if er:
         if er.is_expired():
             return {"message": "Reset code expired"}, 401
+        throw_on_banned(er.user)
         er.user.set_password(password)
         db.session.delete(er)
         db.session.commit()

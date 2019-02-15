@@ -119,6 +119,20 @@ class TestUserAPI(BaseUserConfig):
         self.assert400(user_auth_resp)
         self.assertTrue(user_auth_resp.json['message'] is not None)
 
+    def test_user_auth_banned(self):
+        self.user.set_banned(True, 'reason for banning')
+        user_auth_resp = self.app.post(
+            "/api/v1/users/auth",
+            data=json.dumps({
+                "email": self.user.email_address,
+                "password": self.user_password
+            }),
+            content_type="application/json"
+        )
+        # in test mode we get 500s instead of 403
+        self.assert500(user_auth_resp)
+        self.assertIn('banned', user_auth_resp.json['data'])
+
     def test_create_user_duplicate_400(self):
         # self.user is identical to test_user, should throw
         response = self.app.post(
@@ -224,6 +238,20 @@ class TestUserAPI(BaseUserConfig):
         self.assertStatus(reset_resp, 401)
         self.assertIsNotNone(reset_resp.json['message'])
 
+    @patch('grant.email.send.send_email')
+    def test_recover_user_banned(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+        self.user.set_banned(True, 'Reason for banning')
+        # 1. request reset email
+        response = self.app.post(
+            "/api/v1/users/recover",
+            data=json.dumps({'email': self.user.email_address}),
+            content_type='application/json'
+        )
+        # 404 outside testing mode
+        self.assertStatus(response, 500)
+        self.assertIn('banned', response.json['data'])
+
     def test_recover_user_no_user(self):
         response = self.app.post(
             "/api/v1/users/recover",
@@ -243,6 +271,34 @@ class TestUserAPI(BaseUserConfig):
         )
         self.assertStatus(reset_resp, 400)
         self.assertIsNotNone(reset_resp.json['message'])
+
+    @patch('grant.email.send.send_email')
+    def test_recover_user_code_banned(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+
+        # 1. request reset email
+        response = self.app.post(
+            "/api/v1/users/recover",
+            data=json.dumps({'email': self.user.email_address}),
+            content_type='application/json'
+        )
+
+        self.assertStatus(response, 200)
+        er = self.user.email_recovery
+        code = er.code
+
+        self.user.set_banned(True, "Reason")
+
+        # 2. reset password
+        new_password = 'n3wp455w3rd'
+        reset_resp = self.app.post(
+            f"/api/v1/users/recover/{code}",
+            data=json.dumps({'password': new_password}),
+            content_type='application/json'
+        )
+        # 403 outside of testing mode
+        self.assertStatus(reset_resp, 500)
+        self.assertIn('banned', reset_resp.json['data'])
 
     @patch('grant.user.views.verify_social')
     def test_user_verify_social(self, mock_verify_social):

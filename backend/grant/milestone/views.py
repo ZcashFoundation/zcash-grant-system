@@ -5,10 +5,10 @@ from .models import Milestone, milestones_schema
 
 blueprint = Blueprint('milestone', __name__, url_prefix='/api/v1/milestones')
 
-
-@blueprint.route("/", methods=["GET"])
-@endpoint.api()
-def get_milestones():
-    milestones = Milestone.query.all()
-    result = milestones_schema.dump(milestones)
-    return result
+# Unused
+# @blueprint.route("/", methods=["GET"])
+# @endpoint.api()
+# def get_milestones():
+#     milestones = Milestone.query.all()
+#     result = milestones_schema.dump(milestones)
+#     return result

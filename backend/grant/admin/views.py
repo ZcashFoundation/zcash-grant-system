@@ -91,12 +91,24 @@ def delete_user(user_id):
 
 
 @blueprint.route("/users", methods=["GET"])
-@endpoint.api()
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
 @admin_auth_required
-def get_users():
-    users = User.query.all()
-    result = admin_users_schema.dump(users)
-    return result
+def get_users(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.user(
+        schema=admin_users_schema,
+        query=User.query,
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
 
 
 @blueprint.route('/users/<id>', methods=['GET'])
@@ -115,6 +127,33 @@ def get_user(id):
         user["contributions"] = contributions_dump
         return user
     return {"message": f"Could not find user with id {id}"}, 404
+
+
+@blueprint.route('/users/<user_id>', methods=['PUT'])
+@endpoint.api(
+    parameter('silenced', type=bool, required=False),
+    parameter('banned', type=bool, required=False),
+    parameter('bannedReason', type=str, required=False),
+)
+@admin_auth_required
+def edit_user(user_id, silenced, banned, banned_reason):
+    user = User.query.filter(User.id == user_id).first()
+    if not user:
+        return {"message": f"Could not find user with id {id}"}, 404
+
+    if silenced is not None:
+        user.silenced = silenced
+        db.session.add(user)
+
+    if banned is not None:
+        if banned and not banned_reason:  # if banned true, provide reason
+            return {"message": "Please include reason for banning"}, 417
+        user.banned = banned
+        user.banned_reason = banned_reason
+        db.session.add(user)
+
+    db.session.commit()
+    return admin_user_schema.dump(user)
 
 
 # ARBITERS
