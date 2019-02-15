@@ -194,7 +194,9 @@ class RFPForm extends React.Component<Props, State> {
                   size="large"
                 />,
               )}
-              {getFieldDecorator('matching')(
+              {getFieldDecorator('matching', {
+                initialValue: defaults.matching,
+              })(
                 <Checkbox
                   className="RFPForm-bounty-matching"
                   name="matching"
