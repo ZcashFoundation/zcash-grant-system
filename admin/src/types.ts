@@ -86,6 +86,8 @@ export interface Proposal {
   dateCreated: number;
   dateApproved: number;
   datePublished: number;
+  deadlineDuration: number;
+  isFailed: boolean;
   title: string;
   content: string;
   stage: PROPOSAL_STAGE;

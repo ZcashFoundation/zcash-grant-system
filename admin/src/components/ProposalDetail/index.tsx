@@ -17,7 +17,7 @@ import {
 } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
-import { formatDateSeconds } from 'util/time';
+import { formatDateSeconds, formatDurationSeconds } from 'util/time';
 import {
   PROPOSAL_STATUS,
   PROPOSAL_ARBITER_STATUS,
@@ -57,6 +57,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       return 'loading proposal...';
     }
 
+    const needsArbiter =
+      PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
+      p.status === PROPOSAL_STATUS.LIVE &&
+      !p.isFailed;
+
     const renderDeleteControl = () => (
       <Popconfirm
         onConfirm={this.handleDelete}
@@ -77,7 +82,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           type: 'default',
           className: 'ProposalDetail-controls-control',
           block: true,
-          disabled: p.status !== PROPOSAL_STATUS.LIVE,
+          disabled: p.status !== PROPOSAL_STATUS.LIVE || p.isFailed,
         }}
       />
     );
@@ -106,7 +111,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           <Switch
             checked={p.contributionMatching === 1}
             loading={false}
-            disabled={[PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)}
+            disabled={
+              p.isFailed ||
+              [PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)
+            }
           />{' '}
         </Popconfirm>
         <span>
@@ -225,8 +233,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderNominateArbiter = () =>
-      PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
-      p.status === PROPOSAL_STATUS.LIVE && (
+      needsArbiter && (
         <Alert
           showIcon
           type="warning"
@@ -307,6 +314,21 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
     };
 
+    const renderFailed = () =>
+      p.isFailed && (
+        <Alert
+          showIcon
+          type="error"
+          message="Funding failed"
+          description={
+            <>
+              This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
+              <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>.
+            </>
+          }
+        />
+      );
+
     const renderDeetItem = (name: string, val: any) => (
       <div className="ProposalDetail-deet">
         <span>{name}</span>
@@ -327,6 +349,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderNominateArbiter()}
             {renderNominatedArbiter()}
             {renderMilestoneAccepted()}
+            {renderFailed()}
             <Collapse defaultActiveKey={['brief', 'content']}>
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
@@ -357,6 +380,17 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             <Card title="Details" size="small">
               {renderDeetItem('id', p.proposalId)}
               {renderDeetItem('created', formatDateSeconds(p.dateCreated))}
+              {renderDeetItem('published', formatDateSeconds(p.datePublished))}
+              {renderDeetItem(
+                'deadlineDuration',
+                formatDurationSeconds(p.deadlineDuration),
+              )}
+              {p.datePublished &&
+                renderDeetItem(
+                  '(deadline)',
+                  formatDateSeconds(p.datePublished + p.deadlineDuration),
+                )}
+              {renderDeetItem('isFailed', JSON.stringify(p.isFailed))}
               {renderDeetItem('status', p.status)}
               {renderDeetItem('stage', p.stage)}
               {renderDeetItem('category', p.category)}

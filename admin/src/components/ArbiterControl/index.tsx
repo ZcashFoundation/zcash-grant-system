@@ -46,7 +46,7 @@ class ArbiterControlNaked extends React.Component<Props, State> {
         {/* CONTROL */}
         <Button
           className="ArbiterControl-control"
-          loading={store.proposalDetailApproving}
+          loading={store.arbiterSaving}
           icon="crown"
           type="primary"
           onClick={this.handleShowSearch}

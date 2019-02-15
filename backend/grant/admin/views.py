@@ -166,6 +166,9 @@ def set_arbiter(proposal_id, user_id):
         if member.id == user_id:
             return {"message": "Cannot set proposal team member as arbiter"}, 400
 
+    if proposal.is_failed:
+        return {"message": "Cannot set arbiter on failed proposal"}, 400
+
     user = User.query.filter(User.id == user_id).first()
     if not user:
         return {"message": "User not found"}, 404
