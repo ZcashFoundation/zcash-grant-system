@@ -64,12 +64,15 @@ class RFPDetail extends React.Component<Props> {
             {rfp.bounty && (
               <li>
                 Accepted proposals will be funded up to{' '}
-                <UnitDisplay value={rfp.bounty} symbol="ZEC" />
+                <strong>
+                  <UnitDisplay value={rfp.bounty} symbol="ZEC" />
+                </strong>
               </li>
             )}
             {rfp.matching && (
               <li>
-                Contributions will have their funding matched by the Zcash Foundation
+                Contributions will have their <strong>funding matched</strong> by the
+                Zcash Foundation
               </li>
             )}
             {rfp.dateCloses && (
