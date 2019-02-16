@@ -9,7 +9,7 @@ from grant import commands, proposal, user, comment, milestone, admin, email, bl
 from grant.extensions import bcrypt, migrate, db, ma, security
 from grant.settings import SENTRY_RELEASE, ENV
 from sentry_sdk.integrations.flask import FlaskIntegration
-from grant.utils.auth import AuthException, handle_auth_error
+from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
 
 
 def create_app(config_objects=["grant.settings"]):
@@ -33,6 +33,11 @@ def create_app(config_objects=["grant.settings"]):
     # NOTE: testing mode does not honor this handler, and instead returns the generic 500 response
     app.register_error_handler(AuthException, handle_auth_error)
 
+    @app.after_request
+    def grantio_authed(response):
+        response.headers["X-Grantio-Authed"] = 'yes' if get_authed_user() else 'no'
+        return response
+
     return app
 
 
@@ -46,7 +51,7 @@ def register_extensions(app):
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
 
     # supports_credentials for session cookies
-    CORS(app, supports_credentials=True)
+    CORS(app, supports_credentials=True, expose_headers='X-Grantio-Authed')
     SSLify(app)
     return None
 
