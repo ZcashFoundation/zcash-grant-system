@@ -402,7 +402,12 @@ class Proposal(db.Model):
 
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
-        self.stage = ProposalStage.FUNDING_REQUIRED
+
+        # If we had a bounty that pushed us into funding, skip straight into WIP
+        if self.is_funded:
+            self.stage = ProposalStage.WIP
+        else:
+            self.stage = ProposalStage.FUNDING_REQUIRED
 
     @hybrid_property
     def contributed(self):
@@ -417,6 +422,9 @@ class Proposal(db.Model):
         target = Decimal(self.target)
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
+        # apply bounty, if available
+        if self.rfp:
+            funded = funded + Decimal(self.rfp.bounty)
         # if funded > target, just set as target
         if funded > target:
             return str(target)
@@ -429,7 +437,7 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_funded(self):
-        return Decimal(self.contributed) >= Decimal(self.target)
+        return Decimal(self.funded) >= Decimal(self.target)
 
     @hybrid_property
     def current_milestone(self):
