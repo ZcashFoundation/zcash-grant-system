@@ -53,9 +53,6 @@ const serverRenderer = async (req: Request, res: Response) => {
   const cssFiles = ['bundle.css', 'vendor.css']
     .map(f => res.locals.assetPath(f))
     .filter(Boolean);
-  const jsFiles = ['vendor.js', 'bundle.js']
-    .map(f => res.locals.assetPath(f))
-    .filter(Boolean);
   const mappedLinkTags = linkTags
     .map(l => ({ ...l, href: res.locals.assetPath(l.href) }))
     .filter(l => !!l.href);
@@ -66,7 +63,6 @@ const serverRenderer = async (req: Request, res: Response) => {
   const html = renderToString(
     <Html
       css={cssFiles}
-      scripts={jsFiles}
       linkTags={mappedLinkTags}
       metaTags={mappedMetaTags}
       state={state}
