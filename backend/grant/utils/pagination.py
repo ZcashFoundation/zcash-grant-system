@@ -84,10 +84,8 @@ class ProposalPagination(Pagination):
 
             if status_filters:
                 query = query.filter(Proposal.status.in_(status_filters))
-            # TODO: figure out what is going to happen with stages
             if stage_filters:
-                self._raise('stage filters not yet supported')
-            #     query = query.filter(Proposal.stage.in_(stage_filters))
+                query = query.filter(Proposal.stage.in_(stage_filters))
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
             if arbiter_filters:
