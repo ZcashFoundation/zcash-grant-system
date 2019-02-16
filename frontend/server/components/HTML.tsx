@@ -76,9 +76,6 @@ const HTML: React.SFC<Props> = ({
       </head>
       <body>
         <div id="app" dangerouslySetInnerHTML={{ __html: children }} />
-        {/* {scripts.map(src => {
-          return <script key={src} src={src} />;
-        })} */}
       </body>
     </html>
   );
