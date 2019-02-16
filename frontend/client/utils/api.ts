@@ -97,6 +97,9 @@ export function formatProposalFromGet(p: any): Proposal {
     proposal.milestones = proposal.milestones.map(msToFe);
     proposal.currentMilestone = msToFe(proposal.currentMilestone);
   }
+  if (proposal.rfp) {
+    proposal.rfp = formatRFPFromGet(proposal.rfp);
+  }
   return proposal;
 }
 
@@ -104,7 +107,9 @@ export function formatRFPFromGet(rfp: RFP): RFP {
   if (rfp.bounty) {
     rfp.bounty = toZat(rfp.bounty as any);
   }
-  rfp.acceptedProposals = rfp.acceptedProposals.map(formatProposalFromGet);
+  if (rfp.acceptedProposals) {
+    rfp.acceptedProposals = rfp.acceptedProposals.map(formatProposalFromGet);
+  }
   return rfp;
 }
 
