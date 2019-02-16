@@ -79,6 +79,13 @@ export enum PROPOSAL_STATUS {
   DELETED = 'DELETED',
   STAKING = 'STAKING',
 }
+// NOTE: sync with backend/grant/utils/enums.py ProposalStage
+export enum PROPOSAL_STAGE {
+  PREVIEW = 'PREVIEW',
+  FUNDING_REQUIRED = 'FUNDING_REQUIRED',
+  WIP = 'WIP',
+  COMPLETED = 'COMPLETED',
+}
 export interface Proposal {
   proposalId: number;
   brief: string;
@@ -87,9 +94,11 @@ export interface Proposal {
   dateCreated: number;
   dateApproved: number;
   datePublished: number;
+  deadlineDuration: number;
+  isFailed: boolean;
   title: string;
   content: string;
-  stage: string;
+  stage: PROPOSAL_STAGE;
   category: string;
   milestones: Milestone[];
   currentMilestone?: Milestone;

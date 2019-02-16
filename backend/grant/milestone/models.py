@@ -82,6 +82,14 @@ class Milestone(db.Model):
         self.reject_reason = reason
         self.reject_arbiter_id = arbiter_id
 
+    def accept_immediate(self):
+        if self.immediate_payout and self.index == 0:
+            self.date_requested = datetime.datetime.now()
+            self.stage = MilestoneStage.ACCEPTED
+            self.date_accepted = datetime.datetime.now()
+            db.session.add(self)
+            db.session.flush()
+
     def accept_request(self, arbiter_id: int):
         if self.stage != MilestoneStage.REQUESTED:
             raise MilestoneException(f'Cannot accept payout request for milestone at {self.stage} stage')
