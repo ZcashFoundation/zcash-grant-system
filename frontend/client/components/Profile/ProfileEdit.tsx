@@ -12,7 +12,7 @@ import { Input, Form, Col, Row, Button, Alert, Icon } from 'antd';
 import { SOCIAL_INFO } from 'utils/social';
 import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
-import { getCreateTeamMemberError } from 'modules/create/utils';
+import { validateUserProfile } from 'modules/create/utils';
 import AvatarEdit from './AvatarEdit';
 import './ProfileEdit.less';
 
@@ -85,7 +85,7 @@ class ProfileEdit extends React.PureComponent<Props, State> {
       socialVerificationError,
       activeSocialService,
     } = this.state;
-    const error = getCreateTeamMemberError(fields, true);
+    const error = validateUserProfile(fields);
     const isMissingField = !fields.displayName || !fields.title;
     const isDisabled =
       !!error ||
