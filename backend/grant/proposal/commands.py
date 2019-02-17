@@ -1,8 +1,12 @@
 import click
 import datetime
+from random import randint
+from math import floor
 from flask.cli import with_appcontext
 
 from .models import Proposal, db
+from grant.milestone.models import Milestone
+from grant.comment.models import Comment
 from grant.utils.enums import ProposalStatus, Category
 from grant.user.models import User
 
@@ -43,6 +47,27 @@ def create_proposals(count):
         p.date_published = datetime.datetime.now()
         p.team.append(user)
         db.session.add(p)
+        db.session.flush()
+        num_ms = randint(1, 9)
+        for j in range(num_ms):
+            m = Milestone(
+                title=f'Fake MS {j}',
+                content=f'Fake milestone #{j} on fake proposal #{i}!',
+                date_estimated=datetime.datetime.now(),
+                payout_percent=str(floor(1 / num_ms * 100)),
+                immediate_payout=j == 0,
+                proposal_id=p.id,
+                index=j
+            )
+            db.session.add(m)
+        for j in range(100):
+            c = Comment(
+                proposal_id=p.id,
+                user_id=user.id,
+                parent_comment_id=None,
+                content=f'Fake comment #{j} on fake proposal #{i}!'
+            )
+            db.session.add(c)
 
     db.session.commit()
     print(f'Added {count} LIVE fake proposals')

@@ -1,6 +1,7 @@
 import abc
 from sqlalchemy import or_, and_
 
+from grant.comment.models import Comment, comments_schema
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
 from grant.user.models import User, users_schema
 from grant.milestone.models import Milestone
@@ -229,8 +230,56 @@ class UserPagination(Pagination):
         }
 
 
+class CommentPagination(Pagination):
+    def __init__(self):
+        self.FILTERS = []
+        self.PAGE_SIZE = 10
+        self.SORT_MAP = {
+            'CREATED:DESC': Comment.date_created.desc(),
+            'CREATED:ASC': Comment.date_created,
+        }
+
+    def paginate(
+        self,
+        schema: ma.Schema=comments_schema,
+        query: db.Query=None,
+        page: int=1,
+        filters: list=None,
+        search: str=None,
+        sort: str='CREATED:DESC',
+    ):
+        query = query or Comment.query
+        sort = sort or 'CREATED:DESC'
+
+        # FILTER
+        if filters:
+            pass
+
+        # SORT (see self.SORT_MAP)
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
+
+        # SEARCH can match txids or amounts
+        if search:
+            query = query.filter(or_(
+                Comment.content.ilike(f'%{search}%'),
+            ))
+
+        res = query.paginate(page, self.PAGE_SIZE, False)
+        return {
+            'page': res.page,
+            'total': res.total,
+            'page_size': self.PAGE_SIZE,
+            'items': schema.dump(res.items),
+            'filters': filters,
+            'search': search,
+            'sort': sort
+        }
+
+
 # expose pagination methods here
 proposal = ProposalPagination().paginate
 contribution = ContributionPagination().paginate
-# comment = CommentPagination().paginate
+comment = CommentPagination().paginate
 user = UserPagination().paginate
