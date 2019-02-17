@@ -489,11 +489,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     db.session.flush()
 
     if contribution.proposal.status == ProposalStatus.STAKING:
-        # fully staked, set status PENDING
-        if contribution.proposal.is_staked:  # Decimal(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
-            contribution.proposal.status = ProposalStatus.PENDING
-            db.session.add(contribution.proposal)
-            db.session.flush()
+        contribution.proposal.set_pending_when_ready()
 
         # email progress of staking, partial or complete
         send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
@@ -524,12 +520,9 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
+
     # on funding target reached.
-    if contribution.proposal.status == ProposalStatus.LIVE:
-        if contribution.proposal.is_funded:
-            contribution.proposal.stage = ProposalStage.WIP
-            db.session.add(contribution.proposal)
-            db.session.flush()
+    contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
     return None, 200

@@ -5,7 +5,6 @@ import { ChunkExtractor } from '@loadable/server';
 export interface Props {
   children: any;
   css: string[];
-  scripts: string[];
   linkTags: Array<React.LinkHTMLAttributes<HTMLLinkElement>>;
   metaTags: Array<React.MetaHTMLAttributes<HTMLMetaElement>>;
   state: string;
@@ -15,7 +14,6 @@ export interface Props {
 
 const HTML: React.SFC<Props> = ({
   children,
-  scripts,
   css,
   state,
   i18n,
@@ -78,9 +76,6 @@ const HTML: React.SFC<Props> = ({
       </head>
       <body>
         <div id="app" dangerouslySetInnerHTML={{ __html: children }} />
-        {scripts.map(src => {
-          return <script key={src} src={src} />;
-        })}
       </body>
     </html>
   );

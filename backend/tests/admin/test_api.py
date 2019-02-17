@@ -97,7 +97,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_update_proposal_bad_matching(self):
         self.login_admin()
         resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 2})
-        self.assert400(resp)
+        self.assert500(resp)
+        self.assertIn('Bad value', resp.json['data'])
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_approve_proposal(self, mock_get):
@@ -140,7 +141,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             "/api/v1/admin/arbiters",
             data={
                 'proposalId': self.proposal.id,
-                'userId': self.user.id
+                'userId': self.other_user.id
             }
         )
         self.assert200(resp)

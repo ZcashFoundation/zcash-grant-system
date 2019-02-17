@@ -23,6 +23,11 @@ const bindMiddleware = (middleware: MiddleWare[]) => {
   return composeWithDevTools(applyMiddleware(...middleware));
 };
 
+let storeRef = null as null | Store<AppState>;
+export function getStoreRef() {
+  return storeRef;
+}
+
 export function configureStore(initialState: Partial<AppState> = combineInitialState) {
   const store: Store<AppState> = createStore(
     rootReducer,
@@ -44,6 +49,6 @@ export function configureStore(initialState: Partial<AppState> = combineInitialS
       );
     }
   }
-
+  storeRef = store;
   return { store };
 }
