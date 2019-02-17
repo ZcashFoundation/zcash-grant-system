@@ -7,7 +7,7 @@ from flask.cli import with_appcontext
 from .models import Proposal, db
 from grant.milestone.models import Milestone
 from grant.comment.models import Comment
-from grant.utils.enums import ProposalStatus, Category
+from grant.utils.enums import ProposalStatus, Category, ProposalStageEnum
 from grant.user.models import User
 
 
@@ -34,7 +34,12 @@ def create_proposal(stage, user_id, proposal_id, title, content):
 def create_proposals(count):
     user = User.query.filter_by().first()
     for i in range(count):
+        if i < 5:
+            stage = ProposalStageEnum.FUNDING_REQUIRED
+        else:
+            stage = ProposalStageEnum.COMPLETED
         p = Proposal.create(
+            stage=stage,
             status=ProposalStatus.LIVE,
             title=f'Fake Proposal #{i}',
             content=f'My fake proposal content, numero {i}',
