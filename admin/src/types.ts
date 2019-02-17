@@ -104,7 +104,6 @@ export interface Proposal {
   currentMilestone?: Milestone;
   team: User[];
   comments: Comment[];
-  contractStatus: string;
   target: string;
   contributed: string;
   funded: string;
@@ -114,7 +113,9 @@ export interface Proposal {
   arbiter: ProposalArbiter;
 }
 export interface Comment {
-  commentId: string;
+  id: number;
+  userId: User['userid'];
+  author?: User;
   proposalId: Proposal['proposalId'];
   proposal?: Proposal;
   dateCreated: number;

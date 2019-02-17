@@ -2,6 +2,7 @@ import abc
 from sqlalchemy import or_, and_
 
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
+from grant.comment.models import Comment, comments_schema
 from grant.user.models import User, users_schema
 from grant.milestone.models import Milestone
 from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, MilestoneStage
@@ -231,8 +232,68 @@ class UserPagination(Pagination):
         }
 
 
+class CommentPagination(Pagination):
+    def __init__(self):
+        self.FILTERS = ['REPORTED', 'HIDDEN']
+        self.PAGE_SIZE = 10
+        self.SORT_MAP = {
+            'CREATED:DESC': Comment.date_created.desc(),
+            'CREATED:ASC': Comment.date_created,
+            # 'AUTHOR:DESC': Comment.author.display_name.desc(),
+            # 'AUTHOR:ASC': Comment.author.display_name,
+            # 'PROPOSAL:DESC': Comment.proposal.title.desc(),
+            # 'PROPOSAL:ASC': Comment.proposal.title,
+        }
+
+    def paginate(
+        self,
+        schema: ma.Schema=users_schema,
+        query: db.Query=None,
+        page: int=1,
+        filters: list=None,
+        search: str=None,
+        sort: str='CREATED:DESC',
+    ):
+        query = query or Comment.query
+        sort = sort or 'CREATED:DESC'
+
+        # FILTER
+        if filters:
+            self.validate_filters(filters)
+            # if 'BANNED' in filters:
+            #     query = query.filter(User.banned == True)
+            # if 'SILENCED' in filters:
+            #     query = query.filter(User.silenced == True)
+            # if 'ARBITER' in filters:
+            #     query = query.join(User.arbiter_proposals) \
+            #         .filter(ProposalArbiter.status == ProposalArbiterStatus.ACCEPTED)
+
+        # SORT (see self.SORT_MAP)
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
+
+        # SEARCH
+        if search:
+            query = query.filter(
+                Comment.content.ilike(f'%{search}%') |
+                User.display_name.ilike(f'%{search}%')
+            )
+
+        res = query.paginate(page, self.PAGE_SIZE, False)
+        return {
+            'page': res.page,
+            'total': res.total,
+            'page_size': self.PAGE_SIZE,
+            'items': schema.dump(res.items),
+            'filters': filters,
+            'search': search,
+            'sort': sort
+        }
+
+
 # expose pagination methods here
 proposal = ProposalPagination().paginate
 contribution = ContributionPagination().paginate
-# comment = CommentPagination().paginate
+comment = CommentPagination().paginate
 user = UserPagination().paginate

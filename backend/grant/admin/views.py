@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
 from datetime import datetime
-from grant.comment.models import Comment, user_comments_schema
+from grant.comment.models import Comment, user_comments_schema, admin_comments_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.proposal.models import (
@@ -575,3 +575,26 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
 
     db.session.commit()
     return proposal_contribution_schema.dump(contribution), 200
+
+
+# Comments
+
+
+@blueprint.route('/comments', methods=['GET'])
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
+@admin_auth_required
+def get_comments(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.comment(
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+        schema=admin_comments_schema
+    )
+    return page

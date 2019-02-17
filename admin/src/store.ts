@@ -100,6 +100,11 @@ async function approveProposal(id: number, isApprove: boolean, rejectReason?: st
   return data;
 }
 
+async function fetchComments(params: Partial<PageQuery>) {
+  const { data } = await api.get('/admin/comments', { params });
+  return data;
+}
+
 async function markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
   const { data } = await api.put(
     `/admin/proposals/${proposalId}/milestone/${milestoneId}/paid`,
@@ -199,6 +204,10 @@ const app = store({
   proposalDetailFetching: false,
   proposalDetailApproving: false,
   proposalDetailMarkingMilestonePaid: false,
+
+  comments: {
+    page: createDefaultPageData<Comment>('CREATED:DESC'),
+  },
 
   rfps: [] as RFP[],
   rfpsFetching: false,
@@ -505,6 +514,19 @@ const app = store({
     app.proposalDetailMarkingMilestonePaid = false;
   },
 
+  // Comments
+
+  fetchComments: makePageFetch(
+    () => app.comments.page,
+    p => (app.comments.page = p),
+    fetchComments,
+  ),
+  setCommentPageParams: makeSetPageParams(
+    () => app.comments.page,
+    p => (app.comments.page = p),
+  ),
+  resetCommentPageParams: makeResetPageParams(() => app.comments.page),
+
   // Email
 
   async getEmailExample(type: string) {
@@ -671,6 +693,60 @@ function createDefaultPageData<T>(sort: string): PageData<T> {
     items: [] as T[],
     fetching: false,
     fetched: false,
+  };
+}
+
+type FNGetPage<T> = () => PageData<T>;
+type FNSetPage<T> = (p: PageData<T>) => void;
+type FNFetchPage = (params: PageQuery) => Promise<any>;
+
+function makePageFetch<T>(
+  getPage: FNGetPage<T>,
+  setPage: FNSetPage<T>,
+  fetch: FNFetchPage,
+) {
+  return async () => {
+    let page = getPage();
+    page.fetching = true;
+    try {
+      const params = getPageParams(page);
+      const newPage = await fetch(params);
+      page = {
+        ...page,
+        ...newPage,
+        fetched: true,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
+    page.fetching = false;
+    setPage(page);
+  };
+}
+
+function getPageParams<T>(page: PageData<T>) {
+  return pick(page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+}
+
+function makeSetPageParams<T>(getPage: FNGetPage<T>, setPage: FNSetPage<T>) {
+  return (query: Partial<PageQuery>) => {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
+    setPage({
+      ...getPage(),
+      ...query,
+    });
+  };
+}
+
+function makeResetPageParams<T>(getPage: FNGetPage<T>) {
+  return () => {
+    getPage().page = 1;
+    getPage().search = '';
+    getPage().sort = 'CREATED:DESC';
+    getPage().filters = [];
   };
 }
 

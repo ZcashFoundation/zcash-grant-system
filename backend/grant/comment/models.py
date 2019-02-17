@@ -1,7 +1,7 @@
 import datetime
 
 from grant.extensions import ma, db
-from grant.utils.misc import dt_to_unix
+from grant.utils.ma_fields import UnixDate
 from sqlalchemy.orm import raiseload
 
 
@@ -49,12 +49,9 @@ class CommentSchema(ma.Schema):
             "replies"
         )
 
-    date_created = ma.Method("get_date_created")
+    date_created = UnixDate(attribute='date_created')
     author = ma.Nested("UserSchema")
     replies = ma.Nested("CommentSchema", many=True)
-
-    def get_date_created(self, obj):
-        return dt_to_unix(obj.date_created)
 
 
 comment_schema = CommentSchema()
@@ -82,11 +79,45 @@ class UserCommentSchema(ma.Schema):
             "updates"
         ]
     )
-    date_created = ma.Method("get_date_created")
-
-    def get_date_created(self, obj):
-        return dt_to_unix(obj.date_created) * 1000
+    date_created = UnixDate(attribute='date_created')
 
 
 user_comment_schema = UserCommentSchema()
 user_comments_schema = UserCommentSchema(many=True)
+
+
+class AdminCommentSchema(ma.Schema):
+    class Meta:
+        model = Comment
+        fields = (
+            "id",
+            "user_id",
+            "author",
+            "proposal",
+            "proposal_id",
+            "content",
+            "date_created",
+        )
+
+    proposal = ma.Nested(
+        "ProposalSchema",
+        only=[
+            "proposal_id",
+            "title",
+            "brief"
+        ]
+    )
+    author = ma.Nested(
+        "SelfUserSchema",
+        only=[
+            "userid",
+            "email_address",
+            "display_name",
+            "title"
+        ]
+    )
+    date_created = UnixDate(attribute='date_created')
+
+
+admin_comment_schema = AdminCommentSchema()
+admin_comments_schema = AdminCommentSchema(many=True)
