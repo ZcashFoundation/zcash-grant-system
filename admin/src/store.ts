@@ -294,40 +294,15 @@ const app = store({
   // Users
 
   async fetchUsers() {
-    app.users.page.fetching = true;
-    try {
-      const page = await fetchUsers(app.getUserPageQuery());
-      app.users.page = {
-        ...app.users.page,
-        ...page,
-        fetched: true,
-      };
-    } catch (e) {
-      handleApiError(e);
-    }
-    app.users.page.fetching = false;
+    return await pageFetch(app.users, fetchUsers);
   },
 
-  getUserPageQuery() {
-    return pick(app.users.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
-  },
-
-  setUserPageQuery(query: Partial<PageQuery>) {
-    // sometimes we need to reset page to 1
-    if (query.filters || query.search) {
-      query.page = 1;
-    }
-    app.users.page = {
-      ...app.users.page,
-      ...query,
-    };
+  setUserPageQuery(params: Partial<PageQuery>) {
+    setPageParams(app.users, params);
   },
 
   resetUserPageQuery() {
-    app.users.page.page = 1;
-    app.users.page.search = '';
-    app.users.page.sort = 'CREATED:DESC';
-    app.users.page.filters = [];
+    resetPageParams(app.users);
   },
 
   async fetchUserDetail(id: number) {
@@ -413,40 +388,15 @@ const app = store({
   // Proposals
 
   async fetchProposals() {
-    app.proposals.page.fetching = true;
-    try {
-      const page = await fetchProposals(app.getProposalPageQuery());
-      app.proposals.page = {
-        ...app.proposals.page,
-        ...page,
-        fetched: true,
-      };
-    } catch (e) {
-      handleApiError(e);
-    }
-    app.proposals.page.fetching = false;
+    return await pageFetch(app.proposals, fetchProposals);
   },
 
-  setProposalPageQuery(query: Partial<PageQuery>) {
-    // sometimes we need to reset page to 1
-    if (query.filters || query.search) {
-      query.page = 1;
-    }
-    app.proposals.page = {
-      ...app.proposals.page,
-      ...query,
-    };
-  },
-
-  getProposalPageQuery() {
-    return pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+  setProposalPageQuery(params: Partial<PageQuery>) {
+    setPageParams(app.proposals, params);
   },
 
   resetProposalPageQuery() {
-    app.proposals.page.page = 1;
-    app.proposals.page.search = '';
-    app.proposals.page.sort = 'CREATED:DESC';
-    app.proposals.page.filters = [];
+    resetPageParams(app.proposals);
   },
 
   async fetchProposalDetail(id: number) {
@@ -516,16 +466,17 @@ const app = store({
 
   // Comments
 
-  fetchComments: makePageFetch(
-    () => app.comments.page,
-    p => (app.comments.page = p),
-    fetchComments,
-  ),
-  setCommentPageParams: makeSetPageParams(
-    () => app.comments.page,
-    p => (app.comments.page = p),
-  ),
-  resetCommentPageParams: makeResetPageParams(() => app.comments.page),
+  async fetchComments() {
+    return await pageFetch(app.comments, fetchComments);
+  },
+
+  setCommentPageParams(params: Partial<PageQuery>) {
+    setPageParams(app.comments, params);
+  },
+
+  resetCommentPageParams() {
+    resetPageParams(app.comments);
+  },
 
   // Email
 
@@ -595,45 +546,15 @@ const app = store({
   // Contributions
 
   async fetchContributions() {
-    app.contributions.page.fetching = true;
-    try {
-      const page = await getContributions(app.getContributionPageQuery());
-      app.contributions.page = {
-        ...app.contributions.page,
-        ...page,
-        fetched: true,
-      };
-    } catch (e) {
-      handleApiError(e);
-    }
-    app.contributions.page.fetching = false;
+    return await pageFetch(app.contributions, getContributions);
   },
 
-  setContributionPageQuery(query: Partial<PageQuery>) {
-    // sometimes we need to reset page to 1
-    if (query.filters || query.search) {
-      query.page = 1;
-    }
-    app.contributions.page = {
-      ...app.contributions.page,
-      ...query,
-    };
-  },
-
-  getContributionPageQuery() {
-    return pick(app.contributions.page, [
-      'page',
-      'search',
-      'filters',
-      'sort',
-    ]) as PageQuery;
+  setContributionPageQuery(params: Partial<PageQuery>) {
+    setPageParams(app.contributions, params);
   },
 
   resetContributionPageQuery() {
-    app.contributions.page.page = 1;
-    app.contributions.page.search = '';
-    app.contributions.page.sort = 'CREATED:DESC';
-    app.contributions.page.filters = [];
+    resetPageParams(app.contributions);
   },
 
   async fetchContributionDetail(id: number) {
@@ -696,58 +617,47 @@ function createDefaultPageData<T>(sort: string): PageData<T> {
   };
 }
 
-type FNGetPage<T> = () => PageData<T>;
-type FNSetPage<T> = (p: PageData<T>) => void;
 type FNFetchPage = (params: PageQuery) => Promise<any>;
+interface PageParent<T> {
+  page: PageData<T>;
+}
 
-function makePageFetch<T>(
-  getPage: FNGetPage<T>,
-  setPage: FNSetPage<T>,
-  fetch: FNFetchPage,
-) {
-  return async () => {
-    let page = getPage();
-    page.fetching = true;
-    try {
-      const params = getPageParams(page);
-      const newPage = await fetch(params);
-      page = {
-        ...page,
-        ...newPage,
-        fetched: true,
-      };
-    } catch (e) {
-      handleApiError(e);
-    }
-    page.fetching = false;
-    setPage(page);
-  };
+async function pageFetch<T>(ref: PageParent<T>, fetch: FNFetchPage) {
+  ref.page.fetching = true;
+  try {
+    const params = getPageParams(ref.page);
+    const newPage = await fetch(params);
+    ref.page = {
+      ...ref.page,
+      ...newPage,
+      fetched: true,
+    };
+  } catch (e) {
+    handleApiError(e);
+  }
+  ref.page.fetching = false;
 }
 
 function getPageParams<T>(page: PageData<T>) {
   return pick(page, ['page', 'search', 'filters', 'sort']) as PageQuery;
 }
 
-function makeSetPageParams<T>(getPage: FNGetPage<T>, setPage: FNSetPage<T>) {
-  return (query: Partial<PageQuery>) => {
-    // sometimes we need to reset page to 1
-    if (query.filters || query.search) {
-      query.page = 1;
-    }
-    setPage({
-      ...getPage(),
-      ...query,
-    });
+function setPageParams<T>(ref: PageParent<T>, query: Partial<PageQuery>) {
+  // sometimes we need to reset page to 1
+  if (query.filters || query.search) {
+    query.page = 1;
+  }
+  ref.page = {
+    ...ref.page,
+    ...query,
   };
 }
 
-function makeResetPageParams<T>(getPage: FNGetPage<T>) {
-  return () => {
-    getPage().page = 1;
-    getPage().search = '';
-    getPage().sort = 'CREATED:DESC';
-    getPage().filters = [];
-  };
+function resetPageParams<T>(ref: PageParent<T>) {
+  ref.page.page = 1;
+  ref.page.search = '';
+  ref.page.sort = 'CREATED:DESC';
+  ref.page.filters = [];
 }
 
 // Attach to window for inspection

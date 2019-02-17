@@ -14,7 +14,7 @@ class Moderation extends React.Component<{}> {
     return (
       <Pageable
         page={page}
-        filters={proposalFilters}
+        filters={null}
         sorts={sorts}
         searchPlaceholder="Search comment content"
         renderItem={(p: Comment) => <div key={p.id}>{p.content}</div>}
