@@ -419,6 +419,8 @@ class Proposal(db.Model):
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
         self.stage = ProposalStage.FUNDING_REQUIRED
+        # If we had a bounty that pushed us into funding, skip straight into WIP
+        self.set_funded_when_ready()
 
     def set_funded_when_ready(self):
         if self.status == ProposalStatus.LIVE and self.is_funded:
@@ -464,6 +466,9 @@ class Proposal(db.Model):
         target = Decimal(self.target)
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
+        # apply bounty, if available
+        if self.rfp:
+            funded = funded + Decimal(self.rfp.bounty)
         # if funded > target, just set as target
         if funded > target:
             return str(target)
