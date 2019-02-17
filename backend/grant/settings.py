@@ -16,6 +16,7 @@ ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
 SITE_URL = env.str('SITE_URL', default='https://zfnd.org')
 SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL")
+SQLALCHEMY_ECHO = False # True will print queries to log
 QUEUES = ["default"]
 SECRET_KEY = env.str("SECRET_KEY")
 BCRYPT_LOG_ROUNDS = env.int("BCRYPT_LOG_ROUNDS", default=13)

@@ -168,6 +168,7 @@ const app = store({
     proposalPendingCount: 0,
     proposalNoArbiterCount: 0,
     proposalMilestonePayoutsCount: 0,
+    contributionRefundableCount: 0,
   },
 
   users: {

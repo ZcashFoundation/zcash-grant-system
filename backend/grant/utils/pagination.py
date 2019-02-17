@@ -1,8 +1,9 @@
 import abc
 from sqlalchemy import or_, and_
+from datetime import datetime, timedelta
 
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
-from grant.user.models import User, users_schema
+from grant.user.models import User, UserSettings, users_schema
 from grant.milestone.models import Milestone
 from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, MilestoneStage
 
@@ -121,6 +122,7 @@ class ProposalPagination(Pagination):
 class ContributionPagination(Pagination):
     def __init__(self):
         self.FILTERS = [f'STATUS_{s}' for s in ContributionStatus.list()]
+        self.FILTERS.extend(['REFUNDABLE'])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': ProposalContribution.date_created.desc(),
@@ -148,6 +150,14 @@ class ContributionPagination(Pagination):
 
             if status_filters:
                 query = query.filter(ProposalContribution.status.in_(status_filters))
+            
+            if 'REFUNDABLE' in filters:
+                query = query.join(Proposal) \
+                    .filter(Proposal.stage == ProposalStage.FUNDING_REQUIRED) \
+                    .filter(Proposal.date_published + timedelta(seconds=1) * Proposal.deadline_duration < datetime.now()) \
+                    .join(ProposalContribution.user) \
+                    .join(UserSettings) \
+                    .filter(UserSettings.refund_address != None) \
 
         # SORT (see self.SORT_MAP)
         if sort:

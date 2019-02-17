@@ -2,7 +2,9 @@ from functools import reduce
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timedelta
+from sqlalchemy import text
+
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
@@ -12,11 +14,11 @@ from grant.proposal.models import (
     ProposalContribution,
     proposals_schema,
     proposal_schema,
-    proposal_contribution_schema,
     user_proposal_contributions_schema,
+    admin_proposal_contribution_schema,
 )
 from grant.milestone.models import Milestone
-from grant.user.models import User, admin_users_schema, admin_user_schema
+from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
 from grant.utils.misc import make_url
@@ -81,12 +83,22 @@ def stats():
         .filter(Proposal.status == ProposalStatus.LIVE) \
         .filter(Milestone.stage == MilestoneStage.ACCEPTED) \
         .scalar()
+    # Count contributions on proposals that didn't get funded for users who have specified a refund address
+    contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
+        .join(Proposal) \
+        .filter(Proposal.stage == ProposalStage.FUNDING_REQUIRED) \
+        .filter(Proposal.date_published + timedelta(seconds=1) * Proposal.deadline_duration < datetime.now()) \
+        .join(ProposalContribution.user) \
+        .join(UserSettings) \
+        .filter(UserSettings.refund_address != None) \
+        .scalar()
     return {
         "userCount": user_count,
         "proposalCount": proposal_count,
         "proposalPendingCount": proposal_pending_count,
         "proposalNoArbiterCount": proposal_no_arbiter_count,
         "proposalMilestonePayoutsCount": proposal_milestone_payouts_count,
+        "contributionRefundableCount": contribution_refundable_count,
     }
 
 
@@ -473,6 +485,7 @@ def get_contributions(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.contribution(
         page=page,
+        schema=admin_proposal_contribution_schema,
         filters=filters_workaround,
         search=search,
         sort=sort,
@@ -506,7 +519,7 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
     contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
-    return proposal_contribution_schema.dump(contribution), 200
+    return admin_proposal_contribution_schema.dump(contribution), 200
 
 
 @blueprint.route('/contributions/<contribution_id>', methods=['GET'])
@@ -517,7 +530,7 @@ def get_contribution(contribution_id):
     if not contribution:
         return {"message": "No contribution matching that id"}, 404
 
-    return proposal_contribution_schema.dump(contribution), 200
+    return admin_proposal_contribution_schema.dump(contribution), 200
 
 
 @blueprint.route('/contributions/<contribution_id>', methods=['PUT'])
@@ -527,9 +540,10 @@ def get_contribution(contribution_id):
     parameter('status', type=str, required=False),
     parameter('amount', type=str, required=False),
     parameter('txId', type=str, required=False),
+    parameter('refundTxId', type=str, required=False),
 )
 @admin_auth_required
-def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id):
+def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id, refund_tx_id):
     contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
     if not contribution:
         return {"message": "No contribution matching that id"}, 404
@@ -537,8 +551,6 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     # do not allow editing contributions once a proposal has become funded
     if contribution.proposal.is_funded:
         return {"message": "Cannot edit contributions to fully-funded proposals"}, 400
-
-    print((contribution_id, proposal_id, user_id, status, amount, tx_id))
 
     # Proposal ID (must belong to an existing proposal)
     if proposal_id:
@@ -566,6 +578,9 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     # Transaction ID (no validation)
     if tx_id:
         contribution.tx_id = tx_id
+    # Refund TX ID (no validation)
+    if refund_tx_id:
+        contribution.refund_tx_id = refund_tx_id
 
     db.session.add(contribution)
     db.session.flush()
@@ -574,4 +589,4 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
-    return proposal_contribution_schema.dump(contribution), 200
+    return admin_proposal_contribution_schema.dump(contribution), 200

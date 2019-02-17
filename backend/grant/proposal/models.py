@@ -78,7 +78,8 @@ class ProposalContribution(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     status = db.Column(db.String(255), nullable=False)
     amount = db.Column(db.String(255), nullable=False)
-    tx_id = db.Column(db.String(255))
+    tx_id = db.Column(db.String(255), nullable=True)
+    refund_tx_id = db.Column(db.String(255), nullable=True)
 
     user = db.relationship("User")
 
@@ -155,6 +156,10 @@ class ProposalContribution(db.Model):
         self.status = ContributionStatus.CONFIRMED
         self.tx_id = tx_id
         self.amount = amount
+    
+    @hybrid_property
+    def refund_address(self):
+        return self.user.settings.refund_address
 
 
 class ProposalArbiter(db.Model):
@@ -686,6 +691,39 @@ user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 
 user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
 proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
 proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
+
+
+class AdminProposalContributionSchema(ma.Schema):
+    class Meta:
+        model = ProposalContribution
+        # Fields to expose
+        fields = (
+            "id",
+            "proposal",
+            "user",
+            "status",
+            "tx_id",
+            "amount",
+            "date_created",
+            "addresses",
+            "refund_address",
+            "refund_tx_id",
+        )
+
+    proposal = ma.Nested("ProposalSchema")
+    user = ma.Nested("UserSchema")
+    date_created = ma.Method("get_date_created")
+    addresses = ma.Method("get_addresses")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+    def get_addresses(self, obj):
+        return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+
+
+admin_proposal_contribution_schema = AdminProposalContributionSchema()
+admin_proposal_contributions_schema = AdminProposalContributionSchema(many=True)
 
 
 class ProposalArbiterSchema(ma.Schema):

@@ -78,7 +78,12 @@ const CONTRIBUTION_FILTERS = CONTRIBUTION_STATUSES.map(s => ({
   display: `Status: ${s.tagDisplay}`,
   color: s.tagColor,
   group: 'Status',
-}));
+})).concat([{
+  id: 'REFUNDABLE',
+  display: 'Refundable',
+  color: '#afd500',
+  group: 'Refundable',
+}]);
 
 export const contributionFilters: Filters = {
   list: CONTRIBUTION_FILTERS,
