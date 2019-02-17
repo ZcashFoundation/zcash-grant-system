@@ -1,35 +1,11 @@
 import { AppState } from 'store/reducers';
 import {
   Proposal,
-  ProposalComments,
   ProposalUpdates,
   ProposalContributions,
   ProposalPageParams,
+  PageParams,
 } from 'types';
-
-export function getProposalComments(
-  state: AppState,
-  proposalId: Proposal['proposalId'],
-): ProposalComments['comments'] | null {
-  const pc = state.proposal.proposalComments[proposalId];
-  return pc ? pc.comments : null;
-}
-
-export function getProposalCommentCount(
-  state: AppState,
-  proposalId: Proposal['proposalId'],
-): ProposalComments['totalComments'] | null {
-  const pc = state.proposal.proposalComments[proposalId];
-  return pc ? pc.totalComments : null;
-}
-
-export function getIsFetchingComments(state: AppState) {
-  return state.proposal.isFetchingComments;
-}
-
-export function getCommentsError(state: AppState) {
-  return state.proposal.commentsError;
-}
 
 export function getProposalUpdates(
   state: AppState,
@@ -73,6 +49,16 @@ export function getFetchContributionsError(state: AppState) {
 
 export function getProposalPageSettings(state: AppState): ProposalPageParams {
   const { page, search, sort, filters } = state.proposal.page;
+  return {
+    page,
+    search,
+    sort,
+    filters,
+  };
+}
+
+export function getProposalCommentPageParams(state: AppState): PageParams {
+  const { page, search, sort, filters } = state.proposal.detailComments;
   return {
     page,
     search,
