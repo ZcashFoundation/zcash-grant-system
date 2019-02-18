@@ -84,6 +84,8 @@ class UserCommentSchema(ma.Schema):
             "proposal",
             "content",
             "date_created",
+            "reported",
+            "hidden",
         )
 
     proposal = ma.Nested(
@@ -94,8 +96,6 @@ class UserCommentSchema(ma.Schema):
             "content",
             "invites",
             "updates",
-            "reported",
-            "hidden",
         ]
     )
 
