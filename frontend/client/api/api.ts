@@ -12,6 +12,7 @@ import {
   EmailSubscriptions,
   RFP,
   ProposalPageParams,
+  PageParams,
 } from 'types';
 import {
   formatUserForPost,
@@ -40,8 +41,8 @@ export function getProposal(proposalId: number | string): Promise<{ data: Propos
   });
 }
 
-export function getProposalComments(proposalId: number | string) {
-  return axios.get(`/api/v1/proposals/${proposalId}/comments`);
+export function getProposalComments(proposalId: number | string, params: PageParams) {
+  return axios.get(`/api/v1/proposals/${proposalId}/comments`, { params });
 }
 
 export function reportProposalComment(proposalId: number, commentId: number) {

@@ -521,7 +521,6 @@ class ProposalSchema(ma.Schema):
             "is_failed",
             "funded",
             "content",
-            "comments",
             "updates",
             "milestones",
             "current_milestone",
@@ -540,7 +539,6 @@ class ProposalSchema(ma.Schema):
     date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
 
-    comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)

@@ -10,6 +10,10 @@ export interface Page {
   filters: string[];
 }
 
+export interface ServerPage<T> extends Page {
+  items: T[];
+}
+
 export type PageParams = Omit<Page, 'pageSize' | 'total'>;
 
 export interface Loadable {
@@ -28,6 +32,14 @@ export interface ProposalPage extends Omit<Page, 'filters' | 'sort'> {
   };
 }
 
+export type LoadablePage = Page & Loadable;
+
 export type LoadableProposalPage = ProposalPage & Loadable;
 
 export type ProposalPageParams = Omit<ProposalPage, 'items' | 'pageSize' | 'total'>;
+
+export interface Moreable<T> extends LoadablePage {
+  pages: T[][]; // ex: Comment
+  hasMore: boolean;
+  parentId: null | number; // ex: proposalId, parentCommentId... (optional)
+}

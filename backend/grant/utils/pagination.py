@@ -1,6 +1,7 @@
 import abc
 from sqlalchemy import or_, and_
 
+from grant.comment.models import Comment, comments_schema
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
 from grant.comment.models import Comment, comments_schema
 from grant.user.models import User, users_schema
@@ -85,10 +86,8 @@ class ProposalPagination(Pagination):
 
             if status_filters:
                 query = query.filter(Proposal.status.in_(status_filters))
-            # TODO: figure out what is going to happen with stages
             if stage_filters:
-                self._raise('stage filters not yet supported')
-            #     query = query.filter(Proposal.stage.in_(stage_filters))
+                query = query.filter(Proposal.stage.in_(stage_filters))
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
             if arbiter_filters:
@@ -243,7 +242,7 @@ class CommentPagination(Pagination):
 
     def paginate(
         self,
-        schema: ma.Schema=users_schema,
+        schema: ma.Schema=comments_schema,
         query: db.Query=None,
         page: int=1,
         filters: list=None,
