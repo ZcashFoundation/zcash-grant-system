@@ -4,6 +4,7 @@ import {
   CONTRIBUTION_STATUSES,
   PROPOSAL_ARBITER_STATUSES,
   MILESTONE_STAGES,
+  PROPOSAL_STAGES,
 } from './statuses';
 
 export interface Filter {
@@ -35,6 +36,14 @@ const PROPOSAL_FILTERS = PROPOSAL_STATUSES.map(s => ({
   group: 'Status',
 }))
   // proposal has extra filters
+  .concat(
+    PROPOSAL_STAGES.map(s => ({
+      id: `STAGE_${s.id}`,
+      display: `Stage: ${s.tagDisplay}`,
+      color: s.tagColor,
+      group: 'Stage',
+    })),
+  )
   .concat(
     PROPOSAL_ARBITER_STATUSES.map(s => ({
       id: `ARBITER_${s.id}`,

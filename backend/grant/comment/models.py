@@ -74,7 +74,6 @@ class UserCommentSchema(ma.Schema):
     proposal = ma.Nested(
         "ProposalSchema",
         exclude=[
-            "comments",
             "team",
             "milestones",
             "content",

@@ -55,18 +55,30 @@ export default class ProposalFilters extends React.Component<Props> {
           <Divider />
 
           <h3>Proposal stage</h3>
-          {typedKeys(PROPOSAL_STAGE).map(s => (
-            <div key={s} style={{ marginBottom: '0.25rem' }}>
-              <Radio
-                value={s}
-                name="stage"
-                checked={filters.stage.includes(s as PROPOSAL_STAGE)}
-                onChange={this.handleStageChange}
-              >
-                {STAGE_UI[s].label}
-              </Radio>
-            </div>
-          ))}
+          <div style={{ marginBottom: '0.25rem' }}>
+            <Radio
+              value="ALL"
+              name="stage"
+              checked={filters.stage.length === 0}
+              onChange={this.handleStageChange}
+            >
+              All
+            </Radio>
+          </div>
+          {typedKeys(PROPOSAL_STAGE)
+            .filter(s => s !== PROPOSAL_STAGE.PREVIEW) // skip this one
+            .map(s => (
+              <div key={s} style={{ marginBottom: '0.25rem' }}>
+                <Radio
+                  value={s}
+                  name="stage"
+                  checked={filters.stage.includes(s as PROPOSAL_STAGE)}
+                  onChange={this.handleStageChange}
+                >
+                  {STAGE_UI[s].label}
+                </Radio>
+              </div>
+            ))}
         </Card>
       </div>
     );
@@ -86,9 +98,13 @@ export default class ProposalFilters extends React.Component<Props> {
   };
 
   private handleStageChange = (ev: RadioChangeEvent) => {
+    let stage = [] as PROPOSAL_STAGE[];
+    if (ev.target.value !== 'ALL') {
+      stage = [ev.target.value as PROPOSAL_STAGE];
+    }
     this.props.handleChangeFilters({
       ...this.props.filters,
-      stage: [ev.target.value as PROPOSAL_STAGE],
+      stage,
     });
   };
 

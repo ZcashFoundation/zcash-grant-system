@@ -59,20 +59,24 @@ def get_proposal(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
-@endpoint.api()
-def get_proposal_comments(proposal_id):
-    proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if not proposal:
-        return {"message": "No proposal matching id"}, 404
-
-    # Only pull top comments, replies will be attached to them
-    comments = Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None)
-    num_comments = Comment.query.filter_by(proposal_id=proposal_id).count()
-    return {
-        "proposalId": proposal_id,
-        "totalComments": num_comments,
-        "comments": comments_schema.dump(comments)
-    }
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
+def get_proposal_comments(proposal_id, page, filters, search, sort):
+    # only using page, currently
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.comment(
+        schema=comments_schema,
+        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None),
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])

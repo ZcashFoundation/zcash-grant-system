@@ -4,6 +4,7 @@ import {
   CONTRIBUTION_STATUS,
   PROPOSAL_ARBITER_STATUS,
   MILESTONE_STAGE,
+  PROPOSAL_STAGE,
 } from 'src/types';
 
 export interface StatusSoT<E> {
@@ -89,6 +90,33 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     tagDisplay: 'Staking',
     tagColor: '#722ed1',
     hint: 'This proposal is awaiting a staking contribution.',
+  },
+];
+
+export const PROPOSAL_STAGES: Array<StatusSoT<PROPOSAL_STAGE>> = [
+  {
+    id: PROPOSAL_STAGE.PREVIEW,
+    tagDisplay: 'Preview',
+    tagColor: '#afd500',
+    hint: 'Proposal is not yet published.',
+  },
+  {
+    id: PROPOSAL_STAGE.FUNDING_REQUIRED,
+    tagDisplay: 'Funding',
+    tagColor: '#bebebe',
+    hint: 'Proposal has been published but still needs funding.',
+  },
+  {
+    id: PROPOSAL_STAGE.WIP,
+    tagDisplay: 'WIP',
+    tagColor: '#8d8d8d',
+    hint: 'Proposal is fully funded and the work is being done.',
+  },
+  {
+    id: PROPOSAL_STAGE.COMPLETED,
+    tagDisplay: 'Completed',
+    tagColor: '#108ee9',
+    hint: 'Proposal was accepted, published, funded and all funds paid out.',
   },
 ];
 
