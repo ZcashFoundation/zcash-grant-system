@@ -11,6 +11,7 @@ except ImportError:
 
 
 class Parser(FlaskParser):
+    DEFAULT_VALIDATION_STATUS = 400
 
     def use_kwargs(self, *args, **kwargs):
 
@@ -54,9 +55,9 @@ class Parser(FlaskParser):
                 )
                 if as_kwargs:
                     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    # ONLY CHANGE HERE
-                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    # ONLY CHANGE FROM ORIGINAL
                     kwargs.update(animalify(parsed_args, types='snake'))
+                    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     return func(*args, **kwargs)
                 else:
                     # Add parsed_args after other positional arguments

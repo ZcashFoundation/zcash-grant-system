@@ -33,7 +33,7 @@ from .models import (
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
-get_users_query_args = {"proposalId": fields.Str(required=False)}
+get_users_query_args = {"proposalId": fields.Str(required=False, missing=None)}
 
 
 @blueprint.route("/", methods=["GET"])
@@ -62,11 +62,11 @@ def get_me():
 
 
 get_user_query_args = {
-    "withProposals": fields.Bool(required=False),
-    "withComments": fields.Bool(required=False),
-    "withFunded": fields.Bool(required=False),
-    "withPending": fields.Bool(required=False),
-    "withArbitrated": fields.Bool(required=False)
+    "withProposals": fields.Bool(required=False, missing=None),
+    "withComments": fields.Bool(required=False, missing=None),
+    "withFunded": fields.Bool(required=False, missing=None),
+    "withPending": fields.Bool(required=False, missing=None),
+    "withArbitrated": fields.Bool(required=False, missing=None)
 }
 
 
@@ -173,7 +173,7 @@ def update_user_password(current_password, password):
     if not g.current_user.check_password(current_password):
         return {"message": "Current password incorrect"}, 403
     g.current_user.set_password(password)
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 update_user_email_json_args = {
@@ -189,21 +189,21 @@ def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
     g.current_user.set_email(email)
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/me/resend-verification", methods=["PUT"])
 @requires_auth
 def resend_email_verification():
     g.current_user.send_verification_email()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/logout", methods=["POST"])
 @requires_auth
 def logout_user():
     User.logout_current_user()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/social/<service>/authurl", methods=["GET"])
@@ -259,7 +259,7 @@ def recover_user(email):
         return {"message": "No user exists with that email"}, 400
     throw_on_banned(existing_user)
     existing_user.send_recovery_email()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 recover_email_json_args = {
@@ -278,7 +278,7 @@ def recover_email(code, password):
         er.user.set_password(password)
         db.session.delete(er)
         db.session.commit()
-        return None, 200
+        return {"message": "ok"}, 200
 
     return {"message": "Invalid reset code"}, 400
 
@@ -385,7 +385,7 @@ def respond_to_invite(user_id, invite_id, response):
         db.session.add(invite)
 
     db.session.commit()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/<user_id>/settings", methods=["GET"])
@@ -414,7 +414,7 @@ def set_user_settings(user_id, email_subscriptions):
 
 
 set_user_settings_json_args = {
-    "isAccept": fields.Bool(required=False)
+    "isAccept": fields.Bool(required=False, missing=None)
 }
 
 
