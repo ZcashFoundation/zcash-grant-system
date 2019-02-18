@@ -79,7 +79,6 @@ class RFPDetail extends React.Component<Props> {
 
         <h1 className="RFPDetail-title">{rfp.title}</h1>
         <div className="RFPDetail-tags">{tags}</div>
-
         <p className="RFPDetail-brief">{rfp.brief}</p>
 
         <Markdown className="RFPDetail-content" source={rfp.content} />
