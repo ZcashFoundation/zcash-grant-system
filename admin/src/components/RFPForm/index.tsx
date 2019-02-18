@@ -1,5 +1,5 @@
 import React from 'react';
-import moment, { Moment } from 'moment';
+import moment from 'moment';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
