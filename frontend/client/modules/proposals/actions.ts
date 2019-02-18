@@ -4,6 +4,7 @@ import {
   getProposal,
   getProposalComments,
   getProposalUpdates,
+  reportProposalComment as apiReportProposalComment,
   getProposalContributions,
   postProposalComment as apiPostProposalComment,
   requestProposalPayout,
@@ -209,9 +210,23 @@ export function reportProposalComment(
   proposalId: Proposal['proposalId'],
   commentId: Comment['id'],
 ) {
-  return (dispatch: Dispatch<any>) => {
-    // dispatch({
-    //   type: types.POST_PROPOSAL_COMMENT,
-    // })
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({ type: types.REPORT_PROPOSAL_COMMENT_PENDING, payload: { commentId } });
+
+    try {
+      await apiReportProposalComment(proposalId, commentId);
+      return dispatch({
+        type: types.REPORT_PROPOSAL_COMMENT_FULFILLED,
+        payload: {
+          commentId,
+        },
+      });
+    } catch (err) {
+      return dispatch({
+        type: types.REPORT_PROPOSAL_COMMENT_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
   };
 }
