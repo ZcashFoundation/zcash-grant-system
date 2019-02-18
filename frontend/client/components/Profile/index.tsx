@@ -24,8 +24,9 @@ import Loader from 'components/Loader';
 import ExceptionPage from 'components/ExceptionPage';
 import ContributionModal from 'components/ContributionModal';
 import LinkableTabs from 'components/LinkableTabs';
-import './style.less';
 import { UserContribution } from 'types';
+import ProfileArbitrated from './ProfileArbitrated';
+import './style.less';
 
 interface StateProps {
   usersMap: AppState['users']['map'];
@@ -86,11 +87,19 @@ class Profile extends React.Component<Props, State> {
       return <ExceptionPage code="404" desc="No user could be found" />;
     }
 
-    const { proposals, pendingProposals, contributions, comments, invites } = user;
+    const {
+      proposals,
+      pendingProposals,
+      contributions,
+      comments,
+      invites,
+      arbitrated,
+    } = user;
     const nonePending = pendingProposals.length === 0;
     const noneCreated = proposals.length === 0;
     const noneFunded = contributions.length === 0;
     const noneCommented = comments.length === 0;
+    const noneArbitrated = arbitrated.length === 0;
     const noneInvites = user.hasFetchedInvites && invites.length === 0;
 
     return (
@@ -113,74 +122,96 @@ class Profile extends React.Component<Props, State> {
             render={() => <ProfileEdit user={user} />}
           />
         </Switch>
-        <LinkableTabs defaultActiveKey="pending">
-          {isAuthedUser && (
-            <Tabs.TabPane
-              tab={TabTitle('Pending', pendingProposals.length)}
-              key="pending"
-            >
+        <div className="Profile-tabs">
+          <LinkableTabs defaultActiveKey="pending">
+            {isAuthedUser && (
+              <Tabs.TabPane
+                tab={TabTitle('Pending', pendingProposals.length)}
+                key="pending"
+              >
+                <div>
+                  {nonePending && (
+                    <Placeholder
+                      title="No pending proposals"
+                      subtitle="You do not have any proposals awaiting approval."
+                    />
+                  )}
+                  <ProfilePendingList proposals={pendingProposals} />
+                </div>
+              </Tabs.TabPane>
+            )}
+            <Tabs.TabPane tab={TabTitle('Created', proposals.length)} key="created">
               <div>
-                {nonePending && (
-                  <Placeholder
-                    title="No pending proposals"
-                    subtitle="You do not have any proposals awaiting approval."
-                  />
+                {noneCreated && (
+                  <Placeholder subtitle="Has not created any proposals yet" />
                 )}
-                <ProfilePendingList proposals={pendingProposals} />
-              </div>
-            </Tabs.TabPane>
-          )}
-          <Tabs.TabPane tab={TabTitle('Created', proposals.length)} key="created">
-            <div>
-              {noneCreated && (
-                <Placeholder subtitle="Has not created any proposals yet" />
-              )}
-              {proposals.map(p => (
-                <ProfileProposal key={p.proposalId} proposal={p} />
-              ))}
-            </div>
-          </Tabs.TabPane>
-          <Tabs.TabPane tab={TabTitle('Funded', contributions.length)} key="funded">
-            <div>
-              {noneFunded && <Placeholder subtitle="Has not funded any proposals yet" />}
-              {contributions.map(c => (
-                <ProfileContribution
-                  key={c.id}
-                  userId={user.userid}
-                  contribution={c}
-                  showSendInstructions={this.openContributionModal}
-                />
-              ))}
-            </div>
-          </Tabs.TabPane>
-          <Tabs.TabPane tab={TabTitle('Comments', comments.length)} key="comments">
-            <div>
-              {noneCommented && <Placeholder subtitle="Has not made any comments yet" />}
-              {comments.map(c => (
-                <ProfileComment key={c.id} userName={user.displayName} comment={c} />
-              ))}
-            </div>
-          </Tabs.TabPane>
-          {isAuthedUser && (
-            <Tabs.TabPane
-              tab={TabTitle('Invites', invites.length)}
-              key="invites"
-              disabled={!user.hasFetchedInvites}
-            >
-              <div>
-                {noneInvites && (
-                  <Placeholder
-                    title="No invites here!"
-                    subtitle="You’ll be notified when you’ve been invited to join a proposal"
-                  />
-                )}
-                {invites.map(invite => (
-                  <ProfileInvite key={invite.id} userId={user.userid} invite={invite} />
+                {proposals.map(p => (
+                  <ProfileProposal key={p.proposalId} proposal={p} />
                 ))}
               </div>
             </Tabs.TabPane>
-          )}
-        </LinkableTabs>
+            <Tabs.TabPane tab={TabTitle('Funded', contributions.length)} key="funded">
+              <div>
+                {noneFunded && (
+                  <Placeholder subtitle="Has not funded any proposals yet" />
+                )}
+                {contributions.map(c => (
+                  <ProfileContribution
+                    key={c.id}
+                    userId={user.userid}
+                    contribution={c}
+                    showSendInstructions={this.openContributionModal}
+                  />
+                ))}
+              </div>
+            </Tabs.TabPane>
+            <Tabs.TabPane tab={TabTitle('Comments', comments.length)} key="comments">
+              <div>
+                {noneCommented && (
+                  <Placeholder subtitle="Has not made any comments yet" />
+                )}
+                {comments.map(c => (
+                  <ProfileComment key={c.id} userName={user.displayName} comment={c} />
+                ))}
+              </div>
+            </Tabs.TabPane>
+            {isAuthedUser && (
+              <Tabs.TabPane
+                tab={TabTitle('Invites', invites.length)}
+                key="invites"
+                disabled={!user.hasFetchedInvites}
+              >
+                <div>
+                  {noneInvites && (
+                    <Placeholder
+                      title="No invites here!"
+                      subtitle="You’ll be notified when you’ve been invited to join a proposal"
+                    />
+                  )}
+                  {invites.map(invite => (
+                    <ProfileInvite key={invite.id} userId={user.userid} invite={invite} />
+                  ))}
+                </div>
+              </Tabs.TabPane>
+            )}
+            {isAuthedUser && (
+              <Tabs.TabPane
+                tab={TabTitle('Arbitrations', arbitrated.length)}
+                key="arbitrations"
+              >
+                {noneArbitrated && (
+                  <Placeholder
+                    title="No arbitrations"
+                    subtitle="You are not an arbiter of any proposals"
+                  />
+                )}
+                {arbitrated.map(arb => (
+                  <ProfileArbitrated key={arb.proposal.proposalId} arbiter={arb} />
+                ))}
+              </Tabs.TabPane>
+            )}
+          </LinkableTabs>
+        </div>
 
         <ContributionModal
           isVisible={!!activeContribution}

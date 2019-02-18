@@ -1,7 +1,19 @@
 import React from 'react';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { Row, Col, Card, Button, Collapse, Popconfirm, Avatar, List } from 'antd';
+import {
+  Row,
+  Col,
+  Card,
+  Button,
+  Collapse,
+  Popconfirm,
+  Avatar,
+  List,
+  message,
+  Switch,
+  Modal,
+} from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { Proposal, Comment, Contribution } from 'src/types';
@@ -10,6 +22,8 @@ import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import './index.less';
 import Markdown from 'components/Markdown';
+import FeedbackModal from 'components/FeedbackModal';
+import Info from '../Info';
 
 type Props = RouteComponentProps<any>;
 
@@ -20,9 +34,11 @@ type State = typeof STATE;
 class UserDetailNaked extends React.Component<Props, State> {
   state = STATE;
   rejectInput: null | TextArea = null;
+
   componentDidMount() {
     this.loadDetail();
   }
+
   render() {
     const id = this.getIdFromQuery();
     const { userDetail: u, userDetailFetching } = store;
@@ -34,14 +50,75 @@ class UserDetailNaked extends React.Component<Props, State> {
     const renderDelete = () => (
       <Popconfirm
         onConfirm={this.handleDelete}
-        title="Delete user?"
-        okText="delete"
-        cancelText="cancel"
+        title={
+          <>
+            Are you sure? Due to GDPR compliance,
+            <br />
+            this <strong>cannot</strong> be undone.
+          </>
+        }
+        okText="Delete"
+        cancelText="Cancel"
+        okType="danger"
       >
-        <Button icon="delete" block>
+        <Button
+          icon="delete"
+          type="danger"
+          className="UserDetail-controls-control"
+          ghost
+          block
+        >
           Delete
         </Button>
       </Popconfirm>
+    );
+
+    const renderSilenceControl = () => (
+      <div className="UserDetail-controls-control">
+        <Popconfirm
+          overlayClassName="UserDetail-popover-overlay"
+          onConfirm={this.handleToggleSilence}
+          title={<>{u.silenced ? 'Allow' : 'Disallow'} commenting?</>}
+          okText="ok"
+          cancelText="cancel"
+        >
+          <Switch checked={u.silenced} loading={store.userSaving} />{' '}
+        </Popconfirm>
+        <span>
+          Silence{' '}
+          <Info
+            placement="right"
+            content={
+              <span>
+                <b>Silence User</b>
+                <br /> User will not be able to comment.
+              </span>
+            }
+          />
+        </span>
+      </div>
+    );
+
+    const renderBanControl = () => (
+      <div className="UserDetail-controls-control">
+        <Switch
+          checked={u.banned}
+          onChange={this.handleToggleBan}
+          loading={store.userSaving}
+        />{' '}
+        <span>
+          Ban{' '}
+          <Info
+            placement="right"
+            content={
+              <span>
+                <b>Ban User</b>
+                <br /> User will not be able to sign-in or perform authenticated actions.
+              </span>
+            }
+          />
+        </span>
+      </div>
     );
 
     const renderDeetItem = (name: string, val: any) => (
@@ -108,7 +185,10 @@ class UserDetailNaked extends React.Component<Props, State> {
                         </Link>,
                       ]}
                     >
-                      <List.Item.Meta title={p.title} description={p.brief} />
+                      <List.Item.Meta
+                        title={p.title || '(no title)'}
+                        description={p.brief || '(no brief)'}
+                      />
                     </List.Item>
                   )}
                 />
@@ -182,7 +262,11 @@ class UserDetailNaked extends React.Component<Props, State> {
           {/* SIDE */}
           <Col span={6}>
             {/* ACTIONS */}
-            <Card size="small">{renderDelete()}</Card>
+            <Card size="small" className="UserDetail-controls">
+              {renderDelete()}
+              {renderSilenceControl()}
+              {renderBanControl()}
+            </Card>
           </Col>
         </Row>
       </div>
@@ -197,9 +281,75 @@ class UserDetailNaked extends React.Component<Props, State> {
     store.fetchUserDetail(this.getIdFromQuery());
   };
 
-  private handleDelete = () => {
+  private handleDelete = async () => {
     if (!store.userDetail) return;
-    store.deleteUser(store.userDetail.userid);
+    await store.deleteUser(store.userDetail.userid);
+    if (store.userDeleted) {
+      message.success('Successfully deleted', 2);
+      this.props.history.replace('/users');
+    }
+  };
+
+  private handleToggleSilence = async () => {
+    if (store.userDetail) {
+      const ud = store.userDetail;
+      const newSilenced = !ud.silenced;
+      await store.editUser(ud.userid, { silenced: newSilenced });
+      if (store.userSaved) {
+        message.success(
+          <>
+            <b>{ud.displayName}</b> {newSilenced ? 'is silenced' : 'can comment again'}
+          </>,
+          2,
+        );
+      }
+    }
+  };
+
+  private handleToggleBan = () => {
+    if (store.userDetail) {
+      const ud = store.userDetail;
+      const newBanned = !ud.banned;
+      const informSuccess = () => {
+        if (store.userSaved) {
+          message.success(
+            <>
+              <b>{ud.displayName}</b> has been{' '}
+              {newBanned ? 'banned' : 'freed to roam the land'}
+            </>,
+            2,
+          );
+        }
+      };
+
+      if (newBanned) {
+        FeedbackModal.open({
+          title: 'Ban user?',
+          content: 'They will not be able to login.',
+          label: 'Please provide a reason:',
+          okText: 'Ban',
+          onOk: async reason => {
+            await store.editUser(ud.userid, { banned: newBanned, bannedReason: reason });
+            informSuccess();
+          },
+        });
+      } else {
+        Modal.confirm({
+          title: 'Unban user?',
+          okText: 'Unban',
+          content: (
+            <>
+              <p>This user was banned for the following reason: </p>
+              <q>{ud.bannedReason}</q>
+            </>
+          ),
+          onOk: async () => {
+            await store.editUser(ud.userid, { banned: newBanned });
+            informSuccess();
+          },
+        });
+      }
+    }
   };
 }
 

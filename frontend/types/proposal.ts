@@ -1,5 +1,5 @@
 import { Zat } from 'utils/units';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import { CreateMilestone, Update, User, Comment, ContributionWithUser } from 'types';
 import { ProposalMilestone } from './milestone';
 import { RFP } from './rfp';
@@ -20,6 +20,15 @@ export interface Contributor {
   milestoneNoVotes: boolean[];
 }
 
+export interface ProposalArbiter {
+  user?: User; // only set if there is nomination/acceptance
+  proposal: Proposal;
+  status: PROPOSAL_ARBITER_STATUS;
+}
+
+export type ProposalProposalArbiter = Omit<ProposalArbiter, 'proposal'>;
+export type UserProposalArbiter = Omit<ProposalArbiter, 'user'>;
+
 export interface ProposalDraft {
   proposalId: number;
   dateCreated: number;
@@ -27,7 +36,7 @@ export interface ProposalDraft {
   brief: string;
   category: PROPOSAL_CATEGORY;
   content: string;
-  stage: string;
+  stage: PROPOSAL_STAGE;
   target: string;
   payoutAddress: string;
   deadlineDuration: number;
@@ -47,7 +56,12 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   percentFunded: number;
   contributionMatching: number;
   milestones: ProposalMilestone[];
-  datePublished: number;
+  currentMilestone?: ProposalMilestone;
+  datePublished: number | null;
+  dateApproved: number | null;
+  arbiter: ProposalProposalArbiter;
+  isTeamMember?: boolean; // FE derived
+  isArbiter?: boolean; // FE derived
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {
@@ -94,4 +108,10 @@ export enum STATUS {
   REJECTED = 'REJECTED',
   LIVE = 'LIVE',
   DELETED = 'DELETED',
+}
+
+export enum PROPOSAL_ARBITER_STATUS {
+  MISSING = 'MISSING',
+  NOMINATED = 'NOMINATED',
+  ACCEPTED = 'ACCEPTED',
 }

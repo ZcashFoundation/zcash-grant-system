@@ -72,4 +72,29 @@ export default [
     title: 'Comment reply',
     description: 'Sent if someone makes a direct reply to your comment',
   },
+  {
+    id: 'proposal_arbiter',
+    title: 'Arbiter assignment',
+    description: 'Sent if someone is made arbiter of a proposal',
+  },
+  {
+    id: 'milestone_request',
+    title: 'Milestone request',
+    description: 'Sent if team member has made a milestone payout request',
+  },
+  {
+    id: 'milestone_accept',
+    title: 'Milestone accept',
+    description: 'Sent if arbiter approves milestone payout',
+  },
+  {
+    id: 'milestone_reject',
+    title: 'Milestone reject',
+    description: 'Sent if arbiter rejects milestone payout',
+  },
+  {
+    id: 'milestone_paid',
+    title: 'Milestone paid',
+    description: 'Sent when milestone is paid',
+  },
 ] as Email[];

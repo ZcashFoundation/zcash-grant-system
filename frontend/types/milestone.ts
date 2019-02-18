@@ -7,18 +7,32 @@ export enum MILESTONE_STATE {
   PAID = 'PAID',
 }
 
+// NOTE: sync with /backend/grand/utils/enums.py MilestoneStage
+export enum MILESTONE_STAGE {
+  IDLE = 'IDLE',
+  REQUESTED = 'REQUESTED',
+  REJECTED = 'REJECTED',
+  ACCEPTED = 'ACCEPTED',
+  PAID = 'PAID',
+}
+
 export interface Milestone {
   index: number;
-  state: MILESTONE_STATE;
+  stage: MILESTONE_STAGE;
   amount: Zat;
-  isPaid: boolean;
-  isImmediatePayout: boolean;
+  immediatePayout: boolean;
+  dateEstimated: number;
+  dateRequested?: number;
+  dateRejected?: number;
+  dateAccepted?: number;
+  datePaid?: number;
+  rejectReason?: string;
+  paidTxId?: string;
 }
 
 export interface ProposalMilestone extends Milestone {
+  id: number;
   content: string;
-  immediatePayout: boolean;
-  dateEstimated: string;
   payoutPercent: string;
   title: string;
 }
@@ -26,7 +40,7 @@ export interface ProposalMilestone extends Milestone {
 export interface CreateMilestone {
   title: string;
   content: string;
-  dateEstimated: string;
+  dateEstimated: number;
   payoutPercent: string;
   immediatePayout: boolean;
 }

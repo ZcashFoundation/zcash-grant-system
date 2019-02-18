@@ -111,3 +111,23 @@ class TestProposalCommentAPI(BaseUserConfig):
         )
 
         self.assertStatus(comment_res, 403)
+
+    def test_create_new_proposal_comment_fails_with_silenced_user(self):
+        self.login_default_user()
+        self.user.set_silenced(True)
+
+        proposal = Proposal(
+            status="LIVE"
+        )
+        db.session.add(proposal)
+        db.session.commit()
+        proposal_id = proposal.id
+
+        comment_res = self.app.post(
+            "/api/v1/proposals/{}/comments".format(proposal_id),
+            data=json.dumps(test_comment),
+            content_type='application/json'
+        )
+
+        self.assertStatus(comment_res, 403)
+        self.assertIn('silenced', comment_res.json['message'])

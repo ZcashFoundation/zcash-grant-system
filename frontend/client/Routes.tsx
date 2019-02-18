@@ -34,6 +34,7 @@ const VerifyEmail = loadable(() => import('pages/email-verify'), opts);
 const Callback = loadable(() => import('pages/callback'), opts);
 const RecoverEmail = loadable(() => import('pages/email-recover'), opts);
 const UnsubscribeEmail = loadable(() => import('pages/email-unsubscribe'), opts);
+const ArbiterEmail = loadable(() => import('pages/email-arbiter'), opts);
 const RFP = loadable(() => import('pages/rfp'), opts);
 const RFPs = loadable(() => import('pages/rfps'), opts);
 
@@ -271,6 +272,17 @@ const routeConfigs: RouteConfig[] = [
     route: {
       path: '/email/unsubscribe',
       component: UnsubscribeEmail,
+      exact: true,
+    },
+    template: {
+      title: 'Unsubscribe email',
+    },
+  },
+  {
+    // Arbiter email
+    route: {
+      path: '/email/arbiter',
+      component: ArbiterEmail,
       exact: true,
     },
     template: {

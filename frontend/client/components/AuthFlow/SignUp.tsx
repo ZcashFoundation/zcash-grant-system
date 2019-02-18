@@ -1,11 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Form, Input, Button, Alert } from 'antd';
+import { Form, Input, Button, Checkbox, Alert } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
 import { authActions } from 'modules/auth';
 import { AppState } from 'store/reducers';
 import PasswordFormItems from 'components/PasswordFormItems';
 import './SignUp.less';
+import { Link } from 'react-router-dom';
 
 interface StateProps {
   isCreatingUser: AppState['auth']['isCreatingUser'];
@@ -66,6 +67,32 @@ class SignUp extends React.Component<Props> {
             </Form.Item>
 
             <PasswordFormItems form={this.props.form} />
+
+            <Form.Item className="SignUp-form-legal">
+              {getFieldDecorator('hasAgreed', {
+                rules: [
+                  { required: true, message: 'You must agree to create an account' },
+                ],
+              })(
+                <Checkbox name="hasAgreed">
+                  <span className="SignUp-form-legal-text">
+                    I agree to the{' '}
+                    <Link target="_blank" to="/code-of-conduct">
+                      code of conduct
+                    </Link>
+                    ,{' '}
+                    <Link target="_blank" to="/tos">
+                      terms of service
+                    </Link>
+                    , and{' '}
+                    <Link target="_blank" to="/privacy">
+                      privacy policy
+                    </Link>
+                    .
+                  </span>
+                </Checkbox>,
+              )}
+            </Form.Item>
 
             <div className="SignUp-form-controls">
               <Button

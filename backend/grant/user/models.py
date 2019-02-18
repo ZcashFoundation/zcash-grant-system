@@ -18,7 +18,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 def is_current_authed_user_id(user_id):
     return current_user.is_authenticated and \
-           current_user.id == user_id
+        current_user.id == user_id
 
 
 class RolesUsers(db.Model):
@@ -107,6 +107,12 @@ class User(db.Model, UserMixin):
     title = db.Column(db.String(255), unique=False, nullable=True)
     active = db.Column(db.Boolean, default=True)
 
+    # moderation
+    silenced = db.Column(db.Boolean, default=False)
+    banned = db.Column(db.Boolean, default=False)
+    banned_reason = db.Column(db.String(), nullable=True)
+
+    # relations
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
@@ -118,6 +124,7 @@ class User(db.Model, UserMixin):
                                      lazy=True, cascade="all, delete-orphan")
     roles = db.relationship('Role', secondary='roles_users',
                             backref=db.backref('users', lazy='dynamic'))
+    arbiter_proposals = db.relationship("ProposalArbiter", lazy=True, back_populates="user")
 
     # TODO - add create and validate methods
 
@@ -155,10 +162,7 @@ class User(db.Model, UserMixin):
         db.session.commit()
 
         if _send_email:
-            send_email(user.email_address, 'signup', {
-                'display_name': user.display_name,
-                'confirm_url': make_url(f'/email/verify?code={ev.code}')
-            })
+            user.send_verification_email()
 
         return user
 
@@ -211,6 +215,12 @@ class User(db.Model, UserMixin):
     def login(self):
         login_user(self)
 
+    def send_verification_email(self):
+        send_email(self.email_address, 'signup', {
+            'display_name': self.display_name,
+            'confirm_url': make_url(f'/email/verify?code={self.email_verification.code}')
+        })
+
     def send_recovery_email(self):
         existing = self.email_recovery
         if existing:
@@ -222,6 +232,17 @@ class User(db.Model, UserMixin):
             'display_name': self.display_name,
             'recover_url': make_url(f'/email/recover?code={er.code}'),
         })
+
+    def set_banned(self, is_ban: bool, reason: str=None):
+        self.banned = is_ban
+        self.banned_reason = reason
+        db.session.add(self)
+        db.session.flush()
+
+    def set_silenced(self, is_silence: bool):
+        self.silenced = is_silence
+        db.session.add(self)
+        db.session.flush()
 
 
 class SelfUserSchema(ma.Schema):
@@ -235,11 +256,16 @@ class SelfUserSchema(ma.Schema):
             "avatar",
             "display_name",
             "userid",
-            "email_verified"
+            "email_verified",
+            "arbiter_proposals",
+            "silenced",
+            "banned",
+            "banned_reason",
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
+    arbiter_proposals = ma.Nested("ProposalArbiterSchema", many=True, exclude=["user"])
     userid = ma.Method("get_userid")
     email_verified = ma.Method("get_email_verified")
 
@@ -252,6 +278,10 @@ class SelfUserSchema(ma.Schema):
 
 self_user_schema = SelfUserSchema()
 self_users_schema = SelfUserSchema(many=True)
+
+# differentiate from self, same for now
+admin_user_schema = self_user_schema
+admin_users_schema = self_users_schema
 
 
 class UserSchema(ma.Schema):

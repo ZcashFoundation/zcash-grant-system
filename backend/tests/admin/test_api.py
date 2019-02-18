@@ -1,9 +1,11 @@
 from grant.utils.enums import ProposalStatus
 from grant.utils.admin import generate_admin_password_hash
+from grant.user.models import admin_user_schema
+from grant.proposal.models import proposal_schema
 from mock import patch
 
 from ..config import BaseProposalCreatorConfig
-from ..mocks import mock_request
+from ..test_data import mock_blockchain_api_requests
 
 
 plaintext_mock_password = "p4ssw0rd"
@@ -67,15 +69,16 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.login_admin()
         resp = self.app.get("/api/v1/admin/users")
         self.assert200(resp)
+        print(resp.json)
         # 2 users created by BaseProposalCreatorConfig
-        self.assertEqual(len(resp.json), 2)
+        self.assertEqual(len(resp.json['items']), 2)
 
     def test_get_proposals(self):
         self.login_admin()
         resp = self.app.get("/api/v1/admin/proposals")
         self.assert200(resp)
         # 2 proposals created by BaseProposalCreatorConfig
-        self.assertEqual(len(resp.json), 2)
+        self.assertEqual(len(resp.json['items']), 2)
 
     def test_update_proposal(self):
         self.login_admin()
@@ -94,9 +97,11 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_update_proposal_bad_matching(self):
         self.login_admin()
         resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 2})
-        self.assert400(resp)
+        self.assert500(resp)
+        self.assertIn('Bad value', resp.json['data'])
 
-    def test_approve_proposal(self):
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_approve_proposal(self, mock_get):
         self.login_admin()
 
         # proposal needs to be PENDING
@@ -110,7 +115,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.APPROVED)
 
-    def test_reject_proposal(self):
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_reject_proposal(self, mock_get):
         self.login_admin()
 
         # proposal needs to be PENDING
@@ -124,3 +130,19 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
         self.assertEqual(resp.json["rejectReason"], "Funnzies.")
+
+    @patch('grant.email.send.send_email')
+    def test_nominate_arbiter(self, mock_send_email):
+        mock_send_email.return_value.ok = True
+        self.login_admin()
+
+        # nominate arbiter
+        resp = self.app.put(
+            "/api/v1/admin/arbiters",
+            data={
+                'proposalId': self.proposal.id,
+                'userId': self.other_user.id
+            }
+        )
+        self.assert200(resp)
+        # TODO - more tests

@@ -1,10 +1,19 @@
-import { ProposalDraft, CreateMilestone, STATUS } from 'types';
+import {
+  ProposalDraft,
+  CreateMilestone,
+  STATUS,
+  MILESTONE_STAGE,
+  PROPOSAL_ARBITER_STATUS,
+} from 'types';
 import { User } from 'types';
-import { getAmountError } from 'utils/validators';
-import { MILESTONE_STATE, Proposal } from 'types';
+import { getAmountError, isValidAddress } from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
+import {
+  ProposalDetail,
+  PROPOSAL_DETAIL_INITIAL_STATE,
+} from 'modules/proposals/reducers';
 
 export const TARGET_ZEC_LIMIT = 1000;
 
@@ -81,8 +90,8 @@ export function getCreateErrors(
   }
 
   // Payout address
-  if (!payoutAddress) {
-    errors.payoutAddress = 'That doesn’t look like a valid address';
+  if (payoutAddress && !isValidAddress(payoutAddress)) {
+    errors.payoutAddress = 'That doesn’t look like a valid zcash address';
   }
 
   // Milestones
@@ -118,13 +127,11 @@ export function getCreateErrors(
   return errors;
 }
 
-export function getCreateTeamMemberError(user: User) {
+export function validateUserProfile(user: User) {
   if (user.displayName.length > 30) {
     return 'Display name can only be 30 characters maximum';
   } else if (user.title.length > 30) {
     return 'Title can only be 30 characters maximum';
-  } else if (!user.emailAddress || !/.+\@.+\..+/.test(user.emailAddress)) {
-    return 'That doesn’t look like a valid email address';
   }
 
   return '';
@@ -170,7 +177,7 @@ export function proposalToContractData(form: ProposalDraft): any {
 }
 
 // This is kind of a disgusting function, sorry.
-export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
+export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDetail {
   const { invites, ...rest } = draft;
   const target = parseFloat(draft.target);
 
@@ -183,25 +190,29 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): Proposal {
     payoutAddress: '0x0',
     dateCreated: Date.now() / 1000,
     datePublished: Date.now() / 1000,
+    dateApproved: Date.now() / 1000,
     deadlineDuration: 86400 * 60,
     target: toZat(draft.target),
     funded: Zat('0'),
     contributionMatching: 0,
     percentFunded: 0,
-    stage: 'preview',
-    category: draft.category || PROPOSAL_CATEGORY.DAPP,
+    stage: PROPOSAL_STAGE.PREVIEW,
+    category: draft.category || PROPOSAL_CATEGORY.CORE_DEV,
     isStaked: true,
+    arbiter: {
+      status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
+    },
     milestones: draft.milestones.map((m, idx) => ({
+      id: idx,
       index: idx,
       title: m.title,
       content: m.content,
       amount: toZat(target * (parseInt(m.payoutPercent, 10) / 100)),
       dateEstimated: m.dateEstimated,
       immediatePayout: m.immediatePayout,
-      isImmediatePayout: m.immediatePayout,
-      isPaid: false,
       payoutPercent: m.payoutPercent.toString(),
-      state: MILESTONE_STATE.WAITING,
+      stage: MILESTONE_STAGE.IDLE,
     })),
+    ...PROPOSAL_DETAIL_INITIAL_STATE,
   };
 }

@@ -11,13 +11,14 @@ from grant.proposal.models import (
     ProposalContribution,
     user_proposal_contributions_schema,
     user_proposals_schema,
+    user_proposal_arbiters_schema
 )
-from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user
+from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user, throw_on_banned
 from grant.utils.exceptions import ValidationException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from grant.utils.enums import ProposalStatus, ContributionStatus
-
+from flask import current_app
 from .models import (
     User,
     SocialMedia,
@@ -65,13 +66,15 @@ def get_me():
     parameter("withProposals", type=bool, required=False),
     parameter("withComments", type=bool, required=False),
     parameter("withFunded", type=bool, required=False),
-    parameter("withPending", type=bool, required=False)
+    parameter("withPending", type=bool, required=False),
+    parameter("withArbitrated", type=bool, required=False)
 )
-def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
+def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated):
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
         authed_user = get_authed_user()
+        is_self = authed_user and authed_user.id == user.id
         if with_proposals:
             proposals = Proposal.get_by_user(user)
             proposals_dump = user_proposals_schema.dump(proposals)
@@ -86,7 +89,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
             comments = Comment.get_by_user(user)
             comments_dump = user_comments_schema.dump(comments)
             result["comments"] = comments_dump
-        if with_pending and authed_user and authed_user.id == user.id:
+        if with_pending and is_self:
             pending = Proposal.get_by_user(user, [
                 ProposalStatus.STAKING,
                 ProposalStatus.PENDING,
@@ -95,6 +98,9 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending):
             ])
             pending_dump = user_proposals_schema.dump(pending)
             result["pendingProposals"] = pending_dump
+        if with_arbitrated and is_self:
+            result["arbitrated"] = user_proposal_arbiters_schema.dump(user.arbiter_proposals)
+
         return result
     else:
         message = "User with id matching {} not found".format(user_id)
@@ -140,6 +146,7 @@ def auth_user(email, password):
         return {"message": "No user exists with that email"}, 400
     if not existing_user.check_password(password):
         return {"message": "Invalid password"}, 403
+    throw_on_banned(existing_user)
     existing_user.login()
     return self_user_schema.dump(existing_user)
 
@@ -166,8 +173,15 @@ def update_user_password(current_password, password):
 def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
-    print('set_email')
     g.current_user.set_email(email)
+    return None, 200
+
+
+@blueprint.route("/me/resend-verification", methods=["PUT"])
+@requires_auth
+@endpoint.api()
+def resend_email_verification():
+    g.current_user.send_verification_email()
     return None, 200
 
 
@@ -225,6 +239,7 @@ def recover_user(email):
     existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
+    throw_on_banned(existing_user)
     existing_user.send_recovery_email()
     return None, 200
 
@@ -238,6 +253,7 @@ def recover_email(code, password):
     if er:
         if er.is_expired():
             return {"message": "Reset code expired"}, 401
+        throw_on_banned(er.user)
         er.user.set_password(password)
         db.session.delete(er)
         db.session.commit()
@@ -360,4 +376,28 @@ def set_user_settings(user_id, email_subscriptions):
     except ValidationException as e:
         return {"message": str(e)}, 400
     db.session.commit()
+    return user_settings_schema.dump(g.current_user.settings)
+
+
+@blueprint.route("/<user_id>/arbiter/<proposal_id>", methods=["PUT"])
+@requires_same_user_auth
+@endpoint.api(
+    parameter('isAccept', type=bool)
+)
+def set_user_arbiter(user_id, proposal_id, is_accept):
+    try:
+        proposal = Proposal.query.filter_by(id=int(proposal_id)).first()
+        if not proposal:
+            return {"message": "No such proposal"}, 404
+
+        if is_accept:
+            proposal.arbiter.accept_nomination(g.current_user.id)
+            return {"message": "Accepted nomination"}, 200
+        else:
+            proposal.arbiter.reject_nomination(g.current_user.id)
+            return {"message": "Rejected nomination"}, 200
+
+    except ValidationException as e:
+        return {"message": str(e)}, 400
+
     return user_settings_schema.dump(g.current_user.settings)

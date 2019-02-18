@@ -1,6 +1,17 @@
+import { pick } from 'lodash';
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
-import { User, Proposal, RFP, RFPArgs, EmailExample, PROPOSAL_STATUS } from './types';
+import {
+  User,
+  Proposal,
+  Contribution,
+  ContributionArgs,
+  RFP,
+  RFPArgs,
+  EmailExample,
+  PageQuery,
+  PageData,
+} from './types';
 
 // API
 const api = axios.create({
@@ -31,8 +42,8 @@ async function fetchStats() {
   return data;
 }
 
-async function fetchUsers() {
-  const { data } = await api.get('/admin/users');
+async function fetchUsers(params: Partial<PageQuery>) {
+  const { data } = await api.get('/admin/users', { params });
   return data;
 }
 
@@ -41,15 +52,28 @@ async function fetchUserDetail(id: number) {
   return data;
 }
 
-async function deleteUser(id: number | string) {
+async function editUser(id: number, args: Partial<User>) {
+  const { data } = await api.put(`/admin/users/${id}`, args);
+  return data;
+}
+
+async function deleteUser(id: number) {
   const { data } = await api.delete('/admin/users/' + id);
   return data;
 }
 
-async function fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
-  const { data } = await api.get('/admin/proposals', {
-    params: { statusFilters },
-  });
+async function fetchArbiters(search: string) {
+  const { data } = await api.get(`/admin/arbiters`, { params: { search } });
+  return data;
+}
+
+async function setArbiter(proposalId: number, userId: number) {
+  const { data } = await api.put(`/admin/arbiters`, { proposalId, userId });
+  return data;
+}
+
+async function fetchProposals(params: Partial<PageQuery>) {
+  const { data } = await api.get('/admin/proposals', { params });
   return data;
 }
 
@@ -73,6 +97,14 @@ async function approveProposal(id: number, isApprove: boolean, rejectReason?: st
     isApprove,
     rejectReason,
   });
+  return data;
+}
+
+async function markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
+  const { data } = await api.put(
+    `/admin/proposals/${proposalId}/milestone/${milestoneId}/paid`,
+    { txId },
+  );
   return data;
 }
 
@@ -100,8 +132,30 @@ async function deleteRFP(id: number) {
   await api.delete(`/admin/rfps/${id}`);
 }
 
+async function getContributions(params: PageQuery) {
+  const { data } = await api.get('/admin/contributions', { params });
+  return data;
+}
+
+async function getContribution(id: number) {
+  const { data } = await api.get(`/admin/contributions/${id}`);
+  return data;
+}
+
+async function createContribution(args: ContributionArgs) {
+  const { data } = await api.post('/admin/contributions', args);
+  return data;
+}
+
+async function editContribution(id: number, args: ContributionArgs) {
+  const { data } = await api.put(`/admin/contributions/${id}`, args);
+  return data;
+}
+
 // STORE
 const app = store({
+  /*** DATA ***/
+
   hasCheckedLogin: false,
   isLoggedIn: false,
   loginError: '',
@@ -112,20 +166,39 @@ const app = store({
     userCount: 0,
     proposalCount: 0,
     proposalPendingCount: 0,
+    proposalNoArbiterCount: 0,
+    proposalMilestonePayoutsCount: 0,
   },
 
-  usersFetching: false,
-  usersFetched: false,
-  users: [] as User[],
+  users: {
+    page: createDefaultPageData<User>('EMAIL:DESC'),
+  },
+  userSaving: false,
+  userSaved: false,
+
   userDetailFetching: false,
   userDetail: null as null | User,
+  userDeleting: false,
+  userDeleted: false,
 
-  proposalsFetching: false,
-  proposalsFetched: false,
-  proposals: [] as Proposal[],
-  proposalDetailFetching: false,
+  arbiterSaving: false,
+  arbiterSaved: false,
+
+  arbitersSearch: {
+    search: '',
+    results: [] as User[],
+    fetching: false,
+    error: null as string | null,
+  },
+
+  proposals: {
+    page: createDefaultPageData<Proposal>('CREATED:DESC'),
+  },
+
   proposalDetail: null as null | Proposal,
+  proposalDetailFetching: false,
   proposalDetailApproving: false,
+  proposalDetailMarkingMilestonePaid: false,
 
   rfps: [] as RFP[],
   rfpsFetching: false,
@@ -135,21 +208,47 @@ const app = store({
   rfpDeleting: false,
   rfpDeleted: false,
 
+  contributions: {
+    page: createDefaultPageData<Contribution>('CREATED:DESC'),
+  },
+
+  contributionDetail: null as null | Contribution,
+  contributionDetailFetching: false,
+  contributionSaving: false,
+  contributionSaved: false,
+
   emailExamples: {} as { [type: string]: EmailExample },
+
+  /*** ACTIONS ***/
 
   removeGeneralError(i: number) {
     app.generalError.splice(i, 1);
   },
 
   updateProposalInStore(p: Proposal) {
-    const index = app.proposals.findIndex(x => x.proposalId === p.proposalId);
+    const index = app.proposals.page.items.findIndex(x => x.proposalId === p.proposalId);
     if (index > -1) {
-      app.proposals[index] = p;
+      app.proposals.page.items[index] = p;
     }
     if (app.proposalDetail && app.proposalDetail.proposalId === p.proposalId) {
       app.proposalDetail = p;
     }
   },
+
+  updateUserInStore(u: User) {
+    const index = app.users.page.items.findIndex(x => x.userid === u.userid);
+    if (index > -1) {
+      app.users.page.items[index] = u;
+    }
+    if (app.userDetail && app.userDetail.userid === u.userid) {
+      app.userDetail = {
+        ...app.userDetail,
+        ...u,
+      };
+    }
+  },
+
+  // Auth
 
   async checkLogin() {
     app.isLoggedIn = await checkLogin();
@@ -183,15 +282,43 @@ const app = store({
     app.statsFetching = false;
   },
 
+  // Users
+
   async fetchUsers() {
-    app.usersFetching = true;
+    app.users.page.fetching = true;
     try {
-      app.users = await fetchUsers();
-      app.usersFetched = true;
+      const page = await fetchUsers(app.getUserPageQuery());
+      app.users.page = {
+        ...app.users.page,
+        ...page,
+        fetched: true,
+      };
     } catch (e) {
       handleApiError(e);
     }
-    app.usersFetching = false;
+    app.users.page.fetching = false;
+  },
+
+  getUserPageQuery() {
+    return pick(app.users.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+  },
+
+  setUserPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
+    app.users.page = {
+      ...app.users.page,
+      ...query,
+    };
+  },
+
+  resetUserPageQuery() {
+    app.users.page.page = 1;
+    app.users.page.search = '';
+    app.users.page.sort = 'CREATED:DESC';
+    app.users.page.filters = [];
   },
 
   async fetchUserDetail(id: number) {
@@ -204,24 +331,113 @@ const app = store({
     app.userDetailFetching = false;
   },
 
-  async deleteUser(id: string | number) {
+  async editUser(id: number, args: Partial<User>) {
+    app.userSaving = true;
+    app.userSaved = false;
     try {
-      await deleteUser(id);
-      app.users = app.users.filter(u => u.userid !== id && u.emailAddress !== id);
+      const user = await editUser(id, args);
+      app.updateUserInStore(user);
+      app.userSaved = true;
     } catch (e) {
       handleApiError(e);
     }
+    app.userSaving = false;
   },
 
-  async fetchProposals(statusFilters?: PROPOSAL_STATUS[]) {
-    app.proposalsFetching = true;
+  async deleteUser(id: number) {
+    app.userDeleting = false;
+    app.userDeleted = false;
     try {
-      app.proposals = await fetchProposals(statusFilters);
-      app.proposalsFetched = true;
+      await deleteUser(id);
+      app.users.page.items = app.users.page.items.filter(u => u.userid !== id);
+      app.userDeleted = true;
+      app.userDetail = null;
     } catch (e) {
       handleApiError(e);
     }
-    app.proposalsFetching = false;
+    app.userDeleting = false;
+  },
+
+  // Arbiters
+
+  async searchArbiters(search: string) {
+    app.arbitersSearch = {
+      ...app.arbitersSearch,
+      search,
+      fetching: true,
+    };
+    try {
+      const data = await fetchArbiters(search);
+      app.arbitersSearch = {
+        ...app.arbitersSearch,
+        ...data,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.arbitersSearch.fetching = false;
+  },
+
+  async searchArbitersClear() {
+    app.arbitersSearch = {
+      search: '',
+      results: [] as User[],
+      fetching: false,
+      error: null,
+    };
+  },
+
+  async setArbiter(proposalId: number, userId: number) {
+    app.arbiterSaving = true;
+    app.arbiterSaved = false;
+    try {
+      const { proposal, user } = await setArbiter(proposalId, userId);
+      this.updateProposalInStore(proposal);
+      this.updateUserInStore(user);
+      app.arbiterSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.arbiterSaving = false;
+  },
+
+  // Proposals
+
+  async fetchProposals() {
+    app.proposals.page.fetching = true;
+    try {
+      const page = await fetchProposals(app.getProposalPageQuery());
+      app.proposals.page = {
+        ...app.proposals.page,
+        ...page,
+        fetched: true,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposals.page.fetching = false;
+  },
+
+  setProposalPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
+    app.proposals.page = {
+      ...app.proposals.page,
+      ...query,
+    };
+  },
+
+  getProposalPageQuery() {
+    return pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+  },
+
+  resetProposalPageQuery() {
+    app.proposals.page.page = 1;
+    app.proposals.page.search = '';
+    app.proposals.page.sort = 'CREATED:DESC';
+    app.proposals.page.filters = [];
   },
 
   async fetchProposalDetail(id: number) {
@@ -252,7 +468,9 @@ const app = store({
   async deleteProposal(id: number) {
     try {
       await deleteProposal(id);
-      app.proposals = app.proposals.filter(p => p.proposalId === id);
+      app.proposals.page.items = app.proposals.page.items.filter(
+        p => p.proposalId === id,
+      );
     } catch (e) {
       handleApiError(e);
     }
@@ -276,6 +494,19 @@ const app = store({
     app.proposalDetailApproving = false;
   },
 
+  async markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
+    app.proposalDetailMarkingMilestonePaid = true;
+    try {
+      const res = await markMilestonePaid(proposalId, milestoneId, txId);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailMarkingMilestonePaid = false;
+  },
+
+  // Email
+
   async getEmailExample(type: string) {
     try {
       const example = await getEmailExample(type);
@@ -287,6 +518,8 @@ const app = store({
       handleApiError(e);
     }
   },
+
+  // RFPs
 
   async fetchRFPs() {
     app.rfpsFetching = true;
@@ -336,8 +569,87 @@ const app = store({
     }
     app.rfpDeleting = false;
   },
+
+  // Contributions
+
+  async fetchContributions() {
+    app.contributions.page.fetching = true;
+    try {
+      const page = await getContributions(app.getContributionPageQuery());
+      app.contributions.page = {
+        ...app.contributions.page,
+        ...page,
+        fetched: true,
+      };
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributions.page.fetching = false;
+  },
+
+  setContributionPageQuery(query: Partial<PageQuery>) {
+    // sometimes we need to reset page to 1
+    if (query.filters || query.search) {
+      query.page = 1;
+    }
+    app.contributions.page = {
+      ...app.contributions.page,
+      ...query,
+    };
+  },
+
+  getContributionPageQuery() {
+    return pick(app.contributions.page, [
+      'page',
+      'search',
+      'filters',
+      'sort',
+    ]) as PageQuery;
+  },
+
+  resetContributionPageQuery() {
+    app.contributions.page.page = 1;
+    app.contributions.page.search = '';
+    app.contributions.page.sort = 'CREATED:DESC';
+    app.contributions.page.filters = [];
+  },
+
+  async fetchContributionDetail(id: number) {
+    app.contributionDetailFetching = true;
+    try {
+      app.contributionDetail = await getContribution(id);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributionDetailFetching = false;
+  },
+
+  async editContribution(id: number, args: ContributionArgs) {
+    app.contributionSaving = true;
+    app.contributionSaved = false;
+    try {
+      await editContribution(id, args);
+      app.contributionSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributionSaving = false;
+  },
+
+  async createContribution(args: ContributionArgs) {
+    app.contributionSaving = true;
+    app.contributionSaved = false;
+    try {
+      await createContribution(args);
+      app.contributionSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.contributionSaving = false;
+  },
 });
 
+// Utils
 function handleApiError(e: AxiosError) {
   if (e.response && e.response.data!.message) {
     app.generalError.push(e.response!.data.message);
@@ -348,6 +660,21 @@ function handleApiError(e: AxiosError) {
   }
 }
 
+function createDefaultPageData<T>(sort: string): PageData<T> {
+  return {
+    sort,
+    page: 1,
+    search: '',
+    filters: [] as string[],
+    pageSize: 0,
+    total: 0,
+    items: [] as T[],
+    fetching: false,
+    fetched: false,
+  };
+}
+
+// Attach to window for inspection
 (window as any).appStore = app;
 
 // check login status periodically

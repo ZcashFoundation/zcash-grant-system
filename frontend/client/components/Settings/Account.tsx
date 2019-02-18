@@ -1,13 +1,15 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Form, Input, Button, Alert } from 'antd';
+import { Form, Input, Button, Alert, message } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
-import { updateUserEmail } from 'api/api';
+import Loader from 'components/Loader';
+import { updateUserEmail, resendEmailVerification } from 'api/api';
 import { AppState } from 'store/reducers';
 import './Account.less';
 
 interface StateProps {
   email: string;
+  emailVerified: boolean;
 }
 
 type Props = FormComponentProps & StateProps;
@@ -17,6 +19,8 @@ const STATE = {
   emailChangePending: false,
   emailChangeSuccess: false,
   emailChangeError: '',
+  isResendingVerification: false,
+  hasResentVerification: false,
 };
 
 type State = typeof STATE;
@@ -25,12 +29,14 @@ class AccountSettings extends React.Component<Props, State> {
   state: State = { ...STATE };
 
   render() {
-    const { email, form } = this.props;
+    const { email, emailVerified, form } = this.props;
     const {
       emailChangeError,
       emailChangePending,
       emailChangeSuccess,
       newEmail,
+      isResendingVerification,
+      hasResentVerification,
     } = this.state;
 
     return (
@@ -40,6 +46,36 @@ class AccountSettings extends React.Component<Props, State> {
           onSubmit={this.handleSubmit}
           layout="vertical"
         >
+          {!emailVerified &&
+            !hasResentVerification && (
+              <Alert
+                showIcon
+                className="AccountSettings-form-resend"
+                type="warning"
+                message="Your email has not been verified"
+                description={
+                  <>
+                    You should have a verification in your inbox. If you can't find it,
+                    check your spam folder. Still don't see it?{' '}
+                    <a onClick={this.resendEmailVerification}>Click here to resend</a>.
+                    {isResendingVerification && <Loader overlay />}
+                  </>
+                }
+              />
+            )}
+          {!emailVerified &&
+            hasResentVerification && (
+              <Alert
+                showIcon
+                className="AccountSettings-form-resend"
+                type="success"
+                message="Verification has been sent"
+                description={`
+                It should be in your inbox shortly. If you don’t see it soon,
+                check your spam folder or contact support for help.
+              `}
+              />
+            )}
           <Form.Item label="Email">
             {form.getFieldDecorator('email', {
               initialValue: newEmail || email,
@@ -139,10 +175,25 @@ class AccountSettings extends React.Component<Props, State> {
       }
     });
   };
+
+  private resendEmailVerification = async () => {
+    if (this.state.isResendingVerification) {
+      return;
+    }
+    this.setState({ isResendingVerification: true });
+    try {
+      await resendEmailVerification();
+      this.setState({ hasResentVerification: true });
+    } catch (err) {
+      message.error(err.message || err.toString());
+    }
+    this.setState({ isResendingVerification: false });
+  };
 }
 
 const FormWrappedAccountSettings = Form.create()(AccountSettings);
 
 export default connect<StateProps, {}, {}, AppState>(state => ({
   email: state.auth.user ? state.auth.user.emailAddress || '' : '',
+  emailVerified: !!state.auth.user && !!state.auth.user.emailVerified,
 }))(FormWrappedAccountSettings);

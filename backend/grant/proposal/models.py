@@ -2,6 +2,7 @@ import datetime
 from functools import reduce
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from decimal import Decimal
 
 from grant.comment.models import Comment
 from grant.email.send import send_email
@@ -9,36 +10,15 @@ from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url
 from grant.utils.requests import blockchain_get
-from grant.utils.enums import ProposalStatus, ProposalStage, Category, ContributionStatus
 from grant.settings import PROPOSAL_STAKING_AMOUNT
-
-# Proposal states
-DRAFT = 'DRAFT'
-PENDING = 'PENDING'
-STAKING = 'STAKING'
-APPROVED = 'APPROVED'
-REJECTED = 'REJECTED'
-LIVE = 'LIVE'
-DELETED = 'DELETED'
-STATUSES = [DRAFT, PENDING, STAKING, APPROVED, REJECTED, LIVE, DELETED]
-
-# Funding stages
-FUNDING_REQUIRED = 'FUNDING_REQUIRED'
-COMPLETED = 'COMPLETED'
-PROPOSAL_STAGES = [FUNDING_REQUIRED, COMPLETED]
-
-# Proposal categories
-DAPP = "DAPP"
-DEV_TOOL = "DEV_TOOL"
-CORE_DEV = "CORE_DEV"
-COMMUNITY = "COMMUNITY"
-DOCUMENTATION = "DOCUMENTATION"
-ACCESSIBILITY = "ACCESSIBILITY"
-CATEGORIES = [DAPP, DEV_TOOL, CORE_DEV, COMMUNITY, DOCUMENTATION, ACCESSIBILITY]
-
-# Contribution states
-# PENDING = 'PENDING'
-CONFIRMED = 'CONFIRMED'
+from grant.utils.enums import (
+    ProposalStatus,
+    ProposalStage,
+    Category,
+    ContributionStatus,
+    ProposalArbiterStatus,
+    MilestoneStage
+)
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -131,10 +111,84 @@ class ProposalContribution(db.Model):
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
 
+    @staticmethod
+    def validate(contribution):
+        proposal_id = contribution.get('proposal_id')
+        user_id = contribution.get('user_id')
+        status = contribution.get('status')
+        amount = contribution.get('amount')
+        tx_id = contribution.get('tx_id')
+
+        # Proposal ID (must belong to an existing proposal)
+        if proposal_id:
+            proposal = Proposal.query.filter(Proposal.id == proposal_id).first()
+            if not proposal:
+                raise ValidationException('No proposal matching that ID')
+            contribution.proposal_id = proposal_id
+        else:
+            raise ValidationException('Proposal ID is required')
+        # User ID (must belong to an existing user)
+        if user_id:
+            user = User.query.filter(User.id == user_id).first()
+            if not user:
+                raise ValidationException('No user matching that ID')
+            contribution.user_id = user_id
+        else:
+            raise ValidationException('User ID is required')
+        # Status (must be in list of statuses)
+        if status:
+            if not ContributionStatus.includes(status):
+                raise ValidationException('Invalid status')
+            contribution.status = status
+        else:
+            raise ValidationException('Status is required')
+        # Amount (must be a Decimal parseable)
+        if amount:
+            try:
+                contribution.amount = str(Decimal(amount))
+            except:
+                raise ValidationException('Amount must be a number')
+        else:
+            raise ValidationException('Amount is required')
+
     def confirm(self, tx_id: str, amount: str):
         self.status = ContributionStatus.CONFIRMED
         self.tx_id = tx_id
         self.amount = amount
+
+
+class ProposalArbiter(db.Model):
+    __tablename__ = "proposal_arbiter"
+
+    id = db.Column(db.Integer(), primary_key=True)
+    proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    status = db.Column(db.String(255), nullable=False)
+
+    proposal = db.relationship("Proposal", lazy=True, back_populates="arbiter")
+    user = db.relationship("User", uselist=False, lazy=True, back_populates="arbiter_proposals")
+
+    def __init__(self, proposal_id: int, user_id: int = None, status: str = ProposalArbiterStatus.MISSING):
+        self.proposal_id = proposal_id
+        self.user_id = user_id
+        self.status = status
+
+    def accept_nomination(self, user_id: int):
+        if self.user_id == user_id:
+            self.status = ProposalArbiterStatus.ACCEPTED
+            db.session.add(self)
+            db.session.commit()
+            return
+        raise ValidationException('User not nominated for arbiter')
+
+    def reject_nomination(self, user_id: int):
+        if self.user_id == user_id:
+            self.status = ProposalArbiterStatus.MISSING
+            self.user = None
+            db.session.add(self)
+            db.session.commit()
+            return
+        raise ValidationException('User is not arbiter')
 
 
 class Proposal(db.Model):
@@ -167,8 +221,10 @@ class Proposal(db.Model):
     comments = db.relationship(Comment, backref="proposal", lazy=True, cascade="all, delete-orphan")
     updates = db.relationship(ProposalUpdate, backref="proposal", lazy=True, cascade="all, delete-orphan")
     contributions = db.relationship(ProposalContribution, backref="proposal", lazy=True, cascade="all, delete-orphan")
-    milestones = db.relationship("Milestone", backref="proposal", lazy=True, cascade="all, delete-orphan")
+    milestones = db.relationship("Milestone", backref="proposal",
+                                 order_by="asc(Milestone.index)", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
+    arbiter = db.relationship(ProposalArbiter, uselist=False, back_populates="proposal", cascade="all, delete-orphan")
 
     def __init__(
             self,
@@ -176,7 +232,7 @@ class Proposal(db.Model):
             title: str = '',
             brief: str = '',
             content: str = '',
-            stage: str = '',
+            stage: str = ProposalStage.PREVIEW,
             target: str = '0',
             payout_address: str = '',
             deadline_duration: int = 5184000,  # 60 days
@@ -212,15 +268,29 @@ class Proposal(db.Model):
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
 
+        # Check with node that the address is kosher
+        res = blockchain_get('/validate/address', {'address': self.payout_address})
+        if not res['valid']:
+            raise ValidationException("Payout address is not a valid Zcash address")
+
         # Then run through regular validation
         Proposal.validate(vars(self))
 
     @staticmethod
     def create(**kwargs):
         Proposal.validate(kwargs)
-        return Proposal(
+        proposal = Proposal(
             **kwargs
         )
+
+        # arbiter needs proposal.id
+        db.session.add(proposal)
+        db.session.flush()
+
+        arbiter = ProposalArbiter(proposal_id=proposal.id)
+        db.session.add(arbiter)
+
+        return proposal
 
     @staticmethod
     def get_by_user(user, statuses=[ProposalStatus.LIVE]):
@@ -258,7 +328,7 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def create_contribution(self, user_id: int, amount: float):
+    def create_contribution(self, user_id: int, amount):
         contribution = ProposalContribution(
             proposal_id=self.id,
             user_id=user_id,
@@ -270,21 +340,20 @@ class Proposal(db.Model):
 
     def get_staking_contribution(self, user_id: int):
         contribution = None
-        remaining = PROPOSAL_STAKING_AMOUNT - float(self.contributed)
+        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.contributed)
         # check funding
         if remaining > 0:
-            # find pending contribution for any user
-            # (always use full staking amout so we can find it)
+            # find pending contribution for any user of remaining amount
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
-                amount=str(PROPOSAL_STAKING_AMOUNT),
-                status=PENDING,
+                status=ProposalStatus.PENDING,
             ).first()
             if not contribution:
-                contribution = self.create_contribution(user_id, PROPOSAL_STAKING_AMOUNT)
+                contribution = self.create_contribution(user_id, str(remaining.normalize()))
 
         return contribution
 
+    # state: status (DRAFT || REJECTED) -> (PENDING || STAKING)
     def submit_for_approval(self):
         self.validate_publishable()
         allowed_statuses = [ProposalStatus.DRAFT, ProposalStatus.REJECTED]
@@ -297,6 +366,21 @@ class Proposal(db.Model):
         else:
             self.status = ProposalStatus.STAKING
 
+    def set_pending_when_ready(self):
+        if self.status == ProposalStatus.STAKING and self.is_staked:
+            self.set_pending()
+
+    # state: status STAKING -> PENDING
+    def set_pending(self):
+        if self.status != ProposalStatus.STAKING:
+            raise ValidationException(f"Proposal status must be staking in order to be set to pending")
+        if not self.is_staked:
+            raise ValidationException(f"Proposal is not fully staked, cannot set to pending")
+        self.status = ProposalStatus.PENDING
+        db.session.add(self)
+        db.session.flush()
+
+    # state: status PENDING -> (APPROVED || REJECTED)
     def approve_pending(self, is_approve, reject_reason=None):
         self.validate_publishable()
         # specific validation
@@ -326,28 +410,65 @@ class Proposal(db.Model):
                     'admin_note': reject_reason
                 })
 
+    # state: status APPROVE -> LIVE, stage PREVIEW -> FUNDING_REQUIRED
     def publish(self):
         self.validate_publishable()
         # specific validation
         if not self.status == ProposalStatus.APPROVED:
             raise ValidationException(f"Proposal status must be approved")
-
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
+        self.stage = ProposalStage.FUNDING_REQUIRED
+        # If we had a bounty that pushed us into funding, skip straight into WIP
+        self.set_funded_when_ready()
+
+    def set_funded_when_ready(self):
+        if self.status == ProposalStatus.LIVE and self.is_funded:
+            self.set_funded()
+
+    # state: stage FUNDING_REQUIRED -> WIP
+    def set_funded(self):
+        if self.status != ProposalStatus.LIVE:
+            raise ValidationException(f"Proposal status must be live in order transition to funded state")
+        if self.stage != ProposalStage.FUNDING_REQUIRED:
+            raise ValidationException(f"Proposal stage must be funding_required in order transition to funded state")
+        if not self.is_funded:
+            raise ValidationException(f"Proposal is not fully funded, cannot set to funded state")
+        self.stage = ProposalStage.WIP
+        db.session.add(self)
+        db.session.flush()
+        # check the first step, if immediate payout bump it to accepted
+        self.current_milestone.accept_immediate()
+
+    def set_contribution_matching(self, matching: float):
+        # do not allow on funded/WIP proposals
+        if self.is_funded:
+            raise ValidationException("Cannot set contribution matching on fully-funded proposal")
+        # enforce 1 or 0 for now
+        if matching == 0.0 or matching == 1.0:
+            self.contribution_matching = matching
+            db.session.add(self)
+            db.session.flush()
+            self.set_funded_when_ready()
+        else:
+            raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
 
     @hybrid_property
     def contributed(self):
         contributions = ProposalContribution.query \
             .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
             .all()
-        funded = reduce(lambda prev, c: prev + float(c.amount), contributions, 0)
+        funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
 
     @hybrid_property
     def funded(self):
-        target = float(self.target)
+        target = Decimal(self.target)
         # apply matching multiplier
-        funded = float(self.contributed) * (1 + self.contribution_matching)
+        funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
+        # apply bounty, if available
+        if self.rfp:
+            funded = funded + Decimal(self.rfp.bounty)
         # if funded > target, just set as target
         if funded > target:
             return str(target)
@@ -356,7 +477,28 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_staked(self):
-        return float(self.contributed) >= PROPOSAL_STAKING_AMOUNT
+        return Decimal(self.contributed) >= PROPOSAL_STAKING_AMOUNT
+
+    @hybrid_property
+    def is_funded(self):
+        return Decimal(self.funded) >= Decimal(self.target)
+
+    @hybrid_property
+    def is_failed(self):
+        if not self.status == ProposalStatus.LIVE or not self.date_published:
+            return False
+        deadline = self.date_published + datetime.timedelta(seconds=self.deadline_duration)
+        passed = deadline < datetime.datetime.now()
+        return passed and not self.is_funded
+
+    @hybrid_property
+    def current_milestone(self):
+        if self.milestones:
+            for ms in self.milestones:
+                if ms.stage != MilestoneStage.PAID:
+                    return ms
+            return self.milestones[-1]  # return last one if all PAID
+        return None
 
 
 class ProposalSchema(ma.Schema):
@@ -376,18 +518,20 @@ class ProposalSchema(ma.Schema):
             "target",
             "contributed",
             "is_staked",
+            "is_failed",
             "funded",
             "content",
-            "comments",
             "updates",
             "milestones",
+            "current_milestone",
             "category",
             "team",
             "payout_address",
             "deadline_duration",
             "contribution_matching",
             "invites",
-            "rfp"
+            "rfp",
+            "arbiter"
         )
 
     date_created = ma.Method("get_date_created")
@@ -395,12 +539,13 @@ class ProposalSchema(ma.Schema):
     date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
 
-    comments = ma.Nested("CommentSchema", many=True)
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
     milestones = ma.Nested("MilestoneSchema", many=True)
+    current_milestone = ma.Nested("MilestoneSchema")
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
     rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
+    arbiter = ma.Nested("ProposalArbiterSchema", exclude=["proposal"])
 
     def get_proposal_id(self, obj):
         return obj.id
@@ -544,3 +689,21 @@ user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 
 user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
 proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
 proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
+
+
+class ProposalArbiterSchema(ma.Schema):
+    class Meta:
+        model = ProposalArbiter
+        fields = (
+            "id",
+            "user",
+            "proposal",
+            "status"
+        )
+
+    user = ma.Nested("UserSchema")  # , exclude=['arbiter_proposals'] (if UserSchema ever includes it)
+    proposal = ma.Nested("ProposalSchema", exclude=['arbiter'])
+
+
+user_proposal_arbiter_schema = ProposalArbiterSchema(exclude=['user'])
+user_proposal_arbiters_schema = ProposalArbiterSchema(many=True, exclude=['user'])

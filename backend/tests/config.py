@@ -9,7 +9,7 @@ from grant.user.models import User, SocialMedia, db, Avatar
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.utils.enums import ProposalStatus
 
-from .test_data import test_user, test_other_user, test_proposal, mock_contribution_addresses
+from .test_data import test_user, test_other_user, test_proposal, mock_blockchain_api_requests
 
 
 class BaseTestConfig(TestCase):
@@ -148,14 +148,14 @@ class BaseProposalCreatorConfig(BaseUserConfig):
         proposal_reminder = ProposalReminder(self.proposal.id)
         proposal_reminder.make_task()
 
-    @patch('requests.get', side_effect=mock_contribution_addresses)
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def stake_proposal(self, mock_get):
         # 1. submit
         self.proposal.submit_for_approval()
         # 2. get staking contribution
         contribution = self.proposal.get_staking_contribution(self.user.id)
         # 3. fake a confirmation
-        contribution.confirm(tx_id='tx', amount=str(PROPOSAL_STAKING_AMOUNT))
+        contribution.confirm(tx_id='tx', amount=str(PROPOSAL_STAKING_AMOUNT.normalize()))
         db.session.add(contribution)
         db.session.commit()
         contribution = self.proposal.get_staking_contribution(self.user.id)

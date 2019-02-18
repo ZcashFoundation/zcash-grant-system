@@ -1,0 +1,12 @@
+<p style="margin: 0 0 20px;">
+  Hooray! <b>{{ args.amount }} ZEC</b> has been paid out for
+  <a href="{{ args.proposal_milestones_url }}" target="_blank">
+    {{ args.proposal.title }} - {{ args.proposal.current_milestone.title }}</a
+  >! You can view the transaction below:
+</p>
+
+<p style="margin: 0 0 20px;">
+  <a href="{{ args.tx_explorer_url }}" target="_blank" rel="nofollow noopener">
+    {{ args.tx_explorer_url }}
+  </a>
+</p>

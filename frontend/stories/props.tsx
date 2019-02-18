@@ -1,13 +1,14 @@
 import {
   Contributor,
-  Milestone,
-  MILESTONE_STATE,
+  MILESTONE_STAGE,
   Proposal,
   ProposalMilestone,
   STATUS,
+  PROPOSAL_ARBITER_STATUS,
 } from 'types';
-import { PROPOSAL_CATEGORY } from 'api/constants';
+import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import BN from 'bn.js';
+import moment from 'moment';
 
 const oneZec = new BN('100000000');
 
@@ -39,7 +40,7 @@ export function generateProposal({
   funded?: number;
   created?: number;
   deadline?: number;
-  milestoneOverrides?: Array<Partial<Milestone>>;
+  milestoneOverrides?: Array<Partial<ProposalMilestone>>;
   contributorOverrides?: Array<Partial<Contributor>>;
   milestoneCount?: number;
 }) {
@@ -101,23 +102,22 @@ export function generateProposal({
   const genMilestone = (
     overrides: Partial<ProposalMilestone> = {},
   ): ProposalMilestone => {
-    const now = new Date();
     if (overrides.index) {
-      const estimate = new Date(now.setMonth(now.getMonth() + overrides.index));
-      overrides.dateEstimated = estimate.toISOString();
+      overrides.dateEstimated = moment()
+        .add(overrides.index, 'month')
+        .unix();
     }
 
     const defaults: ProposalMilestone = {
+      id: 0,
       title: 'Milestone A',
       content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
            tempor incididunt ut labore et dolore magna aliqua.`,
-      dateEstimated: '2018-10-01T00:00:00+00:00',
+      dateEstimated: moment().unix(),
       immediatePayout: true,
       index: 0,
-      state: MILESTONE_STATE.WAITING,
+      stage: MILESTONE_STAGE.IDLE,
       amount: amountBn,
-      isPaid: false,
-      isImmediatePayout: true,
       payoutPercent: '33',
     };
     return { ...defaults, ...overrides };
@@ -125,10 +125,10 @@ export function generateProposal({
 
   const milestones = [...Array(milestoneCount).keys()].map(i => {
     const overrides = {
+      id: i,
       index: i,
       title: genMilestoneTitle(),
       immediatePayout: i === 0,
-      isImmediatePayout: i === 0,
       payoutRequestVoteDeadline: i !== 0 ? Date.now() + 3600000 : 0,
       payoutPercent: '' + (1 / milestoneCount) * 100,
     };
@@ -149,6 +149,7 @@ export function generateProposal({
     payoutAddress: 'z123',
     dateCreated: created / 1000,
     datePublished: created / 1000,
+    dateApproved: created / 1000,
     deadlineDuration: 86400 * 60,
     target: amountBn,
     funded: fundedBn,
@@ -157,9 +158,20 @@ export function generateProposal({
     title: 'Crowdfund Title',
     brief: 'A cool test crowdfund',
     content: 'body',
-    stage: 'FUNDING_REQUIRED',
+    stage: PROPOSAL_STAGE.WIP,
     category: PROPOSAL_CATEGORY.COMMUNITY,
     isStaked: true,
+    arbiter: {
+      status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
+      user: {
+        userid: 999,
+        displayName: 'Test Arbiter',
+        title: '',
+        emailAddress: 'test@arbiter.com',
+        avatar: null,
+        socialMedias: [],
+      },
+    },
     team: [
       {
         userid: 123,

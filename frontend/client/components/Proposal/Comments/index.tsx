@@ -1,32 +1,25 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, message } from 'antd';
+import { Button, message, Skeleton, Alert } from 'antd';
 import { AppState } from 'store/reducers';
 import { Proposal } from 'types';
 import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
-import {
-  getCommentsError,
-  getIsFetchingComments,
-  getProposalComments,
-} from 'modules/proposals/selectors';
-import { getIsVerified } from 'modules/auth/selectors';
+import { getIsVerified, getIsSignedIn } from 'modules/auth/selectors';
 import Comments from 'components/Comments';
 import Placeholder from 'components/Placeholder';
-import Loader from 'components/Loader';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
-import './style.less';
+import './index.less';
 
 interface OwnProps {
   proposalId: Proposal['proposalId'];
 }
 
 interface StateProps {
-  comments: ReturnType<typeof getProposalComments>;
-  isFetchingComments: ReturnType<typeof getIsFetchingComments>;
-  commentsError: ReturnType<typeof getCommentsError>;
+  detailComments: AppState['proposal']['detailComments'];
   isPostCommentPending: AppState['proposal']['isPostCommentPending'];
   postCommentError: AppState['proposal']['postCommentError'];
   isVerified: ReturnType<typeof getIsVerified>;
+  isSignedIn: ReturnType<typeof getIsSignedIn>;
 }
 
 interface DispatchProps {
@@ -38,17 +31,19 @@ type Props = DispatchProps & OwnProps & StateProps;
 
 interface State {
   comment: string;
+  curtainsMatchDrapes: boolean;
 }
 
 class ProposalComments extends React.Component<Props, State> {
   state: State = {
     comment: '',
+    curtainsMatchDrapes: this.props.detailComments.parentId === this.props.proposalId,
   };
 
   private editor: MarkdownEditor | null = null;
 
   componentDidMount() {
-    if (this.props.proposalId) {
+    if (!this.state.curtainsMatchDrapes) {
       this.props.fetchProposalComments(this.props.proposalId);
     }
   }
@@ -73,49 +68,59 @@ class ProposalComments extends React.Component<Props, State> {
   }
 
   render() {
-    const {
-      comments,
-      isFetchingComments,
-      commentsError,
-      isPostCommentPending,
-      isVerified,
-    } = this.props;
+    const { detailComments, isPostCommentPending, isVerified, isSignedIn } = this.props;
     const { comment } = this.state;
     let content = null;
 
-    if (isFetchingComments) {
-      content = <Loader />;
-    } else if (commentsError) {
+    const { hasFetched, isFetching, hasMore, pages, fetchError, total } = detailComments;
+    if (!hasFetched) {
+      content = [1, 2, 3].map(i => (
+        <Skeleton
+          className="ProposalComments-skellie"
+          key={i}
+          active
+          avatar={{ shape: 'square' }}
+          paragraph={{ rows: 2 }}
+        />
+      ));
+    } else if (total) {
       content = (
         <>
-          <h2>Something went wrong</h2>
-          <p>{commentsError}</p>
+          {pages.map((p, i) => (
+            <Comments key={i} comments={p} />
+          ))}
+          <div>
+            {hasMore && (
+              <Button
+                onClick={() => this.props.fetchProposalComments()}
+                loading={isFetching}
+                block
+              >
+                Older Comments
+              </Button>
+            )}
+          </div>
         </>
       );
-    } else if (comments) {
-      if (comments.length) {
-        content = <Comments comments={comments} />;
-      } else {
-        content = (
-          <Placeholder
-            title="No comments have been made yet"
-            subtitle="Why not be the first?"
-          />
-        );
-      }
+    } else {
+      content = (
+        <Placeholder
+          title="No comments have been made yet"
+          subtitle="Why not be the first?"
+        />
+      );
     }
 
     return (
-      <div>
+      <div className="ProposalComments">
         <div className="ProposalComments-post">
-          {isVerified ? (
+          {isVerified && (
             <>
               <MarkdownEditor
                 ref={el => (this.editor = el)}
                 onChange={this.handleCommentChange}
                 type={MARKDOWN_TYPE.REDUCED}
               />
-              <div style={{ marginTop: '0.5rem' }} />
               <Button
                 onClick={this.postComment}
                 disabled={!comment.length}
@@ -124,14 +129,30 @@ class ProposalComments extends React.Component<Props, State> {
                 Submit comment
               </Button>
             </>
-          ) : (
-            <Placeholder
-              title="Your email is not verified"
-              subtitle="Please verify your email to post a comment."
-            />
           )}
+          {isSignedIn &&
+            !isVerified && (
+              <>
+                <h4 className="ProposalComments-verify">
+                  Please verify your email to post a comment.
+                </h4>
+                <MarkdownEditor
+                  onChange={this.handleCommentChange}
+                  type={MARKDOWN_TYPE.REDUCED}
+                  readOnly={true}
+                />
+              </>
+            )}
         </div>
         {content}
+        {fetchError && (
+          <Alert
+            className="ProposalComments-alert"
+            type="error"
+            message="Oopsy, there was a problem loading comments!"
+            description={fetchError}
+          />
+        )}
       </div>
     );
   }
@@ -146,13 +167,12 @@ class ProposalComments extends React.Component<Props, State> {
 }
 
 export default connect<StateProps, DispatchProps, OwnProps, AppState>(
-  (state, ownProps) => ({
-    comments: getProposalComments(state, ownProps.proposalId),
-    isFetchingComments: getIsFetchingComments(state),
-    commentsError: getCommentsError(state),
+  state => ({
+    detailComments: state.proposal.detailComments,
     isPostCommentPending: state.proposal.isPostCommentPending,
     postCommentError: state.proposal.postCommentError,
     isVerified: getIsVerified(state),
+    isSignedIn: getIsSignedIn(state),
   }),
   {
     fetchProposalComments,

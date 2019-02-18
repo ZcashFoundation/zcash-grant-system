@@ -1,0 +1,4 @@
+You have been nominated for arbiter of {{ args.proposal.title }}. You will be responsible 
+for reviewing milestone payout requests.
+
+Accept nomination by visiting: {{ args.accept_url }}

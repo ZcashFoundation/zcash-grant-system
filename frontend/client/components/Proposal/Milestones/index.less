@@ -39,6 +39,11 @@
       margin-left: 0;
     }
 
+    &-alert {
+      width: fit-content;
+      margin: 0 0 1rem 0;
+    }
+
     &-title {
       display: none;
       white-space: nowrap;
@@ -95,6 +100,31 @@
     &-description,
     &-action {
       flex: 1;
+    }
+
+    &-action {
+      q {
+        display: block;
+        margin-bottom: 0.5rem;
+        background: rgba(0, 0, 0, 0.06);
+        padding: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1rem;
+        text-align: center;
+      }
+
+      &-controls {
+        display: flex;
+
+        & > * {
+          flex-grow: 1;
+        }
+        & > * + * {
+          margin-left: 0.5rem;
+        }
+      }
     }
 
     &-divider {

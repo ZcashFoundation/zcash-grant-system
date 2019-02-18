@@ -3,5 +3,4 @@ export interface Update {
   title: string;
   content: string;
   dateCreated: number;
-  totalComments: number;
 }

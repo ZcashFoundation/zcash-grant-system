@@ -91,6 +91,9 @@ class RFPDetail extends React.Component<Props> {
               {renderDeetItem('created', formatDateSeconds(rfp.dateCreated))}
               {renderDeetItem('status', rfp.status)}
               {renderDeetItem('category', rfp.category)}
+              {renderDeetItem('matching', String(rfp.matching))}
+              {renderDeetItem('bounty', `${rfp.bounty} ZEC`)}
+              {renderDeetItem('dateCloses', rfp.dateCloses && formatDateSeconds(rfp.dateCloses))}
             </Card>
 
             {/* PROPOSALS */}

@@ -8,3 +8,4 @@ export * from './proposal';
 export * from './api';
 export * from './email';
 export * from './rfp';
+export * from './pagination';

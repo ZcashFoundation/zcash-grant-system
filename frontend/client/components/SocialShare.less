@@ -28,4 +28,19 @@
     .social-mixin(facebook, @facebook-color);
     .social-mixin(linkedin, @linkedin-color);
   }
+
+  &-icon {
+    display: inline;
+    cursor: default;
+
+    .social-mixin(@name, @color) {
+      &.is-@{name} {
+        color: @color;
+      }
+    }
+    .social-mixin(twitter, @twitter-color);
+    .social-mixin(reddit, @reddit-color);
+    .social-mixin(facebook, @facebook-color);
+    .social-mixin(linkedin, @linkedin-color);
+  }
 }

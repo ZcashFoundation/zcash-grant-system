@@ -4,10 +4,24 @@ export interface SocialMedia {
   service: string;
   username: string;
 }
+// NOTE: sync with backend/grant/utils/enums.py MilestoneStage
+export enum MILESTONE_STAGE {
+  IDLE = 'IDLE',
+  REQUESTED = 'REQUESTED',
+  REJECTED = 'REJECTED',
+  ACCEPTED = 'ACCEPTED',
+  PAID = 'PAID',
+}
 export interface Milestone {
+  id: number;
+  index: number;
   content: string;
-  dateCreated: string;
-  dateEstimated: string;
+  dateCreated: number;
+  dateEstimated: number;
+  dateRequested: number;
+  dateAccepted: number;
+  dateRejected: number;
+  datePaid: number;
   immediatePayout: boolean;
   payoutPercent: string;
   stage: string;
@@ -22,19 +36,38 @@ export enum RFP_STATUS {
 export interface RFP {
   id: number;
   dateCreated: number;
+  dateOpened: number | null;
+  dateClosed: number | null;
   title: string;
   brief: string;
   content: string;
   category: string;
   status: string;
   proposals: Proposal[];
+  matching: boolean;
+  bounty: string | null;
+  dateCloses: number | null;
 }
 export interface RFPArgs {
   title: string;
   brief: string;
   content: string;
   category: string;
-  status?: string;
+  matching: boolean;
+  dateCloses: number | null | undefined;
+  bounty: string | null | undefined;
+  status: string;
+}
+// NOTE: sync with backend/grant/utils/enums.py ProposalArbiterStatus
+export enum PROPOSAL_ARBITER_STATUS {
+  MISSING = 'MISSING',
+  NOMINATED = 'NOMINATED',
+  ACCEPTED = 'ACCEPTED',
+}
+export interface ProposalArbiter {
+  user?: User;
+  proposal: Proposal;
+  status: PROPOSAL_ARBITER_STATUS;
 }
 // NOTE: sync with backend/grant/utils/enums.py ProposalStatus
 export enum PROPOSAL_STATUS {
@@ -46,19 +79,29 @@ export enum PROPOSAL_STATUS {
   DELETED = 'DELETED',
   STAKING = 'STAKING',
 }
+// NOTE: sync with backend/grant/utils/enums.py ProposalStage
+export enum PROPOSAL_STAGE {
+  PREVIEW = 'PREVIEW',
+  FUNDING_REQUIRED = 'FUNDING_REQUIRED',
+  WIP = 'WIP',
+  COMPLETED = 'COMPLETED',
+}
 export interface Proposal {
   proposalId: number;
   brief: string;
   status: PROPOSAL_STATUS;
-  proposalAddress: string;
+  payoutAddress: string;
   dateCreated: number;
   dateApproved: number;
   datePublished: number;
+  deadlineDuration: number;
+  isFailed: boolean;
   title: string;
   content: string;
-  stage: string;
+  stage: PROPOSAL_STAGE;
   category: string;
   milestones: Milestone[];
+  currentMilestone?: Milestone;
   team: User[];
   comments: Comment[];
   contractStatus: string;
@@ -68,6 +111,7 @@ export interface Proposal {
   rejectReason: string;
   contributionMatching: number;
   rfp?: RFP;
+  arbiter: ProposalArbiter;
 }
 export interface Comment {
   commentId: string;
@@ -76,14 +120,32 @@ export interface Comment {
   dateCreated: number;
   content: string;
 }
+// NOTE: sync with backend/utils/enums.py
+export enum CONTRIBUTION_STATUS {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  DELETED = 'DELETED',
+}
 export interface Contribution {
   id: number;
-  status: string;
+  status: CONTRIBUTION_STATUS;
   txId: null | string;
   amount: string;
   dateCreated: number;
   user: User;
   proposal: Proposal;
+  addresses: {
+    transparent: string;
+    sprout: string;
+    memo: string;
+  };
+}
+export interface ContributionArgs {
+  proposalId: string | number;
+  userId: string | number;
+  amount: string;
+  status: string;
+  txId?: string;
 }
 export interface User {
   accountAddress: string;
@@ -96,6 +158,9 @@ export interface User {
   proposals: Proposal[];
   comments: Comment[];
   contributions: Contribution[];
+  silenced: boolean;
+  banned: boolean;
+  bannedReason: string;
 }
 
 export interface EmailExample {
@@ -109,10 +174,24 @@ export interface EmailExample {
 }
 
 export enum PROPOSAL_CATEGORY {
-  DAPP = 'DAPP',
   DEV_TOOL = 'DEV_TOOL',
   CORE_DEV = 'CORE_DEV',
   COMMUNITY = 'COMMUNITY',
   DOCUMENTATION = 'DOCUMENTATION',
   ACCESSIBILITY = 'ACCESSIBILITY',
+}
+
+export interface PageQuery {
+  page: number;
+  filters: string[];
+  search: string;
+  sort: string;
+}
+
+export interface PageData<T> extends PageQuery {
+  pageSize: number;
+  total: number;
+  items: T[];
+  fetching: boolean;
+  fetched: boolean;
 }

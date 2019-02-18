@@ -5,6 +5,7 @@
 
   &-controls {
     &-control + &-control {
+      margin-left: 0 !important;
       margin-top: 0.8rem;
     }
   }
@@ -34,6 +35,15 @@
   &-popover {
     &-overlay {
       max-width: 400px;
+    }
+  }
+
+  &-alert {
+    & pre {
+      margin: 1rem 0;
+      overflow: hidden;
+      word-break: break-all;
+      white-space: inherit;
     }
   }
 }

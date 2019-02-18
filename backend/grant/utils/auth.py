@@ -8,8 +8,22 @@ from grant.settings import BLOCKCHAIN_API_SECRET
 from grant.user.models import User
 
 
+class AuthException(Exception):
+    pass
+
+
+# use with: @blueprint.errorhandler(AuthException)
+def handle_auth_error(e):
+    return jsonify(message=str(e)), 403
+
+
 def get_authed_user():
-    return current_user if current_user.is_authenticated else None
+    return current_user if current_user.is_authenticated and not current_user.banned else None
+
+
+def throw_on_banned(user):
+    if user.banned:
+        raise AuthException("You are banned")
 
 
 def requires_auth(f):
@@ -17,6 +31,7 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated:
             return jsonify(message="Authentication is required to access this resource"), 401
+        throw_on_banned(current_user)
         g.current_user = current_user
         with sentry_sdk.configure_scope() as scope:
             scope.user = {
@@ -69,6 +84,26 @@ def requires_team_member_auth(f):
 
         if g.current_user not in proposal.team:
             return jsonify(message="You are not authorized to modify this proposal"), 403
+
+        g.current_proposal = proposal
+        return f(*args, **kwargs)
+
+    return requires_email_verified_auth(decorated)
+
+
+def requires_arbiter_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        proposal_id = kwargs["proposal_id"]
+        if not proposal_id:
+            return jsonify(message="Decorator requires_arbiter_auth requires path variable <proposal_id>"), 500
+
+        proposal = Proposal.query.filter_by(id=proposal_id).first()
+        if not proposal:
+            return jsonify(message="No proposal exists with id {}".format(proposal_id)), 404
+
+        if g.current_user != proposal.arbiter.user:
+            return jsonify(message="You are not arbiter this proposal"), 403
 
         g.current_proposal = proposal
         return f(*args, **kwargs)

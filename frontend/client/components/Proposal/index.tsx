@@ -8,10 +8,10 @@ import Loader from 'components/Loader';
 import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
-import { Proposal, STATUS } from 'types';
-import { getProposal } from 'modules/proposals/selectors';
+import { STATUS } from 'types';
 import { Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
 import { AlertProps } from 'antd/lib/alert';
+import ExceptionPage from 'components/ExceptionPage';
 import CampaignBlock from './CampaignBlock';
 import TeamBlock from './TeamBlock';
 import RFPBlock from './RFPBlock';
@@ -32,7 +32,9 @@ interface OwnProps {
 }
 
 interface StateProps {
-  proposal: Proposal | null;
+  detail: AppState['proposal']['detail'];
+  isFetchingDetail: AppState['proposal']['isFetchingDetail'];
+  detailError: AppState['proposal']['detailError'];
   user: AppState['auth']['user'];
 }
 
@@ -63,7 +65,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     // always refresh from server
     this.props.fetchProposal(this.props.proposalId);
 
-    if (this.props.proposal) {
+    if (this.props.detail) {
       this.checkBodyOverflow();
     }
     if (typeof window !== 'undefined') {
@@ -78,13 +80,13 @@ export class ProposalDetail extends React.Component<Props, State> {
   }
 
   componentDidUpdate() {
-    if (this.props.proposal) {
+    if (this.props.detail) {
       this.checkBodyOverflow();
     }
   }
 
   render() {
-    const { user, proposal, isPreview } = this.props;
+    const { user, detail: proposal, isPreview, detailError } = this.props;
     const {
       isBodyExpanded,
       isBodyOverflowing,
@@ -93,8 +95,12 @@ export class ProposalDetail extends React.Component<Props, State> {
       bodyId,
     } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
+    const wrongProposal = proposal && proposal.proposalId !== this.props.proposalId;
 
-    if (!proposal) {
+    if (detailError) {
+      return <ExceptionPage code="404" desc="Could not find that proposal" />;
+    }
+    if (!proposal || wrongProposal) {
       return <Loader size="large" />;
     }
 
@@ -243,22 +249,24 @@ export class ProposalDetail extends React.Component<Props, State> {
           </div>
         </div>
 
-        <LinkableTabs scrollToTabs defaultActiveKey="milestones">
-          <Tabs.TabPane tab="Milestones" key="milestones">
-            <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
-              <Milestones proposal={proposal} />
-            </div>
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Discussion" key="discussions" disabled={!isLive}>
-            <CommentsTab proposalId={proposal.proposalId} />
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
-            <UpdatesTab proposalId={proposal.proposalId} />
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
-            <ContributorsTab proposalId={proposal.proposalId} />
-          </Tabs.TabPane>
-        </LinkableTabs>
+        <div className="Proposal-bottom">
+          <LinkableTabs scrollToTabs defaultActiveKey="milestones">
+            <Tabs.TabPane tab="Milestones" key="milestones">
+              <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
+                <Milestones proposal={proposal} />
+              </div>
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Discussion" key="discussions" disabled={!isLive}>
+              <CommentsTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
+              <UpdatesTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
+              <ContributorsTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+          </LinkableTabs>
+        </div>
 
         {isTrustee && (
           <>
@@ -308,10 +316,11 @@ export class ProposalDetail extends React.Component<Props, State> {
   private closeCancelModal = () => this.setState({ isCancelOpen: false });
 }
 
-function mapStateToProps(state: AppState, ownProps: OwnProps) {
-  console.warn('TODO - new redux user-proposal-role/account');
+function mapStateToProps(state: AppState, _: OwnProps) {
   return {
-    proposal: getProposal(state, ownProps.proposalId),
+    detail: state.proposal.detail,
+    isFetchingDetail: state.proposal.isFetchingDetail,
+    detailError: state.proposal.detailError,
     user: state.auth.user,
   };
 }

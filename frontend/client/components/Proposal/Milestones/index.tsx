@@ -1,17 +1,27 @@
-import lodash from 'lodash';
-import React from 'react';
+import { throttle } from 'lodash';
+import React, { ReactNode } from 'react';
 import moment from 'moment';
-import { Alert, Steps } from 'antd';
-import { Proposal, MILESTONE_STATE } from 'types';
+import classnames from 'classnames';
+import { connect } from 'react-redux';
+import { Alert, Steps, Button, message, Modal, Input } from 'antd';
+import { AlertProps } from 'antd/lib/alert';
+import { StepProps } from 'antd/lib/steps';
+import TextArea from 'antd/lib/input/TextArea';
+import {
+  Milestone,
+  ProposalMilestone,
+  MILESTONE_STAGE,
+  PROPOSAL_ARBITER_STATUS,
+} from 'types';
+import { PROPOSAL_STAGE } from 'api/constants';
 import UnitDisplay from 'components/UnitDisplay';
 import Loader from 'components/Loader';
 import { AppState } from 'store/reducers';
-import { connect } from 'react-redux';
-import classnames from 'classnames';
-import './style.less';
 import Placeholder from 'components/Placeholder';
-
-const { WAITING, ACTIVE, PAID, REJECTED } = MILESTONE_STATE;
+import { proposalActions } from 'modules/proposals';
+import { ProposalDetail } from 'modules/proposals/reducers';
+import './index.less';
+import { Link } from 'react-router-dom';
 
 enum STEP_STATUS {
   WAIT = 'wait',
@@ -20,53 +30,68 @@ enum STEP_STATUS {
   ERROR = 'error',
 }
 
-const milestoneStateToStepState = {
-  [WAITING]: STEP_STATUS.WAIT,
-  [ACTIVE]: STEP_STATUS.PROCESS,
-  [PAID]: STEP_STATUS.FINISH,
-  [REJECTED]: STEP_STATUS.ERROR,
-};
+const milestoneStageToStepState = {
+  [MILESTONE_STAGE.IDLE]: STEP_STATUS.WAIT,
+  [MILESTONE_STAGE.REQUESTED]: STEP_STATUS.PROCESS,
+  [MILESTONE_STAGE.ACCEPTED]: STEP_STATUS.PROCESS,
+  [MILESTONE_STAGE.REJECTED]: STEP_STATUS.ERROR,
+  [MILESTONE_STAGE.ACCEPTED]: STEP_STATUS.FINISH,
+} as { [key in MILESTONE_STAGE]: StepProps['status'] };
+
+const fmtDate = (n: undefined | number) =>
+  (n && moment(n * 1000).format('MMM Do, YYYY, h:mm a')) || undefined;
+
+const fmtDateFromNow = (n: undefined | number) => (n && moment(n * 1000).fromNow()) || '';
 
 interface OwnProps {
-  proposal: Proposal;
+  proposal: ProposalDetail;
 }
 
-interface StateProps {
-  accounts: string[];
+interface DispatchProps {
+  requestPayout: typeof proposalActions.requestPayout;
+  acceptPayout: typeof proposalActions.acceptPayout;
+  rejectPayout: typeof proposalActions.rejectPayout;
 }
 
-type Props = OwnProps & StateProps;
+type Props = OwnProps & DispatchProps;
 
 interface State {
   step: number;
   activeMilestoneIdx: number;
   doTitlesOverflow: boolean;
+  showRejectModal: boolean;
+  rejectReason: string;
+  rejectMilestoneId: number;
 }
 
 class ProposalMilestones extends React.Component<Props, State> {
   stepTitleRefs: Array<React.RefObject<HTMLDivElement>> = [];
   ref: React.RefObject<HTMLDivElement>;
+  rejectInput: null | TextArea;
   throttledUpdateDoTitlesOverflow: () => void;
+
   constructor(props: Props) {
     super(props);
+    this.rejectInput = null;
     this.stepTitleRefs = this.props.proposal.milestones.map(() => React.createRef());
     this.ref = React.createRef();
-    this.throttledUpdateDoTitlesOverflow = lodash.throttle(
-      this.updateDoTitlesOverflow,
-      500,
-    );
+    this.throttledUpdateDoTitlesOverflow = throttle(this.updateDoTitlesOverflow, 500);
+    const step =
+      (this.props.proposal &&
+        this.props.proposal.currentMilestone &&
+        this.props.proposal.currentMilestone.index) ||
+      0;
     this.state = {
-      step: 0,
+      step,
       activeMilestoneIdx: 0,
       doTitlesOverflow: true,
+      showRejectModal: false,
+      rejectReason: '',
+      rejectMilestoneId: -1,
     };
   }
 
   componentDidMount() {
-    if (this.props.proposal) {
-      const activeMilestoneIdx = this.getActiveMilestoneIdx();
-      this.setState({ step: activeMilestoneIdx, activeMilestoneIdx });
-    }
     this.updateDoTitlesOverflow();
     window.addEventListener('resize', this.throttledUpdateDoTitlesOverflow);
   }
@@ -74,123 +99,116 @@ class ProposalMilestones extends React.Component<Props, State> {
     window.removeEventListener('resize', this.throttledUpdateDoTitlesOverflow);
   }
 
-  componentDidUpdate(_: Props, prevState: State) {
-    const activeMilestoneIdx = this.getActiveMilestoneIdx();
-    if (prevState.activeMilestoneIdx !== activeMilestoneIdx) {
-      this.setState({ step: activeMilestoneIdx, activeMilestoneIdx });
+  componentDidUpdate(prevProps: Props, _: State) {
+    const cm = this.props.proposal.currentMilestone;
+    const pcm = prevProps.proposal.currentMilestone;
+    const cmId = (cm && cm.id) || 0;
+    const pcmId = (pcm && pcm.id) || 0;
+    if (pcmId !== cmId) {
+      this.setState({ step: (cm && cm.index) || 0 });
+    }
+    const {
+      requestPayoutError,
+      isRequestingPayout,
+      acceptPayoutError,
+      isAcceptingPayout,
+      rejectPayoutError,
+      isRejectingPayout,
+    } = this.props.proposal;
+
+    if (!prevProps.proposal.requestPayoutError && requestPayoutError) {
+      message.error(requestPayoutError);
+    }
+    if (
+      prevProps.proposal.isRequestingPayout &&
+      !isRequestingPayout &&
+      !requestPayoutError
+    ) {
+      message.success('Payout requested.');
+    }
+
+    if (!prevProps.proposal.acceptPayoutError && acceptPayoutError) {
+      message.error(acceptPayoutError);
+    }
+    if (
+      prevProps.proposal.isAcceptingPayout &&
+      !isAcceptingPayout &&
+      !acceptPayoutError
+    ) {
+      message.success('Payout approved.');
+    }
+
+    if (!prevProps.proposal.rejectPayoutError && rejectPayoutError) {
+      message.error(rejectPayoutError);
+    }
+    if (
+      prevProps.proposal.isRejectingPayout &&
+      !isRejectingPayout &&
+      !rejectPayoutError
+    ) {
+      message.info('Payout rejected.');
     }
   }
 
   render() {
-    const { proposal } = this.props;
+    const { proposal, requestPayout, acceptPayout, rejectPayout } = this.props;
+    const { rejectReason, showRejectModal } = this.state;
     if (!proposal) {
       return <Loader />;
     }
-    const { milestones } = proposal;
-
-    const isTrustee = false; // TODO: Replace with being on the team
+    const { milestones, currentMilestone, isRejectingPayout } = proposal;
     const milestoneCount = milestones.length;
 
-    const milestoneSteps = milestones.map((milestone, i) => {
+    // arbiter reject modal
+    const rejectModal = (
+      <Modal
+        visible={showRejectModal}
+        title="Reject this milestone payout"
+        onOk={this.handleReject}
+        onCancel={() => this.setState({ showRejectModal: false })}
+        okButtonProps={{
+          disabled: rejectReason.length === 0,
+          loading: isRejectingPayout,
+        }}
+        cancelButtonProps={{
+          loading: isRejectingPayout,
+        }}
+      >
+        Please provide a reason:
+        <Input.TextArea
+          ref={ta => (this.rejectInput = ta)}
+          rows={4}
+          maxLength={250}
+          required={true}
+          value={rejectReason}
+          onChange={e => {
+            this.setState({ rejectReason: e.target.value });
+          }}
+        />
+      </Modal>
+    );
+
+    // generate steps
+    const milestoneSteps = milestones.map((ms, i) => {
       const status =
-        this.state.activeMilestoneIdx === i && milestone.state === WAITING
+        currentMilestone &&
+        currentMilestone.index === i &&
+        ms.stage === MILESTONE_STAGE.IDLE
           ? STEP_STATUS.PROCESS
-          : milestoneStateToStepState[milestone.state];
-
+          : milestoneStageToStepState[ms.stage];
       const className = this.state.step === i ? 'is-active' : 'is-inactive';
-      const estimatedDate = moment(milestone.dateEstimated).format('MMMM YYYY');
-      const reward = (
-        <UnitDisplay value={milestone.amount} symbol="ZEC" displayShortBalance={4} />
-      );
-      const alertStyle = { width: 'fit-content', margin: '0 0 1rem 0' };
-
       const stepProps = {
-        title: <div ref={this.stepTitleRefs[i]}>{milestone.title}</div>,
+        title: <div ref={this.stepTitleRefs[i]}>{ms.title}</div>,
         status,
         className,
         onClick: () => this.setState({ step: i }),
       };
-
-      let notification;
-
-      switch (milestone.state) {
-        case PAID:
-          notification = (
-            <Alert
-              type="success"
-              message={
-                <span>
-                  The team was awarded <strong>{reward}</strong>{' '}
-                  {milestone.isImmediatePayout
-                    ? 'as an initial payout'
-                    : // TODO: Add property for payout date on milestones
-                      `on ${moment().format('MMM Do, YYYY')}`}
-                  .
-                </span>
-              }
-              style={alertStyle}
-            />
-          );
-          break;
-        case ACTIVE:
-          notification = (
-            <Alert
-              type="info"
-              message={`
-                The team has requested a payout for this milestone. It is
-                currently under review.
-              `}
-              style={alertStyle}
-            />
-          );
-          break;
-        case REJECTED:
-          notification = (
-            <Alert
-              type="warning"
-              message={
-                <span>
-                  Payout for this milestone was rejected on{' '}
-                  {/* TODO: add property for payout rejection date on milestones */}
-                  {moment().format('MMM Do, YYYY')}.{isTrustee ? ' You ' : ' The team '}{' '}
-                  can request another review for payout at any time.
-                </span>
-              }
-              style={alertStyle}
-            />
-          );
-          break;
-      }
-
-      const statuses = (
-        <div className="ProposalMilestones-milestone-status">
-          {!milestone.isImmediatePayout && (
-            <div>
-              Estimate: <strong>{estimatedDate}</strong>
-            </div>
-          )}
-          <div>
-            Reward: <strong>{reward}</strong>
-          </div>
-        </div>
-      );
-
-      const content = (
-        <div className="ProposalMilestones-milestone">
-          <div className="ProposalMilestones-milestone-body">
-            <div className="ProposalMilestones-milestone-description">
-              <h3 className="ProposalMilestones-milestone-title">{milestone.title}</h3>
-              {statuses}
-              {notification}
-              {milestone.content}
-            </div>
-          </div>
-        </div>
-      );
-      return { key: i, stepProps, content };
+      return { key: i, stepProps };
     });
 
     const stepSize = milestoneCount > 5 ? 'small' : 'default';
+    const activeMilestone = proposal.milestones[this.state.step];
+    const activeIsCurrent = activeMilestone.id === proposal.currentMilestone!.id;
 
     return (
       <div
@@ -198,7 +216,6 @@ class ProposalMilestones extends React.Component<Props, State> {
         className={classnames({
           ['ProposalMilestones']: true,
           ['do-titles-overflow']: this.state.doTitlesOverflow,
-          [`is-count-${milestoneCount}`]: true,
         })}
       >
         {!!milestoneSteps.length ? (
@@ -208,7 +225,22 @@ class ProposalMilestones extends React.Component<Props, State> {
                 <Steps.Step key={mss.key} {...mss.stepProps} />
               ))}
             </Steps>
-            {milestoneSteps[this.state.step].content}
+            <Milestone
+              isFunded={[PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(
+                proposal.stage,
+              )}
+              proposalId={proposal.proposalId}
+              showRejectPayout={this.handleShowRejectPayout}
+              {...{ requestPayout, acceptPayout, rejectPayout }}
+              {...activeMilestone}
+              isCurrent={activeIsCurrent}
+              isTeamMember={proposal.isTeamMember || false}
+              isArbiter={proposal.isArbiter || false}
+              hasArbiter={
+                !!proposal.arbiter.user &&
+                proposal.arbiter.status === PROPOSAL_ARBITER_STATUS.ACCEPTED
+              }
+            />
           </>
         ) : (
           <Placeholder
@@ -216,21 +248,26 @@ class ProposalMilestones extends React.Component<Props, State> {
             subtitle="The creator of this proposal has not setup any milestones"
           />
         )}
+        {rejectModal}
       </div>
     );
   }
 
-  private getActiveMilestoneIdx = () => {
-    const { milestones } = this.props.proposal;
-    const activeMilestone =
-      milestones.find(
-        m =>
-          m.state === WAITING ||
-          m.state === ACTIVE ||
-          (m.state === PAID && !m.isPaid) ||
-          m.state === REJECTED,
-      ) || milestones[0];
-    return milestones.indexOf(activeMilestone);
+  private handleShowRejectPayout = (milestoneId: number) => {
+    this.setState({ showRejectModal: true, rejectMilestoneId: milestoneId });
+    // try to focus on text-area after modal loads
+    setTimeout(() => {
+      if (this.rejectInput) this.rejectInput.focus();
+    }, 200);
+  };
+
+  private handleReject = () => {
+    const { proposalId } = this.props.proposal;
+    const { rejectMilestoneId, rejectReason } = this.state;
+
+    this.props.rejectPayout(proposalId, rejectMilestoneId, rejectReason);
+
+    this.setState({ showRejectModal: false, rejectMilestoneId: -1, rejectReason: '' });
   };
 
   private updateDoTitlesOverflow = () => {
@@ -268,11 +305,286 @@ class ProposalMilestones extends React.Component<Props, State> {
   };
 }
 
-const ConnectedProposalMilestones = connect((state: AppState) => {
-  console.warn('TODO - new redux accounts/user-role-for-proposal', state);
-  return {
-    accounts: [],
-  };
-})(ProposalMilestones);
+// Milestone
+type MSProps = ProposalMilestone & DispatchProps;
+interface MilestoneProps extends MSProps {
+  showRejectPayout: (milestoneId: number) => void;
+  isTeamMember: boolean;
+  isArbiter: boolean;
+  hasArbiter: boolean;
+  isCurrent: boolean;
+  proposalId: number;
+  isFunded: boolean;
+}
+const Milestone: React.SFC<MilestoneProps> = p => {
+  const estimatedDate = moment(p.dateEstimated * 1000).format('MMMM YYYY');
+  const reward = <UnitDisplay value={p.amount} symbol="ZEC" displayShortBalance={4} />;
+  const getAlertProps = {
+    [MILESTONE_STAGE.IDLE]: () => null,
+    [MILESTONE_STAGE.REQUESTED]: () => ({
+      type: 'info',
+      message: (
+        <>
+          The team requested a payout for this milestone {fmtDateFromNow(p.dateRequested)}
+          . It is currently under review.
+        </>
+      ),
+    }),
+    [MILESTONE_STAGE.REJECTED]: () => ({
+      type: 'warning',
+      message: (
+        <span>
+          Payout for this milestone was rejected {fmtDateFromNow(p.dateRejected)}.
+          {p.isTeamMember ? ' You ' : ' The team '} can request another review for payout
+          at any time.
+        </span>
+      ),
+    }),
+    [MILESTONE_STAGE.ACCEPTED]: () => ({
+      type: 'info',
+      message: (
+        <span>
+          Payout for this milestone was accepted {fmtDateFromNow(p.dateAccepted)}.{' '}
+          <strong>{reward}</strong> will be sent to{' '}
+          {p.isTeamMember ? ' you ' : ' the team '} soon.
+        </span>
+      ),
+    }),
+    [MILESTONE_STAGE.PAID]: () => ({
+      type: 'success',
+      message: (
+        <span>
+          The team was awarded <strong>{reward}</strong>{' '}
+          {p.immediatePayout && ` as an initial payout `} on {fmtDate(p.datePaid)}.
+        </span>
+      ),
+    }),
+  } as { [key in MILESTONE_STAGE]: () => AlertProps | null };
+
+  const alertProps = getAlertProps[p.stage]();
+
+  return (
+    <div className="ProposalMilestones-milestone">
+      <div className="ProposalMilestones-milestone-body">
+        <div className="ProposalMilestones-milestone-description">
+          <h3 className="ProposalMilestones-milestone-title">{p.title}</h3>
+          <div className="ProposalMilestones-milestone-status">
+            {!p.immediatePayout && (
+              <div>
+                Estimate: <strong>{estimatedDate}</strong>
+              </div>
+            )}
+            <div>
+              Reward: <strong>{reward}</strong>
+            </div>
+          </div>
+          {alertProps && (
+            <Alert {...alertProps} className="ProposalMilestones-milestone-alert" />
+          )}
+          {p.content}
+        </div>
+        <MilestoneAction {...p} />
+      </div>
+    </div>
+  );
+};
+
+const MilestoneAction: React.SFC<MilestoneProps> = p => {
+  if (!p.isCurrent || !p.isFunded || p.stage === MILESTONE_STAGE.PAID) {
+    return null;
+  }
+  if (!p.hasArbiter && !p.isTeamMember) {
+    return null;
+  }
+
+  // TEAM INFO
+  const team = {
+    [MILESTONE_STAGE.IDLE]: () => (
+      <>
+        <h3>Payment Request</h3>
+        {p.immediatePayout && (
+          <p>
+            Congratulations on getting funded! You can now begin the process of receiving
+            your initial payment. Click below to request the first milestone payout. It
+            will instantly be approved, and you’ll receive your funds shortly thereafter.
+          </p>
+        )}
+        {!p.immediatePayout &&
+          p.index === 0 && (
+            <p>
+              Congratulations on getting funded! Click below to request your first
+              milestone payout.
+            </p>
+          )}
+        {!p.immediatePayout &&
+          p.index > 0 && <p>You can request a payment for this milestone.</p>}
+        <Button type="primary" onClick={() => p.requestPayout(p.proposalId, p.id)} block>
+          {(p.immediatePayout && 'Request initial payout') || 'Request payout'}
+        </Button>
+      </>
+    ),
+    [MILESTONE_STAGE.REQUESTED]: () => (
+      <>
+        <h3>Payment Requested</h3>
+        <p>
+          The milestone payout was requested on {fmtDate(p.dateRequested)}. You will be
+          notified when it has been reviewed.
+        </p>
+      </>
+    ),
+    [MILESTONE_STAGE.REJECTED]: () => (
+      <>
+        <h3>Payment Rejected</h3>
+        <p>The request for payout was rejected for the following reason:</p>
+        <q>{p.rejectReason}</q>
+        <p>You may request payout again when you are ready.</p>
+        <Button type="primary" onClick={() => p.requestPayout(p.proposalId, p.id)} block>
+          Request payout
+        </Button>
+      </>
+    ),
+    [MILESTONE_STAGE.ACCEPTED]: () => (
+      <>
+        <h3>Awaiting Payment</h3>
+        <p>
+          Payout approved on {fmtDate(p.dateAccepted)}! You will receive payment shortly.
+        </p>
+      </>
+    ),
+    [MILESTONE_STAGE.PAID]: () => <></>,
+  } as { [key in MILESTONE_STAGE]: () => ReactNode };
+
+  // OUTSIDERS/OTHERS INFO
+  const others = {
+    [MILESTONE_STAGE.IDLE]: () => (
+      <>
+        <h3>Payment Request</h3>
+        <p>The team may request a payout for this milestone at any time.</p>
+      </>
+    ),
+    [MILESTONE_STAGE.REQUESTED]: () => (
+      <>
+        <h3>Payment Requested</h3>
+        <p>
+          The team requested a payout on {fmtDate(p.dateRequested)}, and awaits approval.
+        </p>
+      </>
+    ),
+    [MILESTONE_STAGE.REJECTED]: () => (
+      <>
+        <h3>Payment Rejected</h3>
+        <p>
+          The payout request was denied on {fmtDate(p.dateRejected)} for the following
+          reason:
+        </p>
+        <q>{p.rejectReason}</q>
+      </>
+    ),
+    [MILESTONE_STAGE.ACCEPTED]: () => (
+      <>
+        <h3>Awaiting Payment</h3>
+        <p>The payout request was approved on {fmtDate(p.dateAccepted)}.</p>
+      </>
+    ),
+    [MILESTONE_STAGE.PAID]: () => <></>,
+  } as { [key in MILESTONE_STAGE]: () => ReactNode };
+
+  // ARBITER INFO
+  const arbiter = {
+    [MILESTONE_STAGE.IDLE]: () => (
+      <>
+        <h3>Payment Request</h3>
+        <p>
+          The team may request a payout for this milestone at any time. As arbiter you
+          will be responsible for reviewing these requests.
+        </p>
+      </>
+    ),
+    [MILESTONE_STAGE.REQUESTED]: () => (
+      <>
+        <h3>Payment Requested</h3>
+        <p>
+          The team requested a payout on {fmtDate(p.dateRequested)}, and awaits your
+          approval.
+        </p>
+        <div className="ProposalMilestones-milestone-action-controls">
+          <Button type="primary" onClick={() => p.acceptPayout(p.proposalId, p.id)}>
+            Accept
+          </Button>
+          <Button type="danger" onClick={() => p.showRejectPayout(p.id)}>
+            Reject
+          </Button>
+        </div>
+      </>
+    ),
+    [MILESTONE_STAGE.REJECTED]: () => (
+      <>
+        <h3>Payment Rejected</h3>
+        <p>
+          You rejected this payment request on {fmtDate(p.dateRejected)} for the following
+          reason:
+        </p>
+        <q>{p.rejectReason}</q>
+      </>
+    ),
+    [MILESTONE_STAGE.ACCEPTED]: () => (
+      <>
+        <h3>Awaiting Payment</h3>
+        <p>You approved this payment request on {fmtDate(p.dateAccepted)}.</p>
+      </>
+    ),
+    [MILESTONE_STAGE.PAID]: () => <></>,
+  } as { [key in MILESTONE_STAGE]: () => ReactNode };
+
+  let content = null;
+  if (p.isTeamMember) {
+    content = team[p.stage]();
+  } else if (p.isArbiter) {
+    content = arbiter[p.stage]();
+  } else {
+    content = others[p.stage]();
+  }
+
+  // special warning if no arbiter is set for team members
+  if (!p.hasArbiter && p.isTeamMember && p.stage === MILESTONE_STAGE.IDLE) {
+    content = (
+      <Alert
+        type="info"
+        message="Arbiter not assigned"
+        description={
+          <>
+            <p>
+              Arbiters are users who review requests for payment. When they have approved
+              a payment the grant administrators are then notified to make payment.
+            </p>
+            <p>
+              It typically takes a couple of days to have an arbiter assigned. Please{' '}
+              <Link target="_blank" to="/contact">
+                contact support
+              </Link>{' '}
+              if you have waited longer than three days.
+            </p>
+          </>
+        }
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="ProposalMilestones-milestone-divider" />
+      <div className="ProposalMilestones-milestone-action">{content}</div>
+    </>
+  );
+};
+
+const ConnectedProposalMilestones = connect<{}, DispatchProps, OwnProps, AppState>(
+  undefined,
+  {
+    requestPayout: proposalActions.requestPayout,
+    acceptPayout: proposalActions.acceptPayout,
+    rejectPayout: proposalActions.rejectPayout,
+  },
+)(ProposalMilestones);
 
 export default ConnectedProposalMilestones;

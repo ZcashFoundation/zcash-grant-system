@@ -1,5 +1,6 @@
 from dateutil.parser import parse
-from flask import Blueprint, g
+from decimal import Decimal
+from flask import Blueprint, g, request
 from flask_yoloapi import endpoint, parameter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
@@ -10,14 +11,17 @@ from grant.rfp.models import RFP
 from grant.utils.auth import (
     requires_auth,
     requires_team_member_auth,
+    requires_arbiter_auth,
     requires_email_verified_auth,
     get_authed_user,
     internal_webhook
 )
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email, make_url, from_zat, make_preview
-from grant.utils.enums import ProposalStatus, ContributionStatus
+from grant.utils.misc import is_email, make_url, from_zat
+from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
+from grant.utils import pagination
 from sqlalchemy import or_
+from datetime import datetime
 
 from .models import (
     Proposal,
@@ -55,20 +59,24 @@ def get_proposal(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
-@endpoint.api()
-def get_proposal_comments(proposal_id):
-    proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if not proposal:
-        return {"message": "No proposal matching id"}, 404
-
-    # Only pull top comments, replies will be attached to them
-    comments = Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None)
-    num_comments = Comment.query.filter_by(proposal_id=proposal_id).count()
-    return {
-        "proposalId": proposal_id,
-        "totalComments": num_comments,
-        "comments": comments_schema.dump(comments)
-    }
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
+def get_proposal_comments(proposal_id, page, filters, search, sort):
+    # only using page, currently
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.comment(
+        schema=comments_schema,
+        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None),
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
@@ -92,8 +100,11 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 
     # Make sure user has verified their email
     if not g.current_user.email_verification.has_verified:
-        message = "Please confirm your email before commenting."
-        return {"message": message}, 401
+        return {"message": "Please confirm your email before commenting"}, 401
+
+    # Make sure user is not silenced
+    if g.current_user.silenced:
+        return {"message": "Your account has been silenced, commenting is disabled."}, 403
 
     # Make the comment
     comment = Comment(
@@ -107,13 +118,11 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     dumped_comment = comment_schema.dump(comment)
 
     # TODO: Email proposal team if top-level comment
-    preview = make_preview(comment.content, 60)
     if not parent:
         for member in proposal.team:
             send_email(member.email_address, 'proposal_comment', {
                 'author': g.current_user,
                 'proposal': proposal,
-                'preview': preview,
                 'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
                 'author_url': make_url(f'/profile/{comment.author.id}'),
             })
@@ -122,7 +131,6 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         send_email(parent.author.email_address, 'comment_reply', {
             'author': g.current_user,
             'proposal': proposal,
-            'preview': preview,
             'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
             'author_url': make_url(f'/profile/{comment.author.id}'),
         })
@@ -132,23 +140,22 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 
 @blueprint.route("/", methods=["GET"])
 @endpoint.api(
-    parameter('stage', type=str, required=False)
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
 )
-def get_proposals(stage):
-    if stage:
-        proposals = (
-            Proposal.query.filter_by(status=ProposalStatus.LIVE, stage=stage)
-            .order_by(Proposal.date_created.desc())
-            .all()
-        )
-    else:
-        proposals = (
-            Proposal.query.filter_by(status=ProposalStatus.LIVE)
-            .order_by(Proposal.date_created.desc())
-            .all()
-        )
-    dumped_proposals = proposals_schema.dump(proposals)
-    return dumped_proposals
+def get_proposals(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.proposal(
+        schema=proposals_schema,
+        query=Proposal.query.filter_by(status=ProposalStatus.LIVE),
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
 
 
 @blueprint.route("/drafts", methods=["POST"])
@@ -164,9 +171,9 @@ def make_proposal_draft(rfp_id):
         rfp = RFP.query.filter_by(id=rfp_id).first()
         if not rfp:
             return {"message": "The request this proposal was made for doesn’t exist"}, 400
-        proposal.title = rfp.title
-        proposal.brief = rfp.brief
         proposal.category = rfp.category
+        if rfp.matching:
+            proposal.contribution_matching = 1.0
         rfp.proposals.append(proposal)
         db.session.add(rfp)
 
@@ -215,14 +222,15 @@ def update_proposal(milestones, proposal_id, **kwargs):
     # Delete & re-add milestones
     [db.session.delete(x) for x in g.current_proposal.milestones]
     if milestones:
-        for mdata in milestones:
+        for i, mdata in enumerate(milestones):
             m = Milestone(
                 title=mdata["title"],
                 content=mdata["content"],
-                date_estimated=parse(mdata["dateEstimated"]),
+                date_estimated=datetime.fromtimestamp(mdata["dateEstimated"]),
                 payout_percent=str(mdata["payoutPercent"]),
                 immediate_payout=mdata["immediatePayout"],
-                proposal_id=g.current_proposal.id
+                proposal_id=g.current_proposal.id,
+                index=i
             )
             db.session.add(m)
 
@@ -240,6 +248,7 @@ def delete_proposal(proposal_id):
         ProposalStatus.PENDING,
         ProposalStatus.APPROVED,
         ProposalStatus.REJECTED,
+        ProposalStatus.STAKING,
     ]
     status = g.current_proposal.status
     if status not in deleteable_statuses:
@@ -328,13 +337,11 @@ def post_proposal_update(proposal_id, title, content):
     db.session.commit()
 
     # Send email to all contributors (even if contribution failed)
-    preview = make_preview(update.content, 200)
     contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
     for c in contributions:
         send_email(c.user.email_address, 'contribution_update', {
             'proposal': g.current_proposal,
             'proposal_update': update,
-            'preview': preview,
             'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
         })
 
@@ -483,14 +490,10 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     contribution.confirm(tx_id=txid, amount=zec_amount)
     db.session.add(contribution)
-    db.session.commit()
+    db.session.flush()
 
     if contribution.proposal.status == ProposalStatus.STAKING:
-        # fully staked, set status PENDING & notify user
-        if contribution.proposal.is_staked:  # float(contribution.proposal.contributed) >= PROPOSAL_STAKING_AMOUNT:
-            contribution.proposal.status = ProposalStatus.PENDING
-            db.session.add(contribution.proposal)
-            db.session.commit()
+        contribution.proposal.set_pending_when_ready()
 
         # email progress of staking, partial or complete
         send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
@@ -498,7 +501,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             'proposal': contribution.proposal,
             'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
             'fully_staked': contribution.proposal.is_staked,
-            'stake_target': PROPOSAL_STAKING_AMOUNT
+            'stake_target': str(PROPOSAL_STAKING_AMOUNT.normalize()),
         })
 
     else:
@@ -521,8 +524,11 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
-    # on funding target reached.
 
+    # on funding target reached.
+    contribution.proposal.set_funded_when_ready()
+
+    db.session.commit()
     return None, 200
 
 
@@ -545,3 +551,76 @@ def delete_proposal_contribution(contribution_id):
     db.session.add(contribution)
     db.session.commit()
     return None, 202
+
+
+# request MS payout
+@blueprint.route("/<proposal_id>/milestone/<milestone_id>/request", methods=["PUT"])
+@requires_team_member_auth
+@endpoint.api()
+def request_milestone_payout(proposal_id, milestone_id):
+    if not g.current_proposal.is_funded:
+        return {"message": "Proposal is not fully funded"}, 400
+    for ms in g.current_proposal.milestones:
+        if ms.id == int(milestone_id):
+            ms.request_payout(g.current_user.id)
+            db.session.add(ms)
+            db.session.commit()
+            # email ARBITER to review payout request
+            send_email(g.current_proposal.arbiter.user.email_address, 'milestone_request', {
+                'proposal': g.current_proposal,
+                'proposal_milestones_url': make_url(f'/proposals/{g.current_proposal.id}?tab=milestones'),
+            })
+            return proposal_schema.dump(g.current_proposal), 200
+
+    return {"message": "No milestone matching id"}, 404
+
+
+# accept MS payout (arbiter)
+@blueprint.route("/<proposal_id>/milestone/<milestone_id>/accept", methods=["PUT"])
+@requires_arbiter_auth
+@endpoint.api()
+def accept_milestone_payout_request(proposal_id, milestone_id):
+    if not g.current_proposal.is_funded:
+        return {"message": "Proposal is not fully funded"}, 400
+    for ms in g.current_proposal.milestones:
+        if ms.id == int(milestone_id):
+            ms.accept_request(g.current_user.id)
+            db.session.add(ms)
+            db.session.commit()
+            # email TEAM that payout request accepted
+            amount = Decimal(ms.payout_percent) * Decimal(g.current_proposal.target) / 100
+            for member in g.current_proposal.team:
+                send_email(member.email_address, 'milestone_accept', {
+                    'proposal': g.current_proposal,
+                    'amount': amount,
+                    'proposal_milestones_url': make_url(f'/proposals/{g.current_proposal.id}?tab=milestones'),
+                })
+            return proposal_schema.dump(g.current_proposal), 200
+
+    return {"message": "No milestone matching id"}, 404
+
+
+# reject MS payout (arbiter) (reason)
+@blueprint.route("/<proposal_id>/milestone/<milestone_id>/reject", methods=["PUT"])
+@requires_arbiter_auth
+@endpoint.api(
+    parameter('reason', type=str, required=True),
+)
+def reject_milestone_payout_request(proposal_id, milestone_id, reason):
+    if not g.current_proposal.is_funded:
+        return {"message": "Proposal is not fully funded"}, 400
+    for ms in g.current_proposal.milestones:
+        if ms.id == int(milestone_id):
+            ms.reject_request(g.current_user.id, reason)
+            db.session.add(ms)
+            db.session.commit()
+            # email TEAM that payout request was rejected
+            for member in g.current_proposal.team:
+                send_email(member.email_address, 'milestone_reject', {
+                    'proposal': g.current_proposal,
+                    'admin_note': reason,
+                    'proposal_milestones_url': make_url(f'/proposals/{g.current_proposal.id}?tab=milestones'),
+                })
+            return proposal_schema.dump(g.current_proposal), 200
+
+    return {"message": "No milestone matching id"}, 404
