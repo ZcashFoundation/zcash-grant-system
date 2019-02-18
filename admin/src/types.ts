@@ -120,6 +120,12 @@ export interface Comment {
   proposal?: Proposal;
   dateCreated: number;
   content: string;
+  hidden: boolean;
+  reported: boolean;
+}
+export interface CommentArgs {
+  hidden: boolean;
+  reported: boolean;
 }
 // NOTE: sync with backend/utils/enums.py
 export enum CONTRIBUTION_STATUS {

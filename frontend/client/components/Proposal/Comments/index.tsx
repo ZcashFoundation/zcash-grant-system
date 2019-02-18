@@ -3,7 +3,11 @@ import { connect } from 'react-redux';
 import { Button, message } from 'antd';
 import { AppState } from 'store/reducers';
 import { Proposal } from 'types';
-import { fetchProposalComments, postProposalComment } from 'modules/proposals/actions';
+import {
+  fetchProposalComments,
+  postProposalComment,
+  reportProposalComment,
+} from 'modules/proposals/actions';
 import {
   getCommentsError,
   getIsFetchingComments,
@@ -33,6 +37,7 @@ interface StateProps {
 interface DispatchProps {
   fetchProposalComments: typeof fetchProposalComments;
   postProposalComment: typeof postProposalComment;
+  reportProposalComment: typeof reportProposalComment;
 }
 
 type Props = DispatchProps & OwnProps & StateProps;
@@ -168,5 +173,6 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
   {
     fetchProposalComments,
     postProposalComment,
+    reportProposalComment,
   },
 )(ProposalComments);

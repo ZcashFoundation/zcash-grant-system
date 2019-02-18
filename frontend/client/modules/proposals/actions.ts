@@ -183,3 +183,14 @@ export function postProposalComment(
     }
   };
 }
+
+export function reportProposalComment(
+  proposalId: Proposal['proposalId'],
+  commentId: Comment['id'],
+) {
+  return (dispatch: Dispatch<any>) => {
+    // dispatch({
+    //   type: types.POST_PROPOSAL_COMMENT,
+    // })
+  };
+}

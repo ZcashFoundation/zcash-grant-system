@@ -11,6 +11,7 @@ import {
   EmailExample,
   PageQuery,
   PageData,
+  CommentArgs,
 } from './types';
 
 // API
@@ -102,6 +103,11 @@ async function approveProposal(id: number, isApprove: boolean, rejectReason?: st
 
 async function fetchComments(params: Partial<PageQuery>) {
   const { data } = await api.get('/admin/comments', { params });
+  return data;
+}
+
+async function updateComment(id: number, args: Partial<CommentArgs>) {
+  const { data } = await api.put(`/admin/comments/${id}`, args);
   return data;
 }
 
@@ -208,6 +214,8 @@ const app = store({
   comments: {
     page: createDefaultPageData<Comment>('CREATED:DESC'),
   },
+  commentSaving: false,
+  commentSaved: false,
 
   rfps: [] as RFP[],
   rfpsFetching: false,
@@ -476,6 +484,19 @@ const app = store({
 
   resetCommentPageParams() {
     resetPageParams(app.comments);
+  },
+
+  async updateComment(id: number, args: Partial<CommentArgs>) {
+    app.commentSaving = true;
+    app.commentSaved = false;
+    try {
+      await updateComment(id, args);
+      app.commentSaved = true;
+      await app.fetchComments();
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.commentSaving = false;
   },
 
   // Email

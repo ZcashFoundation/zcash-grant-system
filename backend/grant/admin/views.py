@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
 from datetime import datetime
-from grant.comment.models import Comment, user_comments_schema, admin_comments_schema
+from grant.comment.models import Comment, user_comments_schema, admin_comments_schema, admin_comment_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.proposal.models import (
@@ -598,3 +598,24 @@ def get_comments(page, filters, search, sort):
         schema=admin_comments_schema
     )
     return page
+
+
+@blueprint.route('/comments/<comment_id>', methods=['PUT'])
+@endpoint.api(
+    parameter('hidden', type=bool, required=False),
+    parameter('reported', type=bool, required=False),
+)
+@admin_auth_required
+def edit_comment(comment_id, hidden, reported):
+    comment = Comment.query.filter(Comment.id == comment_id).first()
+    if not comment:
+        return {"message": "No comment matching that id"}, 404
+
+    if hidden is not None:
+        comment.hide(hidden)
+
+    if reported is not None:
+        comment.report(reported)
+
+    db.session.commit()
+    return admin_comment_schema.dump(comment)

@@ -1,55 +1,81 @@
 import React from 'react';
 import { view } from 'react-easy-state';
-import { Popconfirm, Tag, Tooltip, List } from 'antd';
-import { Link } from 'react-router-dom';
 import store from 'src/store';
-import { Proposal } from 'src/types';
-import { PROPOSAL_STATUSES, getStatusById } from 'util/statuses';
+import { Popconfirm, List, Avatar, Icon, message } from 'antd';
+import { Link } from 'react-router-dom';
+import { Comment } from 'src/types';
 import { formatDateSeconds } from 'util/time';
-import './ProposalItem.less';
+import Markdown from '../Markdown';
+import ShowMore from 'components/ShowMore';
+import './ModerationItem.less';
 
-class ProposalItemNaked extends React.Component<Proposal> {
-  state = {
-    showDelete: false,
-  };
+class ModerationItem extends React.Component<Comment> {
   render() {
     const p = this.props;
-    const status = getStatusById(PROPOSAL_STATUSES, p.status);
+    const avatarUrl = (p.author!.avatar && p.author!.avatar!.imageUrl) || undefined;
     const actions = [
       <Popconfirm
-        key="delete"
-        onConfirm={this.handleDelete}
-        title="Are you sure?"
-        okText="Delete"
-        okType="danger"
+        key="toggleHide"
+        onConfirm={this.handleHide}
+        title={`${
+          p.hidden ? 'Show' : 'Hide'
+        } the content of this comment on public view?`}
+        okText={p.hidden ? 'Show' : 'Hide'}
+        okType="primary"
         placement="left"
       >
-        <a>delete</a>
+        <a>{p.hidden ? 'show' : 'hide'}</a>
       </Popconfirm>,
     ];
 
     return (
-      <List.Item key={p.proposalId} className="ProposalItem" actions={actions}>
-        <Link to={`/proposals/${p.proposalId}`}>
-          <h2>
-            {p.title || '(no title)'}
-            <Tooltip title={status.hint}>
-              <Tag color={status.tagColor}>{status.tagDisplay}</Tag>
-            </Tooltip>
-          </h2>
-          <p>Created: {formatDateSeconds(p.dateCreated)}</p>
-          <p>{p.brief}</p>
-          {p.rfp && (
-            <p>Submitted for RFP: <strong>{p.rfp.title}</strong></p>
-          )}
-        </Link>
+      <List.Item className="ModerationItem" actions={actions}>
+        <List.Item.Meta
+          avatar={<Avatar icon="user" src={avatarUrl} shape="square" />}
+          title={
+            <>
+              <Link to={`/users/${p.author!.userid}`}>{p.author!.displayName}</Link>{' '}
+              <small>commented on</small>{' '}
+              <Link to={`/proposals/${p.proposalId}`}>
+                {p.proposal && p.proposal.title}
+              </Link>{' '}
+              <small>at {formatDateSeconds(p.dateCreated)}</small>{' '}
+              {p.hidden && (
+                <>
+                  <Icon type="eye-invisible" />{' '}
+                </>
+              )}
+              {p.reported && (
+                <>
+                  <Icon type="flag" />{' '}
+                </>
+              )}
+            </>
+          }
+          description={
+            <ShowMore height={100}>
+              <Markdown source={p.content} />
+            </ShowMore>
+          }
+        />
       </List.Item>
     );
   }
-  private handleDelete = () => {
-    store.deleteProposal(this.props.proposalId);
+  private handleHide = async () => {
+    await store.updateComment(this.props.id, { hidden: !this.props.hidden });
+    if (store.commentSaved) {
+      message.success(
+        <>
+          <b>
+            {this.props.author!.displayName}
+            's
+          </b>{' '}
+          comment on <b>{this.props.proposal!.title}</b>{' '}
+          {this.props.hidden ? 'hidden' : 'now visible'}
+        </>,
+      );
+    }
   };
 }
 
-const ProposalItem = view(ProposalItemNaked);
-export default ProposalItem;
+export default view(ModerationItem);

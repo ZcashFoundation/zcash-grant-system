@@ -239,10 +239,6 @@ class CommentPagination(Pagination):
         self.SORT_MAP = {
             'CREATED:DESC': Comment.date_created.desc(),
             'CREATED:ASC': Comment.date_created,
-            # 'AUTHOR:DESC': Comment.author.display_name.desc(),
-            # 'AUTHOR:ASC': Comment.author.display_name,
-            # 'PROPOSAL:DESC': Comment.proposal.title.desc(),
-            # 'PROPOSAL:ASC': Comment.proposal.title,
         }
 
     def paginate(
@@ -260,13 +256,10 @@ class CommentPagination(Pagination):
         # FILTER
         if filters:
             self.validate_filters(filters)
-            # if 'BANNED' in filters:
-            #     query = query.filter(User.banned == True)
-            # if 'SILENCED' in filters:
-            #     query = query.filter(User.silenced == True)
-            # if 'ARBITER' in filters:
-            #     query = query.join(User.arbiter_proposals) \
-            #         .filter(ProposalArbiter.status == ProposalArbiterStatus.ACCEPTED)
+            if 'REPORTED' in filters:
+                query = query.filter(Comment.reported == True)
+            if 'HIDDEN' in filters:
+                query = query.filter(Comment.hidden == True)
 
         # SORT (see self.SORT_MAP)
         if sort:
@@ -276,8 +269,7 @@ class CommentPagination(Pagination):
         # SEARCH
         if search:
             query = query.filter(
-                Comment.content.ilike(f'%{search}%') |
-                User.display_name.ilike(f'%{search}%')
+                Comment.content.ilike(f'%{search}%')
             )
 
         res = query.paginate(page, self.PAGE_SIZE, False)

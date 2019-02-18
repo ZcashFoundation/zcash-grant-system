@@ -111,3 +111,24 @@ export const userFilters: Filters = {
   list: USER_FILTERS,
   getById: getFilterById(USER_FILTERS),
 };
+
+// Comment
+const COMMENT_FILTERS = [
+  {
+    id: `REPORTED`,
+    display: `Reported`,
+    color: '#ffaa00',
+    group: 'Misc',
+  },
+  {
+    id: `HIDDEN`,
+    display: `Hidden`,
+    color: '#bebebe',
+    group: 'Misc',
+  },
+];
+
+export const commentFilters = {
+  list: COMMENT_FILTERS,
+  getById: getFilterById(COMMENT_FILTERS),
+};

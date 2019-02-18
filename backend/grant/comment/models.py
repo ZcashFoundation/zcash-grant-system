@@ -4,6 +4,8 @@ from grant.extensions import ma, db
 from grant.utils.ma_fields import UnixDate
 from sqlalchemy.orm import raiseload
 
+HIDDEN_CONTENT = '~~comment removed by admin~~'
+
 
 class Comment(db.Model):
     __tablename__ = "comment"
@@ -11,6 +13,8 @@ class Comment(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
     content = db.Column(db.Text, nullable=False)
+    hidden = db.Column(db.Boolean, nullable=False, default=False, server_default=db.text("FALSE"))
+    reported = db.Column(db.Boolean, nullable=True, default=False, server_default=db.text("FALSE"))
 
     parent_comment_id = db.Column(db.Integer, db.ForeignKey("comment.id"), nullable=True)
     proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
@@ -34,6 +38,14 @@ class Comment(db.Model):
             .order_by(Comment.date_created.desc()) \
             .all()
 
+    def report(self, reported: bool):
+        self.reported = reported
+        db.session.add(self)
+
+    def hide(self, hidden: bool):
+        self.hidden = hidden
+        db.session.add(self)
+
 
 class CommentSchema(ma.Schema):
     class Meta:
@@ -46,12 +58,18 @@ class CommentSchema(ma.Schema):
             "content",
             "parent_comment_id",
             "date_created",
-            "replies"
+            "replies",
+            "reported",
+            "hidden",
         )
 
+    content = ma.Method("get_content")
     date_created = UnixDate(attribute='date_created')
     author = ma.Nested("UserSchema")
     replies = ma.Nested("CommentSchema", many=True)
+
+    def get_content(self, obj):
+        return HIDDEN_CONTENT if obj.hidden else obj.content
 
 
 comment_schema = CommentSchema()
@@ -76,10 +94,17 @@ class UserCommentSchema(ma.Schema):
             "milestones",
             "content",
             "invites",
-            "updates"
+            "updates",
+            "reported",
+            "hidden",
         ]
     )
+
+    content = ma.Method("get_content")
     date_created = UnixDate(attribute='date_created')
+
+    def get_content(self, obj):
+        return HIDDEN_CONTENT if obj.hidden else obj.content
 
 
 user_comment_schema = UserCommentSchema()
@@ -97,6 +122,8 @@ class AdminCommentSchema(ma.Schema):
             "proposal_id",
             "content",
             "date_created",
+            "reported",
+            "hidden",
         )
 
     proposal = ma.Nested(
@@ -113,7 +140,8 @@ class AdminCommentSchema(ma.Schema):
             "userid",
             "email_address",
             "display_name",
-            "title"
+            "title",
+            "avatar",
         ]
     )
     date_created = UnixDate(attribute='date_created')

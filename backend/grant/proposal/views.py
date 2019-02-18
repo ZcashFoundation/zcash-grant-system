@@ -134,6 +134,23 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     return dumped_comment, 201
 
 
+@blueprint.route("/<proposal_id>/comments/<comment_id>/report", methods=["PUT"])
+@requires_email_verified_auth
+@endpoint.api
+def report_proposal_comment(proposal_id, comment_id):
+    # Make sure proposal exists
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    comment = Comment.query.filter_by(id=comment_id).first()
+    if not comment:
+        return {"message": "Comment doesn’t exist"}, 404
+
+    comment.report(True)
+    return None, 200
+
+
 @blueprint.route("/", methods=["GET"])
 @endpoint.api(
     parameter('page', type=int, required=False),

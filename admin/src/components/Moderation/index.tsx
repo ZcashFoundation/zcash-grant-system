@@ -1,23 +1,23 @@
 import React from 'react';
 import { view } from 'react-easy-state';
 import store from 'src/store';
-// import ProposalItem from './ProposalItem';
+import ModerationItem from './ModerationItem';
 import Pageable from 'components/Pageable';
 import { Comment } from 'src/types';
-import { proposalFilters } from 'util/filters';
+import { commentFilters } from 'src/util/filters';
 
 class Moderation extends React.Component<{}> {
   render() {
     const { page } = store.comments;
     // NOTE: sync with /backend ... pagination.py ProposalCommentPagination.SORT_MAP
-    const sorts = ['CREATED:DESC', 'CREATED:ASC', 'PUBLISHED:DESC', 'PUBLISHED:ASC'];
+    const sorts = ['CREATED:DESC', 'CREATED:ASC'];
     return (
       <Pageable
         page={page}
-        filters={null}
+        filters={commentFilters}
         sorts={sorts}
         searchPlaceholder="Search comment content"
-        renderItem={(p: Comment) => <div key={p.id}>{p.content}</div>}
+        renderItem={(p: Comment) => <ModerationItem key={p.id} {...p} />}
         handleSearch={store.fetchComments}
         handleChangeQuery={store.setCommentPageParams}
         handleResetQuery={store.resetCommentPageParams}

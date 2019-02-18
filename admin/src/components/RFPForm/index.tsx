@@ -1,9 +1,21 @@
 import React from 'react';
-import moment, { Moment } from 'moment';
+import moment from 'moment';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Form, Input, Select, Icon, Button, message, Spin, Checkbox, Row, Col, DatePicker } from 'antd';
+import {
+  Form,
+  Input,
+  Select,
+  Icon,
+  Button,
+  message,
+  Spin,
+  Checkbox,
+  Row,
+  Col,
+  DatePicker,
+} from 'antd';
 import Exception from 'ant-design-pro/lib/Exception';
 import { FormComponentProps } from 'antd/lib/form';
 import { PROPOSAL_CATEGORY, RFP_STATUS, RFPArgs } from 'src/types';
@@ -70,7 +82,7 @@ class RFPForm extends React.Component<Props, State> {
         return <Exception type="404" desc="This RFP does not exist" />;
       }
     }
-    
+
     const dateCloses = isFieldsTouched(['dateCloses'])
       ? getFieldValue('dateCloses')
       : defaults.dateCloses && moment(defaults.dateCloses * 1000);
@@ -100,7 +112,9 @@ class RFPForm extends React.Component<Props, State> {
         {rfpId && (
           <Form.Item
             label="Status"
-            help={forceClosed && 'Status is forced to "Closed" when close date is in the past'}
+            help={
+              forceClosed && 'Status is forced to "Closed" when close date is in the past'
+            }
           >
             {getFieldDecorator('status', {
               initialValue: defaults.status,
@@ -214,10 +228,10 @@ class RFPForm extends React.Component<Props, State> {
               help="Date that proposals will stop being submittable by"
             >
               {getFieldDecorator('dateCloses', {
-                initialValue: defaults.dateCloses ? moment(defaults.dateCloses * 1000) : undefined,
-              })(
-                <DatePicker size="large" />
-              )}
+                initialValue: defaults.dateCloses
+                  ? moment(defaults.dateCloses * 1000)
+                  : undefined,
+              })(<DatePicker size="large" />)}
             </Form.Item>
           </Col>
         </Row>
