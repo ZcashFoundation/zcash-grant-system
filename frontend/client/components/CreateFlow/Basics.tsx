@@ -1,11 +1,31 @@
 import React from 'react';
-import { Input, Form, Icon, Select, Alert } from 'antd';
+import { connect } from 'react-redux';
+import { Input, Form, Icon, Select, Alert, Popconfirm, message } from 'antd';
 import { SelectValue } from 'antd/lib/select';
 import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
 import { ProposalDraft, RFP } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import { typedKeys } from 'utils/ts';
 import { Link } from 'react-router-dom';
+import { unlinkProposalRFP } from 'modules/create/actions';
+import { AppState } from 'store/reducers';
+
+interface OwnProps {
+  proposalId: number;
+  initialState?: Partial<State>;
+  updateForm(form: Partial<ProposalDraft>): void;
+}
+
+interface StateProps {
+  isUnlinkingProposalRFP: AppState['create']['isUnlinkingProposalRFP'];
+  unlinkProposalRFPError: AppState['create']['unlinkProposalRFPError'];
+}
+
+interface DispatchProps {
+  unlinkProposalRFP: typeof unlinkProposalRFP;
+}
+
+type Props = OwnProps & StateProps & DispatchProps;
 
 interface State extends Partial<ProposalDraft> {
   title: string;
@@ -15,12 +35,7 @@ interface State extends Partial<ProposalDraft> {
   rfp?: RFP;
 }
 
-interface Props {
-  initialState?: Partial<State>;
-  updateForm(form: Partial<ProposalDraft>): void;
-}
-
-export default class CreateFlowBasics extends React.Component<Props, State> {
+class CreateFlowBasics extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -32,22 +47,22 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
     };
   }
 
-  handleInputChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { value, name } = event.currentTarget;
-    this.setState({ [name]: value } as any, () => {
-      this.props.updateForm(this.state);
-    });
-  };
-
-  handleCategoryChange = (value: SelectValue) => {
-    this.setState({ category: value as PROPOSAL_CATEGORY }, () => {
-      this.props.updateForm(this.state);
-    });
-  };
+  componentDidUpdate(prevProps: Props) {
+    const { unlinkProposalRFPError, isUnlinkingProposalRFP } = this.props;
+    if (
+      unlinkProposalRFPError &&
+      unlinkProposalRFPError !== prevProps.unlinkProposalRFPError
+    ) {
+      console.error('Failed to unlink request:', unlinkProposalRFPError);
+      message.error('Failed to unlink request');
+    } else if (!isUnlinkingProposalRFP && prevProps.isUnlinkingProposalRFP) {
+      this.setState({ rfp: undefined });
+      message.success('Unlinked proposal from request');
+    }
+  }
 
   render() {
+    const { isUnlinkingProposalRFP } = this.props;
     const { title, brief, category, target, rfp } = this.state;
     const errors = getCreateErrors(this.state, true);
 
@@ -63,8 +78,15 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
                 <Link to={`/requests/${rfp.id}`} target="_blank">
                   {rfp.title}
                 </Link>
-                . If you didn’t mean to do this, you can delete this proposal and create a
-                new one.
+                . If you didn’t mean to do this, or want to unlink it,{' '}
+                <Popconfirm
+                  title="Are you sure? This cannot be undone."
+                  onConfirm={this.unlinkRfp}
+                  okButtonProps={{ loading: isUnlinkingProposalRFP }}
+                >
+                  <a>click here</a>
+                </Popconfirm>{' '}
+                to do so.
               </>
             }
             style={{ marginBottom: '2rem' }}
@@ -138,4 +160,31 @@ export default class CreateFlowBasics extends React.Component<Props, State> {
       </Form>
     );
   }
+
+  private handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { value, name } = event.currentTarget;
+    this.setState({ [name]: value } as any, () => {
+      this.props.updateForm(this.state);
+    });
+  };
+
+  private handleCategoryChange = (value: SelectValue) => {
+    this.setState({ category: value as PROPOSAL_CATEGORY }, () => {
+      this.props.updateForm(this.state);
+    });
+  };
+
+  private unlinkRfp = () => {
+    this.props.unlinkProposalRFP(this.props.proposalId);
+  };
 }
+
+export default connect<StateProps, DispatchProps, OwnProps, AppState>(
+  state => ({
+    isUnlinkingProposalRFP: state.create.isUnlinkingProposalRFP,
+    unlinkProposalRFPError: state.create.unlinkProposalRFPError,
+  }),
+  { unlinkProposalRFP },
+)(CreateFlowBasics);

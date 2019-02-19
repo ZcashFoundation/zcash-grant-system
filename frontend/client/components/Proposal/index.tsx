@@ -49,7 +49,6 @@ interface State {
   isBodyOverflowing: boolean;
   isUpdateOpen: boolean;
   isCancelOpen: boolean;
-  bodyId: string;
 }
 
 export class ProposalDetail extends React.Component<Props, State> {
@@ -58,8 +57,9 @@ export class ProposalDetail extends React.Component<Props, State> {
     isBodyOverflowing: false,
     isUpdateOpen: false,
     isCancelOpen: false,
-    bodyId: `body-${Math.floor(Math.random() * 1000000)}`,
   };
+
+  bodyEl: HTMLElement | null = null;
 
   componentDidMount() {
     // always refresh from server
@@ -87,13 +87,7 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   render() {
     const { user, detail: proposal, isPreview, detailError } = this.props;
-    const {
-      isBodyExpanded,
-      isBodyOverflowing,
-      isCancelOpen,
-      isUpdateOpen,
-      bodyId,
-    } = this.state;
+    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, isUpdateOpen } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
     const wrongProposal = proposal && proposal.proposalId !== this.props.proposalId;
 
@@ -209,7 +203,7 @@ export class ProposalDetail extends React.Component<Props, State> {
             </h1>
             <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
               <div
-                id={bodyId}
+                ref={el => (this.bodyEl = el)}
                 className={classnames({
                   ['Proposal-top-main-block-bodyText']: true,
                   ['is-expanded']: isBodyExpanded,
@@ -291,20 +285,17 @@ export class ProposalDetail extends React.Component<Props, State> {
   };
 
   private checkBodyOverflow = () => {
-    const { isBodyExpanded, bodyId, isBodyOverflowing } = this.state;
-    if (isBodyExpanded) {
+    const { isBodyExpanded, isBodyOverflowing } = this.state;
+    if (isBodyExpanded || !this.bodyEl) {
       return;
     }
 
-    // Use id instead of ref because styled component ref doesn't return html element
-    const bodyEl = document.getElementById(bodyId);
-    if (!bodyEl) {
-      return;
-    }
-
-    if (isBodyOverflowing && bodyEl.scrollHeight <= bodyEl.clientHeight) {
+    if (isBodyOverflowing && this.bodyEl.scrollHeight <= this.bodyEl.clientHeight) {
       this.setState({ isBodyOverflowing: false });
-    } else if (!isBodyOverflowing && bodyEl.scrollHeight > bodyEl.clientHeight) {
+    } else if (
+      !isBodyOverflowing &&
+      this.bodyEl.scrollHeight > this.bodyEl.clientHeight
+    ) {
       this.setState({ isBodyOverflowing: true });
     }
   };

@@ -257,6 +257,16 @@ def update_proposal(milestones, proposal_id, **kwargs):
     return proposal_schema.dump(g.current_proposal), 200
 
 
+@blueprint.route("/<proposal_id>/rfp", methods=["DELETE"])
+@requires_team_member_auth
+@endpoint.api()
+def unlink_proposal_from_rfp(proposal_id):
+    g.current_proposal.rfp_id = None
+    db.session.add(g.current_proposal)
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
+
+
 @blueprint.route("/<proposal_id>", methods=["DELETE"])
 @requires_team_member_auth
 @endpoint.api()
