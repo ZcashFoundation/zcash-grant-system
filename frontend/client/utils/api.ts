@@ -145,6 +145,12 @@ export function massageSerializedState(state: AppState) {
       (state.proposal.detail.funded as any) as string,
       16,
     );
+    if (state.proposal.detail.rfp && state.proposal.detail.rfp.bounty) {
+      state.proposal.detail.rfp.bounty = new BN(
+        (state.proposal.detail.rfp.bounty as any) as string,
+        16,
+      );
+    }
   }
   // proposals
   state.proposal.page.items = state.proposal.page.items.map(p => ({
