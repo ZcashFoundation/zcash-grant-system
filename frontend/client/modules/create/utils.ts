@@ -101,7 +101,7 @@ export function getCreateErrors(
     const milestoneErrors = milestones.map((ms, idx) => {
       if (!ms.title || !ms.content || !ms.dateEstimated || !ms.payoutPercent) {
         didMilestoneError = true;
-        return '';
+        return `Milestone ${idx + 1} is missing fields`;
       }
 
       let err = '';
@@ -111,10 +111,18 @@ export function getCreateErrors(
         err = 'Description can only be 200 characters maximum';
       }
 
-      // Last one shows percentage errors
+      if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
+        err = 'Payout percent must be a valid number';
+      }
+
+      // Last one shows percentage errors (if number is valid)
       cumulativeMilestonePct += parseInt(ms.payoutPercent, 10);
-      if (idx === milestones.length - 1 && cumulativeMilestonePct !== 100) {
-        err = `Payout percentages doesn’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
+      if (
+        idx === milestones.length - 1 &&
+        cumulativeMilestonePct !== 100 &&
+        !Number.isNaN(cumulativeMilestonePct)
+      ) {
+        err = `Payout percentages don’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
       }
 
       didMilestoneError = didMilestoneError || !!err;
