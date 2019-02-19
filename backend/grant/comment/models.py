@@ -3,7 +3,6 @@ import datetime
 from functools import reduce
 from grant.extensions import ma, db
 from grant.utils.ma_fields import UnixDate
-from marshmallow import pre_dump
 from sqlalchemy.orm import raiseload
 
 HIDDEN_CONTENT = '~~comment removed by admin~~'
@@ -87,13 +86,6 @@ class CommentSchema(ma.Schema):
     # filter out "dead" comments
     def get_replies(self, obj):
         return comments_schema.dump(filter_dead(obj.replies))
-
-    # filter out top-level "dead" comments
-    @pre_dump(pass_many=True)
-    def clear_hidden(self, data, many):
-        if many:
-            return filter_dead(data)
-        return data
 
 
 comment_schema = CommentSchema()

@@ -70,7 +70,7 @@ def get_proposal_comments(proposal_id, page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.comment(
         schema=comments_schema,
-        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None),
+        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None, hidden=False),
         page=page,
         filters=filters_workaround,
         search=search,
