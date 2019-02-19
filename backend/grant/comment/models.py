@@ -1,7 +1,9 @@
 import datetime
 
+from functools import reduce
 from grant.extensions import ma, db
 from grant.utils.ma_fields import UnixDate
+from marshmallow import pre_dump
 from sqlalchemy.orm import raiseload
 
 HIDDEN_CONTENT = '~~comment removed by admin~~'
@@ -47,6 +49,16 @@ class Comment(db.Model):
         db.session.add(self)
 
 
+# are all of the replies hidden?
+def all_hidden(replies):
+    return reduce(lambda ah, r: ah and r.hidden, replies, True)
+
+
+# remove replies that are hidden and have all hidden children or no children
+def filter_dead(replies):
+    return [x for x in replies if not (x.hidden and all_hidden(x.replies))]
+
+
 class CommentSchema(ma.Schema):
     class Meta:
         model = Comment
@@ -66,10 +78,22 @@ class CommentSchema(ma.Schema):
     content = ma.Method("get_content")
     date_created = UnixDate(attribute='date_created')
     author = ma.Nested("UserSchema")
-    replies = ma.Nested("CommentSchema", many=True)
+    # custome handling of replies, was: replies = ma.Nested("CommentSchema", many=True)
+    replies = ma.Method("get_replies")
 
     def get_content(self, obj):
         return HIDDEN_CONTENT if obj.hidden else obj.content
+
+    # filter out "dead" comments
+    def get_replies(self, obj):
+        return comments_schema.dump(filter_dead(obj.replies))
+
+    # filter out top-level "dead" comments
+    @pre_dump(pass_many=True)
+    def clear_hidden(self, data, many):
+        if many:
+            return filter_dead(data)
+        return data
 
 
 comment_schema = CommentSchema()
