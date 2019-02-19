@@ -33,11 +33,11 @@ from .models import (
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
-get_users_query_args = {"proposalId": fields.Str(required=False, missing=None)}
-
 
 @blueprint.route("/", methods=["GET"])
-@query(get_users_query_args)
+@query({
+    "proposalId": fields.Str(required=False, missing=None)
+})
 def get_users(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
@@ -61,17 +61,14 @@ def get_me():
     return dumped_user
 
 
-get_user_query_args = {
+@blueprint.route("/<user_id>", methods=["GET"])
+@query({
     "withProposals": fields.Bool(required=False, missing=None),
     "withComments": fields.Bool(required=False, missing=None),
     "withFunded": fields.Bool(required=False, missing=None),
     "withPending": fields.Bool(required=False, missing=None),
     "withArbitrated": fields.Bool(required=False, missing=None)
-}
-
-
-@blueprint.route("/<user_id>", methods=["GET"])
-@query(get_user_query_args)
+})
 def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated):
     user = User.get_by_id(user_id)
     if user:
@@ -110,16 +107,13 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
         return {"message": message}, 404
 
 
-create_user_json_args = {
+@blueprint.route("/", methods=["POST"])
+@body({
     "emailAddress": fields.Str(required=True),
     "password": fields.Str(required=True),
     "displayName": fields.Str(required=True),
     "title": fields.Str(required=True),
-}
-
-
-@blueprint.route("/", methods=["POST"])
-@body(create_user_json_args)
+})
 def create_user(
         email_address,
         password,
@@ -141,14 +135,11 @@ def create_user(
     return result, 201
 
 
-auth_user_json_args = {
+@blueprint.route("/auth", methods=["POST"])
+@body({
     "email": fields.Str(required=True),
     "password": fields.Str(required=True)
-}
-
-
-@blueprint.route("/auth", methods=["POST"])
-@body(auth_user_json_args)
+})
 def auth_user(email, password):
     existing_user = User.get_by_email(email)
     if not existing_user:
@@ -160,15 +151,12 @@ def auth_user(email, password):
     return self_user_schema.dump(existing_user)
 
 
-update_user_password_json_args = {
-    "currentPassword": fields.Str(required=True),
-    "password": fields.Str(required=True)
-}
-
-
 @blueprint.route("/me/password", methods=["PUT"])
 @requires_auth
-@body(update_user_password_json_args)
+@body({
+    "currentPassword": fields.Str(required=True),
+    "password": fields.Str(required=True)
+})
 def update_user_password(current_password, password):
     if not g.current_user.check_password(current_password):
         return {"message": "Current password incorrect"}, 403
@@ -176,15 +164,12 @@ def update_user_password(current_password, password):
     return {"message": "ok"}, 200
 
 
-update_user_email_json_args = {
-    "email": fields.Str(required=True),
-    "password": fields.Str(required=True)
-}
-
-
 @blueprint.route("/me/email", methods=["PUT"])
 @requires_auth
-@body(update_user_email_json_args)
+@body({
+    "email": fields.Str(required=True),
+    "password": fields.Str(required=True)
+})
 def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
@@ -216,14 +201,12 @@ def get_user_social_auth_url(service):
         return {"message": str(e)}, 400
 
 
-verify_user_social_json_args = {
-    "code": fields.Str(required=True)
-}
-
-
 @blueprint.route("/social/<service>/verify", methods=["POST"])
 @requires_auth
-@body(verify_user_social_json_args)
+@body({
+    "code": fields.Str(required=True)
+}
+)
 def verify_user_social(service, code):
     try:
         # 1. verify with 3rd party
@@ -246,13 +229,11 @@ def verify_user_social(service, code):
         return {"message": str(e)}, 400
 
 
-recover_user_json_args = {
+@blueprint.route("/recover", methods=["POST"])
+@body({
     "email": fields.Str(required=True)
 }
-
-
-@blueprint.route("/recover", methods=["POST"])
-@body(recover_user_json_args)
+)
 def recover_user(email):
     existing_user = User.get_by_email(email)
     if not existing_user:
@@ -262,13 +243,10 @@ def recover_user(email):
     return {"message": "ok"}, 200
 
 
-recover_email_json_args = {
-    "password": fields.Str(required=True)
-}
-
-
 @blueprint.route("/recover/<code>", methods=["POST"])
-@body(recover_email_json_args)
+@body({
+    "password": fields.Str(required=True)
+})
 def recover_email(code, password):
     er = EmailRecovery.query.filter_by(code=code).first()
     if er:
@@ -283,14 +261,11 @@ def recover_email(code, password):
     return {"message": "Invalid reset code"}, 400
 
 
-upload_avatar_json_args = {
-    "mimetype": fields.Str(required=True)
-}
-
-
 @blueprint.route("/avatar", methods=["POST"])
 @requires_auth
-@body(upload_avatar_json_args)
+@body({
+    "mimetype": fields.Str(required=True)
+})
 def upload_avatar(mimetype):
     user = g.current_user
     try:
@@ -300,31 +275,25 @@ def upload_avatar(mimetype):
         return {"message": str(e)}, 400
 
 
-delete_avatar_json_args = {
-    "url": fields.Str(required=True)
-}
-
-
 @blueprint.route("/avatar", methods=["DELETE"])
 @requires_auth
-@body(delete_avatar_json_args)
+@body({
+    "url": fields.Str(required=True)
+})
 def delete_avatar(url):
     user = g.current_user
     remove_avatar(url, user.id)
 
 
-update_user_json_args = {
+@blueprint.route("/<user_id>", methods=["PUT"])
+@requires_auth
+@requires_same_user_auth
+@body({
     "displayName": fields.Str(required=True),
     "title": fields.Str(required=True),
     "socialMedias": fields.List(fields.Dict(), required=True),
     "avatar": fields.Str(required=True)
-}
-
-
-@blueprint.route("/<user_id>", methods=["PUT"])
-@requires_auth
-@requires_same_user_auth
-@body(update_user_json_args)
+})
 def update_user(user_id, display_name, title, social_medias, avatar):
     user = g.current_user
 
@@ -364,14 +333,11 @@ def get_user_invites(user_id):
     return invites_with_proposal_schema.dump(invites)
 
 
-respond_to_invite_json_args = {
-    "response": fields.Bool(required=True)
-}
-
-
 @blueprint.route("/<user_id>/invites/<invite_id>/respond", methods=["PUT"])
 @requires_same_user_auth
-@body(respond_to_invite_json_args)
+@body({
+    "response": fields.Bool(required=True)
+})
 def respond_to_invite(user_id, invite_id, response):
     invite = ProposalTeamInvite.query.filter_by(id=invite_id).first()
     if not invite:
@@ -394,14 +360,11 @@ def get_user_settings(user_id):
     return user_settings_schema.dump(g.current_user.settings)
 
 
-set_user_settings_json_args = {
-    "emailSubscriptions": fields.Dict(required=True)
-}
-
-
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @requires_same_user_auth
-@body(set_user_settings_json_args)
+@body({
+    "emailSubscriptions": fields.Dict(required=True)
+})
 def set_user_settings(user_id, email_subscriptions):
     try:
         if email_subscriptions:
@@ -413,14 +376,11 @@ def set_user_settings(user_id, email_subscriptions):
     return user_settings_schema.dump(g.current_user.settings)
 
 
-set_user_settings_json_args = {
-    "isAccept": fields.Bool(required=False, missing=None)
-}
-
-
 @blueprint.route("/<user_id>/arbiter/<proposal_id>", methods=["PUT"])
 @requires_same_user_auth
-@body(set_user_settings_json_args)
+@body({
+    "isAccept": fields.Bool(required=False, missing=None)
+})
 def set_user_arbiter(user_id, proposal_id, is_accept):
     try:
         proposal = Proposal.query.filter_by(id=int(proposal_id)).first()
