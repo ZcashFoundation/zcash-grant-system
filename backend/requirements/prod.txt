@@ -53,9 +53,6 @@ markdownify
 # email
 sendgrid==5.6.0
 
-# input validation
-flask-yolo2API==0.2.6
-
 #sentry
 sentry-sdk[flask]==0.5.5
 

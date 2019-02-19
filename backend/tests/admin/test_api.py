@@ -97,8 +97,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_update_proposal_bad_matching(self):
         self.login_admin()
         resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 2})
-        self.assert500(resp)
-        self.assertIn('Bad value', resp.json['data'])
+        self.assert400(resp)
+        self.assertTrue(resp.json['errors'])
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_approve_proposal(self, mock_get):
