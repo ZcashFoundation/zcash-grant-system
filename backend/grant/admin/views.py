@@ -2,7 +2,7 @@ from functools import reduce
 from flask import Blueprint, request
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy import text
 
 from grant.comment.models import Comment, user_comments_schema

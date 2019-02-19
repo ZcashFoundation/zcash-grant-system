@@ -1,6 +1,5 @@
 import abc
 from sqlalchemy import or_, and_
-from datetime import datetime, timedelta
 
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
 from grant.user.models import User, UserSettings, users_schema
