@@ -69,7 +69,8 @@ class ContributionDetail extends React.Component<Props, State> {
               </p>
               <pre>{c.refundAddress}</pre>
               <p>
-                They will be sent an email notifying them of the refund.
+                They will be sent an email notifying them of the refund when you
+                enter the txid below.
               </p>
               <Input.Search
                 placeholder="Enter payment txid"

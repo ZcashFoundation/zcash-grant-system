@@ -153,8 +153,7 @@ class ContributionPagination(Pagination):
             
             if 'REFUNDABLE' in filters:
                 query = query.join(Proposal) \
-                    .filter(Proposal.stage == ProposalStage.FUNDING_REQUIRED) \
-                    .filter(Proposal.date_published + timedelta(seconds=1) * Proposal.deadline_duration < datetime.now()) \
+                    .filter(Proposal.stage == ProposalStage.REFUNDING) \
                     .join(ProposalContribution.user) \
                     .join(UserSettings) \
                     .filter(UserSettings.refund_address != None) \

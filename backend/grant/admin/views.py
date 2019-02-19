@@ -87,8 +87,7 @@ def stats():
     # Count contributions on proposals that didn't get funded for users who have specified a refund address
     contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
         .join(Proposal) \
-        .filter(Proposal.stage == ProposalStage.FUNDING_REQUIRED) \
-        .filter(Proposal.date_published + timedelta(seconds=1) * Proposal.deadline_duration < datetime.now()) \
+        .filter(Proposal.stage == ProposalStage.REFUNDING) \
         .join(ProposalContribution.user) \
         .join(UserSettings) \
         .filter(UserSettings.refund_address != None) \
