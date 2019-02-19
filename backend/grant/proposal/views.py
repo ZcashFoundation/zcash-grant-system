@@ -20,6 +20,7 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
 from grant.utils import pagination
+from grant.task.jobs import ProposalDeadline
 from sqlalchemy import or_
 from datetime import datetime
 
@@ -288,6 +289,10 @@ def publish_proposal(proposal_id):
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
+
+    task = ProposalDeadline(g.current_proposal)
+    task.make_task()
+
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
 

@@ -16,6 +16,7 @@ from grant.proposal.models import (
     proposal_schema,
     user_proposal_contributions_schema,
     admin_proposal_contribution_schema,
+    admin_proposal_contributions_schema,
 )
 from grant.milestone.models import Milestone
 from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
@@ -485,7 +486,7 @@ def get_contributions(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.contribution(
         page=page,
-        schema=admin_proposal_contribution_schema,
+        schema=admin_proposal_contributions_schema,
         filters=filters_workaround,
         search=search,
         sort=sort,
@@ -547,6 +548,7 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
     if not contribution:
         return {"message": "No contribution matching that id"}, 404
+    had_refund = contribution.refund_tx_id
 
     # do not allow editing contributions once a proposal has become funded
     if contribution.proposal.is_funded:
@@ -569,7 +571,7 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
         if not ContributionStatus.includes(status):
             return {"message": "Invalid status"}, 400
         contribution.status = status
-    # Amount (must be a Decimal parseable)
+    # Amount (must be a Decimal parseable) 
     if amount:
         try:
             contribution.amount = str(Decimal(amount))
@@ -589,4 +591,13 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
+
+    # Send email on refund txid
+    if not had_refund and contribution.refund_tx_id:
+        send_email(contribution.user.email_address, 'contribution_refunded', {
+            'contribution': contribution,
+            'proposal': contribution.proposal,
+            'tx_explorer_url': f'{EXPLORER_URL}transactions/{contribution.refund_tx_id}',
+        })
+
     return admin_proposal_contribution_schema.dump(contribution), 200

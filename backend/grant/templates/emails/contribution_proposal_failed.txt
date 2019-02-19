@@ -1,0 +1,23 @@
+We're sorry to inform you that a proposal you contributed to,
+"{{ args.proposal.title }}", failed to reach its funding goal
+before the deadline.
+
+{% if args.refund_address %}
+It looks like you've configured refunds to be sent to:
+
+{{ args.refund_address }}
+
+If you would like to change it, you can configure your refund address on your account settings page:
+
+{{ args.account_settings_url }}
+{% else %}
+You'll need to configure a refund address to receive your refund. You can do
+that from the account settings page:
+
+{{ args.account_settings_url }}
+
+You should expect to receive the refund within a few days of setting an address.
+{% endif %}
+
+We hope you continue to try to improve the Zcash ecosystem, and that your next
+proposal gets fully funded!
