@@ -96,39 +96,42 @@ export function getCreateErrors(
 
   // Milestones
   if (milestones) {
-    let didMilestoneError = false;
     let cumulativeMilestonePct = 0;
     const milestoneErrors = milestones.map((ms, idx) => {
-      if (!ms.title || !ms.content || !ms.dateEstimated || !ms.payoutPercent) {
-        didMilestoneError = true;
-        return `Milestone ${idx + 1} is missing fields`;
+      if (!ms.title) {
+        return 'Title is required';
+      } else if (ms.title.length > 40) {
+        return 'Title length can only be 40 characters maximum';
       }
 
-      let err = '';
-      if (ms.title.length > 40) {
-        err = 'Title length can only be 40 characters maximum';
+      if (!ms.content) {
+        return 'Description is required';
       } else if (ms.content.length > 200) {
-        err = 'Description can only be 200 characters maximum';
+        return 'Description can only be 200 characters maximum';
       }
 
-      if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
-        err = 'Payout percent must be a valid number';
+      if (!ms.dateEstimated) {
+        return 'Estimate date is required';
       }
 
-      // Last one shows percentage errors (if number is valid)
+      if (!ms.payoutPercent) {
+        return 'Payout percent is required';
+      } else if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
+        return 'Payout percent must be a valid number';
+      }
+
+      // Last one shows percentage errors
       cumulativeMilestonePct += parseInt(ms.payoutPercent, 10);
       if (
         idx === milestones.length - 1 &&
         cumulativeMilestonePct !== 100 &&
         !Number.isNaN(cumulativeMilestonePct)
       ) {
-        err = `Payout percentages don’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
+        return `Payout percentages don’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
       }
-
-      didMilestoneError = didMilestoneError || !!err;
-      return err;
+      return '';
     });
-    if (didMilestoneError) {
+    if (milestoneErrors.find(err => !!err)) {
       errors.milestones = milestoneErrors;
     }
   }
