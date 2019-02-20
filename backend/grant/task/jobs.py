@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from grant.extensions import db
 from grant.email.send import send_email
 from grant.utils.enums import ProposalStage
+from grant.utils.misc import make_url
 
 
 class ProposalReminder:
@@ -81,6 +82,7 @@ class ProposalDeadline:
                 'contribution': c,
                 'proposal': proposal,
                 'refund_address': c.user.settings.refund_address,
+                'account_settings_url': make_url('/profile/settings?tab=account')
             })
 
 

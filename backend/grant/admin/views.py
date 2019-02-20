@@ -86,6 +86,7 @@ def stats():
         .scalar()
     # Count contributions on proposals that didn't get funded for users who have specified a refund address
     contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
+        .filter(ProposalContribution.refund_tx_id == None) \
         .join(Proposal) \
         .filter(Proposal.stage == ProposalStage.REFUNDING) \
         .join(ProposalContribution.user) \

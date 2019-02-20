@@ -149,13 +149,15 @@ class ContributionPagination(Pagination):
 
             if status_filters:
                 query = query.filter(ProposalContribution.status.in_(status_filters))
-            
+
             if 'REFUNDABLE' in filters:
-                query = query.join(Proposal) \
+                query = query.filter(ProposalContribution.refund_tx_id == None) \
+                    .join(Proposal) \
                     .filter(Proposal.stage == ProposalStage.REFUNDING) \
                     .join(ProposalContribution.user) \
                     .join(UserSettings) \
                     .filter(UserSettings.refund_address != None) \
+
 
         # SORT (see self.SORT_MAP)
         if sort:
