@@ -47,13 +47,11 @@ export default class PaymentInfo extends React.Component<Props, State> {
     return (
       <Form className="PaymentInfo" layout="vertical">
         <div className="PaymentInfo-text">
-          {text || (
-            <>
-              Thank you for contributing! Just send using whichever method works best for
-              you, and we'll let you know when your contribution has been confirmed.
-            </>
-          )}
-          {/* TODO: Help / FAQ page for sending */} Need help sending? <a>Click here</a>.
+          {text ||
+            `
+            Thank you for contributing! Just send using whichever method works best for
+            you, and we'll let you know when your contribution has been confirmed.
+          `}
         </div>
 
         <Radio.Group
