@@ -18,7 +18,7 @@ from grant.proposal.models import (
 from grant.milestone.models import Milestone
 from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
-from grant.utils.admin import admin_auth_required, admin_is_authed, admin_login, admin_logout
+from grant.utils.admin import admin_auth_required, admin_is_authed, admin_is_2fa_authed, admin_login, admin_logout
 from grant.utils.misc import make_url
 from grant.utils.enums import (
     ProposalStatus,
@@ -40,7 +40,10 @@ blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
 @blueprint.route("/checklogin", methods=["GET"])
 @endpoint.api()
 def loggedin():
-    return {"isLoggedIn": admin_is_authed()}
+    return {
+        "isLoggedIn": admin_is_authed(),
+        "is2faAuthed": admin_is_2fa_authed(),
+    }
 
 
 @blueprint.route("/login", methods=["POST"])
@@ -50,7 +53,10 @@ def loggedin():
 )
 def login(username, password):
     if admin_login(username, password):
-        return {"isLoggedIn": True}
+        return {
+            "isLoggedIn": admin_is_authed(),
+            "is2faAuthed": admin_is_2fa_authed()
+        }
     else:
         return {"message": "Username or password incorrect."}, 401
 
@@ -59,7 +65,10 @@ def login(username, password):
 @endpoint.api()
 def logout():
     admin_logout()
-    return {"isLoggedIn": False}
+    return {
+        "isLoggedIn": False,
+        "is2faAuthed": False
+    }
 
 
 @blueprint.route("/stats", methods=["GET"])

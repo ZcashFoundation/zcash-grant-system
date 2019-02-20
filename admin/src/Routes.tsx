@@ -25,13 +25,13 @@ type Props = RouteComponentProps<any>;
 
 class Routes extends React.Component<Props> {
   render() {
-    const { hasCheckedLogin, isLoggedIn } = store;
+    const { hasCheckedLogin, isLoggedIn, is2faAuthed } = store;
     if (!hasCheckedLogin) {
       return <div>checking auth status...</div>;
     }
     return (
       <Template>
-        {!isLoggedIn ? (
+        {!isLoggedIn || !is2faAuthed ? (
           <Login />
         ) : (
           <Switch>

@@ -24,17 +24,17 @@ async function login(username: string, password: string) {
     username,
     password,
   });
-  return data.isLoggedIn;
+  return data;
 }
 
 async function logout() {
   const { data } = await api.get('/admin/logout');
-  return data.isLoggedIn;
+  return data;
 }
 
 async function checkLogin() {
   const { data } = await api.get('/admin/checklogin');
-  return data.isLoggedIn;
+  return data;
 }
 
 async function fetchStats() {
@@ -158,6 +158,7 @@ const app = store({
 
   hasCheckedLogin: false,
   isLoggedIn: false,
+  is2faAuthed: false,
   loginError: '',
   generalError: [] as string[],
   statsFetched: false,
@@ -251,13 +252,17 @@ const app = store({
   // Auth
 
   async checkLogin() {
-    app.isLoggedIn = await checkLogin();
+    const res = await checkLogin();
+    app.isLoggedIn = res.isLoggedIn;
+    app.is2faAuthed = res.is2faAuthed;
     app.hasCheckedLogin = true;
   },
 
   async login(username: string, password: string) {
     try {
-      app.isLoggedIn = await login(username, password);
+      const res = await login(username, password);
+      app.isLoggedIn = res.isLoggedIn;
+      app.is2faAuthed = res.is2faAuthed;
     } catch (e) {
       app.loginError = e.response.data.message;
     }
@@ -265,7 +270,9 @@ const app = store({
 
   async logout() {
     try {
-      app.isLoggedIn = await logout();
+      const res = await logout();
+      app.isLoggedIn = res.isLoggedIn;
+      app.is2faAuthed = res.is2faAuthed;
     } catch (e) {
       app.generalError.push(e.toString());
     }
