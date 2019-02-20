@@ -70,13 +70,31 @@ def get_proposal_comments(proposal_id, page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.comment(
         schema=comments_schema,
-        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None),
+        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None, hidden=False),
         page=page,
         filters=filters_workaround,
         search=search,
         sort=sort,
     )
     return page
+
+
+@blueprint.route("/<proposal_id>/comments/<comment_id>/report", methods=["PUT"])
+@requires_email_verified_auth
+@endpoint.api()
+def report_proposal_comment(proposal_id, comment_id):
+    # Make sure proposal exists
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    comment = Comment.query.filter_by(id=comment_id).first()
+    if not comment:
+        return {"message": "Comment doesn’t exist"}, 404
+
+    comment.report(True)
+    db.session.commit()
+    return None, 200
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])

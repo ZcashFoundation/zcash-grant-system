@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import moment from 'moment';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import { Link } from 'react-router-dom';
 import Markdown from 'components/Markdown';
 import UserAvatar from 'components/UserAvatar';
 import MarkdownEditor, { MARKDOWN_TYPE } from 'components/MarkdownEditor';
-import { postProposalComment } from 'modules/proposals/actions';
+import { postProposalComment, reportProposalComment } from 'modules/proposals/actions';
 import { getIsSignedIn } from 'modules/auth/selectors';
 import { Comment as IComment } from 'types';
 import { AppState } from 'store/reducers';
@@ -24,6 +24,7 @@ interface StateProps {
 
 interface DispatchProps {
   postProposalComment: typeof postProposalComment;
+  reportProposalComment: typeof reportProposalComment;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -76,7 +77,12 @@ class Comment extends React.Component<Props> {
             <a className="Comment-controls-button" onClick={this.toggleReply}>
               {isReplying ? 'Cancel' : 'Reply'}
             </a>
-            {/*<a className="Comment-controls-button">Report</a>*/}
+            {!comment.hidden &&
+              !comment.reported && (
+                <a className="Comment-controls-button" onClick={this.report}>
+                  Report
+                </a>
+              )}
           </div>
         )}
 
@@ -120,6 +126,16 @@ class Comment extends React.Component<Props> {
     const { reply } = this.state;
     this.props.postProposalComment(comment.proposalId, reply, comment.id);
   };
+
+  private report = async () => {
+    const { proposalId, id } = this.props.comment;
+    const res = await this.props.reportProposalComment(proposalId, id);
+    if ((res as any).error) {
+      message.error('Problem reporting comment: ' + (res as any).payload);
+    } else {
+      message.success('Comment reported');
+    }
+  };
 }
 
 const ConnectedComment = connect<StateProps, DispatchProps, OwnProps, AppState>(
@@ -130,6 +146,7 @@ const ConnectedComment = connect<StateProps, DispatchProps, OwnProps, AppState>(
   }),
   {
     postProposalComment,
+    reportProposalComment,
   },
 )(Comment);
 

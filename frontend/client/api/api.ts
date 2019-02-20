@@ -45,6 +45,10 @@ export function getProposalComments(proposalId: number | string, params: PagePar
   return axios.get(`/api/v1/proposals/${proposalId}/comments`, { params });
 }
 
+export function reportProposalComment(proposalId: number, commentId: number) {
+  return axios.put(`/api/v1/proposals/${proposalId}/comments/${commentId}/report`);
+}
+
 export function getProposalUpdates(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/updates`);
 }
