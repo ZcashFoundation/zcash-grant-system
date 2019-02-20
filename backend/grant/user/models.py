@@ -106,6 +106,7 @@ class User(db.Model, UserMixin):
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
     active = db.Column(db.Boolean, default=True)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False, server_default=db.text("FALSE"))
 
     # moderation
     silenced = db.Column(db.Boolean, default=False)
