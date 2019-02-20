@@ -229,6 +229,10 @@ export async function putProposalPublish(
   });
 }
 
+export async function deleteProposalRFPLink(proposalId: number): Promise<any> {
+  return axios.delete(`/api/v1/proposals/${proposalId}/rfp`);
+}
+
 export async function requestProposalPayout(
   proposalId: number,
   milestoneId: number,

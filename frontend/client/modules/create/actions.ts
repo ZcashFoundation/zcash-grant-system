@@ -1,7 +1,11 @@
 import { Dispatch } from 'redux';
 import { ProposalDraft } from 'types';
 import types, { CreateDraftOptions } from './types';
-import { putProposal, putProposalSubmitForApproval } from 'api/api';
+import {
+  putProposal,
+  putProposalSubmitForApproval,
+  deleteProposalRFPLink,
+} from 'api/api';
 
 export function initializeForm(proposalId: number) {
   return {
@@ -62,6 +66,23 @@ export function submitProposal(form: ProposalDraft) {
     } catch (err) {
       dispatch({
         type: types.SUBMIT_PROPOSAL_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}
+
+export function unlinkProposalRFP(proposalId: number) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({ type: types.UNLINK_PROPOSAL_RFP_PENDING });
+    try {
+      await deleteProposalRFPLink(proposalId);
+      dispatch({ type: types.UNLINK_PROPOSAL_RFP_FULFILLED });
+      dispatch(fetchDrafts());
+    } catch (err) {
+      dispatch({
+        type: types.UNLINK_PROPOSAL_RFP_REJECTED,
         payload: err.message || err.toString(),
         error: true,
       });
