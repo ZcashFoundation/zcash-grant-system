@@ -245,6 +245,12 @@ class User(db.Model, UserMixin):
         db.session.add(self)
         db.session.flush()
 
+    def set_admin(self, is_admin: bool):
+        # TODO: audit entry & possibly email user
+        self.is_admin = is_admin
+        db.session.add(self)
+        db.session.flush()
+
 
 class SelfUserSchema(ma.Schema):
     class Meta:
@@ -262,6 +268,7 @@ class SelfUserSchema(ma.Schema):
             "silenced",
             "banned",
             "banned_reason",
+            "is_admin",
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)

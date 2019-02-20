@@ -99,6 +99,33 @@ class UserDetailNaked extends React.Component<Props, State> {
       </div>
     );
 
+    const renderAdminControl = () => (
+      <div className="UserDetail-controls-control">
+        <Popconfirm
+          overlayClassName="UserDetail-popover-overlay"
+          onConfirm={this.handleToggleAdmin}
+          title={<>{u.isAdmin ? 'Remove admin privileges?' : 'Add admin privileges?'}</>}
+          okText="ok"
+          cancelText="cancel"
+        >
+          <Switch checked={u.isAdmin} loading={store.userSaving} />{' '}
+        </Popconfirm>
+        <span>
+          Admin{' '}
+          <Info
+            placement="right"
+            content={
+              <span>
+                <b>Admin User</b>
+                <br /> User will be able to log into this (admin) interface with full
+                privileges.
+              </span>
+            }
+          />
+        </span>
+      </div>
+    );
+
     const renderBanControl = () => (
       <div className="UserDetail-controls-control">
         <Switch
@@ -266,6 +293,7 @@ class UserDetailNaked extends React.Component<Props, State> {
               {renderDelete()}
               {renderSilenceControl()}
               {renderBanControl()}
+              {renderAdminControl()}
             </Card>
           </Col>
         </Row>
@@ -299,6 +327,22 @@ class UserDetailNaked extends React.Component<Props, State> {
         message.success(
           <>
             <b>{ud.displayName}</b> {newSilenced ? 'is silenced' : 'can comment again'}
+          </>,
+          2,
+        );
+      }
+    }
+  };
+
+  private handleToggleAdmin = async () => {
+    if (store.userDetail) {
+      const ud = store.userDetail;
+      const newAdmin = !ud.isAdmin;
+      await store.editUser(ud.userid, { isAdmin: newAdmin });
+      if (store.userSaved) {
+        message.success(
+          <>
+            <b>{ud.displayName}</b> {newAdmin ? 'made admin' : 'no longer admin'}
           </>,
           2,
         );

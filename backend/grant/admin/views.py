@@ -150,23 +150,24 @@ def get_user(id):
     parameter('silenced', type=bool, required=False),
     parameter('banned', type=bool, required=False),
     parameter('bannedReason', type=str, required=False),
+    parameter('isAdmin', type=bool, required=False)
 )
 @admin_auth_required
-def edit_user(user_id, silenced, banned, banned_reason):
+def edit_user(user_id, silenced, banned, banned_reason, is_admin):
     user = User.query.filter(User.id == user_id).first()
     if not user:
         return {"message": f"Could not find user with id {id}"}, 404
 
     if silenced is not None:
-        user.silenced = silenced
-        db.session.add(user)
+        user.set_silenced(silenced)
 
     if banned is not None:
         if banned and not banned_reason:  # if banned true, provide reason
             return {"message": "Please include reason for banning"}, 417
-        user.banned = banned
-        user.banned_reason = banned_reason
-        db.session.add(user)
+        user.set_banned(banned, banned_reason)
+
+    if is_admin is not None:
+        user.set_admin(is_admin)
 
     db.session.commit()
     return admin_user_schema.dump(user)
