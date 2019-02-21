@@ -143,7 +143,10 @@ class Profile extends React.Component<Props, State> {
             <Tabs.TabPane tab={TabTitle('Created', proposals.length)} key="created">
               <div>
                 {noneCreated && (
-                  <Placeholder subtitle="Has not created any proposals yet" />
+                  <Placeholder
+                    title="No created proposals"
+                    subtitle="There have not been any created proposals."
+                  />
                 )}
                 {proposals.map(p => (
                   <ProfileProposal key={p.proposalId} proposal={p} />
@@ -153,7 +156,10 @@ class Profile extends React.Component<Props, State> {
             <Tabs.TabPane tab={TabTitle('Funded', contributions.length)} key="funded">
               <div>
                 {noneFunded && (
-                  <Placeholder subtitle="Has not funded any proposals yet" />
+                  <Placeholder
+                    title="No proposals funded"
+                    subtitle="There have not been any proposals funded."
+                  />
                 )}
                 {contributions.map(c => (
                   <ProfileContribution
@@ -168,7 +174,10 @@ class Profile extends React.Component<Props, State> {
             <Tabs.TabPane tab={TabTitle('Comments', comments.length)} key="comments">
               <div>
                 {noneCommented && (
-                  <Placeholder subtitle="Has not made any comments yet" />
+                  <Placeholder
+                    title="No comments"
+                    subtitle="There have not been any comments made"
+                  />
                 )}
                 {comments.map(c => (
                   <ProfileComment key={c.id} userName={user.displayName} comment={c} />
@@ -184,7 +193,7 @@ class Profile extends React.Component<Props, State> {
                 <div>
                   {noneInvites && (
                     <Placeholder
-                      title="No invites here!"
+                      title="No invitations"
                       subtitle="You’ll be notified when you’ve been invited to join a proposal"
                     />
                   )}
