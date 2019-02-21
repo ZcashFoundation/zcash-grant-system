@@ -146,6 +146,7 @@ export interface Contribution {
     sprout: string;
     memo: string;
   };
+  staking: boolean;
   refundAddress?: string;
   refundTxId?: string;
 }

@@ -80,6 +80,7 @@ class ProposalContribution(db.Model):
     amount = db.Column(db.String(255), nullable=False)
     tx_id = db.Column(db.String(255), nullable=True)
     refund_tx_id = db.Column(db.String(255), nullable=True)
+    staking = db.Column(db.Boolean, nullable=False)
 
     user = db.relationship("User")
 
@@ -87,11 +88,13 @@ class ProposalContribution(db.Model):
             self,
             proposal_id: int,
             user_id: int,
-            amount: str
+            amount: str,
+            staking: bool = False,
     ):
         self.proposal_id = proposal_id
         self.user_id = user_id
         self.amount = amount
+        self.staking = staking
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
 
@@ -333,11 +336,12 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def create_contribution(self, user_id: int, amount):
+    def create_contribution(self, user_id: int, amount, staking: bool = False):
         contribution = ProposalContribution(
             proposal_id=self.id,
             user_id=user_id,
-            amount=amount
+            amount=amount,
+            staking=staking,
         )
         db.session.add(contribution)
         db.session.commit()
@@ -349,12 +353,17 @@ class Proposal(db.Model):
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
+            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
             ).first()
             if not contribution:
-                contribution = self.create_contribution(user_id, str(remaining.normalize()))
+                contribution = self.create_contribution(
+                    user_id=user_id,
+                    amount=str(remaining.normalize()),
+                    staking=True,
+                )
 
         return contribution
 
@@ -711,6 +720,7 @@ class AdminProposalContributionSchema(ma.Schema):
             "addresses",
             "refund_address",
             "refund_tx_id",
+            "staking"
         )
 
     proposal = ma.Nested("ProposalSchema")

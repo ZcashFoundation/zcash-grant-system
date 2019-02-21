@@ -152,6 +152,7 @@ class ContributionPagination(Pagination):
 
             if 'REFUNDABLE' in filters:
                 query = query.filter(ProposalContribution.refund_tx_id == None) \
+                    .filter(ProposalContribution.staking == False) \
                     .join(Proposal) \
                     .filter(Proposal.stage == ProposalStage.REFUNDING) \
                     .join(ProposalContribution.user) \

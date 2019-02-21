@@ -46,7 +46,7 @@ class ContributionDetail extends React.Component<Props, State> {
     );
 
     const renderSendRefund = () => {
-      if (!c.refundAddress || c.refundTxId || !c.proposal.isFailed) {
+      if (c.staking || !c.refundAddress || c.refundTxId || !c.proposal.isFailed) {
         return;
       }
       const percent = c.proposal.milestones.reduce((prev, m) => {
@@ -135,6 +135,7 @@ class ContributionDetail extends React.Component<Props, State> {
                 ? <Input size="small" value={c.refundTxId} readOnly />
                 : <em>N/A</em>
               )}
+              {renderDeetItem('staking tx', JSON.stringify(c.staking))}
             </Card>
           </Col>
         </Row>
