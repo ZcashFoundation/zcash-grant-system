@@ -13,7 +13,7 @@ from grant.proposal.models import (
     user_proposals_schema,
     user_proposal_arbiters_schema
 )
-from grant.utils.auth import requires_auth, requires_same_user_auth, get_authed_user, throw_on_banned
+import grant.utils.auth as auth
 from grant.utils.exceptions import ValidationException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
@@ -54,7 +54,7 @@ def get_users(proposal_id):
 
 
 @blueprint.route("/me", methods=["GET"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api()
 def get_me():
     dumped_user = self_user_schema.dump(g.current_user)
@@ -73,7 +73,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
-        authed_user = get_authed_user()
+        authed_user = auth.get_authed_user()
         is_self = authed_user and authed_user.id == user.id
         if with_proposals:
             proposals = Proposal.get_by_user(user)
@@ -141,18 +141,12 @@ def create_user(
     parameter('password', type=str, required=True)
 )
 def auth_user(email, password):
-    existing_user = User.get_by_email(email)
-    if not existing_user:
-        return {"message": "No user exists with that email"}, 400
-    if not existing_user.check_password(password):
-        return {"message": "Invalid password"}, 403
-    throw_on_banned(existing_user)
-    existing_user.login()
-    return self_user_schema.dump(existing_user)
+    authed_user = auth.auth_user(email, password)
+    return self_user_schema.dump(authed_user)
 
 
 @blueprint.route("/me/password", methods=["PUT"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api(
     parameter('currentPassword', type=str, required=True),
     parameter('password', type=str, required=True),
@@ -165,7 +159,7 @@ def update_user_password(current_password, password):
 
 
 @blueprint.route("/me/email", methods=["PUT"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api(
     parameter('email', type=str, required=True),
     parameter('password', type=str, required=True)
@@ -178,7 +172,7 @@ def update_user_email(email, password):
 
 
 @blueprint.route("/me/resend-verification", methods=["PUT"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api()
 def resend_email_verification():
     g.current_user.send_verification_email()
@@ -186,15 +180,15 @@ def resend_email_verification():
 
 
 @blueprint.route("/logout", methods=["POST"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api()
 def logout_user():
-    User.logout_current_user()
+    auth.logout_current_user()
     return None, 200
 
 
 @blueprint.route("/social/<service>/authurl", methods=["GET"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api()
 def get_user_social_auth_url(service):
     try:
@@ -205,7 +199,7 @@ def get_user_social_auth_url(service):
 
 
 @blueprint.route("/social/<service>/verify", methods=["POST"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api(
     parameter('code', type=str, required=True)
 )
@@ -239,7 +233,7 @@ def recover_user(email):
     existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
-    throw_on_banned(existing_user)
+    auth.throw_on_banned(existing_user)
     existing_user.send_recovery_email()
     return None, 200
 
@@ -253,7 +247,7 @@ def recover_email(code, password):
     if er:
         if er.is_expired():
             return {"message": "Reset code expired"}, 401
-        throw_on_banned(er.user)
+        auth.throw_on_banned(er.user)
         er.user.set_password(password)
         db.session.delete(er)
         db.session.commit()
@@ -263,7 +257,7 @@ def recover_email(code, password):
 
 
 @blueprint.route("/avatar", methods=["POST"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api(
     parameter('mimetype', type=str, required=True)
 )
@@ -277,7 +271,7 @@ def upload_avatar(mimetype):
 
 
 @blueprint.route("/avatar", methods=["DELETE"])
-@requires_auth
+@auth.requires_auth
 @endpoint.api(
     parameter('url', type=str, required=True)
 )
@@ -287,8 +281,8 @@ def delete_avatar(url):
 
 
 @blueprint.route("/<user_id>", methods=["PUT"])
-@requires_auth
-@requires_same_user_auth
+@auth.requires_auth
+@auth.requires_same_user_auth
 @endpoint.api(
     parameter('displayName', type=str, required=True),
     parameter('title', type=str, required=True),
@@ -328,7 +322,7 @@ def update_user(user_id, display_name, title, social_medias, avatar):
 
 
 @blueprint.route("/<user_id>/invites", methods=["GET"])
-@requires_same_user_auth
+@auth.requires_same_user_auth
 @endpoint.api()
 def get_user_invites(user_id):
     invites = ProposalTeamInvite.get_pending_for_user(g.current_user)
@@ -336,7 +330,7 @@ def get_user_invites(user_id):
 
 
 @blueprint.route("/<user_id>/invites/<invite_id>/respond", methods=["PUT"])
-@requires_same_user_auth
+@auth.requires_same_user_auth
 @endpoint.api(
     parameter('response', type=bool, required=True)
 )
@@ -357,14 +351,14 @@ def respond_to_invite(user_id, invite_id, response):
 
 
 @blueprint.route("/<user_id>/settings", methods=["GET"])
-@requires_same_user_auth
+@auth.requires_same_user_auth
 @endpoint.api()
 def get_user_settings(user_id):
     return user_settings_schema.dump(g.current_user.settings)
 
 
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
-@requires_same_user_auth
+@auth.requires_same_user_auth
 @endpoint.api(
     parameter('emailSubscriptions', type=dict)
 )
@@ -380,7 +374,7 @@ def set_user_settings(user_id, email_subscriptions):
 
 
 @blueprint.route("/<user_id>/arbiter/<proposal_id>", methods=["PUT"])
-@requires_same_user_auth
+@auth.requires_same_user_auth
 @endpoint.api(
     parameter('isAccept', type=bool)
 )

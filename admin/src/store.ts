@@ -27,6 +27,13 @@ async function login(username: string, password: string) {
   return data;
 }
 
+export async function refresh(password: string) {
+  const { data } = await api.post('/admin/refresh', {
+    password,
+  });
+  return data;
+}
+
 async function logout() {
   const { data } = await api.get('/admin/logout');
   return data;
@@ -34,6 +41,30 @@ async function logout() {
 
 async function checkLogin() {
   const { data } = await api.get('/admin/checklogin');
+  return data;
+}
+
+export async function get2fa() {
+  const { data } = await api.get('/admin/2fa');
+  return data;
+}
+
+export async function get2faInit() {
+  const { data } = await api.get('/admin/2fa/init');
+  return data;
+}
+
+export async function post2faEnable(args: {
+  backupCodes: string[];
+  totpSecret: string;
+  verifyCode: string;
+}) {
+  const { data } = await api.post('/admin/2fa/enable', args);
+  return data;
+}
+
+export async function post2faVerify(args: { verifyCode: string }) {
+  const { data } = await api.post('/admin/2fa/verify', args);
   return data;
 }
 
@@ -657,7 +688,7 @@ const app = store({
 });
 
 // Utils
-function handleApiError(e: AxiosError) {
+export function handleApiError(e: AxiosError) {
   if (e.response && e.response.data!.message) {
     app.generalError.push(e.response!.data.message);
   } else if (e.response && e.response.data!.data!) {

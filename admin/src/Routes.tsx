@@ -6,6 +6,7 @@ import { Switch, Route, RouteComponentProps, withRouter } from 'react-router';
 import Template from 'components/Template';
 import store from './store';
 import Login from 'components/Login';
+import MFAuth from 'components/MFAuth';
 import Home from 'components/Home';
 import Users from 'components/Users';
 import UserDetail from 'components/UserDetail';
@@ -29,10 +30,13 @@ class Routes extends React.Component<Props> {
     if (!hasCheckedLogin) {
       return <div>checking auth status...</div>;
     }
+
     return (
       <Template>
-        {!isLoggedIn || !is2faAuthed ? (
+        {!isLoggedIn ? (
           <Login />
+        ) : !is2faAuthed ? (
+          <MFAuth />
         ) : (
           <Switch>
             <Route path="/" exact={true} component={Home} />

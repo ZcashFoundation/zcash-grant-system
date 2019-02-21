@@ -1,6 +1,6 @@
 from flask_security import UserMixin, RoleMixin
 from flask_security.core import current_user
-from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
+from flask_security.utils import hash_password, verify_and_update_password, login_user
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification, EmailRecovery
 from grant.email.send import send_email
@@ -13,6 +13,7 @@ from grant.extensions import ma, db, security
 from grant.utils.misc import make_url
 from grant.utils.social import generate_social_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
+from grant.utils import totp_2fa
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
@@ -107,6 +108,8 @@ class User(db.Model, UserMixin):
     title = db.Column(db.String(255), unique=False, nullable=True)
     active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False, nullable=False, server_default=db.text("FALSE"))
+    totp_secret = db.Column(db.String(255), nullable=True)
+    backup_codes = db.Column(db.String(), nullable=True)
 
     # moderation
     silenced = db.Column(db.Boolean, default=False)
@@ -174,10 +177,6 @@ class User(db.Model, UserMixin):
     @staticmethod
     def get_by_email(email_address: str):
         return security.datastore.get_user(email_address)
-
-    @staticmethod
-    def logout_current_user():
-        logout_user()  # logs current user out
 
     def check_password(self, password: str):
         return verify_and_update_password(password, self)
@@ -250,6 +249,25 @@ class User(db.Model, UserMixin):
         self.is_admin = is_admin
         db.session.add(self)
         db.session.flush()
+
+    def set_2fa(self, codes, secret):
+        self.totp_secret = secret
+        self.backup_codes = totp_2fa.serialize_backup_codes(codes)
+        db.session.add(self)
+        db.session.flush()
+
+    def set_serialized_backup_codes(self, codes):
+        self.backup_codes = codes
+        db.session.add(self)
+        db.session.flush()
+
+    def has_2fa(self):
+        return self.totp_secret is not None
+
+    def get_backup_code_count(self):
+        if not self.backup_codes:
+            return 0
+        return len(totp_2fa.deserialize_backup_codes(self.backup_codes))
 
 
 class SelfUserSchema(ma.Schema):
