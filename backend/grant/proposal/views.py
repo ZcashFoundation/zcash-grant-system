@@ -442,6 +442,7 @@ def get_proposal_contributions(proposal_id):
         .filter_by(
             proposal_id=proposal_id,
             status=ContributionStatus.CONFIRMED,
+            staking=False,
         ) \
         .order_by(ProposalContribution.amount.desc()) \
         .limit(5) \
@@ -450,6 +451,7 @@ def get_proposal_contributions(proposal_id):
         .filter_by(
             proposal_id=proposal_id,
             status=ContributionStatus.CONFIRMED,
+            staking=False,
         ) \
         .order_by(ProposalContribution.date_created.desc()) \
         .limit(5) \

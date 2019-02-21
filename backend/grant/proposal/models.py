@@ -112,6 +112,7 @@ class ProposalContribution(db.Model):
         return ProposalContribution.query \
             .filter(ProposalContribution.user_id == user_id) \
             .filter(ProposalContribution.status != ContributionStatus.DELETED) \
+            .filter(ProposalContribution.staking == False) \
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
 
@@ -470,7 +471,7 @@ class Proposal(db.Model):
     @hybrid_property
     def contributed(self):
         contributions = ProposalContribution.query \
-            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=False) \
             .all()
         funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
