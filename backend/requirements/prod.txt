@@ -67,3 +67,6 @@ Flask-Security==3.0.0
 
 # oauth
 requests-oauthlib==1.0.0
+
+# request parsing
+webargs==5.1.2
