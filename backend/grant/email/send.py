@@ -5,6 +5,7 @@ from grant.utils.misc import make_url
 from python_http_client import HTTPError
 from sendgrid.helpers.mail import Email, Mail, Content
 
+from grant.user.models import User
 from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
@@ -103,6 +104,17 @@ def proposal_comment(email_args):
             email_args['proposal'].title,
         ),
         'subscription': EmailSubscription.MY_PROPOSAL_COMMENT,
+    }
+
+
+def proposal_failed(email_args):
+    return {
+        'subject': 'Your proposal failed to get funding',
+        'title': 'Proposal failed',
+        'preview': 'Your proposal entitled {} failed to get enough funding by the deadline'.format(
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
     }
 
 
@@ -277,10 +289,10 @@ def send_email(to, type, email_args):
 
     info = get_info_lookup[type](email_args)
 
-    if 'subscription' in info and 'user' in email_args:
-        user = email_args['user']
+    if 'subscription' in info and:
+        user = User.get_by_email(to)
         sub = info['subscription']
-        if not is_subscribed(user.settings.email_subscriptions, sub):
+        if user and not is_subscribed(user.settings.email_subscriptions, sub):
             print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
             return
 
