@@ -146,13 +146,17 @@ export interface Contribution {
     sprout: string;
     memo: string;
   };
+  staking: boolean;
+  refundAddress?: string;
+  refundTxId?: string;
 }
 export interface ContributionArgs {
-  proposalId: string | number;
-  userId: string | number;
-  amount: string;
-  status: string;
+  proposalId?: string | number;
+  userId?: string | number;
+  amount?: string;
+  status?: string;
   txId?: string;
+  refundTxId?: string;
 }
 export interface User {
   accountAddress: string;

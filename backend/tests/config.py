@@ -157,6 +157,5 @@ class BaseProposalCreatorConfig(BaseUserConfig):
         # 3. fake a confirmation
         contribution.confirm(tx_id='tx', amount=str(PROPOSAL_STAKING_AMOUNT.normalize()))
         db.session.add(contribution)
-        db.session.commit()
-        contribution = self.proposal.get_staking_contribution(self.user.id)
-        return contribution
+        db.session.flush()
+        self.proposal.set_pending_when_ready()

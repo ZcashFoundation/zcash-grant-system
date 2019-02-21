@@ -1,0 +1,30 @@
+<p style="margin: 0 0 20px;">
+  We're sorry to inform you that a proposal you contributed to,
+  <strong>{{ args.proposal.title }}</strong>, failed to get fully funded
+  before the deadline.
+</p>
+
+{% if args.refund_address %}
+<p style="margin: 0 0 20px;">
+  It looks like you've configured refunds to be sent to:
+</p>
+<p style="margin: 0 0 20px">
+  <code style="word-break: break-all; margin: 10px 0;">{{ args.refund_address }}</code>
+</p>
+<p style="margin: 0 0 20px;">
+  If you would like to change it, you
+  can configure your refund address on your
+  <a href="{{ args.account_settings_url }}">account settings page</a>.
+</p>
+{% else %}
+<p style="margin: 0 0 20px;">
+  You'll need to configure a refund address to receive your refund. You can
+  do that from the <a href="{{ args.account_settings_url }}">account settings page</a>.
+  You should expect to receive the refund within a few days of setting an address.
+</p>
+{% endif %}
+
+<p style="margin: 0;">
+  We hope you continue to try to improve the Zcash ecosystem, and that your next
+  proposal gets fully funded!
+</p>
