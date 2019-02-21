@@ -131,11 +131,15 @@ export function getUserSettings(userId: string | number): Promise<any> {
   return axios.get(`/api/v1/users/${userId}/settings`);
 }
 
+interface SettingsArgs {
+  emailSubscriptions?: EmailSubscriptions;
+  refundAddress?: string;
+}
 export function updateUserSettings(
   userId: string | number,
-  emailSubscriptions?: EmailSubscriptions,
+  args?: SettingsArgs,
 ): Promise<any> {
-  return axios.put(`/api/v1/users/${userId}/settings`, { emailSubscriptions });
+  return axios.put(`/api/v1/users/${userId}/settings`, args);
 }
 
 export function updateUserArbiter(
