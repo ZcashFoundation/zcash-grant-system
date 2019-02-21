@@ -12,6 +12,7 @@ import {
   EmailSubscriptions,
   RFP,
   ProposalPageParams,
+  PageParams,
 } from 'types';
 import {
   formatUserForPost,
@@ -40,8 +41,12 @@ export function getProposal(proposalId: number | string): Promise<{ data: Propos
   });
 }
 
-export function getProposalComments(proposalId: number | string) {
-  return axios.get(`/api/v1/proposals/${proposalId}/comments`);
+export function getProposalComments(proposalId: number | string, params: PageParams) {
+  return axios.get(`/api/v1/proposals/${proposalId}/comments`, { params });
+}
+
+export function reportProposalComment(proposalId: number, commentId: number) {
+  return axios.put(`/api/v1/proposals/${proposalId}/comments/${commentId}/report`);
 }
 
 export function getProposalUpdates(proposalId: number | string) {
@@ -230,6 +235,10 @@ export async function putProposalPublish(
     res.data = formatProposalFromGet(res.data);
     return res;
   });
+}
+
+export async function deleteProposalRFPLink(proposalId: number): Promise<any> {
+  return axios.delete(`/api/v1/proposals/${proposalId}/rfp`);
 }
 
 export async function requestProposalPayout(

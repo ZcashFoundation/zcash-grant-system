@@ -97,6 +97,9 @@ export function formatProposalFromGet(p: any): Proposal {
     proposal.milestones = proposal.milestones.map(msToFe);
     proposal.currentMilestone = msToFe(proposal.currentMilestone);
   }
+  if (proposal.rfp) {
+    proposal.rfp = formatRFPFromGet(proposal.rfp);
+  }
   return proposal;
 }
 
@@ -104,7 +107,9 @@ export function formatRFPFromGet(rfp: RFP): RFP {
   if (rfp.bounty) {
     rfp.bounty = toZat(rfp.bounty as any);
   }
-  rfp.acceptedProposals = rfp.acceptedProposals.map(formatProposalFromGet);
+  if (rfp.acceptedProposals) {
+    rfp.acceptedProposals = rfp.acceptedProposals.map(formatProposalFromGet);
+  }
   return rfp;
 }
 
@@ -140,6 +145,12 @@ export function massageSerializedState(state: AppState) {
       (state.proposal.detail.funded as any) as string,
       16,
     );
+    if (state.proposal.detail.rfp && state.proposal.detail.rfp.bounty) {
+      state.proposal.detail.rfp.bounty = new BN(
+        (state.proposal.detail.rfp.bounty as any) as string,
+        16,
+      );
+    }
   }
   // proposals
   state.proposal.page.items = state.proposal.page.items.map(p => ({

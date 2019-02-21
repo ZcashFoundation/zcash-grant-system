@@ -5,7 +5,7 @@ from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import text
 
-from grant.comment.models import Comment, user_comments_schema
+from grant.comment.models import Comment, user_comments_schema, admin_comments_schema, admin_comment_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.proposal.models import (
@@ -591,13 +591,48 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
-
-    # Send email on refund txid
-    if not had_refund and contribution.refund_tx_id:
-        send_email(contribution.user.email_address, 'contribution_refunded', {
-            'contribution': contribution,
-            'proposal': contribution.proposal,
-            'tx_explorer_url': f'{EXPLORER_URL}transactions/{contribution.refund_tx_id}',
-        })
-
     return admin_proposal_contribution_schema.dump(contribution), 200
+
+
+# Comments
+
+
+@blueprint.route('/comments', methods=['GET'])
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
+@admin_auth_required
+def get_comments(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.comment(
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+        schema=admin_comments_schema
+    )
+    return page
+
+
+@blueprint.route('/comments/<comment_id>', methods=['PUT'])
+@endpoint.api(
+    parameter('hidden', type=bool, required=False),
+    parameter('reported', type=bool, required=False),
+)
+@admin_auth_required
+def edit_comment(comment_id, hidden, reported):
+    comment = Comment.query.filter(Comment.id == comment_id).first()
+    if not comment:
+        return {"message": "No comment matching that id"}, 404
+
+    if hidden is not None:
+        comment.hide(hidden)
+
+    if reported is not None:
+        comment.report(reported)
+
+    db.session.commit()
+    return admin_comment_schema.dump(comment)

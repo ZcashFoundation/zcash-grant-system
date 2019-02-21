@@ -13,6 +13,8 @@ export interface AuthState {
   isCheckingUser: boolean;
   hasCheckedUser: boolean;
 
+  isLoggingOut: boolean;
+
   isCreatingUser: boolean;
   createUserError: string | null;
 
@@ -34,6 +36,8 @@ export const INITIAL_STATE: AuthState = {
 
   isCheckingUser: false,
   hasCheckedUser: false,
+
+  isLoggingOut: false,
 
   authSignature: null,
   authSignatureAddress: null,
@@ -81,6 +85,7 @@ export default function createReducer(
     case types.CHECK_USER_REJECTED:
       return {
         ...state,
+        user: null,
         isCheckingUser: false,
         hasCheckedUser: true,
       };
@@ -135,9 +140,22 @@ export default function createReducer(
         signAuthError: action.payload,
       };
 
+    case types.LOGOUT_PENDING:
+      return {
+        ...state,
+        isLoggingOut: true,
+        user: null,
+      };
     case types.LOGOUT_FULFILLED:
       return {
         ...state,
+        isLoggingOut: false,
+        user: null,
+      };
+    case types.LOGOUT_REJECTED:
+      return {
+        ...state,
+        isLoggingOut: false,
         user: null,
       };
 

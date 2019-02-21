@@ -1,13 +1,13 @@
 import React, { ReactNode } from 'react';
 import classnames from 'classnames';
-import { Form, Input, Button, Icon, Radio, message } from 'antd';
+import { Button, Form, Icon, Radio } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import QRCode from 'qrcode.react';
-import CopyToClipboard from 'react-copy-to-clipboard';
-import { formatZcashURI, formatZcashCLI } from 'utils/formatters';
+import { formatZcashCLI, formatZcashURI } from 'utils/formatters';
 import { ContributionWithAddresses } from 'types';
 import Loader from 'components/Loader';
 import './PaymentInfo.less';
+import CopyInput from 'components/CopyInput';
 
 interface Props {
   contribution?: ContributionWithAddresses | Falsy;
@@ -47,13 +47,11 @@ export default class PaymentInfo extends React.Component<Props, State> {
     return (
       <Form className="PaymentInfo" layout="vertical">
         <div className="PaymentInfo-text">
-          {text || (
-            <>
-              Thank you for contributing! Just send using whichever method works best for
-              you, and we'll let you know when your contribution has been confirmed.
-            </>
-          )}
-          {/* TODO: Help / FAQ page for sending */} Need help sending? <a>Click here</a>.
+          {text ||
+            `
+            Thank you for contributing! Just send using whichever method works best for
+            you, and we'll let you know when your contribution has been confirmed.
+          `}
         </div>
 
         <Radio.Group
@@ -110,41 +108,3 @@ export default class PaymentInfo extends React.Component<Props, State> {
     this.setState({ sendType: ev.target.value });
   };
 }
-
-interface CopyInputProps {
-  label: string;
-  value: string | undefined;
-  className?: string;
-  help?: string;
-  isTextarea?: boolean;
-}
-
-const CopyInput: React.SFC<CopyInputProps> = ({
-  label,
-  value,
-  help,
-  className,
-  isTextarea,
-}) => (
-  <Form.Item
-    className={classnames('CopyInput', className, isTextarea && 'is-textarea')}
-    label={label}
-    help={help}
-  >
-    {isTextarea ? (
-      <>
-        <Input.TextArea value={value} readOnly rows={3} />
-        <CopyToClipboard text={value || ''} onCopy={() => message.success('Copied!', 2)}>
-          <Button icon="copy" />
-        </CopyToClipboard>
-      </>
-    ) : (
-      <>
-        <Input value={value} readOnly />
-        <CopyToClipboard text={value || ''} onCopy={() => message.success('Copied!', 2)}>
-          <Button icon="copy" />
-        </CopyToClipboard>
-      </>
-    )}
-  </Form.Item>
-);

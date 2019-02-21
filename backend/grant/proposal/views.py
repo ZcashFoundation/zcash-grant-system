@@ -60,20 +60,42 @@ def get_proposal(proposal_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
+def get_proposal_comments(proposal_id, page, filters, search, sort):
+    # only using page, currently
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.comment(
+        schema=comments_schema,
+        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None, hidden=False),
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
+
+
+@blueprint.route("/<proposal_id>/comments/<comment_id>/report", methods=["PUT"])
+@requires_email_verified_auth
 @endpoint.api()
-def get_proposal_comments(proposal_id):
+def report_proposal_comment(proposal_id, comment_id):
+    # Make sure proposal exists
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    # Only pull top comments, replies will be attached to them
-    comments = Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None)
-    num_comments = Comment.query.filter_by(proposal_id=proposal_id).count()
-    return {
-        "proposalId": proposal_id,
-        "totalComments": num_comments,
-        "comments": comments_schema.dump(comments)
-    }
+    comment = Comment.query.filter_by(id=comment_id).first()
+    if not comment:
+        return {"message": "Comment doesn’t exist"}, 404
+
+    comment.report(True)
+    db.session.commit()
+    return None, 200
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
@@ -232,6 +254,16 @@ def update_proposal(milestones, proposal_id, **kwargs):
             db.session.add(m)
 
     # Commit
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
+
+
+@blueprint.route("/<proposal_id>/rfp", methods=["DELETE"])
+@requires_team_member_auth
+@endpoint.api()
+def unlink_proposal_from_rfp(proposal_id):
+    g.current_proposal.rfp_id = None
+    db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
 

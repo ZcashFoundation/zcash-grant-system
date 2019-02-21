@@ -19,7 +19,7 @@ const DEFAULT_STATE: State = {
       title: '',
       content: '',
       dateEstimated: moment().unix(),
-      payoutPercent: '100',
+      payoutPercent: '',
       immediatePayout: false,
     },
   ],
@@ -52,19 +52,7 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
 
   addMilestone = () => {
     const { milestones: oldMilestones } = this.state;
-    const lastMilestone = oldMilestones[oldMilestones.length - 1];
-    const halfPayout = parseInt(lastMilestone.payoutPercent, 10) / 2;
-    const milestones = [
-      ...oldMilestones,
-      {
-        ...DEFAULT_STATE.milestones[0],
-        payoutPercent: halfPayout.toString(),
-      },
-    ];
-    milestones[milestones.length - 2] = {
-      ...lastMilestone,
-      payoutPercent: halfPayout.toString(),
-    };
+    const milestones = [...oldMilestones, { ...DEFAULT_STATE.milestones[0] }];
     this.setState({ milestones });
   };
 
@@ -124,7 +112,7 @@ const MilestoneFields = ({
     <div style={{ display: 'flex', marginBottom: '0.5rem', alignItems: 'center' }}>
       <Input
         size="large"
-        placeholder="Title"
+        placeholder="Milestone title"
         type="text"
         name="title"
         value={milestone.title}
@@ -147,7 +135,7 @@ const MilestoneFields = ({
       <Input.TextArea
         rows={3}
         name="content"
-        placeholder="Description of the deliverable"
+        placeholder="Description of what will be delivered"
         value={milestone.content}
         onChange={ev =>
           onChange(index, { ...milestone, content: ev.currentTarget.value })
@@ -176,14 +164,12 @@ const MilestoneFields = ({
         }
       />
       <Input
-        min={1}
-        max={100}
-        type="number"
         value={milestone.payoutPercent}
+        placeholder="Payout"
         onChange={ev =>
           onChange(index, {
             ...milestone,
-            payoutPercent: ev.currentTarget.value || '0',
+            payoutPercent: ev.currentTarget.value,
           })
         }
         addonAfter="%"

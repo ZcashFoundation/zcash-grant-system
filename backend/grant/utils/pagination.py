@@ -1,7 +1,9 @@
 import abc
 from sqlalchemy import or_, and_
 
+from grant.comment.models import Comment, comments_schema
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
+from grant.comment.models import Comment, comments_schema
 from grant.user.models import User, UserSettings, users_schema
 from grant.milestone.models import Milestone
 from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, MilestoneStage
@@ -84,10 +86,8 @@ class ProposalPagination(Pagination):
 
             if status_filters:
                 query = query.filter(Proposal.status.in_(status_filters))
-            # TODO: figure out what is going to happen with stages
             if stage_filters:
-                self._raise('stage filters not yet supported')
-            #     query = query.filter(Proposal.stage.in_(stage_filters))
+                query = query.filter(Proposal.stage.in_(stage_filters))
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
             if arbiter_filters:
@@ -241,8 +241,60 @@ class UserPagination(Pagination):
         }
 
 
+class CommentPagination(Pagination):
+    def __init__(self):
+        self.FILTERS = ['REPORTED', 'HIDDEN']
+        self.PAGE_SIZE = 10
+        self.SORT_MAP = {
+            'CREATED:DESC': Comment.date_created.desc(),
+            'CREATED:ASC': Comment.date_created,
+        }
+
+    def paginate(
+        self,
+        schema: ma.Schema=comments_schema,
+        query: db.Query=None,
+        page: int=1,
+        filters: list=None,
+        search: str=None,
+        sort: str='CREATED:DESC',
+    ):
+        query = query or Comment.query
+        sort = sort or 'CREATED:DESC'
+
+        # FILTER
+        if filters:
+            self.validate_filters(filters)
+            if 'REPORTED' in filters:
+                query = query.filter(Comment.reported == True)
+            if 'HIDDEN' in filters:
+                query = query.filter(Comment.hidden == True)
+
+        # SORT (see self.SORT_MAP)
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
+
+        # SEARCH
+        if search:
+            query = query.filter(
+                Comment.content.ilike(f'%{search}%')
+            )
+
+        res = query.paginate(page, self.PAGE_SIZE, False)
+        return {
+            'page': res.page,
+            'total': res.total,
+            'page_size': self.PAGE_SIZE,
+            'items': schema.dump(res.items),
+            'filters': filters,
+            'search': search,
+            'sort': sort
+        }
+
+
 # expose pagination methods here
 proposal = ProposalPagination().paginate
 contribution = ContributionPagination().paginate
-# comment = CommentPagination().paginate
+comment = CommentPagination().paginate
 user = UserPagination().paginate

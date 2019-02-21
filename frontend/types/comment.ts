@@ -7,6 +7,8 @@ export interface Comment {
   dateCreated: number;
   author: User;
   replies: Comment[];
+  reported: boolean;
+  hidden: boolean;
 }
 
 export interface UserComment {

@@ -8,7 +8,10 @@ import {
   authUser as apiAuthUser,
   logoutUser,
 } from 'api/api';
+import { AppState } from 'store/reducers';
 import { User } from 'types';
+
+type GetState = () => AppState;
 
 function setSentryScope(user: User) {
   Sentry.configureScope(scope => {
@@ -20,7 +23,17 @@ function setSentryScope(user: User) {
 
 // check if user has authenticated session
 export function checkUser() {
-  return async (dispatch: Dispatch<any>) => {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
+    const state = getState();
+    if (state.auth.isAuthingUser || state.auth.isLoggingOut) {
+      // this happens when axios calls checkUser upon seeing a change in the
+      // custom auth-header, this call will not be ignored on other tabs not
+      // initiating the authentication related behaviors
+      console.info(
+        'ignoring checkUser action b/c we are currently authing or logging out',
+      );
+      return;
+    }
     dispatch({ type: types.CHECK_USER_PENDING });
     try {
       const res = await checkUserAuth();

@@ -180,13 +180,15 @@ const ReviewMilestones = ({
     {milestones.map(m => (
       <Timeline.Item key={m.title}>
         <div className="ReviewMilestone">
-          <div className="ReviewMilestone-title">{m.title}</div>
+          <div className="ReviewMilestone-title">{m.title || <em>No title</em>}</div>
           <div className="ReviewMilestone-info">
             {moment(m.dateEstimated * 1000).format('MMMM YYYY')}
             {' – '}
             {m.payoutPercent}% of funds
           </div>
-          <div className="ReviewMilestone-description">{m.content}</div>
+          <div className="ReviewMilestone-description">
+            {m.content || <em>No description</em>}
+          </div>
         </div>
       </Timeline.Item>
     ))}

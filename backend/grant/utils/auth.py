@@ -18,7 +18,7 @@ def handle_auth_error(e):
 
 
 def get_authed_user():
-    return current_user if current_user.is_authenticated else None
+    return current_user if current_user.is_authenticated and not current_user.banned else None
 
 
 def throw_on_banned(user):

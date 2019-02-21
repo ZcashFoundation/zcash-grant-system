@@ -1,7 +1,7 @@
 """Adds refund_address to user_settings
 
 Revision ID: ebccb1298297
-Revises: 27975c4a04a4
+Revises: 02acd43b4357
 Create Date: 2019-02-16 11:37:46.900729
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'ebccb1298297'
-down_revision = '27975c4a04a4'
+down_revision = '02acd43b4357'
 branch_labels = None
 depends_on = None
 

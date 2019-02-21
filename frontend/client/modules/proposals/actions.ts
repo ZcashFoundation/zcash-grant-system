@@ -4,6 +4,7 @@ import {
   getProposal,
   getProposalComments,
   getProposalUpdates,
+  reportProposalComment as apiReportProposalComment,
   getProposalContributions,
   postProposalComment as apiPostProposalComment,
   requestProposalPayout,
@@ -13,7 +14,7 @@ import {
 import { Dispatch } from 'redux';
 import { Proposal, Comment, ProposalPageParams } from 'types';
 import { AppState } from 'store/reducers';
-import { getProposalPageSettings } from './selectors';
+import { getProposalPageSettings, getProposalCommentPageParams } from './selectors';
 
 type GetState = () => AppState;
 
@@ -118,12 +119,33 @@ export function fetchProposal(proposalId: Proposal['proposalId']) {
   };
 }
 
-export function fetchProposalComments(proposalId: Proposal['proposalId']) {
-  return (dispatch: Dispatch<any>) => {
+export function fetchProposalComments(id?: number) {
+  return async (dispatch: Dispatch<any>, getState: GetState) => {
+    const state = getState();
+    if (!state.proposal.detail) {
+      return;
+    }
+    const proposalId = id || state.proposal.detail.proposalId;
     dispatch({
-      type: types.PROPOSAL_COMMENTS,
-      payload: getProposalComments(proposalId),
+      type: types.PROPOSAL_COMMENTS_PENDING,
+      payload: {
+        parentId: proposalId, // payload gets the proposalId
+      },
     });
+    // get fresh params after PENDING has run, above
+    const params = getProposalCommentPageParams(getState());
+    try {
+      const comments = (await getProposalComments(proposalId, params)).data;
+      return dispatch({
+        type: types.PROPOSAL_COMMENTS_FULFILLED,
+        payload: comments,
+      });
+    } catch (error) {
+      dispatch({
+        type: types.PROPOSAL_COMMENTS_REJECTED,
+        payload: error,
+      });
+    }
   };
 }
 
@@ -177,6 +199,31 @@ export function postProposalComment(
     } catch (err) {
       dispatch({
         type: types.POST_PROPOSAL_COMMENT_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}
+
+export function reportProposalComment(
+  proposalId: Proposal['proposalId'],
+  commentId: Comment['id'],
+) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({ type: types.REPORT_PROPOSAL_COMMENT_PENDING, payload: { commentId } });
+
+    try {
+      await apiReportProposalComment(proposalId, commentId);
+      return dispatch({
+        type: types.REPORT_PROPOSAL_COMMENT_FULFILLED,
+        payload: {
+          commentId,
+        },
+      });
+    } catch (err) {
+      return dispatch({
+        type: types.REPORT_PROPOSAL_COMMENT_REJECTED,
         payload: err.message || err.toString(),
         error: true,
       });
