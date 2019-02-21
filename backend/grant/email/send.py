@@ -156,6 +156,28 @@ def contribution_update(email_args):
     }
 
 
+def contribution_refunded(email_args):
+    return {
+        'subject': 'Your contribution has been refunded!',
+        'title': 'Contribution refunded',
+        'preview': 'Your recent contribution to {} has been refunded!'.format(
+            email_args['proposal'].title
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_CONTRIBUTION,
+    }
+
+
+def contribution_proposal_failed(email_args):
+    return {
+        'subject': 'A proposal you contributed to failed to get funding',
+        'title': 'Proposal failed',
+        'preview': 'The proposal entitled {} failed to get funding, here’s how to get a refund'.format(
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_FUNDED,
+    }
+
+
 def comment_reply(email_args):
     return {
         'subject': 'New reply from {}'.format(email_args['author'].display_name),
@@ -231,9 +253,12 @@ get_info_lookup = {
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
+    'proposal_failed': proposal_failed,
     'staking_contribution_confirmed': staking_contribution_confirmed,
     'contribution_confirmed': contribution_confirmed,
     'contribution_update': contribution_update,
+    'contribution_refunded': contribution_refunded,
+    'contribution_proposal_failed': contribution_proposal_failed,
     'comment_reply': comment_reply,
     'proposal_arbiter': proposal_arbiter,
     'milestone_request': milestone_request,
