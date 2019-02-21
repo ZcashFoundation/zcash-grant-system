@@ -579,10 +579,10 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
         except:
             return {"message": "Amount could not be parsed as number"}, 400
     # Transaction ID (no validation)
-    if tx_id:
+    if tx_id is not None:
         contribution.tx_id = tx_id
     # Refund TX ID (no validation)
-    if refund_tx_id:
+    if refund_tx_id is not None:
         contribution.refund_tx_id = refund_tx_id
 
     db.session.add(contribution)
