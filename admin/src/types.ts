@@ -139,7 +139,7 @@ export interface Contribution {
   txId: null | string;
   amount: string;
   dateCreated: number;
-  user: User;
+  user: User | null;
   proposal: Proposal;
   addresses: {
     transparent: string;

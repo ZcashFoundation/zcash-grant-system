@@ -22,7 +22,7 @@ export default class ContributionItem extends React.PureComponent<Props> {
       >
         <Link to={`/contributions/${id}`}>
           <h2>
-            {user.displayName} <small>for</small> {proposal.title}
+            {user ? user.displayName : <em>Anonymous</em>} <small>for</small> {proposal.title}
             <Tooltip title={status.hint}>
               <Tag color={status.tagColor}>{status.tagDisplay}</Tag>
             </Tooltip>
