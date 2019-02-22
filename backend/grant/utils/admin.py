@@ -12,7 +12,7 @@ from grant.user.models import User
 
 def admin_is_authed():
     user = get_authed_user()
-    return user and user.is_admin
+    return user and user.is_admin or False
 
 
 def admin_is_2fa_authed():

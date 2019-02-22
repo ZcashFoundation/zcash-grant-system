@@ -54,12 +54,12 @@ def loggedin():
 )
 def login(username, password):
     if auth.auth_user(username, password):
-        return {
-            "isLoggedIn": admin.admin_is_authed(),
-            "is2faAuthed": admin.admin_is_2fa_authed()
-        }
-    else:
-        return {"message": "Username or password incorrect."}, 401
+        if admin.admin_is_authed():
+            return {
+                "isLoggedIn": admin.admin_is_authed(),
+                "is2faAuthed": admin.admin_is_2fa_authed()
+            }
+    return {"message": "Username or password incorrect."}, 401
 
 
 @blueprint.route("/refresh", methods=["POST"])
@@ -100,8 +100,6 @@ def get_2fa_init():
         return {"message": "Must be authenticated"}, 403
     if not admin.is_auth_fresh():
         return {"message": "Login stale"}, 403
-    import time
-    time.sleep(2)
     return admin.make_2fa_setup()
 
 
@@ -116,8 +114,6 @@ def post_2fa_enable(backup_codes, totp_secret, verify_code):
         return {"message": "Must be authenticated"}, 403
     if not admin.is_auth_fresh():
         return {"message": "Login stale"}, 403
-    import time
-    time.sleep(2)
     admin.check_and_set_2fa_setup(backup_codes, totp_secret, verify_code)
     db.session.commit()
     return make_2fa_state()
@@ -132,8 +128,6 @@ def post_2fa_verify(verify_code):
         return {"message": "Must be authenticated"}, 403
     if not admin.is_auth_fresh():
         return {"message": "Login stale"}, 403
-    import time
-    time.sleep(2)
     admin.admin_auth_2fa(verify_code)
     db.session.commit()
     return make_2fa_state()

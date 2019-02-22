@@ -46,5 +46,10 @@ def verify_totp(secret: str, code: str):
     return totp.verify(code)
 
 
+def current_totp(secret: str):
+    totp = pyotp.TOTP(secret)
+    return totp.now()
+
+
 def gen_uri(secret: str, email: str):
     return pyotp.totp.TOTP(secret).provisioning_uri(email, issuer_name=ISSUER)
