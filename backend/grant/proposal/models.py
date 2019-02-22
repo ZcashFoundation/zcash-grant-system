@@ -438,7 +438,7 @@ class Proposal(db.Model):
         self.set_funded_when_ready()
 
     def set_funded_when_ready(self):
-        if self.status == ProposalStatus.LIVE and self.is_funded:
+        if self.status == ProposalStatus.LIVE and self.stage == ProposalStage.FUNDING_REQUIRED and self.is_funded:
             self.set_funded()
 
     # state: stage FUNDING_REQUIRED -> WIP

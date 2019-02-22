@@ -571,8 +571,8 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
         return {"message": "No contribution matching that id"}, 404
     had_refund = contribution.refund_tx_id
 
-    # do not allow editing contributions once a proposal has become funded
-    if contribution.proposal.is_funded:
+    # do not allow editing certain fields on contributions once a proposal has become funded
+    if (proposal_id or user_id or status or amount or tx_id) and contribution.proposal.is_funded:
         return {"message": "Cannot edit contributions to fully-funded proposals"}, 400
 
     # Proposal ID (must belong to an existing proposal)

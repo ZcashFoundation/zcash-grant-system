@@ -368,7 +368,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             ) : (
               <>
                 This proposal was canceled by an admin, and will be refunding contributors
-                <b>{refundablePct}%</b> of their contributions.
+                {' '}<b>{refundablePct}%</b> of their contributions.
               </>
             )
             
