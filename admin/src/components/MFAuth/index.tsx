@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Link, Redirect } from 'react-router-dom';
+import { Link, Redirect, withRouter, RouteComponentProps } from 'react-router-dom';
 import { view } from 'react-easy-state';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import QRCode from 'qrcode.react';
@@ -15,9 +15,11 @@ import store, {
 import { downloadString } from 'src/util/file';
 import './index.less';
 
-interface Props {
+interface OwnProps {
   isReset?: boolean;
 }
+
+type Props = OwnProps & RouteComponentProps<any>;
 
 const STATE = {
   // remote
@@ -31,10 +33,10 @@ const STATE = {
   isEmailVerified: false,
   // local
   loaded: false,
-  hasReadSetup: false,
+  stepOutlineComplete: false,
   initializing: false,
-  hasSavedCodes: false,
-  hasVerified: false,
+  stepRecoveryCodesComplete: false,
+  stepTotpComplete: false,
   password: '',
   verifyCode: '',
   isVerifying: false,
@@ -50,10 +52,10 @@ class MFAuth extends React.Component<Props, State> {
   render() {
     const {
       loaded,
-      hasReadSetup,
+      stepOutlineComplete,
       password,
-      hasSavedCodes,
-      hasVerified,
+      stepRecoveryCodesComplete,
+      stepTotpComplete,
       verifyCode,
       isLoginFresh,
       has2fa,
@@ -86,7 +88,7 @@ class MFAuth extends React.Component<Props, State> {
       has2fa &&
       backupCodeCount < 5 && (
         <Alert
-          type="warning"
+          type="error"
           message={
             <>
               You only have <b>{backupCodeCount}</b> recovery codes remaining! Generate
@@ -103,7 +105,6 @@ class MFAuth extends React.Component<Props, State> {
             <h1>
               {isReset ? 'Reset two-factor authentication' : 'Two-factor authentication'}
             </h1>
-            {lowBackupCodesWarning}
             {children}
           </>
         )}
@@ -126,12 +127,14 @@ class MFAuth extends React.Component<Props, State> {
             Too much time has elapsed since you last affirmed your credentials, please
             enter your password below.
           </p>
-          <Input.Password
-            onPressEnter={this.handleSubmitPassword}
-            onChange={e => this.setState({ password: e.target.value })}
-            value={password}
-          />
+
           <div className="MFAuth-controls">
+            <Input.Password
+              onPressEnter={this.handleSubmitPassword}
+              onChange={e => this.setState({ password: e.target.value })}
+              value={password}
+              autoFocus={true}
+            />
             <Button
               type="primary"
               onClick={this.handleSubmitPassword}
@@ -145,10 +148,15 @@ class MFAuth extends React.Component<Props, State> {
     }
 
     // STEP 1 (outline)
-    if ((!has2fa || isReset) && !hasReadSetup) {
+    if ((!has2fa || isReset) && !stepOutlineComplete) {
       return wrap(
         <div>
-          {!has2fa && <Alert type="info" message="Administration requires 2fa setup." />}
+          {!has2fa && (
+            <Alert
+              type="info"
+              message={<>Administration requires two-factor authentication setup.</>}
+            />
+          )}
           {isReset && (
             <Alert
               type="warning"
@@ -170,11 +178,7 @@ class MFAuth extends React.Component<Props, State> {
             </li>
           </ol>
           <div className="MFAuth-controls">
-            {isReset && (
-              <Link to="/settings">
-                <Button>Cancel</Button>
-              </Link>
-            )}
+            {isReset && <Button onClick={this.handleCancel}>Cancel</Button>}
             <Button onClick={this.handleReadSetup} type="primary">
               I'm ready
             </Button>
@@ -184,7 +188,7 @@ class MFAuth extends React.Component<Props, State> {
     }
 
     // STEP 2 (recovery codes)
-    if ((!has2fa || isReset) && !hasSavedCodes) {
+    if ((!has2fa || isReset) && !stepRecoveryCodesComplete) {
       return wrap(
         ((initializing || !backupCodes.length) && (
           <Spin tip="Loading 2fa setup..." />
@@ -228,7 +232,7 @@ class MFAuth extends React.Component<Props, State> {
               <Button onClick={this.handleCancel}>Cancel</Button>
               <Button
                 type="primary"
-                onClick={() => this.setState({ hasSavedCodes: true })}
+                onClick={() => this.setState({ stepRecoveryCodesComplete: true })}
               >
                 Next
               </Button>
@@ -239,7 +243,7 @@ class MFAuth extends React.Component<Props, State> {
     }
 
     // STEP 4 (totp setup/verify)
-    if ((!has2fa || isReset) && !hasVerified) {
+    if ((!has2fa || isReset) && !stepTotpComplete) {
       return wrap(
         <div>
           <h2>3. Set up Authenticator</h2>
@@ -273,11 +277,13 @@ class MFAuth extends React.Component<Props, State> {
             </div>
           </Card>
           <div className="MFAuth-verify">
-            <div>Enter code from application:</div>
+            <div>Enter code from application</div>
             <Input
               placeholder="123456"
               value={verifyCode}
               onChange={e => this.setState({ verifyCode: e.target.value })}
+              onPressEnter={this.handleEnable}
+              autoFocus={true}
             />
           </div>
           <div className="MFAuth-controls">
@@ -288,7 +294,7 @@ class MFAuth extends React.Component<Props, State> {
               disabled={verifyCode.length === 0}
               loading={isVerifying}
             >
-              {isReset ? 'Reset' : 'Enable'}
+              {isReset ? 'Save' : 'Enable'}
             </Button>
           </div>
         </div>,
@@ -299,21 +305,22 @@ class MFAuth extends React.Component<Props, State> {
     if (has2fa && !is2faAuthed) {
       return wrap(
         <>
-          <h2>2FAuthentication required</h2>
+          {lowBackupCodesWarning}
+          <h2>Two-Factor authentication required</h2>
           <p>
-            Enter the current code from your authenticator application. Enter a backup
+            Enter the current code from your authenticator application. Enter a recovery
             code if you do not have access to your authenticator application.
           </p>
-          <div className="MFAuth-verify">
-            <div>Enter code from application:</div>
+          <div className="MFAuth-verify" />
+          <div className="MFAuth-controls">
+            <div className="MFAuth-controls-label">Enter code from application</div>
             <Input
               placeholder="123456"
               value={verifyCode}
               onChange={e => this.setState({ verifyCode: e.target.value })}
               onPressEnter={this.handleVerify}
+              autoFocus={true}
             />
-          </div>
-          <div className="MFAuth-controls">
             <Button
               type="primary"
               onClick={this.handleVerify}
@@ -342,15 +349,19 @@ class MFAuth extends React.Component<Props, State> {
   };
 
   private handleCancel = async () => {
-    this.setState({ ...STATE });
-    this.update2faStateFromServer();
+    const { isReset } = this.props;
+    if (isReset) {
+      message.info('Canceled two-factor reset');
+      this.props.history.replace('/settings');
+    } else {
+      this.setState({ ...STATE });
+      this.update2faStateFromServer();
+    }
   };
 
   private handleReadSetup = async () => {
-    if (this.state.isLoginFresh) {
-      this.setState({ hasReadSetup: true });
-      this.loadSetup();
-    }
+    this.setState({ stepOutlineComplete: true });
+    this.loadSetup();
   };
 
   private handleSubmitPassword = async () => {
@@ -382,13 +393,13 @@ class MFAuth extends React.Component<Props, State> {
 
   private handleEnable = async () => {
     const { backupCodes, totpSecret, verifyCode } = this.state;
+    if (verifyCode.length === 0) return; // for pressEnter
     this.setState({ isVerifying: true });
     try {
       await post2faEnable({ backupCodes, totpSecret, verifyCode });
       message.success('Two-factor setup complete!');
       store.checkLogin(); // should return authenticated status
-      this.setState({ hasVerified: true });
-      // await this.update2faStateFromServer();
+      this.setState({ stepTotpComplete: true });
     } catch (e) {
       handleApiError(e);
     }
@@ -397,6 +408,7 @@ class MFAuth extends React.Component<Props, State> {
 
   private handleVerify = async () => {
     const { verifyCode } = this.state;
+    if (verifyCode.length === 0) return; // for pressEnter
     this.setState({ isVerifying: true });
     try {
       await post2faVerify({ verifyCode });
@@ -409,4 +421,4 @@ class MFAuth extends React.Component<Props, State> {
   };
 }
 
-export default view(MFAuth);
+export default withRouter(view(MFAuth));

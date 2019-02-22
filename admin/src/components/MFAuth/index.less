@@ -14,8 +14,7 @@
     margin-bottom: 0.8rem;
   }
 
-  &-codes,
-  &-qrcode {
+  &-codes {
     margin: 1.5rem 0;
     font-size: 1rem;
     font-family: 'Courier New', Courier, monospace;
@@ -48,13 +47,21 @@
     & > div {
       white-space: nowrap;
       line-height: 2rem;
-      margin-right: 0.6rem;
+      margin-right: 0.5rem;
+      font-weight: bold;
     }
   }
 
   &-controls {
+    display: flex;
     margin-top: 1rem;
-    text-align: right;
+    justify-content: flex-end;
+
+    &-label {
+      white-space: nowrap;
+      line-height: 2rem;
+      font-weight: bold;
+    }
 
     & > * + * {
       margin-left: 0.5rem;
@@ -63,6 +70,7 @@
 
   ol {
     margin-left: 1rem;
+    margin-bottom: 2rem;
 
     & > li {
       margin: 1rem 0;
