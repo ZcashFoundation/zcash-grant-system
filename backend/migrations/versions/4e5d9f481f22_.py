@@ -1,7 +1,7 @@
 """user is_admin field
 
 Revision ID: 4e5d9f481f22
-Revises: 27975c4a04a4
+Revises: 3514aaf4648f
 Create Date: 2019-02-20 11:30:30.376869
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '4e5d9f481f22'
-down_revision = '27975c4a04a4'
+down_revision = '3514aaf4648f'
 branch_labels = None
 depends_on = None
 

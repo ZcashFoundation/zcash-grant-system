@@ -687,7 +687,7 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     parameter('search', type=str, required=False),
     parameter('sort', type=str, required=False)
 )
-@admin_auth_required
+@admin.admin_auth_required
 def get_comments(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.comment(
@@ -705,7 +705,7 @@ def get_comments(page, filters, search, sort):
     parameter('hidden', type=bool, required=False),
     parameter('reported', type=bool, required=False),
 )
-@admin_auth_required
+@admin.admin_auth_required
 def edit_comment(comment_id, hidden, reported):
     comment = Comment.query.filter(Comment.id == comment_id).first()
     if not comment:
