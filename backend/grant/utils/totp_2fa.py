@@ -1,6 +1,6 @@
 import pyotp
 from flask_security.utils import hash_password, verify_password
-from .misc import gen_random_code
+from .misc import gen_random_code, clean_random_code
 
 BACKUP_CODE_COUNT = 16
 ISSUER = 'Zcash Grants'
@@ -15,7 +15,7 @@ def gen_backup_codes():
 
 
 def hash_backup_codes(codes):
-    return [hash_password(c) for c in codes]
+    return [hash_password(clean_random_code(c)) for c in codes]
 
 
 def serialize_backup_codes(codes: tuple):
@@ -30,7 +30,7 @@ def deserialize_backup_codes(codes: str):
 def verify_and_update_backup_codes(code: str, serialized_codes: str):
     hashed = deserialize_backup_codes(serialized_codes)
     for i, hc in enumerate(hashed):
-        if verify_password(code, hc):
+        if verify_password(clean_random_code(code), hc):
             del hashed[i]
             return ','.join(hashed)
 
