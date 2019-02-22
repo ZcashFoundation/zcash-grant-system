@@ -20,6 +20,7 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
 from grant.utils import pagination
+from grant.task.jobs import ProposalDeadline
 from sqlalchemy import or_
 from datetime import datetime
 
@@ -70,13 +71,31 @@ def get_proposal_comments(proposal_id, page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.comment(
         schema=comments_schema,
-        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None),
+        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None, hidden=False),
         page=page,
         filters=filters_workaround,
         search=search,
         sort=sort,
     )
     return page
+
+
+@blueprint.route("/<proposal_id>/comments/<comment_id>/report", methods=["PUT"])
+@requires_email_verified_auth
+@endpoint.api()
+def report_proposal_comment(proposal_id, comment_id):
+    # Make sure proposal exists
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    comment = Comment.query.filter_by(id=comment_id).first()
+    if not comment:
+        return {"message": "Comment doesn’t exist"}, 404
+
+    comment.report(True)
+    db.session.commit()
+    return None, 200
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
@@ -302,6 +321,10 @@ def publish_proposal(proposal_id):
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
+
+    task = ProposalDeadline(g.current_proposal)
+    task.make_task()
+
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
 
@@ -419,6 +442,7 @@ def get_proposal_contributions(proposal_id):
         .filter_by(
             proposal_id=proposal_id,
             status=ContributionStatus.CONFIRMED,
+            staking=False,
         ) \
         .order_by(ProposalContribution.amount.desc()) \
         .limit(5) \
@@ -427,6 +451,7 @@ def get_proposal_contributions(proposal_id):
         .filter_by(
             proposal_id=proposal_id,
             status=ContributionStatus.CONFIRMED,
+            staking=False,
         ) \
         .order_by(ProposalContribution.date_created.desc()) \
         .limit(5) \

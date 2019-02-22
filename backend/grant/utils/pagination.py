@@ -3,7 +3,8 @@ from sqlalchemy import or_, and_
 
 from grant.comment.models import Comment, comments_schema
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
-from grant.user.models import User, users_schema
+from grant.comment.models import Comment, comments_schema
+from grant.user.models import User, UserSettings, users_schema
 from grant.milestone.models import Milestone
 from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, MilestoneStage
 
@@ -120,6 +121,7 @@ class ProposalPagination(Pagination):
 class ContributionPagination(Pagination):
     def __init__(self):
         self.FILTERS = [f'STATUS_{s}' for s in ContributionStatus.list()]
+        self.FILTERS.extend(['REFUNDABLE'])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': ProposalContribution.date_created.desc(),
@@ -147,6 +149,16 @@ class ContributionPagination(Pagination):
 
             if status_filters:
                 query = query.filter(ProposalContribution.status.in_(status_filters))
+
+            if 'REFUNDABLE' in filters:
+                query = query.filter(ProposalContribution.refund_tx_id == None) \
+                    .filter(ProposalContribution.staking == False) \
+                    .join(Proposal) \
+                    .filter(Proposal.stage == ProposalStage.REFUNDING) \
+                    .join(ProposalContribution.user) \
+                    .join(UserSettings) \
+                    .filter(UserSettings.refund_address != None) \
+
 
         # SORT (see self.SORT_MAP)
         if sort:
@@ -232,7 +244,7 @@ class UserPagination(Pagination):
 
 class CommentPagination(Pagination):
     def __init__(self):
-        self.FILTERS = []
+        self.FILTERS = ['REPORTED', 'HIDDEN']
         self.PAGE_SIZE = 10
         self.SORT_MAP = {
             'CREATED:DESC': Comment.date_created.desc(),
@@ -253,18 +265,22 @@ class CommentPagination(Pagination):
 
         # FILTER
         if filters:
-            pass
+            self.validate_filters(filters)
+            if 'REPORTED' in filters:
+                query = query.filter(Comment.reported == True)
+            if 'HIDDEN' in filters:
+                query = query.filter(Comment.hidden == True)
 
         # SORT (see self.SORT_MAP)
         if sort:
             self.validate_sort(sort)
             query = query.order_by(self.SORT_MAP[sort])
 
-        # SEARCH can match txids or amounts
+        # SEARCH
         if search:
-            query = query.filter(or_(
-                Comment.content.ilike(f'%{search}%'),
-            ))
+            query = query.filter(
+                Comment.content.ilike(f'%{search}%')
+            )
 
         res = query.paginate(page, self.PAGE_SIZE, False)
         return {

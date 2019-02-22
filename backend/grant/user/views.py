@@ -360,15 +360,20 @@ def get_user_settings(user_id):
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @auth.requires_same_user_auth
 @endpoint.api(
-    parameter('emailSubscriptions', type=dict)
+    parameter('emailSubscriptions', type=dict),
+    parameter('refundAddress', type=str)
 )
-def set_user_settings(user_id, email_subscriptions):
-    try:
-        if email_subscriptions:
+def set_user_settings(user_id, email_subscriptions, refund_address):
+    if email_subscriptions:
+        try:
             email_subscriptions = keys_to_snake_case(email_subscriptions)
             g.current_user.settings.email_subscriptions = email_subscriptions
-    except ValidationException as e:
-        return {"message": str(e)}, 400
+        except ValidationException as e:
+            return {"message": str(e)}, 400
+
+    if refund_address:
+        g.current_user.settings.refund_address = refund_address
+
     db.session.commit()
     return user_settings_schema.dump(g.current_user.settings)
 

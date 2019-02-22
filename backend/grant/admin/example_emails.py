@@ -90,6 +90,9 @@ example_email_args = {
         'comment_url': 'http://somecomment.com',
         'author_url': 'http://someuser.com',
     },
+    'proposal_failed': {
+        'proposal': proposal,
+    },
     'contribution_confirmed': {
         'proposal': proposal,
         'contribution': contribution,
@@ -99,6 +102,17 @@ example_email_args = {
         'proposal': proposal,
         'proposal_update': update,
         'update_url': 'http://someupdate.com',
+    },
+    'contribution_refunded': {
+        'proposal': proposal,
+        'contribution': contribution,
+        'tx_explorer_url': 'http://someblockexplorer.com/tx/271857129857192579125',
+    },
+    'contribution_proposal_failed': {
+        'proposal': proposal,
+        'contribution': contribution,
+        'refund_address': 'ztqdzvnK2SE27FCWg69EdissCBn7twnfd1XWLrftiZaT4rSFCkp7eQGQDSWXBF43sM5cyA4c8qyVjBP9Cf4zTcFJxf71ve8',
+        'account_settings_url': 'http://accountsettingsurl.com/',
     },
     'comment_reply': {
         'author': user,

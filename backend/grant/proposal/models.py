@@ -78,7 +78,9 @@ class ProposalContribution(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     status = db.Column(db.String(255), nullable=False)
     amount = db.Column(db.String(255), nullable=False)
-    tx_id = db.Column(db.String(255))
+    tx_id = db.Column(db.String(255), nullable=True)
+    refund_tx_id = db.Column(db.String(255), nullable=True)
+    staking = db.Column(db.Boolean, nullable=False)
 
     user = db.relationship("User")
 
@@ -86,11 +88,13 @@ class ProposalContribution(db.Model):
             self,
             proposal_id: int,
             user_id: int,
-            amount: str
+            amount: str,
+            staking: bool = False,
     ):
         self.proposal_id = proposal_id
         self.user_id = user_id
         self.amount = amount
+        self.staking = staking
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
 
@@ -108,6 +112,7 @@ class ProposalContribution(db.Model):
         return ProposalContribution.query \
             .filter(ProposalContribution.user_id == user_id) \
             .filter(ProposalContribution.status != ContributionStatus.DELETED) \
+            .filter(ProposalContribution.staking == False) \
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
 
@@ -155,6 +160,10 @@ class ProposalContribution(db.Model):
         self.status = ContributionStatus.CONFIRMED
         self.tx_id = tx_id
         self.amount = amount
+    
+    @hybrid_property
+    def refund_address(self):
+        return self.user.settings.refund_address
 
 
 class ProposalArbiter(db.Model):
@@ -328,11 +337,12 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def create_contribution(self, user_id: int, amount):
+    def create_contribution(self, user_id: int, amount, staking: bool = False):
         contribution = ProposalContribution(
             proposal_id=self.id,
             user_id=user_id,
-            amount=amount
+            amount=amount,
+            staking=staking,
         )
         db.session.add(contribution)
         db.session.commit()
@@ -344,12 +354,17 @@ class Proposal(db.Model):
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
+            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
             ).first()
             if not contribution:
-                contribution = self.create_contribution(user_id, str(remaining.normalize()))
+                contribution = self.create_contribution(
+                    user_id=user_id,
+                    amount=str(remaining.normalize()),
+                    staking=True,
+                )
 
         return contribution
 
@@ -456,7 +471,7 @@ class Proposal(db.Model):
     @hybrid_property
     def contributed(self):
         contributions = ProposalContribution.query \
-            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=False) \
             .all()
         funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
@@ -477,11 +492,16 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_staked(self):
-        return Decimal(self.contributed) >= PROPOSAL_STAKING_AMOUNT
+        # Don't use self.contributed since that ignores stake contributions
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
+            .all()
+        funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        return Decimal(funded) >= PROPOSAL_STAKING_AMOUNT
 
     @hybrid_property
     def is_funded(self):
-        return Decimal(self.funded) >= Decimal(self.target)
+        return self.is_staked and Decimal(self.funded) >= Decimal(self.target)
 
     @hybrid_property
     def is_failed(self):
@@ -689,6 +709,40 @@ user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 
 user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
 proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
 proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
+
+
+class AdminProposalContributionSchema(ma.Schema):
+    class Meta:
+        model = ProposalContribution
+        # Fields to expose
+        fields = (
+            "id",
+            "proposal",
+            "user",
+            "status",
+            "tx_id",
+            "amount",
+            "date_created",
+            "addresses",
+            "refund_address",
+            "refund_tx_id",
+            "staking"
+        )
+
+    proposal = ma.Nested("ProposalSchema")
+    user = ma.Nested("UserSchema")
+    date_created = ma.Method("get_date_created")
+    addresses = ma.Method("get_addresses")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+    def get_addresses(self, obj):
+        return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+
+
+admin_proposal_contribution_schema = AdminProposalContributionSchema()
+admin_proposal_contributions_schema = AdminProposalContributionSchema(many=True)
 
 
 class ProposalArbiterSchema(ma.Schema):

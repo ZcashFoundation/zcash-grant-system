@@ -19,6 +19,7 @@ import RFPDetail from 'components/RFPDetail';
 import Contributions from 'components/Contributions';
 import ContributionForm from 'components/ContributionForm';
 import ContributionDetail from 'components/ContributionDetail';
+import Moderation from 'components/Moderation';
 
 import 'styles/style.less';
 
@@ -53,6 +54,7 @@ class Routes extends React.Component<Props> {
             <Route path="/contributions/:id" component={ContributionDetail} />
             <Route path="/contributions" component={Contributions} />
             <Route path="/emails/:type?" component={Emails} />
+            <Route path="/moderation" component={Moderation} />
           </Switch>
         )}
       </Template>

@@ -54,8 +54,10 @@ class UserSettings(db.Model):
     __tablename__ = "user_settings"
 
     id = db.Column(db.Integer(), primary_key=True)
-    _email_subscriptions = db.Column("email_subscriptions", db.Integer, default=0)  # bitmask
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    _email_subscriptions = db.Column("email_subscriptions", db.Integer, default=0)  # bitmask
+    refund_address = db.Column(db.String(255), unique=False, nullable=True)
+
     user = db.relationship("User", back_populates="settings")
 
     @hybrid_property
@@ -373,7 +375,10 @@ avatar_schemas = AvatarSchema(many=True)
 class UserSettingsSchema(ma.Schema):
     class Meta:
         model = UserSettings
-        fields = ("email_subscriptions",)
+        fields = (
+            "email_subscriptions",
+            "refund_address",
+        )
 
 
 user_settings_schema = UserSettingsSchema()

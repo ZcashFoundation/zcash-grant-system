@@ -104,7 +104,6 @@ export interface Proposal {
   currentMilestone?: Milestone;
   team: User[];
   comments: Comment[];
-  contractStatus: string;
   target: string;
   contributed: string;
   funded: string;
@@ -114,11 +113,19 @@ export interface Proposal {
   arbiter: ProposalArbiter;
 }
 export interface Comment {
-  commentId: string;
+  id: number;
+  userId: User['userid'];
+  author?: User;
   proposalId: Proposal['proposalId'];
   proposal?: Proposal;
   dateCreated: number;
   content: string;
+  hidden: boolean;
+  reported: boolean;
+}
+export interface CommentArgs {
+  hidden: boolean;
+  reported: boolean;
 }
 // NOTE: sync with backend/utils/enums.py
 export enum CONTRIBUTION_STATUS {
@@ -139,13 +146,17 @@ export interface Contribution {
     sprout: string;
     memo: string;
   };
+  staking: boolean;
+  refundAddress?: string;
+  refundTxId?: string;
 }
 export interface ContributionArgs {
-  proposalId: string | number;
-  userId: string | number;
-  amount: string;
-  status: string;
+  proposalId?: string | number;
+  userId?: string | number;
+  amount?: string;
+  status?: string;
   txId?: string;
+  refundTxId?: string;
 }
 export interface User {
   accountAddress: string;

@@ -3,7 +3,9 @@ from flask import Blueprint, request, session
 from flask_yoloapi import endpoint, parameter
 from decimal import Decimal
 from datetime import datetime
-from grant.comment.models import Comment, user_comments_schema
+from sqlalchemy import text
+
+from grant.comment.models import Comment, user_comments_schema, admin_comments_schema, admin_comment_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.proposal.models import (
@@ -12,11 +14,12 @@ from grant.proposal.models import (
     ProposalContribution,
     proposals_schema,
     proposal_schema,
-    proposal_contribution_schema,
     user_proposal_contributions_schema,
+    admin_proposal_contribution_schema,
+    admin_proposal_contributions_schema,
 )
 from grant.milestone.models import Milestone
-from grant.user.models import User, admin_users_schema, admin_user_schema
+from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 import grant.utils.admin as admin
 import grant.utils.auth as auth
@@ -162,12 +165,23 @@ def stats():
         .filter(Proposal.status == ProposalStatus.LIVE) \
         .filter(Milestone.stage == MilestoneStage.ACCEPTED) \
         .scalar()
+    # Count contributions on proposals that didn't get funded for users who have specified a refund address
+    contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
+        .filter(ProposalContribution.refund_tx_id == None) \
+        .filter(ProposalContribution.staking == False) \
+        .join(Proposal) \
+        .filter(Proposal.stage == ProposalStage.REFUNDING) \
+        .join(ProposalContribution.user) \
+        .join(UserSettings) \
+        .filter(UserSettings.refund_address != None) \
+        .scalar()
     return {
         "userCount": user_count,
         "proposalCount": proposal_count,
         "proposalPendingCount": proposal_pending_count,
         "proposalNoArbiterCount": proposal_no_arbiter_count,
         "proposalMilestonePayoutsCount": proposal_milestone_payouts_count,
+        "contributionRefundableCount": contribution_refundable_count,
     }
 
 
@@ -555,6 +569,7 @@ def get_contributions(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.contribution(
         page=page,
+        schema=admin_proposal_contributions_schema,
         filters=filters_workaround,
         search=search,
         sort=sort,
@@ -588,7 +603,7 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
     contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
-    return proposal_contribution_schema.dump(contribution), 200
+    return admin_proposal_contribution_schema.dump(contribution), 200
 
 
 @blueprint.route('/contributions/<contribution_id>', methods=['GET'])
@@ -599,7 +614,7 @@ def get_contribution(contribution_id):
     if not contribution:
         return {"message": "No contribution matching that id"}, 404
 
-    return proposal_contribution_schema.dump(contribution), 200
+    return admin_proposal_contribution_schema.dump(contribution), 200
 
 
 @blueprint.route('/contributions/<contribution_id>', methods=['PUT'])
@@ -609,18 +624,18 @@ def get_contribution(contribution_id):
     parameter('status', type=str, required=False),
     parameter('amount', type=str, required=False),
     parameter('txId', type=str, required=False),
+    parameter('refundTxId', type=str, required=False),
 )
 @admin.admin_auth_required
-def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id):
+def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id, refund_tx_id):
     contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
     if not contribution:
         return {"message": "No contribution matching that id"}, 404
+    had_refund = contribution.refund_tx_id
 
     # do not allow editing contributions once a proposal has become funded
     if contribution.proposal.is_funded:
         return {"message": "Cannot edit contributions to fully-funded proposals"}, 400
-
-    print((contribution_id, proposal_id, user_id, status, amount, tx_id))
 
     # Proposal ID (must belong to an existing proposal)
     if proposal_id:
@@ -646,8 +661,11 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
         except:
             return {"message": "Amount could not be parsed as number"}, 400
     # Transaction ID (no validation)
-    if tx_id:
+    if tx_id is not None:
         contribution.tx_id = tx_id
+    # Refund TX ID (no validation)
+    if refund_tx_id is not None:
+        contribution.refund_tx_id = refund_tx_id
 
     db.session.add(contribution)
     db.session.flush()
@@ -656,4 +674,48 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
-    return proposal_contribution_schema.dump(contribution), 200
+    return admin_proposal_contribution_schema.dump(contribution), 200
+
+
+# Comments
+
+
+@blueprint.route('/comments', methods=['GET'])
+@endpoint.api(
+    parameter('page', type=int, required=False),
+    parameter('filters', type=list, required=False),
+    parameter('search', type=str, required=False),
+    parameter('sort', type=str, required=False)
+)
+@admin_auth_required
+def get_comments(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.comment(
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+        schema=admin_comments_schema
+    )
+    return page
+
+
+@blueprint.route('/comments/<comment_id>', methods=['PUT'])
+@endpoint.api(
+    parameter('hidden', type=bool, required=False),
+    parameter('reported', type=bool, required=False),
+)
+@admin_auth_required
+def edit_comment(comment_id, hidden, reported):
+    comment = Comment.query.filter(Comment.id == comment_id).first()
+    if not comment:
+        return {"message": "No comment matching that id"}, 404
+
+    if hidden is not None:
+        comment.hide(hidden)
+
+    if reported is not None:
+        comment.report(reported)
+
+    db.session.commit()
+    return admin_comment_schema.dump(comment)

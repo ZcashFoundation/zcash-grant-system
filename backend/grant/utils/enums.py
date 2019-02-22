@@ -37,6 +37,7 @@ class ProposalStageEnum(CustomEnum):
     FUNDING_REQUIRED = 'FUNDING_REQUIRED'
     WIP = 'WIP'
     COMPLETED = 'COMPLETED'
+    REFUNDING = 'REFUNDING'
 
 
 ProposalStage = ProposalStageEnum()
