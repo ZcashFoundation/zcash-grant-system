@@ -120,7 +120,7 @@ def post_2fa_enable(backup_codes, totp_secret, verify_code):
     parameter('verifyCode', type=str, required=True),
 )
 def post_2fa_verify(verify_code):
-    admin.throw_on_2fa_not_allowed()
+    admin.throw_on_2fa_not_allowed(allow_stale=True)
     admin.admin_auth_2fa(verify_code)
     db.session.commit()
     return make_2fa_state()

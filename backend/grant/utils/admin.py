@@ -82,10 +82,10 @@ def make_2fa_setup():
     }
 
 
-def throw_on_2fa_not_allowed():
+def throw_on_2fa_not_allowed(allow_stale=False):
     if not admin_is_authed():
         raise AuthException("Must be authenticated")
-    if not is_auth_fresh():
+    if not allow_stale and not is_auth_fresh():
         raise AuthException("Login stale")
     if not is_email_verified():
         raise AuthException("Email must be verified")
