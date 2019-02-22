@@ -137,7 +137,12 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 ['is-success']: isRaiseGoalReached,
               })}
             >
-              {isRaiseGoalReached ? (
+              {proposal.stage === PROPOSAL_STAGE.CANCELED ? (
+                <>
+                  <Icon type="close-circle-o" />
+                  <span>Proposal was canceled</span>
+                </>
+              ) : isRaiseGoalReached ? (
                 <>
                   <Icon type="check-circle-o" />
                   <span>Proposal has been funded</span>
