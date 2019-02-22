@@ -468,6 +468,27 @@ class Proposal(db.Model):
         else:
             raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
 
+    def cancel(self):
+        if self.status is not ProposalStatus.LIVE:
+            raise ValidationException("Cannot cancel a proposal until it's live")
+
+        self.stage = ProposalStage.REFUNDING
+        db.session.add(self)
+        db.session.flush()
+        # Send emails to team & contributors
+        for u in proposal.team:
+            send_email(u.email_address, 'proposal_canceled', {
+                'proposal': proposal,
+                'support_url': make_url('/contact'),
+            })
+        for c in proposal.contributions:
+            send_email(c.user.email_address, 'contribution_proposal_canceled', {
+                'contribution': c,
+                'proposal': proposal,
+                'refund_address': c.user.settings.refund_address,
+                'account_settings_url': make_url('/profile/settings?tab=account')
+            })
+
     @hybrid_property
     def contributed(self):
         contributions = ProposalContribution.query \

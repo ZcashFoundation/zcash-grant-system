@@ -295,19 +295,25 @@ def delete_proposal(id):
 
 @blueprint.route('/proposals/<id>', methods=['PUT'])
 @endpoint.api(
-    parameter('contributionMatching', type=float, required=False, default=None)
+    parameter('cancel', type=bool, required=False, default=False),
+    parameter('contributionMatching', type=float, required=False, default=None),
 )
 @admin_auth_required
-def update_proposal(id, contribution_matching):
+def update_proposal(id, contribution_matching, cancel):
     proposal = Proposal.query.filter(Proposal.id == id).first()
-    if proposal:
-        if contribution_matching is not None:
-            proposal.set_contribution_matching(contribution_matching)
+    if not proposal:
+        return {"message": f"Could not find proposal with id {id}"}, 404
 
-        db.session.commit()
-        return proposal_schema.dump(proposal)
+    if contribution_matching is not None:
+        proposal.set_contribution_matching(contribution_matching)
 
-    return {"message": f"Could not find proposal with id {id}"}, 404
+    if cancel:
+        proposal.cancel()
+
+    db.session.add(proposal)
+    db.session.commit()
+
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route('/proposals/<id>/approve', methods=['PUT'])

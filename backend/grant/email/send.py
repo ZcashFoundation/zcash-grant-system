@@ -116,6 +116,16 @@ def proposal_failed(email_args):
     }
 
 
+def proposal_canceled(email_args):
+    return {
+        'subject': 'Your proposal has been canceled',
+        'title': 'Proposal canceled',
+        'preview': 'Due to inactivity, your proposal entitled {} has been canceled'.format(
+            email_args['proposal'].title,
+        ),
+    }
+
+
 def staking_contribution_confirmed(email_args):
     subject = 'Your proposal has been staked!' if \
         email_args['fully_staked'] else \
@@ -171,6 +181,17 @@ def contribution_proposal_failed(email_args):
         'subject': 'A proposal you contributed to failed to get funding',
         'title': 'Proposal failed',
         'preview': 'The proposal entitled {} failed to get funding, here’s how to get a refund'.format(
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_FUNDED,
+    }
+
+
+def contribution_proposal_canceled(email_args):
+    return {
+        'subject': 'A proposal you contributed to has been canceled',
+        'title': 'Proposal canceled',
+        'preview': 'The proposal entitled {} has been canceled, here’s how to get a refund'.format(
             email_args['proposal'].title,
         ),
         'subscription': EmailSubscription.FUNDED_PROPOSAL_FUNDED,
@@ -253,11 +274,13 @@ get_info_lookup = {
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
     'proposal_failed': proposal_failed,
+    'proposal_canceled': proposal_canceled,
     'staking_contribution_confirmed': staking_contribution_confirmed,
     'contribution_confirmed': contribution_confirmed,
     'contribution_update': contribution_update,
     'contribution_refunded': contribution_refunded,
     'contribution_proposal_failed': contribution_proposal_failed,
+    'contribution_proposal_canceled': contribution_proposal_canceled,
     'comment_reply': comment_reply,
     'proposal_arbiter': proposal_arbiter,
     'milestone_request': milestone_request,
