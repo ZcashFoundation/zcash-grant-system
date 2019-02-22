@@ -469,22 +469,23 @@ class Proposal(db.Model):
             raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
 
     def cancel(self):
-        if self.status is not ProposalStatus.LIVE:
+        print(self.status)
+        if self.status != ProposalStatus.LIVE:
             raise ValidationException("Cannot cancel a proposal until it's live")
 
         self.stage = ProposalStage.REFUNDING
         db.session.add(self)
         db.session.flush()
         # Send emails to team & contributors
-        for u in proposal.team:
+        for u in self.team:
             send_email(u.email_address, 'proposal_canceled', {
-                'proposal': proposal,
+                'proposal': self,
                 'support_url': make_url('/contact'),
             })
-        for c in proposal.contributions:
+        for c in self.contributions:
             send_email(c.user.email_address, 'contribution_proposal_canceled', {
                 'contribution': c,
-                'proposal': proposal,
+                'proposal': self,
                 'refund_address': c.user.settings.refund_address,
                 'account_settings_url': make_url('/profile/settings?tab=account')
             })
@@ -528,6 +529,8 @@ class Proposal(db.Model):
     def is_failed(self):
         if not self.status == ProposalStatus.LIVE or not self.date_published:
             return False
+        if self.stage == ProposalStage.REFUNDING:
+            return True
         deadline = self.date_published + datetime.timedelta(seconds=self.deadline_duration)
         passed = deadline < datetime.datetime.now()
         return passed and not self.is_funded

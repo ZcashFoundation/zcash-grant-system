@@ -75,6 +75,33 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       </Popconfirm>
     );
 
+    const renderCancelControl = () => (
+      <Popconfirm
+        title={(
+          <p>
+            Are you sure you want to cancel proposal and begin
+            <br />
+            the refund process? This cannot be undone.
+          </p>
+        )}
+        placement="left"
+        cancelText="cancel"
+        okText="confirm"
+        okButtonProps={{ loading: store.proposalDetailCanceling }}
+        onConfirm={this.handleCancel}
+      >
+        <Button
+          icon="close-circle"
+          className="ProposalDetail-controls-control"
+          loading={store.proposalDetailCanceling}
+          disabled={p.status !== PROPOSAL_STATUS.LIVE || p.stage === PROPOSAL_STAGE.REFUNDING}
+          block
+        >
+          Cancel & refund
+        </Button>
+      </Popconfirm>
+    );
+
     const renderArbiterControl = () => (
       <ArbiterControl
         {...p}
@@ -270,6 +297,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       if (
         !(
           p.status === PROPOSAL_STATUS.LIVE &&
+          p.stage !== PROPOSAL_STAGE.REFUNDING &&
           p.currentMilestone &&
           p.currentMilestone.stage === MILESTONE_STAGE.ACCEPTED
         )
@@ -319,11 +347,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         <Alert
           showIcon
           type="error"
-          message="Funding failed"
+          message="Proposal is refunding"
           description={
             <>
-              This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
-              <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>.
+              This proposal either failed to reach its funding goal, or was canceled by
+              an admin. Any contributions it received will need to receive refunds.
             </>
           }
         />
@@ -371,6 +399,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
               {renderDeleteControl()}
+              {renderCancelControl()}
               {renderArbiterControl()}
               {renderMatchingControl()}
               {/* TODO - other actions */}
@@ -443,6 +472,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
   private handleDelete = () => {
     if (!store.proposalDetail) return;
     store.deleteProposal(store.proposalDetail.proposalId);
+  };
+
+  private handleCancel = () => {
+    if (!store.proposalDetail) return;
+    store.cancelProposal(store.proposalDetail.proposalId);
   };
 
   private handleApprove = () => {

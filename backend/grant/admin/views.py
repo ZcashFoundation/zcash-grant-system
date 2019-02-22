@@ -295,8 +295,7 @@ def delete_proposal(id):
 
 @blueprint.route('/proposals/<id>', methods=['PUT'])
 @endpoint.api(
-    parameter('cancel', type=bool, required=False, default=False),
-    parameter('contributionMatching', type=float, required=False, default=None),
+    parameter('contributionMatching', type=float, required=False, default=None)
 )
 @admin_auth_required
 def update_proposal(id, contribution_matching, cancel):
@@ -306,9 +305,6 @@ def update_proposal(id, contribution_matching, cancel):
 
     if contribution_matching is not None:
         proposal.set_contribution_matching(contribution_matching)
-
-    if cancel:
-        proposal.cancel()
 
     db.session.add(proposal)
     db.session.commit()
@@ -330,6 +326,20 @@ def approve_proposal(id, is_approve, reject_reason=None):
         return proposal_schema.dump(proposal)
 
     return {"message": "No proposal found."}, 404
+
+
+@blueprint.route('/proposals/<id>/cancel', methods=['PUT'])
+@endpoint.api()
+@admin_auth_required
+def cancel_proposal(id):
+    proposal = Proposal.query.filter_by(id=id).first()
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    proposal.cancel()
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route("/proposals/<id>/milestone/<mid>/paid", methods=["PUT"])

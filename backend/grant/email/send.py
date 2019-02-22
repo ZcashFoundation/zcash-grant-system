@@ -120,7 +120,7 @@ def proposal_canceled(email_args):
     return {
         'subject': 'Your proposal has been canceled',
         'title': 'Proposal canceled',
-        'preview': 'Due to inactivity, your proposal entitled {} has been canceled'.format(
+        'preview': 'Your proposal entitled {} has been canceled, and your contributors will be refunded'.format(
             email_args['proposal'].title,
         ),
     }

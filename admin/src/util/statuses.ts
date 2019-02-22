@@ -118,6 +118,12 @@ export const PROPOSAL_STAGES: Array<StatusSoT<PROPOSAL_STAGE>> = [
     tagColor: '#108ee9',
     hint: 'Proposal was accepted, published, funded and all funds paid out.',
   },
+  {
+    id: PROPOSAL_STAGE.REFUNDING,
+    tagDisplay: 'Refunding',
+    tagColor: '#eb4118',
+    hint: 'Proposal is currently refunding all contributors.',
+  }
 ];
 
 export const PROPOSAL_ARBITER_STATUSES: Array<StatusSoT<PROPOSAL_ARBITER_STATUS>> = [
