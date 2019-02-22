@@ -81,6 +81,15 @@ export const STAGE_UI: { [key in PROPOSAL_STAGE]: StageUI } = {
     label: 'Completed',
     color: '#27ae60',
   },
+  // Never used
+  FAILED: {
+    label: 'Failed',
+    color: '#000',
+  },
+  CANCELED: {
+    label: 'Canceled',
+    color: '#000',
+  },
 };
 
 export enum RFP_STATUS {
