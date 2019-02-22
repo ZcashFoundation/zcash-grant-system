@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Link, Redirect, withRouter, RouteComponentProps } from 'react-router-dom';
+import { Redirect, withRouter, RouteComponentProps } from 'react-router-dom';
 import { view } from 'react-easy-state';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import QRCode from 'qrcode.react';
