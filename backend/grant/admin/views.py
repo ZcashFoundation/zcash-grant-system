@@ -88,6 +88,7 @@ def stats():
     contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
         .filter(ProposalContribution.refund_tx_id == None) \
         .filter(ProposalContribution.staking == False) \
+        .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
         .filter(or_(
             Proposal.stage == ProposalStage.FAILED,
