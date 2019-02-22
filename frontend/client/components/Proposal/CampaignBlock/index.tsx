@@ -52,7 +52,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       const datePublished = proposal.datePublished || Date.now() / 1000;
       const isRaiseGoalReached = funded.gte(target);
       const deadline = (datePublished + proposal.deadlineDuration) * 1000;
-      const isFrozen = proposal.stage === PROPOSAL_STAGE.REFUNDING;
+      const isFrozen =
+        proposal.stage === PROPOSAL_STAGE.FAILED ||
+        proposal.stage === PROPOSAL_STAGE.CANCELED;
       const isLive = proposal.status === STATUS.LIVE;
 
       const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;

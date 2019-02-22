@@ -154,7 +154,10 @@ class ContributionPagination(Pagination):
                 query = query.filter(ProposalContribution.refund_tx_id == None) \
                     .filter(ProposalContribution.staking == False) \
                     .join(Proposal) \
-                    .filter(Proposal.stage == ProposalStage.REFUNDING) \
+                    .filter(or_(
+                        Proposal.stage == ProposalStage.FAILED,
+                        Proposal.stage == ProposalStage.CANCELED,
+                    )) \
                     .join(ProposalContribution.user) \
                     .join(UserSettings) \
                     .filter(UserSettings.refund_address != None) \

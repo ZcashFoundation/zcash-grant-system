@@ -473,7 +473,7 @@ class Proposal(db.Model):
         if self.status != ProposalStatus.LIVE:
             raise ValidationException("Cannot cancel a proposal until it's live")
 
-        self.stage = ProposalStage.REFUNDING
+        self.stage = ProposalStage.CANCELED
         db.session.add(self)
         db.session.flush()
         # Send emails to team & contributors
@@ -529,7 +529,7 @@ class Proposal(db.Model):
     def is_failed(self):
         if not self.status == ProposalStatus.LIVE or not self.date_published:
             return False
-        if self.stage == ProposalStage.REFUNDING:
+        if self.stage == ProposalStage.FAILED or self.stage == ProposalStage.CANCELED:
             return True
         deadline = self.date_published + datetime.timedelta(seconds=self.deadline_duration)
         passed = deadline < datetime.datetime.now()

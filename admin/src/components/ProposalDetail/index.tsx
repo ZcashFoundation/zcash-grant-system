@@ -61,6 +61,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
       p.status === PROPOSAL_STATUS.LIVE &&
       !p.isFailed;
+    const refundablePct = p.milestones.reduce((prev, m) => {
+      return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
+    }, 100);
+
 
     const renderDeleteControl = () => (
       <Popconfirm
@@ -94,7 +98,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           icon="close-circle"
           className="ProposalDetail-controls-control"
           loading={store.proposalDetailCanceling}
-          disabled={p.status !== PROPOSAL_STATUS.LIVE || p.stage === PROPOSAL_STAGE.REFUNDING}
+          disabled={
+            p.status !== PROPOSAL_STATUS.LIVE ||
+            p.stage === PROPOSAL_STAGE.FAILED ||
+            p.stage === PROPOSAL_STAGE.CANCELED
+          }
           block
         >
           Cancel & refund
@@ -294,10 +302,12 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderMilestoneAccepted = () => {
+      if (p.stage === PROPOSAL_STAGE.FAILED || p.stage === PROPOSAL_STAGE.CANCELED) {
+        return;
+      }
       if (
         !(
           p.status === PROPOSAL_STATUS.LIVE &&
-          p.stage !== PROPOSAL_STAGE.REFUNDING &&
           p.currentMilestone &&
           p.currentMilestone.stage === MILESTONE_STAGE.ACCEPTED
         )
@@ -347,12 +357,21 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         <Alert
           showIcon
           type="error"
-          message="Proposal is refunding"
+          message={p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'}
           description={
-            <>
-              This proposal either failed to reach its funding goal, or was canceled by
-              an admin. Any contributions it received will need to receive refunds.
-            </>
+            p.stage === PROPOSAL_STAGE.FAILED ? (
+              <>
+                This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
+                <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>. All contributors
+                will need to be refunded.
+              </>
+            ) : (
+              <>
+                This proposal was canceled by an admin, and will be refunding contributors
+                <b>{refundablePct}%</b> of their contributions.
+              </>
+            )
+            
           }
         />
       );
