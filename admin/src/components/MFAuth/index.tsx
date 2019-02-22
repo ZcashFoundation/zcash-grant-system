@@ -23,6 +23,7 @@ const STATE = {
   totpUri: '',
   is2faAuthed: false,
   backupCodeCount: 0,
+  isEmailVerified: false,
   // local
   loaded: false,
   hasReadSetup: false,
@@ -58,9 +59,24 @@ class MFAuth extends React.Component<{}, State> {
       showQrCode,
       isVerifying,
       backupCodeCount,
+      isEmailVerified,
     } = this.state;
 
+    const emailNotVerifiedWarning = loaded &&
+      !isEmailVerified && (
+        <Alert
+          type="error"
+          message={
+            <>
+              You must <b>verify your email</b> in order to act as admin. You should have
+              received an email with instructions when you signed up.
+            </>
+          }
+        />
+      );
+
     const lowBackupCodesWarning = loaded &&
+      has2fa &&
       backupCodeCount < 5 && (
         <Alert
           type="warning"
@@ -75,10 +91,12 @@ class MFAuth extends React.Component<{}, State> {
 
     const wrap = (children: ReactNode) => (
       <div className="MFAuth">
-        <>
-          {lowBackupCodesWarning}
-          {children}
-        </>
+        {emailNotVerifiedWarning || (
+          <>
+            {lowBackupCodesWarning}
+            {children}
+          </>
+        )}
       </div>
     );
 

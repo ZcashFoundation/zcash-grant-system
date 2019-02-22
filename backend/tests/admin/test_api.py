@@ -21,7 +21,8 @@ json_2fa = {
     "isLoginFresh": True,
     "has2fa": False,
     "is2faAuthed": False,
-    "backupCodeCount": 0
+    "backupCodeCount": 0,
+    "isEmailVerified": True,
 }
 
 
@@ -168,7 +169,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
         # 14. 2fa verify (fail; logged out)
         r = self.p("/api/v1/admin/2fa/verify", {'verifyCode': totp_2fa.current_totp(secret)})
-        self.assert403(r)
+        self.assert_autherror(r, 'Must be auth')
 
         # 15. login
         r = send_login()

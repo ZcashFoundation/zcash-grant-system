@@ -41,13 +41,27 @@ from .example_emails import example_email_args
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
 
 
+def make_2fa_state():
+    return {
+        "isLoginFresh": admin.is_auth_fresh(),
+        "has2fa": admin.has_2fa_setup(),
+        "is2faAuthed": admin.admin_is_2fa_authed(),
+        "backupCodeCount": admin.backup_code_count(),
+        "isEmailVerified": auth.is_email_verified(),
+    }
+
+
+def make_login_state():
+    return {
+        "isLoggedIn": admin.admin_is_authed(),
+        "is2faAuthed": admin.admin_is_2fa_authed()
+    }
+
+
 @blueprint.route("/checklogin", methods=["GET"])
 @endpoint.api()
 def loggedin():
-    return {
-        "isLoggedIn": admin.admin_is_authed(),
-        "is2faAuthed": admin.admin_is_2fa_authed(),
-    }
+    return make_login_state()
 
 
 @blueprint.route("/login", methods=["POST"])
@@ -58,10 +72,7 @@ def loggedin():
 def login(username, password):
     if auth.auth_user(username, password):
         if admin.admin_is_authed():
-            return {
-                "isLoggedIn": admin.admin_is_authed(),
-                "is2faAuthed": admin.admin_is_2fa_authed()
-            }
+            return make_login_state()
     return {"message": "Username or password incorrect."}, 401
 
 
@@ -71,21 +82,9 @@ def login(username, password):
 )
 def refresh(password):
     if auth.refresh_auth(password):
-        return {
-            "isLoggedIn": admin.admin_is_authed(),
-            "is2faAuthed": admin.admin_is_2fa_authed()
-        }
+        return make_login_state()
     else:
         return {"message": "Username or password incorrect."}, 401
-
-
-def make_2fa_state():
-    return {
-        "isLoginFresh": admin.is_auth_fresh(),
-        "has2fa": admin.has_2fa_setup(),
-        "is2faAuthed": admin.admin_is_2fa_authed(),
-        "backupCodeCount": admin.backup_code_count(),
-    }
 
 
 @blueprint.route("/2fa", methods=["GET"])
@@ -99,10 +98,7 @@ def get_2fa():
 @blueprint.route("/2fa/init", methods=["GET"])
 @endpoint.api()
 def get_2fa_init():
-    if not admin.admin_is_authed():
-        return {"message": "Must be authenticated"}, 403
-    if not admin.is_auth_fresh():
-        return {"message": "Login stale"}, 403
+    admin.throw_on_2fa_not_allowed()
     return admin.make_2fa_setup()
 
 
@@ -113,10 +109,7 @@ def get_2fa_init():
     parameter('verifyCode', type=str, required=True),
 )
 def post_2fa_enable(backup_codes, totp_secret, verify_code):
-    if not admin.admin_is_authed():
-        return {"message": "Must be authenticated"}, 403
-    if not admin.is_auth_fresh():
-        return {"message": "Login stale"}, 403
+    admin.throw_on_2fa_not_allowed()
     admin.check_and_set_2fa_setup(backup_codes, totp_secret, verify_code)
     db.session.commit()
     return make_2fa_state()
@@ -127,10 +120,7 @@ def post_2fa_enable(backup_codes, totp_secret, verify_code):
     parameter('verifyCode', type=str, required=True),
 )
 def post_2fa_verify(verify_code):
-    if not admin.admin_is_authed():
-        return {"message": "Must be authenticated"}, 403
-    if not admin.is_auth_fresh():
-        return {"message": "Login stale"}, 403
+    admin.throw_on_2fa_not_allowed()
     admin.admin_auth_2fa(verify_code)
     db.session.commit()
     return make_2fa_state()

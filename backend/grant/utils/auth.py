@@ -35,6 +35,11 @@ def is_auth_fresh(minutes: int=20):
         return now - last < timedelta(minutes=minutes)
 
 
+def is_email_verified():
+    user = get_authed_user()
+    return user.email_verification.has_verified
+
+
 def auth_user(email, password):
     existing_user = User.get_by_email(email)
     if not existing_user:

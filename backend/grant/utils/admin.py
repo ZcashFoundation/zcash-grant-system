@@ -1,7 +1,7 @@
 from functools import wraps
 from datetime import datetime
 
-from .auth import auth_user, get_authed_user, throw_on_banned, is_auth_fresh, AuthException, logout_current_user
+from .auth import auth_user, get_authed_user, throw_on_banned, is_auth_fresh, AuthException, logout_current_user, is_email_verified
 from .totp_2fa import gen_backup_codes, gen_otp_secret, gen_uri, verify_totp, verify_and_update_backup_codes
 from hashlib import sha256
 
@@ -80,6 +80,15 @@ def make_2fa_setup():
         "totpSecret": secret,
         "totpUri": uri,
     }
+
+
+def throw_on_2fa_not_allowed():
+    if not admin_is_authed():
+        raise AuthException("Must be authenticated")
+    if not is_auth_fresh():
+        raise AuthException("Login stale")
+    if not is_email_verified():
+        raise AuthException("Email must be verified")
 
 
 def check_and_set_2fa_setup(codes: tuple, secret: str, verify: str):
