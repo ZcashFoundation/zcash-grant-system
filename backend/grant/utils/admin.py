@@ -112,7 +112,7 @@ def admin_auth_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         user = get_authed_user()
-        if admin_is_authed() and admin_is_2fa_authed():
+        if admin_is_authed() and admin_is_2fa_authed() and is_email_verified():
             return f(*args, **kwargs)
         else:
             return {"message": "Authentication required"}, 401

@@ -20,6 +20,7 @@ import Contributions from 'components/Contributions';
 import ContributionForm from 'components/ContributionForm';
 import ContributionDetail from 'components/ContributionDetail';
 import Moderation from 'components/Moderation';
+import Settings from 'components/Settings';
 
 import 'styles/style.less';
 
@@ -55,6 +56,8 @@ class Routes extends React.Component<Props> {
             <Route path="/contributions" component={Contributions} />
             <Route path="/emails/:type?" component={Emails} />
             <Route path="/moderation" component={Moderation} />
+            <Route path="/settings/2fa-reset" render={() => <MFAuth isReset={true} />} />
+            <Route path="/settings" component={Settings} />
           </Switch>
         )}
       </Template>
