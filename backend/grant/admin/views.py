@@ -406,7 +406,7 @@ def approve_proposal(id, is_approve, reject_reason=None):
 
 @blueprint.route('/proposals/<id>/cancel', methods=['PUT'])
 @endpoint.api()
-@admin_auth_required
+@admin.admin_auth_required
 def cancel_proposal(id):
     proposal = Proposal.query.filter_by(id=id).first()
     if not proposal:

@@ -1,7 +1,7 @@
 """Convert REFUNDING stage to FAILED
 
 Revision ID: 7c7cecfe5e6c
-Revises: 3514aaf4648f
+Revises: 9ad68ecf85aa
 Create Date: 2019-02-22 13:15:44.997884
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '7c7cecfe5e6c'
-down_revision = '3514aaf4648f'
+down_revision = '9ad68ecf85aa'
 branch_labels = None
 depends_on = None
 
