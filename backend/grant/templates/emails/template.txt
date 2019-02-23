@@ -6,4 +6,4 @@
 123 Address Street
 City, ST 12345
 
-Unsubscribe here: {{ args.unsubscribe_url }}
+Don't want any more emails? Unsubscribe here: {{ args.unsubscribe_url }}
