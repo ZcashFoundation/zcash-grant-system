@@ -93,6 +93,10 @@ example_email_args = {
     'proposal_failed': {
         'proposal': proposal,
     },
+    'proposal_canceled': {
+        'proposal': proposal,
+        'support_url': 'http://linktosupport.com',
+    },
     'contribution_confirmed': {
         'proposal': proposal,
         'contribution': contribution,
@@ -109,6 +113,12 @@ example_email_args = {
         'tx_explorer_url': 'http://someblockexplorer.com/tx/271857129857192579125',
     },
     'contribution_proposal_failed': {
+        'proposal': proposal,
+        'contribution': contribution,
+        'refund_address': 'ztqdzvnK2SE27FCWg69EdissCBn7twnfd1XWLrftiZaT4rSFCkp7eQGQDSWXBF43sM5cyA4c8qyVjBP9Cf4zTcFJxf71ve8',
+        'account_settings_url': 'http://accountsettingsurl.com/',
+    },
+    'contribution_proposal_canceled': {
         'proposal': proposal,
         'contribution': contribution,
         'refund_address': 'ztqdzvnK2SE27FCWg69EdissCBn7twnfd1XWLrftiZaT4rSFCkp7eQGQDSWXBF43sM5cyA4c8qyVjBP9Cf4zTcFJxf71ve8',

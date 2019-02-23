@@ -11,9 +11,10 @@ export interface Contribution {
 
 export interface ContributionWithAddresses extends Contribution {
   addresses: {
-    sprout: string;
     transparent: string;
-    memo: string;
+    // TODO: Add sapling and memo in when ready
+    // sprout: string;
+    // memo: string;
   };
 }
 

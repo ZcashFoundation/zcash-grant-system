@@ -166,9 +166,12 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 )
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
+    query = Proposal.query.filter_by(status=ProposalStatus.LIVE) \
+        .filter(Proposal.stage != ProposalStage.CANCELED) \
+        .filter(Proposal.stage != ProposalStage.FAILED)
     page = pagination.proposal(
         schema=proposals_schema,
-        query=Proposal.query.filter_by(status=ProposalStatus.LIVE),
+        query=query,
         page=page,
         filters=filters_workaround,
         search=search,

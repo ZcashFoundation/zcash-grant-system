@@ -7,6 +7,7 @@ import time
 from grant.settings import SITE_URL
 
 epoch = datetime.datetime.utcfromtimestamp(0)
+RANDOM_CHARS = string.ascii_letters + string.digits
 
 
 def dt_from_ms(ms):
@@ -24,8 +25,12 @@ def dt_to_unix(dt):
 
 def gen_random_code(length=32):
     return ''.join(
-        [random.choice(string.ascii_letters + string.digits) for n in range(length)]
+        [random.choice(RANDOM_CHARS) for n in range(length)]
     )
+
+
+def clean_random_code(code: str):
+    return ''.join(c for c in code if c in RANDOM_CHARS)
 
 
 def make_url(path: str):

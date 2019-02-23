@@ -85,6 +85,8 @@ export enum PROPOSAL_STAGE {
   FUNDING_REQUIRED = 'FUNDING_REQUIRED',
   WIP = 'WIP',
   COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELED = 'CANCELED',
 }
 export interface Proposal {
   proposalId: number;
@@ -172,6 +174,7 @@ export interface User {
   silenced: boolean;
   banned: boolean;
   bannedReason: string;
+  isAdmin: boolean;
 }
 
 export interface EmailExample {

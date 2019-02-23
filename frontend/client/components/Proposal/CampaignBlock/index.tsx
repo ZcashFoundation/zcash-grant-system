@@ -13,7 +13,7 @@ import UnitDisplay from 'components/UnitDisplay';
 import ContributionModal from 'components/ContributionModal';
 import Loader from 'components/Loader';
 import { getAmountError } from 'utils/validators';
-import { CATEGORY_UI } from 'api/constants';
+import { CATEGORY_UI, PROPOSAL_STAGE } from 'api/constants';
 import './style.less';
 
 interface OwnProps {
@@ -55,9 +55,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       const datePublished = proposal.datePublished || Date.now() / 1000;
       const isRaiseGoalReached = funded.gte(target);
       const deadline = (datePublished + proposal.deadlineDuration) * 1000;
-      // TODO: Get values from proposal
-      console.warn('TODO: Get isFrozen from proposal data');
-      const isFrozen = false;
+      const isFrozen =
+        proposal.stage === PROPOSAL_STAGE.FAILED ||
+        proposal.stage === PROPOSAL_STAGE.CANCELED;
       const isLive = proposal.status === STATUS.LIVE;
 
       const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;
@@ -140,7 +140,12 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 ['is-success']: isRaiseGoalReached,
               })}
             >
-              {isRaiseGoalReached ? (
+              {proposal.stage === PROPOSAL_STAGE.CANCELED ? (
+                <>
+                  <Icon type="close-circle-o" />
+                  <span>Proposal was canceled</span>
+                </>
+              ) : isRaiseGoalReached ? (
                 <>
                   <Icon type="check-circle-o" />
                   <span>Proposal has been funded</span>

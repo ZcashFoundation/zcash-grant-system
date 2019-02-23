@@ -440,7 +440,7 @@ class Proposal(db.Model):
         self.set_funded_when_ready()
 
     def set_funded_when_ready(self):
-        if self.status == ProposalStatus.LIVE and self.is_funded:
+        if self.status == ProposalStatus.LIVE and self.stage == ProposalStage.FUNDING_REQUIRED and self.is_funded:
             self.set_funded()
 
     # state: stage FUNDING_REQUIRED -> WIP
@@ -469,6 +469,28 @@ class Proposal(db.Model):
             self.set_funded_when_ready()
         else:
             raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
+
+    def cancel(self):
+        print(self.status)
+        if self.status != ProposalStatus.LIVE:
+            raise ValidationException("Cannot cancel a proposal until it's live")
+
+        self.stage = ProposalStage.CANCELED
+        db.session.add(self)
+        db.session.flush()
+        # Send emails to team & contributors
+        for u in self.team:
+            send_email(u.email_address, 'proposal_canceled', {
+                'proposal': self,
+                'support_url': make_url('/contact'),
+            })
+        for c in self.contributions:
+            send_email(c.user.email_address, 'contribution_proposal_canceled', {
+                'contribution': c,
+                'proposal': self,
+                'refund_address': c.user.settings.refund_address,
+                'account_settings_url': make_url('/profile/settings?tab=account')
+            })
 
     @hybrid_property
     def contributed(self):
@@ -509,6 +531,8 @@ class Proposal(db.Model):
     def is_failed(self):
         if not self.status == ProposalStatus.LIVE or not self.date_published:
             return False
+        if self.stage == ProposalStage.FAILED or self.stage == ProposalStage.CANCELED:
+            return True
         deadline = self.date_published + datetime.timedelta(seconds=self.deadline_duration)
         passed = deadline < datetime.datetime.now()
         return passed and not self.is_funded
@@ -702,7 +726,12 @@ class ProposalContributionSchema(ma.Schema):
         return dt_to_unix(obj.date_created)
 
     def get_addresses(self, obj):
-        return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+        # Omit 'memo' and 'sprout' for now
+        # TODO: Add back in 'sapling' when ready
+        addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+        return {
+            'transparent': addresses['transparent'],
+        }
 
     @post_dump
     def stub_anonymous_user(self, data):

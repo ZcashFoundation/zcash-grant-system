@@ -67,8 +67,8 @@ class ProposalDeadline:
         if not proposal or proposal.is_funded:
             return
         
-        # Otherwise, mark it as refunding and inform everyone
-        proposal.stage = ProposalStage.REFUNDING
+        # Otherwise, mark it as failed and inform everyone
+        proposal.stage = ProposalStage.FAILED
         db.session.add(proposal)
         db.session.commit()
 
