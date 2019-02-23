@@ -700,7 +700,12 @@ class ProposalContributionSchema(ma.Schema):
         return dt_to_unix(obj.date_created)
 
     def get_addresses(self, obj):
-        return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+        # Omit 'memo' and 'sprout' for now
+        # TODO: Add back in 'sapling' when ready
+        addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+        return {
+            'transparent': addresses['transparent'],
+        }
 
 
 proposal_contribution_schema = ProposalContributionSchema()

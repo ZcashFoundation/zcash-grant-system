@@ -31,7 +31,7 @@ export const EMAIL_SUBSCRIPTIONS: { [key in ESKey]: EmailSubscriptionInfo } = {
     value: false,
   },
   fundedProposalFunded: {
-    description: 'gets full funding',
+    description: 'gets fully funded or fails to get funding',
     category: EMAIL_SUBSCRIPTION_CATEGORY.FUNDED,
     value: false,
   },
@@ -63,7 +63,7 @@ export const EMAIL_SUBSCRIPTIONS: { [key in ESKey]: EmailSubscriptionInfo } = {
     value: false,
   },
   myProposalFunded: {
-    description: 'gets fully funded',
+    description: 'gets fully funded or fails to get funding',
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },

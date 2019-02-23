@@ -9,9 +9,9 @@ from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
     'home_url': make_url('/'),
-    'account_url': make_url('/user'),
-    'email_settings_url': make_url('/settings'),
-    'unsubscribe_url': make_url('/unsubscribe'),
+    'account_url': make_url('/profile'),
+    'email_settings_url': make_url('/profile/settings?tab=emails'),
+    'unsubscribe_url': make_url('/profile/settings?tab=emails'),
 }
 
 
@@ -113,6 +113,7 @@ def proposal_failed(email_args):
         'preview': 'Your proposal entitled {} failed to get enough funding by the deadline'.format(
             email_args['proposal'].title,
         ),
+        'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
     }
 
 
@@ -267,7 +268,7 @@ get_info_lookup = {
 }
 
 
-def generate_email(type, email_args):
+def generate_email(type, email_args, user=None):
     info = get_info_lookup[type](email_args)
     body_text = render_template(
         'emails/%s.txt' % (type),
@@ -280,10 +281,15 @@ def generate_email(type, email_args):
         UI=UI,
     )
 
+    template_args = { **default_template_args }
+    if user:
+        template_args['unsubscribe_url'] = make_url('/email/unsubscribe?code={}'.format(user.email_verification.code))
+
+
     html = render_template(
         'emails/template.html',
         args={
-            **default_template_args,
+            **template_args,
             **info,
             'body': Markup(body_html),
         },
@@ -292,7 +298,7 @@ def generate_email(type, email_args):
     text = render_template(
         'emails/template.txt',
         args={
-            **default_template_args,
+            **template_args,
             **info,
             'body': body_text,
         },
@@ -310,17 +316,18 @@ def send_email(to, type, email_args):
     if current_app and current_app.config.get("TESTING"):
         return
 
+    from grant.user.models import User
+    user = User.get_by_email(to)
     info = get_info_lookup[type](email_args)
 
-    if 'subscription' in info and 'user' in email_args:
-        user = email_args['user']
+    if user and 'subscription' in info:
         sub = info['subscription']
-        if not is_subscribed(user.settings.email_subscriptions, sub):
+        if user and not is_subscribed(user.settings.email_subscriptions, sub):
             print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
             return
 
     try:
-        email = generate_email(type, email_args)
+        email = generate_email(type, email_args, user)
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
 
         mail = Mail(
