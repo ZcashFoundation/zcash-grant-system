@@ -61,6 +61,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
       p.status === PROPOSAL_STATUS.LIVE &&
       !p.isFailed;
+    const refundablePct = p.milestones.reduce((prev, m) => {
+      return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
+    }, 100);
+
 
     const renderDeleteControl = () => (
       <Popconfirm
@@ -71,6 +75,37 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       >
         <Button icon="delete" className="ProposalDetail-controls-control" block>
           Delete
+        </Button>
+      </Popconfirm>
+    );
+
+    const renderCancelControl = () => (
+      <Popconfirm
+        title={(
+          <p>
+            Are you sure you want to cancel proposal and begin
+            <br />
+            the refund process? This cannot be undone.
+          </p>
+        )}
+        placement="left"
+        cancelText="cancel"
+        okText="confirm"
+        okButtonProps={{ loading: store.proposalDetailCanceling }}
+        onConfirm={this.handleCancel}
+      >
+        <Button
+          icon="close-circle"
+          className="ProposalDetail-controls-control"
+          loading={store.proposalDetailCanceling}
+          disabled={
+            p.status !== PROPOSAL_STATUS.LIVE ||
+            p.stage === PROPOSAL_STAGE.FAILED ||
+            p.stage === PROPOSAL_STAGE.CANCELED
+          }
+          block
+        >
+          Cancel & refund
         </Button>
       </Popconfirm>
     );
@@ -267,6 +302,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderMilestoneAccepted = () => {
+      if (p.stage === PROPOSAL_STAGE.FAILED || p.stage === PROPOSAL_STAGE.CANCELED) {
+        return;
+      }
       if (
         !(
           p.status === PROPOSAL_STATUS.LIVE &&
@@ -319,12 +357,21 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         <Alert
           showIcon
           type="error"
-          message="Funding failed"
+          message={p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'}
           description={
-            <>
-              This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
-              <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>.
-            </>
+            p.stage === PROPOSAL_STAGE.FAILED ? (
+              <>
+                This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
+                <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>. All contributors
+                will need to be refunded.
+              </>
+            ) : (
+              <>
+                This proposal was canceled by an admin, and will be refunding contributors
+                {' '}<b>{refundablePct}%</b> of their contributions.
+              </>
+            )
+            
           }
         />
       );
@@ -371,6 +418,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
               {renderDeleteControl()}
+              {renderCancelControl()}
               {renderArbiterControl()}
               {renderMatchingControl()}
               {/* TODO - other actions */}
@@ -443,6 +491,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
   private handleDelete = () => {
     if (!store.proposalDetail) return;
     store.deleteProposal(store.proposalDetail.proposalId);
+  };
+
+  private handleCancel = () => {
+    if (!store.proposalDetail) return;
+    store.cancelProposal(store.proposalDetail.proposalId);
   };
 
   private handleApprove = () => {

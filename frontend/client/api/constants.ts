@@ -55,6 +55,8 @@ export enum PROPOSAL_STAGE {
   FUNDING_REQUIRED = 'FUNDING_REQUIRED',
   WIP = 'WIP',
   COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELED = 'CANCELED',
 }
 
 interface StageUI {
@@ -78,6 +80,15 @@ export const STAGE_UI: { [key in PROPOSAL_STAGE]: StageUI } = {
   COMPLETED: {
     label: 'Completed',
     color: '#27ae60',
+  },
+  // Never used
+  FAILED: {
+    label: 'Failed',
+    color: '#000',
+  },
+  CANCELED: {
+    label: 'Canceled',
+    color: '#000',
   },
 };
 

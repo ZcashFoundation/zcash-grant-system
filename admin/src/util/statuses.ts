@@ -118,6 +118,18 @@ export const PROPOSAL_STAGES: Array<StatusSoT<PROPOSAL_STAGE>> = [
     tagColor: '#108ee9',
     hint: 'Proposal was accepted, published, funded and all funds paid out.',
   },
+  {
+    id: PROPOSAL_STAGE.FAILED,
+    tagDisplay: 'Failed',
+    tagColor: '#eb4118',
+    hint: 'Proposal failed to meet target and is currently refunding all contributors.',
+  },
+  {
+    id: PROPOSAL_STAGE.CANCELED,
+    tagDisplay: 'Canceled',
+    tagColor: '#eb4118',
+    hint: 'Proposal was canceled by an admin and is currently refunding all contributors.',
+  },
 ];
 
 export const PROPOSAL_ARBITER_STATUSES: Array<StatusSoT<PROPOSAL_ARBITER_STATUS>> = [

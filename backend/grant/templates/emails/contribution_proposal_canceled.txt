@@ -1,6 +1,6 @@
-We're sorry to inform you that a proposal you contributed to,
-"{{ args.proposal.title }}", failed to reach its funding goal
-before the deadline.
+We're sorry to inform you that a proposal you contributed to, "{{ args.proposal.title }}",
+has been canceled. Contributors will be refunded the remaining amount of money that
+hadn't already been paid out to the team.
 
 {% if args.refund_address %}
 It looks like you've configured refunds to be sent to:
