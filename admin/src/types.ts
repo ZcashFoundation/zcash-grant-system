@@ -172,6 +172,7 @@ export interface User {
   silenced: boolean;
   banned: boolean;
   bannedReason: string;
+  isAdmin: boolean;
 }
 
 export interface EmailExample {

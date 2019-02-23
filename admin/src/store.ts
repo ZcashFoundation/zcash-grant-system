@@ -25,17 +25,48 @@ async function login(username: string, password: string) {
     username,
     password,
   });
-  return data.isLoggedIn;
+  return data;
+}
+
+export async function refresh(password: string) {
+  const { data } = await api.post('/admin/refresh', {
+    password,
+  });
+  return data;
 }
 
 async function logout() {
   const { data } = await api.get('/admin/logout');
-  return data.isLoggedIn;
+  return data;
 }
 
 async function checkLogin() {
   const { data } = await api.get('/admin/checklogin');
-  return data.isLoggedIn;
+  return data;
+}
+
+export async function get2fa() {
+  const { data } = await api.get('/admin/2fa');
+  return data;
+}
+
+export async function get2faInit() {
+  const { data } = await api.get('/admin/2fa/init');
+  return data;
+}
+
+export async function post2faEnable(args: {
+  backupCodes: string[];
+  totpSecret: string;
+  verifyCode: string;
+}) {
+  const { data } = await api.post('/admin/2fa/enable', args);
+  return data;
+}
+
+export async function post2faVerify(args: { verifyCode: string }) {
+  const { data } = await api.post('/admin/2fa/verify', args);
+  return data;
 }
 
 async function fetchStats() {
@@ -169,6 +200,7 @@ const app = store({
 
   hasCheckedLogin: false,
   isLoggedIn: false,
+  is2faAuthed: false,
   loginError: '',
   generalError: [] as string[],
   statsFetched: false,
@@ -269,13 +301,17 @@ const app = store({
   // Auth
 
   async checkLogin() {
-    app.isLoggedIn = await checkLogin();
+    const res = await checkLogin();
+    app.isLoggedIn = res.isLoggedIn;
+    app.is2faAuthed = res.is2faAuthed;
     app.hasCheckedLogin = true;
   },
 
   async login(username: string, password: string) {
     try {
-      app.isLoggedIn = await login(username, password);
+      const res = await login(username, password);
+      app.isLoggedIn = res.isLoggedIn;
+      app.is2faAuthed = res.is2faAuthed;
     } catch (e) {
       app.loginError = e.response.data.message;
     }
@@ -283,7 +319,9 @@ const app = store({
 
   async logout() {
     try {
-      app.isLoggedIn = await logout();
+      const res = await logout();
+      app.isLoggedIn = res.isLoggedIn;
+      app.is2faAuthed = res.is2faAuthed;
     } catch (e) {
       app.generalError.push(e.toString());
     }
@@ -615,7 +653,7 @@ const app = store({
 });
 
 // Utils
-function handleApiError(e: AxiosError) {
+export function handleApiError(e: AxiosError) {
   if (e.response && e.response.data!.message) {
     app.generalError.push(e.response!.data.message);
   } else if (e.response && e.response.data!.data!) {
