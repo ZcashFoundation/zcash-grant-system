@@ -75,6 +75,13 @@ class Template extends React.Component<Props> {
                 <span className="nav-text">Moderation</span>
               </Link>
             </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item key="settings">
+              <Link to="/settings">
+                <Icon type="setting" />
+                <span className="nav-text">Settings</span>
+              </Link>
+            </Menu.Item>
             <Menu.Item key="logout" onClick={store.logout}>
               <Icon type="logout" />
               <span className="nav-text">Logout</span>

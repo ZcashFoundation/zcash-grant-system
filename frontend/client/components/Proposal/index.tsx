@@ -98,13 +98,7 @@ export class ProposalDetail extends React.Component<Props, State> {
       return <Loader size="large" />;
     }
 
-    const deadline = 0; // TODO: Use actual date for deadline
-    // TODO: isTrustee - determine rework to isAdmin?
-    // for now: check if authed user in member of proposal team
     const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
-    const hasBeenFunded = false; // TODO: deterimne if proposal has reached funding
-    const isProposalActive = !hasBeenFunded && deadline > Date.now();
-    const canCancel = false; // TODO: Allow canceling if proposal hasn't gone live yet
     const isLive = proposal.status === STATUS.LIVE;
 
     const adminMenu = (
@@ -112,17 +106,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         <Menu.Item disabled={!isLive} onClick={this.openUpdateModal}>
           Post an Update
         </Menu.Item>
-        <Menu.Item
-          onClick={() => alert('Sorry, not yet implemented!')}
-          disabled={!isProposalActive}
-        >
-          Edit proposal
-        </Menu.Item>
-        <Menu.Item
-          style={{ color: canCancel ? '#e74c3c' : undefined }}
-          onClick={this.openCancelModal}
-          disabled={!canCancel}
-        >
+        <Menu.Item disabled={!isLive} onClick={this.openCancelModal}>
           Cancel proposal
         </Menu.Item>
       </Menu>
