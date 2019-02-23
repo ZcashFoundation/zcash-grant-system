@@ -498,7 +498,7 @@ def get_contributions(page, filters, search, sort):
 @blueprint.route('/contributions', methods=['POST'])
 @endpoint.api(
     parameter('proposalId', type=int, required=True),
-    parameter('userId', type=int, required=True),
+    parameter('userId', type=int, required=False, default=None),
     parameter('status', type=str, required=True),
     parameter('amount', type=str, required=True),
     parameter('txId', type=str, required=False),
@@ -561,12 +561,15 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
         if not proposal:
             return {"message": "No proposal matching that id"}, 400
         contribution.proposal_id = proposal_id
-    # User ID (must belong to an existing user)
-    if user_id:
-        user = User.query.filter(User.id == user_id).first()
-        if not user:
-            return {"message": "No user matching that id"}, 400
-        contribution.user_id = user_id
+    # User ID (must belong to an existing user or 0 to unset)
+    if user_id is not None:
+        if user_id == 0:
+            contribution.user_id = None
+        else:
+            user = User.query.filter(User.id == user_id).first()
+            if not user:
+                return {"message": "No user matching that id"}, 400
+            contribution.user_id = user_id
     # Status (must be in list of statuses)
     if status:
         if not ContributionStatus.includes(status):

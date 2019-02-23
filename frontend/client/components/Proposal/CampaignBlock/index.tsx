@@ -1,6 +1,7 @@
 import React from 'react';
 import moment from 'moment';
-import { Form, Input, Button, Icon, Popover } from 'antd';
+import { Form, Input, Checkbox, Button, Icon, Popover, Tooltip } from 'antd';
+import { CheckboxChangeEvent } from 'antd/lib/checkbox';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { fromZat } from 'utils/units';
@@ -21,7 +22,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  sendLoading: boolean;
+  authUser: AppState['auth']['user'];
 }
 
 type Props = OwnProps & StateProps;
@@ -29,6 +30,7 @@ type Props = OwnProps & StateProps;
 interface State {
   amountToRaise: string;
   amountError: string | null;
+  isAnonymous: boolean;
   isContributing: boolean;
 }
 
@@ -38,13 +40,14 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     this.state = {
       amountToRaise: '',
       amountError: null,
+      isAnonymous: false,
       isContributing: false,
     };
   }
 
   render() {
-    const { proposal, sendLoading, isPreview } = this.props;
-    const { amountToRaise, amountError, isContributing } = this.state;
+    const { proposal, isPreview, authUser } = this.props;
+    const { amountToRaise, amountError, isAnonymous, isContributing } = this.state;
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
@@ -160,7 +163,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 />
               </div>
 
-              <Form layout="vertical">
+              <Form layout="vertical" className="ProposalCampaignBlock-contribute">
                 <Form.Item
                   validateStatus={amountError ? 'error' : undefined}
                   help={amountError}
@@ -180,12 +183,20 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                     disabled={isPreview}
                   />
                 </Form.Item>
+                {amountToRaise &&
+                  !!authUser && (
+                    <Checkbox checked={isAnonymous} onChange={this.handleChangeAnonymity}>
+                      Contribute anonymously
+                      <Tooltip title="Contribute with no attribution to your account. This will make you ineligible for refunds.">
+                        <Icon type="question-circle" />
+                      </Tooltip>
+                    </Checkbox>
+                  )}
                 <Button
                   onClick={this.openContributionModal}
                   size="large"
                   type="primary"
                   disabled={isDisabled}
-                  loading={sendLoading}
                   block
                 >
                   Fund this project
@@ -198,6 +209,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             isVisible={isContributing}
             proposalId={proposal.proposalId}
             amount={amountToRaise}
+            isAnonymous={isAnonymous}
             handleClose={this.closeContributionModal}
           />
         </React.Fragment>
@@ -239,14 +251,17 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     this.setState({ amountToRaise: value, amountError });
   };
 
+  private handleChangeAnonymity = (ev: CheckboxChangeEvent) => {
+    this.setState({ isAnonymous: ev.target.checked });
+  };
+
   private openContributionModal = () => this.setState({ isContributing: true });
   private closeContributionModal = () => this.setState({ isContributing: false });
 }
 
 function mapStateToProps(state: AppState) {
-  console.warn('TODO - new redux flag for sendLoading?', state);
   return {
-    sendLoading: false,
+    authUser: state.auth.user,
   };
 }
 

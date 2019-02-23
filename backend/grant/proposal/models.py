@@ -3,6 +3,7 @@ from functools import reduce
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from decimal import Decimal
+from marshmallow import post_dump
 
 from grant.comment.models import Comment
 from grant.email.send import send_email
@@ -19,6 +20,7 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage
 )
+from grant.utils.stubs import anonymous_user
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -87,13 +89,13 @@ class ProposalContribution(db.Model):
     def __init__(
             self,
             proposal_id: int,
-            user_id: int,
             amount: str,
+            user_id: int = None,
             staking: bool = False,
     ):
         self.proposal_id = proposal_id
-        self.user_id = user_id
         self.amount = amount
+        self.user_id = user_id
         self.staking = staking
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
@@ -163,7 +165,7 @@ class ProposalContribution(db.Model):
     
     @hybrid_property
     def refund_address(self):
-        return self.user.settings.refund_address
+        return self.user.settings.refund_address if self.user else None
 
 
 class ProposalArbiter(db.Model):
@@ -337,11 +339,11 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def create_contribution(self, user_id: int, amount, staking: bool = False):
+    def create_contribution(self, amount, user_id: int = None, staking: bool = False):
         contribution = ProposalContribution(
             proposal_id=self.id,
-            user_id=user_id,
             amount=amount,
+            user_id=user_id,
             staking=staking,
         )
         db.session.add(contribution)
@@ -692,7 +694,7 @@ class ProposalContributionSchema(ma.Schema):
         )
 
     proposal = ma.Nested("ProposalSchema")
-    user = ma.Nested("UserSchema")
+    user = ma.Nested("UserSchema", default=anonymous_user)
     date_created = ma.Method("get_date_created")
     addresses = ma.Method("get_addresses")
 
@@ -701,6 +703,12 @@ class ProposalContributionSchema(ma.Schema):
 
     def get_addresses(self, obj):
         return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+
+    @post_dump
+    def stub_anonymous_user(self, data):
+        if not data['user']:
+            data['user'] = anonymous_user
+        return data
 
 
 proposal_contribution_schema = ProposalContributionSchema()
