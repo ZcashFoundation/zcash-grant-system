@@ -477,7 +477,7 @@ const app = store({
       handleApiError(e);
     }
     app.proposalDetailCanceling = false;
-  }
+  },
 
   async markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
     app.proposalDetailMarkingMilestonePaid = true;

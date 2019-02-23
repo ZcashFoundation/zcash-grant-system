@@ -302,7 +302,7 @@ def delete_proposal(id):
     parameter('contributionMatching', type=float, required=False, default=None)
 )
 @admin_auth_required
-def update_proposal(id, contribution_matching, cancel):
+def update_proposal(id, contribution_matching):
     proposal = Proposal.query.filter(Proposal.id == id).first()
     if not proposal:
         return {"message": f"Could not find proposal with id {id}"}, 404
