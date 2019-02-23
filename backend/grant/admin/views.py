@@ -159,8 +159,12 @@ def stats():
     contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
         .filter(ProposalContribution.refund_tx_id == None) \
         .filter(ProposalContribution.staking == False) \
+        .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
-        .filter(Proposal.stage == ProposalStage.REFUNDING) \
+        .filter(or_(
+            Proposal.stage == ProposalStage.FAILED,
+            Proposal.stage == ProposalStage.CANCELED,
+        )) \
         .join(ProposalContribution.user) \
         .join(UserSettings) \
         .filter(UserSettings.refund_address != None) \
@@ -372,14 +376,16 @@ def delete_proposal(id):
 @admin.admin_auth_required
 def update_proposal(id, contribution_matching):
     proposal = Proposal.query.filter(Proposal.id == id).first()
-    if proposal:
-        if contribution_matching is not None:
-            proposal.set_contribution_matching(contribution_matching)
+    if not proposal:
+        return {"message": f"Could not find proposal with id {id}"}, 404
 
-        db.session.commit()
-        return proposal_schema.dump(proposal)
+    if contribution_matching is not None:
+        proposal.set_contribution_matching(contribution_matching)
 
-    return {"message": f"Could not find proposal with id {id}"}, 404
+    db.session.add(proposal)
+    db.session.commit()
+
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route('/proposals/<id>/approve', methods=['PUT'])
@@ -396,6 +402,20 @@ def approve_proposal(id, is_approve, reject_reason=None):
         return proposal_schema.dump(proposal)
 
     return {"message": "No proposal found."}, 404
+
+
+@blueprint.route('/proposals/<id>/cancel', methods=['PUT'])
+@endpoint.api()
+@admin.admin_auth_required
+def cancel_proposal(id):
+    proposal = Proposal.query.filter_by(id=id).first()
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    proposal.cancel()
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route("/proposals/<id>/milestone/<mid>/paid", methods=["PUT"])
@@ -623,8 +643,8 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
         return {"message": "No contribution matching that id"}, 404
     had_refund = contribution.refund_tx_id
 
-    # do not allow editing contributions once a proposal has become funded
-    if contribution.proposal.is_funded:
+    # do not allow editing certain fields on contributions once a proposal has become funded
+    if (proposal_id or user_id or status or amount or tx_id) and contribution.proposal.is_funded:
         return {"message": "Cannot edit contributions to fully-funded proposals"}, 400
 
     # Proposal ID (must belong to an existing proposal)

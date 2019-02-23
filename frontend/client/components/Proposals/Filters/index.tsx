@@ -66,7 +66,14 @@ export default class ProposalFilters extends React.Component<Props> {
             </Radio>
           </div>
           {typedKeys(PROPOSAL_STAGE)
-            .filter(s => s !== PROPOSAL_STAGE.PREVIEW) // skip this one
+            .filter(
+              s =>
+                ![
+                  PROPOSAL_STAGE.PREVIEW,
+                  PROPOSAL_STAGE.FAILED,
+                  PROPOSAL_STAGE.CANCELED,
+                ].includes(s as PROPOSAL_STAGE),
+            ) // skip a few
             .map(s => (
               <div key={s} style={{ marginBottom: '0.25rem' }}>
                 <Radio

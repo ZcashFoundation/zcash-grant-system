@@ -132,6 +132,11 @@ async function approveProposal(id: number, isApprove: boolean, rejectReason?: st
   return data;
 }
 
+async function cancelProposal(id: number) {
+  const { data } = await api.put(`/admin/proposals/${id}/cancel`);
+  return data;
+}
+
 async function fetchComments(params: Partial<PageQuery>) {
   const { data } = await api.get('/admin/comments', { params });
   return data;
@@ -243,6 +248,7 @@ const app = store({
   proposalDetailFetching: false,
   proposalDetailApproving: false,
   proposalDetailMarkingMilestonePaid: false,
+  proposalDetailCanceling: false,
 
   comments: {
     page: createDefaultPageData<Comment>('CREATED:DESC'),
@@ -498,6 +504,17 @@ const app = store({
       handleApiError(e);
     }
     app.proposalDetailApproving = false;
+  },
+
+  async cancelProposal(id: number) {
+    app.proposalDetailCanceling = true;
+    try {
+      const res = await cancelProposal(id);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailCanceling = false;
   },
 
   async markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
