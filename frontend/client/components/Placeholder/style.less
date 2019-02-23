@@ -1,3 +1,5 @@
+@import '~styles/variables.less';
+
 .Placeholder {
   display: flex;
   flex-direction: column;
@@ -7,6 +9,10 @@
   border: 2px dashed #d9d9d9;
   padding: 3rem;
   border-radius: 8px;
+
+  &.is-loading {
+    border-color: fadeout(@primary-color, 60%);
+  }
 
   &-title {
     margin-bottom: 0;
