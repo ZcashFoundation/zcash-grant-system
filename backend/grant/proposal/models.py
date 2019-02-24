@@ -160,7 +160,7 @@ class ProposalContribution(db.Model):
         self.status = ContributionStatus.CONFIRMED
         self.tx_id = tx_id
         self.amount = amount
-    
+
     @hybrid_property
     def refund_address(self):
         return self.user.settings.refund_address
@@ -216,7 +216,7 @@ class Proposal(db.Model):
     category = db.Column(db.String(255), nullable=False)
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
-    reject_reason = db.Column(db.String(255))
+    reject_reason = db.Column(db.String())
 
     # Payment info
     target = db.Column(db.String(255), nullable=False)
