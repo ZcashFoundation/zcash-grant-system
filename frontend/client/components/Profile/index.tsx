@@ -125,7 +125,7 @@ class Profile extends React.Component<Props, State> {
           />
         </Switch>
         <div className="Profile-tabs">
-          <LinkableTabs defaultActiveKey="pending">
+          <LinkableTabs defaultActiveKey={(isAuthedUser && 'pending') || 'created'}>
             {isAuthedUser && (
               <Tabs.TabPane
                 tab={TabTitle('Pending', pendingProposals.length)}
