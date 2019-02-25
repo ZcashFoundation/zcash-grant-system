@@ -736,11 +736,11 @@ class ProposalContributionSchema(ma.Schema):
         }
     
     def get_is_anonymous(self, obj):
-        return not obj.user
+        return not obj.user_id
 
     @post_dump
     def stub_anonymous_user(self, data):
-        if not data['user']:
+        if 'user' in data and data['user'] is None:
             data['user'] = anonymous_user
         return data
 
