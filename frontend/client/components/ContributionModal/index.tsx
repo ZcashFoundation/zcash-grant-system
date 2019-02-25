@@ -24,30 +24,25 @@ interface State {
   hasConfirmedAnonymous: boolean;
   hasSent: boolean;
   contribution: ContributionWithAddressesAndUser | null;
+  isFetchingContribution: boolean;
   error: string | null;
 }
 
 export default class ContributionModal extends React.Component<Props, State> {
   state: State = {
-    hasConfirmedAnonymous: true,
+    hasConfirmedAnonymous: false,
     hasSent: false,
     contribution: null,
+    isFetchingContribution: false,
     error: null,
   };
 
   constructor(props: Props) {
     super(props);
-    if (props.isAnonymous) {
-      this.state = {
-        ...this.state,
-        hasConfirmedAnonymous: false,
-      };
-    }
     if (props.contribution) {
       this.state = {
         ...this.state,
         contribution: props.contribution,
-        hasConfirmedAnonymous: !!props.contribution.user.userid,
       };
     }
   }
@@ -55,19 +50,14 @@ export default class ContributionModal extends React.Component<Props, State> {
   componentWillUpdate(nextProps: Props, nextState: State) {
     const {
       isVisible,
+      isAnonymous,
       proposalId,
       contributionId,
       contribution,
-      isAnonymous,
     } = nextProps;
-    let { hasConfirmedAnonymous } = nextState;
-    // If we're opening the modal, set hasConfirmedAnonymous based on isAnonymous
-    if (isVisible && !this.props.isVisible && isAnonymous && !hasConfirmedAnonymous) {
-      hasConfirmedAnonymous = false;
-      this.setState({ hasConfirmedAnonymous: false });
-    }
-    // When modal is opened and proposalId is provided or changed and we've confirmed anonymity
-    if (isVisible && proposalId && hasConfirmedAnonymous) {
+    // When modal is opened and proposalId is provided or changed
+    // But not if we're anonymous, that will happen in confirmAnonymous
+    if (isVisible && proposalId && !isAnonymous) {
       if (this.props.isVisible !== isVisible || proposalId !== this.props.proposalId) {
         this.fetchAddresses(proposalId, contributionId);
       }
@@ -84,13 +74,13 @@ export default class ContributionModal extends React.Component<Props, State> {
   }
 
   render() {
-    const { isVisible, handleClose, hasNoButtons, text } = this.props;
+    const { isVisible, isAnonymous, handleClose, hasNoButtons, text } = this.props;
     const { hasSent, hasConfirmedAnonymous, contribution, error } = this.state;
     let okText;
     let onOk;
     let content;
 
-    if (!hasConfirmedAnonymous) {
+    if (isAnonymous && !hasConfirmedAnonymous) {
       okText = 'I accept';
       onOk = this.confirmAnonymous;
       content = (
@@ -101,16 +91,15 @@ export default class ContributionModal extends React.Component<Props, State> {
           description={
             <>
               You are about to contribute anonymously. Your contribution will show up
-              without attribution, and even if you're logged in,{' '}
-              <strong>will not appear anywhere on your account</strong> after you close
-              this modal.
+              without attribution, and even if you're logged in, will not
+              appear anywhere on your account after you close this modal.
               <br /> <br />
               In the case of a refund, your contribution will be treated as a donation to
               the Zcash Foundation instead.
               <br /> <br />
-              If you would like to have your contribution attached to an account, just
-              close this, make sure you're logged in, and don't check the "Contribute
-              anonymously" checkbox.
+              If you would like to have your contribution attached to an account, you
+              can close this modal, make sure you're logged in, and don't check the
+              "Contribute anonymously" checkbox.
             </>
           }
         />
@@ -162,6 +151,7 @@ export default class ContributionModal extends React.Component<Props, State> {
   }
 
   private async fetchAddresses(proposalId: number, contributionId?: number) {
+    this.setState({ isFetchingContribution: true });
     try {
       const { amount, isAnonymous } = this.props;
       let res;
@@ -174,10 +164,15 @@ export default class ContributionModal extends React.Component<Props, State> {
     } catch (err) {
       this.setState({ error: err.message });
     }
+    this.setState({ isFetchingContribution: false });
   }
 
   private confirmAnonymous = () => {
+    const { state, props } = this;
     this.setState({ hasConfirmedAnonymous: true });
+    if (!state.contribution && !props.contribution && props.proposalId) {
+      this.fetchAddresses(props.proposalId, props.contributionId);
+    }
   };
 
   private confirmSend = () => {

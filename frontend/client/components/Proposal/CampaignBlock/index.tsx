@@ -214,7 +214,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             isVisible={isContributing}
             proposalId={proposal.proposalId}
             amount={amountToRaise}
-            isAnonymous={isAnonymous}
+            isAnonymous={isAnonymous || !authUser}
             handleClose={this.closeContributionModal}
           />
         </React.Fragment>
