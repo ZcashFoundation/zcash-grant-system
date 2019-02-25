@@ -10,7 +10,6 @@ import {
   Button,
   Collapse,
   Popconfirm,
-  Modal,
   Input,
   Switch,
   message,
@@ -29,14 +28,13 @@ import Back from 'components/Back';
 import Info from 'components/Info';
 import Markdown from 'components/Markdown';
 import ArbiterControl from 'components/ArbiterControl';
-import './index.less';
 import { toZat, fromZat } from 'src/util/units';
+import FeedbackModal from '../FeedbackModal';
+import './index.less';
 
 type Props = RouteComponentProps<any>;
 
 const STATE = {
-  showRejectModal: false,
-  rejectReason: '',
   paidTxId: '',
 };
 
@@ -50,8 +48,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
   }
   render() {
     const id = this.getIdFromQuery();
-    const { proposalDetail: p, proposalDetailFetching, proposalDetailApproving } = store;
-    const { rejectReason, showRejectModal } = this.state;
+    const { proposalDetail: p, proposalDetailFetching } = store;
 
     if (!p || (p && p.proposalId !== id) || proposalDetailFetching) {
       return 'loading proposal...';
@@ -64,7 +61,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     const refundablePct = p.milestones.reduce((prev, m) => {
       return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
     }, 100);
-
 
     const renderDeleteControl = () => (
       <Popconfirm
@@ -81,13 +77,13 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
     const renderCancelControl = () => (
       <Popconfirm
-        title={(
+        title={
           <p>
             Are you sure you want to cancel proposal and begin
             <br />
             the refund process? This cannot be undone.
           </p>
-        )}
+        }
         placement="left"
         cancelText="cancel"
         okText="confirm"
@@ -181,35 +177,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         />
       );
 
-    const rejectModal = (
-      <Modal
-        visible={showRejectModal}
-        title="Reject this proposal"
-        onOk={this.handleReject}
-        onCancel={() => this.setState({ showRejectModal: false })}
-        okButtonProps={{
-          disabled: rejectReason.length === 0,
-          loading: proposalDetailApproving,
-        }}
-        cancelButtonProps={{
-          loading: proposalDetailApproving,
-        }}
-      >
-        Please provide a reason ({!!rejectReason.length && `${rejectReason.length}/`}
-        250 chars max):
-        <Input.TextArea
-          ref={ta => (this.rejectInput = ta)}
-          rows={4}
-          maxLength={250}
-          required={true}
-          value={rejectReason}
-          onChange={e => {
-            this.setState({ rejectReason: e.target.value });
-          }}
-        />
-      </Modal>
-    );
-
     const renderReview = () =>
       p.status === PROPOSAL_STATUS.PENDING && (
         <Alert
@@ -232,16 +199,16 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 icon="close"
                 type="danger"
                 onClick={() => {
-                  this.setState({ showRejectModal: true });
-                  // hacky way of waiting for modal to render in before focus
-                  setTimeout(() => {
-                    if (this.rejectInput) this.rejectInput.focus();
-                  }, 200);
+                  FeedbackModal.open({
+                    title: 'Reject this proposal?',
+                    label: 'Please provide a reason:',
+                    okText: 'Reject',
+                    onOk: this.handleReject,
+                  });
                 }}
               >
                 Reject
               </Button>
-              {rejectModal}
             </div>
           }
         />
@@ -357,21 +324,22 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         <Alert
           showIcon
           type="error"
-          message={p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'}
+          message={
+            p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'
+          }
           description={
             p.stage === PROPOSAL_STAGE.FAILED ? (
               <>
                 This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
-                <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>. All contributors
-                will need to be refunded.
+                <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>. All
+                contributors will need to be refunded.
               </>
             ) : (
               <>
-                This proposal was canceled by an admin, and will be refunding contributors
-                {' '}<b>{refundablePct}%</b> of their contributions.
+                This proposal was canceled by an admin, and will be refunding contributors{' '}
+                <b>{refundablePct}%</b> of their contributions.
               </>
             )
-            
           }
         />
       );
@@ -421,7 +389,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderCancelControl()}
               {renderArbiterControl()}
               {renderMatchingControl()}
-              {/* TODO - other actions */}
             </Card>
 
             {/* DETAILS */}
@@ -502,9 +469,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     store.approveProposal(true);
   };
 
-  private handleReject = async () => {
-    await store.approveProposal(false, this.state.rejectReason);
-    this.setState({ showRejectModal: false });
+  private handleReject = async (reason: string) => {
+    await store.approveProposal(false, reason);
+    message.info('Proposal rejected');
   };
 
   private handleToggleMatching = async () => {

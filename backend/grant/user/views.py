@@ -83,6 +83,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
             contributions = ProposalContribution.get_by_userid(user_id)
             if not authed_user or user.id != authed_user.id:
                 contributions = [c for c in contributions if c.status == ContributionStatus.CONFIRMED]
+            contributions = [c for c in contributions if c.proposal.status == ProposalStatus.LIVE]
             contributions_dump = user_proposal_contributions_schema.dump(contributions)
             result["contributions"] = contributions_dump
         if with_comments:

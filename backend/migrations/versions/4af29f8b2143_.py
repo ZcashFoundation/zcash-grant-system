@@ -28,7 +28,7 @@ def upgrade():
                     sa.Column('category', sa.String(length=255), nullable=False),
                     sa.Column('date_approved', sa.DateTime(), nullable=True),
                     sa.Column('date_published', sa.DateTime(), nullable=True),
-                    sa.Column('reject_reason', sa.String(length=255), nullable=True),
+                    sa.Column('reject_reason', sa.String(), nullable=True),
                     sa.Column('target', sa.String(length=255), nullable=False),
                     sa.Column('payout_address', sa.String(length=255), nullable=False),
                     sa.Column('deadline_duration', sa.Integer(), nullable=False),
