@@ -375,11 +375,12 @@ def post_proposal_update(proposal_id, title, content):
     # Send email to all contributors (even if contribution failed)
     contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
     for c in contributions:
-        send_email(c.user.email_address, 'contribution_update', {
-            'proposal': g.current_proposal,
-            'proposal_update': update,
-            'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
-        })
+        if c.user:
+            send_email(c.user.email_address, 'contribution_update', {
+                'proposal': g.current_proposal,
+                'proposal_update': update,
+                'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
+            })
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
@@ -553,11 +554,12 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     else:
         # Send to the user
-        send_email(contribution.user.email_address, 'contribution_confirmed', {
-            'contribution': contribution,
-            'proposal': contribution.proposal,
-            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
-        })
+        if contribution.user:
+            send_email(contribution.user.email_address, 'contribution_confirmed', {
+                'contribution': contribution,
+                'proposal': contribution.proposal,
+                'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+            })
 
         # Send to the full proposal gang
         for member in contribution.proposal.team:
@@ -567,7 +569,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
                 'contributor': contribution.user,
                 'funded': contribution.proposal.funded,
                 'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
-                'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+                'contributor_url': make_url(f'/profile/{contribution.user.id}') if contribution.user else '',
             })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone
