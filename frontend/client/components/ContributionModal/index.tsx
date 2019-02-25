@@ -64,11 +64,13 @@ export default class ContributionModal extends React.Component<Props, State> {
     }
     // If contribution is provided, update it
     if (contribution !== this.props.contribution) {
+      this.setState({ contribution: contribution || null });
+    }
+    // When the modal is closed, clear out the contribution and anonymous check
+    if (this.props.isVisible && !isVisible) {
       this.setState({
-        contribution: contribution || null,
-        hasConfirmedAnonymous: contribution
-          ? !!contribution.user.userid
-          : nextState.hasConfirmedAnonymous,
+        contribution: null,
+        hasConfirmedAnonymous: false,
       });
     }
   }
@@ -113,9 +115,16 @@ export default class ContributionModal extends React.Component<Props, State> {
           title="Thank you for your contribution!"
           description={
             <>
-              Your contribution should be confirmed in about 20 minutes. You can keep an
-              eye on it at the{' '}
-              <Link to="/profile?tab=funded">funded tab on your profile</Link>.
+              Your transaction should be confirmed in about 20 minutes.{' '}
+              {isAnonymous
+                ? 'Once it’s confirmed, it’ll show up in the contributions tab.'
+                : (
+                  <>
+                    You can keep an eye on it at the{' '}
+                    <Link to="/profile?tab=funded">funded tab on your profile</Link>.
+                  </>
+                )
+              }
             </>
           }
           style={{ width: '90%' }}

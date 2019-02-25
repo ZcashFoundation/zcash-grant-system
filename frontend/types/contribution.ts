@@ -7,6 +7,7 @@ export interface Contribution {
   amount: string;
   dateCreated: number;
   status: 'PENDING' | 'CONFIRMED';
+  isAnonymous: boolean;
 }
 
 export interface ContributionWithAddresses extends Contribution {

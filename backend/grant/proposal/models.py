@@ -715,12 +715,14 @@ class ProposalContributionSchema(ma.Schema):
             "amount",
             "date_created",
             "addresses",
+            "is_anonymous",
         )
 
     proposal = ma.Nested("ProposalSchema")
     user = ma.Nested("UserSchema", default=anonymous_user)
     date_created = ma.Method("get_date_created")
     addresses = ma.Method("get_addresses")
+    is_anonymous = ma.Method("get_is_anonymous")
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
@@ -732,6 +734,9 @@ class ProposalContributionSchema(ma.Schema):
         return {
             'transparent': addresses['transparent'],
         }
+    
+    def get_is_anonymous(self, obj):
+        return not obj.user
 
     @post_dump
     def stub_anonymous_user(self, data):
