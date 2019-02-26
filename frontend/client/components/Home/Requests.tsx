@@ -47,7 +47,7 @@ class HomeRequests extends React.Component<Props> {
       content = (
         <Placeholder
           title="No open requests at this time"
-          subtitle="But don’t let that stop you, proposals can be submitted at any time"
+          subtitle="But don’t let that stop you! Proposals can be submitted at any time."
         />
       );
     }

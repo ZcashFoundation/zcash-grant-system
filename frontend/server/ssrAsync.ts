@@ -46,6 +46,12 @@ const pathActions = [
       }
     },
   },
+  {
+    matcher: /^(\/)?$/,
+    action: (_: RegExpMatchArray, store: Store) => {
+      return store.dispatch<any>(fetchRfps());
+    },
+  },
 ];
 
 export function storeActionsForPath(path: string, store: Store) {
