@@ -7,6 +7,7 @@ export interface Contribution {
   amount: string;
   dateCreated: number;
   status: 'PENDING' | 'CONFIRMED';
+  isAnonymous: boolean;
 }
 
 export interface ContributionWithAddresses extends Contribution {
@@ -21,6 +22,9 @@ export interface ContributionWithAddresses extends Contribution {
 export interface ContributionWithUser extends Contribution {
   user: User;
 }
+
+export type ContributionWithAddressesAndUser = ContributionWithAddresses &
+  ContributionWithUser;
 
 export interface UserContribution extends Omit<Contribution, 'amount' | 'txId'> {
   amount: Zat;

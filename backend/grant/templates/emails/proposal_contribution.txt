@@ -1,6 +1,8 @@
 Your proposal "{{ args.proposal.title }}" just got a
-{{ args.contribution.amount }} ZEC contribution from
-{{ args.contributor.display_name }}. Your proposal is now at {{ args.funded }} / {{ args.proposal.target }} ZEC.
+{{ args.contribution.amount }} ZEC contribution from {{ args.contributor.display_name if args.contributor else 'an anonymous contributor' }}.
+Your proposal is now at {{ args.funded }} / {{ args.proposal.target }} ZEC.
 
+{% if args.contributor %}
 See {{ args.contributor.display_name }}'s profile: {{ args.contributor_url }}
+{% endif %}
 View your proposal: {{ args.proposal_url }}

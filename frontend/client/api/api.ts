@@ -8,7 +8,7 @@ import {
   TeamInvite,
   TeamInviteWithProposal,
   SOCIAL_SERVICE,
-  ContributionWithAddresses,
+  ContributionWithAddressesAndUser,
   EmailSubscriptions,
   RFP,
   ProposalPageParams,
@@ -309,9 +309,11 @@ export function putInviteResponse(
 export function postProposalContribution(
   proposalId: number,
   amount: string,
-): Promise<{ data: ContributionWithAddresses }> {
+  anonymous?: boolean,
+): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
     amount,
+    anonymous,
   });
 }
 
@@ -331,13 +333,13 @@ export function deleteProposalContribution(contributionId: string | number) {
 export function getProposalContribution(
   proposalId: number,
   contributionId: number,
-): Promise<{ data: ContributionWithAddresses }> {
+): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
 }
 
 export function getProposalStakingContribution(
   proposalId: number,
-): Promise<{ data: ContributionWithAddresses }> {
+): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.get(`/api/v1/proposals/${proposalId}/stake`);
 }
 
