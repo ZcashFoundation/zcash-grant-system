@@ -1,0 +1,6 @@
+Your contribution to {{ args.proposal.title }} has been
+refunded. You can view the refund transaction below:
+
+{{ args.tx_explorer_url }}
+
+Thank you for your help in improving the Zcash ecosystem.

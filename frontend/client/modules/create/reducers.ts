@@ -28,6 +28,9 @@ export interface CreateState {
   publishedProposal: Proposal | null;
   isPublishing: boolean;
   publishError: string | null;
+
+  isUnlinkingProposalRFP: boolean;
+  unlinkProposalRFPError: string | null;
 }
 
 export const INITIAL_STATE: CreateState = {
@@ -57,6 +60,9 @@ export const INITIAL_STATE: CreateState = {
   publishedProposal: null,
   isPublishing: false,
   publishError: null,
+
+  isUnlinkingProposalRFP: false,
+  unlinkProposalRFPError: null,
 };
 
 export default function createReducer(
@@ -189,6 +195,24 @@ export default function createReducer(
         ...state,
         submitError: action.payload,
         isSubmitting: false,
+      };
+
+    case types.UNLINK_PROPOSAL_RFP_PENDING:
+      return {
+        ...state,
+        isUnlinkingProposalRFP: true,
+        unlinkProposalRFPError: null,
+      };
+    case types.UNLINK_PROPOSAL_RFP_FULFILLED:
+      return {
+        ...state,
+        isUnlinkingProposalRFP: false,
+      };
+    case types.UNLINK_PROPOSAL_RFP_REJECTED:
+      return {
+        ...state,
+        isUnlinkingProposalRFP: false,
+        unlinkProposalRFPError: action.payload,
       };
   }
   return state;

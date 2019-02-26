@@ -10,7 +10,7 @@ import './index.less';
 
 interface OwnProps<T> {
   page: PageData<T>;
-  filters: Filters;
+  filters: null | Filters;
   sorts: string[];
   searchPlaceholder?: string;
   controlsExtra?: React.ReactNode;
@@ -39,7 +39,7 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
     } = this.props;
     const loading = !page.fetched || page.fetching;
 
-    const statusFilterMenu = (
+    const statusFilterMenu = filters && (
       <Menu onClick={this.handleFilterClick}>
         {filters.list.map(f => (
           <Menu.Item key={f.id}>{f.display}</Menu.Item>
@@ -63,11 +63,13 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
             placeholder={searchPlaceholder}
             onSearch={this.handleSearch}
           />
-          <Dropdown overlay={statusFilterMenu} trigger={['click']}>
-            <Button>
-              Filter <Icon type="down" />
-            </Button>
-          </Dropdown>
+          {filters && (
+            <Dropdown overlay={statusFilterMenu} trigger={['click']}>
+              <Button>
+                Filter <Icon type="down" />
+              </Button>
+            </Dropdown>
+          )}
           <Dropdown overlay={sortMenu} trigger={['click']}>
             <Button>
               {'Sort ' + page.sort} <Icon type="down" />
@@ -86,29 +88,30 @@ class Pageable<T> extends React.Component<Props<T>, {}> {
           </div>
         )}
 
-        {!!page.filters.length && (
-          <div className="Pageable-filters">
-            Filters:{' '}
-            {page.filters.map(fId => {
-              const f = filters.getById(fId);
-              return (
-                <Tag
-                  key={fId}
-                  onClose={() => this.handleFilterClose(fId)}
-                  color={f.color}
-                  closable
-                >
-                  {f.display}
+        {filters &&
+          !!page.filters.length && (
+            <div className="Pageable-filters">
+              Filters:{' '}
+              {page.filters.map(fId => {
+                const f = filters.getById(fId);
+                return (
+                  <Tag
+                    key={fId}
+                    onClose={() => this.handleFilterClose(fId)}
+                    color={f.color}
+                    closable
+                  >
+                    {f.display}
+                  </Tag>
+                );
+              })}
+              {page.filters.length > 1 && (
+                <Tag key="clear" onClick={this.handleFilterClear}>
+                  clear
                 </Tag>
-              );
-            })}
-            {page.filters.length > 1 && (
-              <Tag key="clear" onClick={this.handleFilterClear}>
-                clear
-              </Tag>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
         <List
           className="Pageable-list"

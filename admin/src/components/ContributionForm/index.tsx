@@ -40,7 +40,7 @@ class ContributionForm extends React.Component<Props> {
       }
       defaults = {
         proposalId: contribution.proposal.proposalId,
-        userId: contribution.user.userid,
+        userId: contribution.user ? contribution.user.userid : '',
         amount: contribution.amount,
         txId: contribution.txId || '',
       };
@@ -52,9 +52,7 @@ class ContributionForm extends React.Component<Props> {
         <Form.Item label="Proposal ID">
           {getFieldDecorator('proposalId', {
             initialValue: defaults.proposalId,
-            rules: [
-              { required: true, message: 'Proposal ID is required' },
-            ],
+            rules: [{ required: true, message: 'Proposal ID is required' }],
           })(
             <Input
               autoComplete="off"
@@ -68,14 +66,11 @@ class ContributionForm extends React.Component<Props> {
         <Form.Item label="User ID">
           {getFieldDecorator('userId', {
             initialValue: defaults.userId,
-            rules: [
-              { required: true, message: 'User ID is required' },
-            ],
           })(
             <Input
               autoComplete="off"
               name="userId"
-              placeholder="Must be an existing user id"
+              placeholder="Existing user id or blank for anonymous"
             />,
           )}
         </Form.Item>
@@ -83,9 +78,7 @@ class ContributionForm extends React.Component<Props> {
         <Form.Item label="Contribution amount">
           {getFieldDecorator('amount', {
             initialValue: defaults.amount,
-            rules: [
-              { required: true, message: 'Must have an amount specified' },
-            ],
+            rules: [{ required: true, message: 'Must have an amount specified' }],
           })(
             <Input
               autoComplete="off"
@@ -100,7 +93,8 @@ class ContributionForm extends React.Component<Props> {
           help={`
             Providing a txid will set status to CONFIRMED, leaving
             blank will set status to PENDING.
-          `}>
+          `}
+        >
           {getFieldDecorator('txId', {
             initialValue: defaults.txId,
           })(
@@ -146,12 +140,14 @@ class ContributionForm extends React.Component<Props> {
       const id = this.getId();
       const args = {
         ...values,
-        status: values.txId
-          ? CONTRIBUTION_STATUS.CONFIRMED
-          : CONTRIBUTION_STATUS.PENDING,
+        status: values.txId ? CONTRIBUTION_STATUS.CONFIRMED : CONTRIBUTION_STATUS.PENDING,
       };
       let msg;
       if (id) {
+        // Explicitly make it zero of omitted to indicate to remove user
+        if (!args.userId) {
+          args.userId = 0;
+        }
         await store.editContribution(id, args);
         msg = 'Successfully updated contribution';
       } else {

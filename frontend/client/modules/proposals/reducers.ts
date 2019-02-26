@@ -172,6 +172,42 @@ function addPostedComment(state: ProposalState, payload: PostCommentPayload) {
   };
 }
 
+function updateCommentInStore(
+  state: ProposalState,
+  commentId: Comment['id'],
+  update: Partial<Comment>,
+) {
+  // clone so we can mutate with great abandon!
+  const pages = cloneDeep(state.detailComments.pages);
+  // recursive populate replies for nested comment
+  const f = (id: number, p: Comment) => {
+    if (p.id === id) {
+      Object.entries(update).forEach(([k, v]) => {
+        (p as any)[k] = v;
+      });
+      return;
+    } else {
+      p.replies.forEach(x => f(id, x));
+    }
+  };
+  // pages > page > comments
+  pages.forEach(p =>
+    p.forEach(c => {
+      f(commentId, c);
+    }),
+  );
+
+  return {
+    ...state,
+    isPostCommentPending: false,
+    detailComments: {
+      ...state.detailComments,
+      pages,
+      total: state.detailComments.total + 1,
+    },
+  };
+}
+
 export default (state = INITIAL_STATE, action: any) => {
   const { payload } = action;
   switch (action.type) {
@@ -335,6 +371,9 @@ export default (state = INITIAL_STATE, action: any) => {
           fetchError: (payload && payload.message) || payload.toString(),
         },
       };
+
+    case types.REPORT_PROPOSAL_COMMENT_FULFILLED:
+      return updateCommentInStore(state, payload.commentId, { reported: true });
 
     case types.PROPOSAL_UPDATES_PENDING:
       return {

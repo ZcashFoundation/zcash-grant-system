@@ -87,7 +87,14 @@ const CONTRIBUTION_FILTERS = CONTRIBUTION_STATUSES.map(s => ({
   display: `Status: ${s.tagDisplay}`,
   color: s.tagColor,
   group: 'Status',
-}));
+})).concat([
+  {
+    id: 'REFUNDABLE',
+    display: 'Refundable',
+    color: '#afd500',
+    group: 'Refundable',
+  },
+]);
 
 export const contributionFilters: Filters = {
   list: CONTRIBUTION_FILTERS,
@@ -119,4 +126,25 @@ const USER_FILTERS = [
 export const userFilters: Filters = {
   list: USER_FILTERS,
   getById: getFilterById(USER_FILTERS),
+};
+
+// Comment
+const COMMENT_FILTERS = [
+  {
+    id: `REPORTED`,
+    display: `Reported`,
+    color: '#ffaa00',
+    group: 'Misc',
+  },
+  {
+    id: `HIDDEN`,
+    display: `Hidden`,
+    color: '#bebebe',
+    group: 'Misc',
+  },
+];
+
+export const commentFilters = {
+  list: COMMENT_FILTERS,
+  getById: getFilterById(COMMENT_FILTERS),
 };

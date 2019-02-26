@@ -5,18 +5,18 @@ export interface RFPState {
   rfps: RFP[];
   fetchRfpsError: null | string;
   isFetchingRfps: boolean;
+  hasFetchedRfps: boolean;
 }
 
 export const INITIAL_STATE: RFPState = {
   rfps: [],
   fetchRfpsError: null,
   isFetchingRfps: false,
+  hasFetchedRfps: false,
 };
 
 function addRfp(state: RFPState, payload: RFP) {
-  const existingProposal = state.rfps.find(
-    (rfp: RFP) => rfp.id === payload.id,
-  );
+  const existingProposal = state.rfps.find((rfp: RFP) => rfp.id === payload.id);
 
   const rfps = [...state.rfps];
   if (!existingProposal) {
@@ -56,7 +56,8 @@ export default (state: RFPState = INITIAL_STATE, action: any): RFPState => {
         ...state,
         rfps: payload,
         fetchRfpsError: null,
-        isFetchingRfps: true,
+        isFetchingRfps: false,
+        hasFetchedRfps: true,
       };
 
     case types.FETCH_RFP_FULFILLED:

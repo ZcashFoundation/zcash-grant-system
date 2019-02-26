@@ -20,6 +20,7 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
 from grant.utils import pagination
+from grant.task.jobs import ProposalDeadline
 from sqlalchemy import or_
 from datetime import datetime
 
@@ -69,13 +70,31 @@ def get_proposal_comments(proposal_id, page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.comment(
         schema=comments_schema,
-        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None),
+        query=Comment.query.filter_by(proposal_id=proposal_id, parent_comment_id=None, hidden=False),
         page=page,
         filters=filters_workaround,
         search=search,
         sort=sort,
     )
     return page
+
+
+@blueprint.route("/<proposal_id>/comments/<comment_id>/report", methods=["PUT"])
+@requires_email_verified_auth
+@endpoint.api()
+def report_proposal_comment(proposal_id, comment_id):
+    # Make sure proposal exists
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    comment = Comment.query.filter_by(id=comment_id).first()
+    if not comment:
+        return {"message": "Comment doesn’t exist"}, 404
+
+    comment.report(True)
+    db.session.commit()
+    return None, 200
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
@@ -146,9 +165,12 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 )
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
+    query = Proposal.query.filter_by(status=ProposalStatus.LIVE) \
+        .filter(Proposal.stage != ProposalStage.CANCELED) \
+        .filter(Proposal.stage != ProposalStage.FAILED)
     page = pagination.proposal(
         schema=proposals_schema,
-        query=Proposal.query.filter_by(status=ProposalStatus.LIVE),
+        query=query,
         page=page,
         filters=filters_workaround,
         search=search,
@@ -237,6 +259,16 @@ def update_proposal(milestones, proposal_id, **kwargs):
     return proposal_schema.dump(g.current_proposal), 200
 
 
+@blueprint.route("/<proposal_id>/rfp", methods=["DELETE"])
+@requires_team_member_auth
+@endpoint.api()
+def unlink_proposal_from_rfp(proposal_id):
+    g.current_proposal.rfp_id = None
+    db.session.add(g.current_proposal)
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
+
+
 @blueprint.route("/<proposal_id>", methods=["DELETE"])
 @requires_team_member_auth
 def delete_proposal(proposal_id):
@@ -286,6 +318,10 @@ def publish_proposal(proposal_id):
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
+
+    task = ProposalDeadline(g.current_proposal)
+    task.make_task()
+
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
 
@@ -331,11 +367,12 @@ def post_proposal_update(proposal_id, title, content):
     # Send email to all contributors (even if contribution failed)
     contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
     for c in contributions:
-        send_email(c.user.email_address, 'contribution_update', {
-            'proposal': g.current_proposal,
-            'proposal_update': update,
-            'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
-        })
+        if c.user:
+            send_email(c.user.email_address, 'contribution_update', {
+                'proposal': g.current_proposal,
+                'proposal_update': update,
+                'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
+            })
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
@@ -399,6 +436,7 @@ def get_proposal_contributions(proposal_id):
         .filter_by(
             proposal_id=proposal_id,
             status=ContributionStatus.CONFIRMED,
+            staking=False,
         ) \
         .order_by(ProposalContribution.amount.desc()) \
         .limit(5) \
@@ -407,6 +445,7 @@ def get_proposal_contributions(proposal_id):
         .filter_by(
             proposal_id=proposal_id,
             status=ContributionStatus.CONFIRMED,
+            staking=False,
         ) \
         .order_by(ProposalContribution.date_created.desc()) \
         .limit(5) \
@@ -432,22 +471,31 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
-@requires_auth
 @endpoint.api(
-    parameter('amount', type=str, required=True)
+    parameter('amount', type=str, required=True),
+    parameter('anonymous', type=bool, required=False)
 )
-def post_proposal_contribution(proposal_id, amount):
+def post_proposal_contribution(proposal_id, amount, anonymous):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
     code = 200
-    contribution = ProposalContribution \
-        .get_existing_contribution(g.current_user.id, proposal_id, amount)
+    user = None
+    contribution = None
+
+    if not anonymous:
+        user = get_authed_user()
+
+    if user:
+        contribution = ProposalContribution.get_existing_contribution(user.id, proposal_id, amount)
 
     if not contribution:
         code = 201
-        contribution = proposal.create_contribution(g.current_user.id, amount)
+        contribution = proposal.create_contribution(
+            amount=amount,
+            user_id=user.id if user else None,
+        )
 
     dumped_contribution = proposal_contribution_schema.dump(contribution)
     return dumped_contribution, code
@@ -495,11 +543,12 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     else:
         # Send to the user
-        send_email(contribution.user.email_address, 'contribution_confirmed', {
-            'contribution': contribution,
-            'proposal': contribution.proposal,
-            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
-        })
+        if contribution.user:
+            send_email(contribution.user.email_address, 'contribution_confirmed', {
+                'contribution': contribution,
+                'proposal': contribution.proposal,
+                'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+            })
 
         # Send to the full proposal gang
         for member in contribution.proposal.team:
@@ -509,7 +558,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
                 'contributor': contribution.user,
                 'funded': contribution.proposal.funded,
                 'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
-                'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+                'contributor_url': make_url(f'/profile/{contribution.user.id}') if contribution.user else '',
             })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone

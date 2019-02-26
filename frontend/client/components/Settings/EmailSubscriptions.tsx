@@ -63,7 +63,7 @@ class EmailSubscriptions extends React.Component<Props, State> {
     const { authUser } = this.props;
     if (!authUser) return;
     this.setState({ loading: true });
-    updateUserSettings(authUser.userid, emailSubscriptions)
+    updateUserSettings(authUser.userid, { emailSubscriptions })
       .then(res => {
         message.success('Settings saved.');
         this.setState({ emailSubscriptions: res.data.emailSubscriptions });

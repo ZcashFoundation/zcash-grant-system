@@ -9,8 +9,16 @@ interface Props {
   extra?: React.ReactNode;
 }
 
+const Wrap = ({ user, children }: { user: User, children: React.ReactNode }) => {
+  if (user.userid) {
+    return <Link to={`/profile/${user.userid}`} className="UserRow" children={children} />;
+  } else {
+    return <div className="UserRow" children={children} />;
+  }
+};
+
 const UserRow = ({ user, extra }: Props) => (
-  <Link to={`/profile/${user.userid}`} className="UserRow">
+  <Wrap user={user}>
     <div className="UserRow-avatar">
       <UserAvatar user={user} className="UserRow-avatar-img" />
     </div>
@@ -23,7 +31,7 @@ const UserRow = ({ user, extra }: Props) => (
         {extra}
       </div>
     )}
-  </Link>
+  </Wrap>
 );
 
 export default UserRow;

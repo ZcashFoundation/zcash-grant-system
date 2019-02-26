@@ -81,6 +81,32 @@
     }
   }
 
+  &-contribute {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    .ant-form-item {
+      width: 100%;
+    }
+
+    .ant-checkbox-wrapper {
+      margin-bottom: 0.5rem;
+      opacity: 0.7;
+      font-size: 0.8rem;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      .anticon {
+        margin-left: 0.2rem;
+        color: @primary-color;
+      }
+    }
+  }
+
   &-fundingOver {
     display: flex;
     justify-content: center;

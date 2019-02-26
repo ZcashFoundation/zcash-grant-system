@@ -95,6 +95,8 @@ class Profile extends React.Component<Props, State> {
       invites,
       arbitrated,
     } = user;
+
+    const isLoading = user.isFetching;
     const nonePending = pendingProposals.length === 0;
     const noneCreated = proposals.length === 0;
     const noneFunded = contributions.length === 0;
@@ -123,7 +125,7 @@ class Profile extends React.Component<Props, State> {
           />
         </Switch>
         <div className="Profile-tabs">
-          <LinkableTabs defaultActiveKey="pending">
+          <LinkableTabs defaultActiveKey={(isAuthedUser && 'pending') || 'created'}>
             {isAuthedUser && (
               <Tabs.TabPane
                 tab={TabTitle('Pending', pendingProposals.length)}
@@ -132,6 +134,7 @@ class Profile extends React.Component<Props, State> {
                 <div>
                   {nonePending && (
                     <Placeholder
+                      loading={isLoading}
                       title="No pending proposals"
                       subtitle="You do not have any proposals awaiting approval."
                     />
@@ -144,6 +147,7 @@ class Profile extends React.Component<Props, State> {
               <div>
                 {noneCreated && (
                   <Placeholder
+                    loading={isLoading}
                     title="No created proposals"
                     subtitle="There have not been any created proposals."
                   />
@@ -157,6 +161,7 @@ class Profile extends React.Component<Props, State> {
               <div>
                 {noneFunded && (
                   <Placeholder
+                    loading={isLoading}
                     title="No proposals funded"
                     subtitle="There have not been any proposals funded."
                   />
@@ -175,6 +180,7 @@ class Profile extends React.Component<Props, State> {
               <div>
                 {noneCommented && (
                   <Placeholder
+                    loading={isLoading}
                     title="No comments"
                     subtitle="There have not been any comments made"
                   />
@@ -193,6 +199,7 @@ class Profile extends React.Component<Props, State> {
                 <div>
                   {noneInvites && (
                     <Placeholder
+                      loading={isLoading}
                       title="No invitations"
                       subtitle="You’ll be notified when you’ve been invited to join a proposal"
                     />
@@ -210,6 +217,7 @@ class Profile extends React.Component<Props, State> {
               >
                 {noneArbitrated && (
                   <Placeholder
+                    loading={isLoading}
                     title="No arbitrations"
                     subtitle="You are not an arbiter of any proposals"
                   />
