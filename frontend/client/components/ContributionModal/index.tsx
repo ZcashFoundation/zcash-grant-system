@@ -47,7 +47,7 @@ export default class ContributionModal extends React.Component<Props, State> {
     }
   }
 
-  componentWillUpdate(nextProps: Props, nextState: State) {
+  componentWillUpdate(nextProps: Props) {
     const {
       isVisible,
       isAnonymous,
