@@ -18,6 +18,10 @@
     font-size: 2.8rem;
     color: #FFF;
     text-align: center;
+
+    @media @tablet-query {
+      font-size: 2.4rem;
+    }
   }
 
   &-items {
@@ -52,6 +56,19 @@
 
           &-icon {
             margin: 0 3rem 0 0;
+          }
+        }
+      }
+
+      @media @tablet-query {
+        &-icon {
+          width: 6rem;
+          margin: 0 0 0 2rem;
+        }
+
+        &:nth-child(odd) {
+          .HomeGuide-items-item-icon {
+            margin: 0 2rem 0 0;
           }
         }
       }
