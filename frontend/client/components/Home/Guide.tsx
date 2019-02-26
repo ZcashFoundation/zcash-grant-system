@@ -1,23 +1,23 @@
 import React from 'react';
-import copy from './copy';
+import { withNamespaces, WithNamespaces } from 'react-i18next';
 import SubmitIcon from 'static/images/guide-submit.svg';
 import ReviewIcon from 'static/images/guide-review.svg';
 import CommunityIcon from 'static/images/guide-community.svg';
 import CompleteIcon from 'static/images/guide-complete.svg';
 import './Guide.less';
 
-const HomeGuide: React.SFC<{}> = () => {
+const HomeGuide: React.SFC<WithNamespaces> = ({ t }) => {
   const items = [{
-    text: copy.guideOne,
+    text: t('home.guide.submit'),
     icon: <SubmitIcon />,
   }, {
-    text: copy.guideTwo,
+    text: t('home.guide.review'),
     icon: <ReviewIcon />,
   }, {
-    text: copy.guideThree,
+    text: t('home.guide.community'),
     icon: <CommunityIcon />,
   }, {
-    text: copy.guideFour,
+    text: t('home.guide.complete'),
     icon: <CompleteIcon />,
   }];
 
@@ -27,7 +27,7 @@ const HomeGuide: React.SFC<{}> = () => {
         <polygon points="100 0, 100 100, 0 100"/>
       </svg>
       <h2 className="HomeGuide-title">
-        {copy.guideTitle}
+        {t('home.guide.title')}
       </h2>
       <div className="HomeGuide-items">
         {items.map((item, idx) => (
@@ -41,4 +41,4 @@ const HomeGuide: React.SFC<{}> = () => {
   );
 };
 
-export default HomeGuide;
+export default withNamespaces()(HomeGuide);
