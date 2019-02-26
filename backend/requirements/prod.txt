@@ -73,3 +73,6 @@ webargs==5.1.2
 
 # 2fa - totp
 pyotp==2.2.7
+
+
+flask-yolo2API==0.2.6
