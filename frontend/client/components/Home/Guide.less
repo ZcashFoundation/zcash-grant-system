@@ -1,0 +1,60 @@
+@import '~styles/variables.less';
+
+.HomeGuide {
+  background: @secondary-color;
+  color: #FFF;
+  padding: 0 0 6rem;
+
+  &-cap {
+    display: block;
+    width: 100%;
+    height: 2rem;
+    background: #FFF;
+    fill: @secondary-color;
+  }
+
+  &-title {
+    margin: 3rem auto 5rem;
+    font-size: 2.8rem;
+    color: #FFF;
+    text-align: center;
+  }
+
+  &-items {
+    max-width: 720px;
+    padding: 0 2rem;
+    margin: 0 auto;
+
+    &-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 5rem;
+
+      &-text {
+        font-size: 1.1rem;
+        text-align: right;
+      }
+
+      &-icon {
+        flex-shrink: 0;
+        width: 8rem;
+        margin: 0 0 0 3rem;
+      }
+
+      &:nth-child(odd) {
+        flex-direction: row-reverse;
+
+        .HomeGuide-items-item {
+          &-text {
+            text-align: left;
+          }
+
+          &-icon {
+            margin: 0 3rem 0 0;
+          }
+        }
+      }
+    }
+  }
+}

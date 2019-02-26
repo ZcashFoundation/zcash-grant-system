@@ -1,0 +1,41 @@
+.HomeRequests {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 1440px;
+  padding: 0 4rem;
+  margin: 0 auto 6rem;
+  position: relative;
+
+  &-divider {
+    width: 100%;
+    margin-bottom: 5rem;
+    border-bottom: 1px solid rgba(#000, 0.08);
+  }
+
+  &-text {
+    width: 540px;
+    padding-right: 3rem;
+    border-right: 1px solid rgba(#000, 0.08);
+
+    &-title {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    &-description {
+      font-size: 1.1rem;
+      opacity: 0.8;
+    }
+  }
+
+  &-content {
+    flex: 1;
+    padding-left: 3rem;
+
+    .RFPItem {
+      margin-bottom: 0.5rem;
+    }
+  }
+}

@@ -1,0 +1,62 @@
+@import '~styles/variables.less';
+
+.HomeIntro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1440px;
+  padding: 0 4rem;
+  margin: 0 auto 6rem;
+
+  &-content {
+    width: 50%;
+    min-width: 600px;
+    padding-right: 2rem;
+
+    &-title {
+      margin-bottom: 2rem;
+      font-size: 2.6rem;
+    }
+
+    &-subtitle {
+      margin-bottom: 2rem;
+      font-size: 1.4rem;
+      opacity: 0.7;
+    }
+
+    &-buttons {
+      display: flex;
+      align-items: center;
+
+      &-auth {
+        display: flex;
+        align-items: center;
+        height: 3.6rem;
+        padding: 0 3rem;
+        margin-right: 0.75rem;
+        font-size: 1.2rem;
+        background: @primary-color;
+        color: #FFF;
+        border-radius: 4px;
+
+        &:hover {
+          color: #FFF;
+          opacity: 0.9;
+        }
+      }
+
+      &-learn {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  &-illustration {
+    max-width: 640px;
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+  }
+}
