@@ -1,0 +1,72 @@
+@import '~styles/variables.less';
+
+.HomeRequests {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 1440px;
+  padding: 0 4rem;
+  margin: 0 auto 6rem;
+  position: relative;
+
+  @media @thin-query {
+    flex-direction: column;
+  }
+
+  &-divider {
+    width: 100%;
+    margin-bottom: 5rem;
+    border-bottom: 1px solid rgba(#000, 0.08);
+
+    @media @thin-query {
+      margin-bottom: 2rem;
+    }
+  }
+
+  &-text {
+    width: 540px;
+    padding-right: 3rem;
+    border-right: 1px solid rgba(#000, 0.08);
+
+    &-title {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    &-description {
+      font-size: 1.1rem;
+      opacity: 0.8;
+    }
+
+    @media @thin-query {
+      width: auto;
+      padding: 0 0 2rem 0;
+      border-right: none;
+      border-bottom: 1px solid rgba(#000, 0.08);
+
+      &-title {
+        font-size: 1.6rem;
+      }
+
+      &-description {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  &-content {
+    position: relative;
+    flex: 1;
+    padding-left: 3rem;
+
+    .RFPItem {
+      margin-bottom: 0.5rem;
+    }
+
+    @media @thin-query {
+      width: 100%;
+      padding: 2rem 0 0;
+    }
+  }
+}

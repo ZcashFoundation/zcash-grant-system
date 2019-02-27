@@ -1,8 +1,7 @@
 import React from 'react';
 import { view } from 'react-easy-state';
-import { Popconfirm, Tag, Tooltip, List } from 'antd';
+import { Tag, Tooltip, List } from 'antd';
 import { Link } from 'react-router-dom';
-import store from 'src/store';
 import { Proposal, PROPOSAL_STATUS } from 'src/types';
 import { PROPOSAL_STATUSES, PROPOSAL_STAGES, getStatusById } from 'util/statuses';
 import { formatDateSeconds } from 'util/time';
@@ -16,21 +15,9 @@ class ProposalItemNaked extends React.Component<Proposal> {
     const p = this.props;
     const status = getStatusById(PROPOSAL_STATUSES, p.status);
     const stage = getStatusById(PROPOSAL_STAGES, p.stage);
-    const actions = [
-      <Popconfirm
-        key="delete"
-        onConfirm={this.handleDelete}
-        title="Are you sure?"
-        okText="Delete"
-        okType="danger"
-        placement="left"
-      >
-        <a>delete</a>
-      </Popconfirm>,
-    ];
 
     return (
-      <List.Item key={p.proposalId} className="ProposalItem" actions={actions}>
+      <List.Item key={p.proposalId} className="ProposalItem">
         <Link to={`/proposals/${p.proposalId}`}>
           <h2>
             {p.title || '(no title)'}
@@ -54,9 +41,6 @@ class ProposalItemNaked extends React.Component<Proposal> {
       </List.Item>
     );
   }
-  private handleDelete = () => {
-    store.deleteProposal(this.props.proposalId);
-  };
 }
 
 const ProposalItem = view(ProposalItemNaked);

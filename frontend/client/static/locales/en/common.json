@@ -2,9 +2,35 @@
   "home": {
     "title": "Home",
     "description": "ZF Grants organizes creators and community members to incentivize ecosystem improvements",
-    "heroTitle1": "Decentralized funding for",
-    "heroTitle2": "Blockchain ecosystem improvements",
-    "createButton": "Propose a Project",
-    "exploreButton": "Explore Projects"
+
+    "intro": {
+      "title": "Grants and crowdfunding for the Zcash community",
+      "subtitle": "Get funding for, or contribute to improvements to the Zcash ecosystem",
+      "signup": "Sign up now",
+      "browse": "Browse proposals",
+      "learn": "or learn more below"
+    },
+
+    "requests": {
+      "title": "Open Requests from the ZF",
+      "description": "The Zcash Foundation will periodically open up requests for proposals that have financial incentives attached to them in the form of fixed bounties, or pledges of contribution matching.\nProposals will be reviewed and chosen based on the ZF’s confidence in the team and their plan.\nTo be eligible for funding from the Zcash Foundation, teams must provide identifying information for legal reasons.",
+      "more": "See all requests",
+      "emptyTitle": "No open requests at this time",
+      "emptySubtitle": "But don’t let that stop you! Proposals can be submitted at any time."
+    },
+
+    "guide": {
+      "title": "How it works",
+      "submit": "Individuals and teams submit proposals against requests from the Zcash Foundation, or of their own ideas",
+      "review": "Their proposal is reviewed by the Zcash Foundation, and potentially rewarded a bounty or met with matching contributions",
+      "community": "The proposal is then opened up to the community to discuss, provide feedback, and help it reach its funding goal",
+      "complete": "Once successfully funded, the proposal creator(s) post updates with their progress and are paid out as they reach project milestones"
+    },
+
+    "actions": {
+      "title": "Take a look at what's happening",
+      "proposals": "Browse proposals",
+      "requests": "See all requests"
+    }
   }
 }

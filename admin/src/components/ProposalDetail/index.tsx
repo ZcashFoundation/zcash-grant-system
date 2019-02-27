@@ -75,36 +75,42 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       </Popconfirm>
     );
 
-    const renderCancelControl = () => (
-      <Popconfirm
-        title={
-          <p>
-            Are you sure you want to cancel proposal and begin
-            <br />
-            the refund process? This cannot be undone.
-          </p>
-        }
-        placement="left"
-        cancelText="cancel"
-        okText="confirm"
-        okButtonProps={{ loading: store.proposalDetailCanceling }}
-        onConfirm={this.handleCancel}
-      >
-        <Button
-          icon="close-circle"
-          className="ProposalDetail-controls-control"
-          loading={store.proposalDetailCanceling}
-          disabled={
-            p.status !== PROPOSAL_STATUS.LIVE ||
-            p.stage === PROPOSAL_STAGE.FAILED ||
-            p.stage === PROPOSAL_STAGE.CANCELED
+    const renderCancelControl = () => {
+      const disabled =
+        p.status !== PROPOSAL_STATUS.LIVE ||
+        p.stage === PROPOSAL_STAGE.FAILED ||
+        p.stage === PROPOSAL_STAGE.CANCELED;
+
+      return (
+        <Popconfirm
+          title={
+            <p>
+              Are you sure you want to cancel proposal and begin
+              <br />
+              the refund process? This cannot be undone.
+            </p>
           }
-          block
+          placement="left"
+          cancelText="cancel"
+          okText="confirm"
+          visible={!disabled}
+          okButtonProps={{
+            loading: store.proposalDetailCanceling,
+          }}
+          onConfirm={this.handleCancel}
         >
-          Cancel & refund
-        </Button>
-      </Popconfirm>
-    );
+          <Button
+            icon="close-circle"
+            className="ProposalDetail-controls-control"
+            loading={store.proposalDetailCanceling}
+            disabled={disabled}
+            block
+          >
+            Cancel & refund
+          </Button>
+        </Popconfirm>
+      );
+    };
 
     const renderArbiterControl = () => (
       <ArbiterControl
