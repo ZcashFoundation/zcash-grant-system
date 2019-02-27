@@ -1,17 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Modal } from 'antd';
+import { Modal, Alert } from 'antd';
 import Result from 'ant-design-pro/lib/Result';
 import { postProposalContribution, getProposalContribution } from 'api/api';
-import { ContributionWithAddresses } from 'types';
+import { ContributionWithAddressesAndUser } from 'types';
 import PaymentInfo from './PaymentInfo';
 
 interface OwnProps {
   isVisible: boolean;
-  contribution?: ContributionWithAddresses | Falsy;
+  contribution?: ContributionWithAddressesAndUser | Falsy;
   proposalId?: number;
   contributionId?: number;
   amount?: string;
+  isAnonymous?: boolean;
   hasNoButtons?: boolean;
   text?: React.ReactNode;
   handleClose(): void;
@@ -20,15 +21,19 @@ interface OwnProps {
 type Props = OwnProps;
 
 interface State {
+  hasConfirmedAnonymous: boolean;
   hasSent: boolean;
-  contribution: ContributionWithAddresses | null;
+  contribution: ContributionWithAddressesAndUser | null;
+  isFetchingContribution: boolean;
   error: string | null;
 }
 
 export default class ContributionModal extends React.Component<Props, State> {
   state: State = {
+    hasConfirmedAnonymous: false,
     hasSent: false,
     contribution: null,
+    isFetchingContribution: false,
     error: null,
   };
 
@@ -43,34 +48,83 @@ export default class ContributionModal extends React.Component<Props, State> {
   }
 
   componentWillUpdate(nextProps: Props) {
-    const { isVisible, proposalId, contributionId, contribution } = nextProps;
+    const {
+      isVisible,
+      isAnonymous,
+      proposalId,
+      contributionId,
+      contribution,
+    } = nextProps;
     // When modal is opened and proposalId is provided or changed
-    if (isVisible && proposalId) {
+    // But not if we're anonymous, that will happen in confirmAnonymous
+    if (isVisible && proposalId && !isAnonymous) {
       if (this.props.isVisible !== isVisible || proposalId !== this.props.proposalId) {
         this.fetchAddresses(proposalId, contributionId);
       }
     }
-    // If contribution is provided
+    // If contribution is provided, update it
     if (contribution !== this.props.contribution) {
       this.setState({ contribution: contribution || null });
+    }
+    // When the modal is closed, clear out the contribution and anonymous check
+    if (this.props.isVisible && !isVisible) {
+      this.setState({
+        contribution: null,
+        hasConfirmedAnonymous: false,
+      });
     }
   }
 
   render() {
-    const { isVisible, handleClose, hasNoButtons, text } = this.props;
-    const { hasSent, contribution, error } = this.state;
+    const { isVisible, isAnonymous, handleClose, hasNoButtons, text } = this.props;
+    const { hasSent, hasConfirmedAnonymous, contribution, error } = this.state;
+    let okText;
+    let onOk;
     let content;
 
-    if (hasSent) {
+    if (isAnonymous && !hasConfirmedAnonymous) {
+      okText = 'I accept';
+      onOk = this.confirmAnonymous;
+      content = (
+        <Alert
+          className="PaymentInfo-anonymous"
+          type="warning"
+          message="This contribution is anonymous"
+          description={
+            <>
+              You are about to contribute anonymously. Your contribution will show up
+              without attribution, and even if you're logged in, will not
+              appear anywhere on your account after you close this modal.
+              <br /> <br />
+              In the case of a refund, your contribution will be treated as a donation to
+              the Zcash Foundation instead.
+              <br /> <br />
+              If you would like to have your contribution attached to an account, you
+              can close this modal, make sure you're logged in, and don't check the
+              "Contribute anonymously" checkbox.
+            </>
+          }
+        />
+      );
+    } else if (hasSent) {
+      okText = 'Done';
+      onOk = handleClose;
       content = (
         <Result
           type="success"
           title="Thank you for your contribution!"
           description={
             <>
-              Your contribution should be confirmed in about 20 minutes. You can keep an
-              eye on it at the{' '}
-              <Link to="/profile?tab=funded">funded tab on your profile</Link>.
+              Your transaction should be confirmed in about 20 minutes.{' '}
+              {isAnonymous
+                ? 'Once it’s confirmed, it’ll show up in the contributions tab.'
+                : (
+                  <>
+                    You can keep an eye on it at the{' '}
+                    <Link to="/profile?tab=funded">funded tab on your profile</Link>.
+                  </>
+                )
+              }
             </>
           }
           style={{ width: '90%' }}
@@ -78,8 +132,12 @@ export default class ContributionModal extends React.Component<Props, State> {
       );
     } else {
       if (error) {
+        okText = 'Done';
+        onOk = handleClose;
         content = error;
       } else {
+        okText = 'I’ve sent it';
+        onOk = this.confirmSend;
         content = <PaymentInfo contribution={contribution} text={text} />;
       }
     }
@@ -90,8 +148,8 @@ export default class ContributionModal extends React.Component<Props, State> {
         visible={isVisible}
         closable={hasSent || hasNoButtons}
         maskClosable={hasSent || hasNoButtons}
-        okText={hasSent ? 'Done' : 'I’ve sent it'}
-        onOk={hasSent ? handleClose : this.confirmSend}
+        okText={okText}
+        onOk={onOk}
         onCancel={handleClose}
         footer={hasNoButtons ? '' : undefined}
         centered
@@ -102,21 +160,31 @@ export default class ContributionModal extends React.Component<Props, State> {
   }
 
   private async fetchAddresses(proposalId: number, contributionId?: number) {
+    this.setState({ isFetchingContribution: true });
     try {
+      const { amount, isAnonymous } = this.props;
       let res;
       if (contributionId) {
         res = await getProposalContribution(proposalId, contributionId);
       } else {
-        res = await postProposalContribution(proposalId, this.props.amount || '0');
+        res = await postProposalContribution(proposalId, amount || '0', isAnonymous);
       }
       this.setState({ contribution: res.data });
     } catch (err) {
       this.setState({ error: err.message });
     }
+    this.setState({ isFetchingContribution: false });
   }
 
+  private confirmAnonymous = () => {
+    const { state, props } = this;
+    this.setState({ hasConfirmedAnonymous: true });
+    if (!state.contribution && !props.contribution && props.proposalId) {
+      this.fetchAddresses(props.proposalId, props.contributionId);
+    }
+  };
+
   private confirmSend = () => {
-    // TODO: Mark on backend
     this.setState({ hasSent: true });
   };
 }

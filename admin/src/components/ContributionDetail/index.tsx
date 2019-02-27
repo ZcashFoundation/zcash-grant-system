@@ -46,7 +46,7 @@ class ContributionDetail extends React.Component<Props, State> {
     );
 
     const renderSendRefund = () => {
-      if (c.staking || !c.refundAddress || c.refundTxId || !c.proposal.isFailed) {
+      if (c.staking || !c.refundAddress || c.refundTxId || !c.proposal.isFailed || !c.user) {
         return;
       }
       const percent = c.proposal.milestones.reduce((prev, m) => {
@@ -98,9 +98,10 @@ class ContributionDetail extends React.Component<Props, State> {
                 <pre>{JSON.stringify(c.addresses, null, 4)}</pre>
               </Collapse.Panel>
 
-              <Collapse.Panel key="user" header="user">
-                <UserItem {...c.user} />
-              </Collapse.Panel>
+              
+                <Collapse.Panel key="user" header="user">
+                  {c.user ? <UserItem {...c.user} /> : <em>Anonymous contribution</em>}
+                </Collapse.Panel>
 
               <Collapse.Panel key="proposal" header="proposal">
                 <ProposalItem {...c.proposal} />

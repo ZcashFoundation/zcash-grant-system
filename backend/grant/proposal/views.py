@@ -375,11 +375,12 @@ def post_proposal_update(proposal_id, title, content):
     # Send email to all contributors (even if contribution failed)
     contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
     for c in contributions:
-        send_email(c.user.email_address, 'contribution_update', {
-            'proposal': g.current_proposal,
-            'proposal_update': update,
-            'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
-        })
+        if c.user:
+            send_email(c.user.email_address, 'contribution_update', {
+                'proposal': g.current_proposal,
+                'proposal_update': update,
+                'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
+            })
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
@@ -481,22 +482,31 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
-@requires_auth
 @endpoint.api(
-    parameter('amount', type=str, required=True)
+    parameter('amount', type=str, required=True),
+    parameter('anonymous', type=bool, required=False)
 )
-def post_proposal_contribution(proposal_id, amount):
+def post_proposal_contribution(proposal_id, amount, anonymous):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
     code = 200
-    contribution = ProposalContribution \
-        .get_existing_contribution(g.current_user.id, proposal_id, amount)
+    user = None
+    contribution = None
+
+    if not anonymous:
+        user = get_authed_user()
+
+    if user:
+        contribution = ProposalContribution.get_existing_contribution(user.id, proposal_id, amount)
 
     if not contribution:
         code = 201
-        contribution = proposal.create_contribution(g.current_user.id, amount)
+        contribution = proposal.create_contribution(
+            amount=amount,
+            user_id=user.id if user else None,
+        )
 
     dumped_contribution = proposal_contribution_schema.dump(contribution)
     return dumped_contribution, code
@@ -544,11 +554,12 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     else:
         # Send to the user
-        send_email(contribution.user.email_address, 'contribution_confirmed', {
-            'contribution': contribution,
-            'proposal': contribution.proposal,
-            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
-        })
+        if contribution.user:
+            send_email(contribution.user.email_address, 'contribution_confirmed', {
+                'contribution': contribution,
+                'proposal': contribution.proposal,
+                'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+            })
 
         # Send to the full proposal gang
         for member in contribution.proposal.team:
@@ -558,7 +569,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
                 'contributor': contribution.user,
                 'funded': contribution.proposal.funded,
                 'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
-                'contributor_url': make_url(f'/profile/{contribution.user.id}'),
+                'contributor_url': make_url(f'/profile/{contribution.user.id}') if contribution.user else '',
             })
 
     # TODO: Once we have a task queuer in place, queue emails to everyone

@@ -203,7 +203,6 @@ export function generateProposal({
 
   const props = {
     sendLoading: false,
-    isMissingWeb3: false,
     proposal,
     ...proposal, // yeah...
   };
