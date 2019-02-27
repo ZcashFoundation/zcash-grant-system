@@ -23,7 +23,7 @@ const HomeIntro: React.SFC<Props> = ({ t, authUser }) => (
             {t('home.intro.browse')}
           </Link>
         ) : (
-          <Link className="HomeIntro-content-buttons-main" to="/auth">
+          <Link className="HomeIntro-content-buttons-main" to="/auth/sign-up">
             {t('home.intro.signup')}
           </Link>
         )}
