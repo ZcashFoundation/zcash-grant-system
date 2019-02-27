@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from grant.proposal.models import (
     ProposalContribution,
     proposal_contributions_schema,
@@ -9,6 +11,7 @@ from grant.utils.enums import ContributionStatus
 def make_bootstrap_data():
     pending_contributions = ProposalContribution.query \
         .filter_by(status=ContributionStatus.PENDING) \
+        .filter(ProposalContribution.date_created + timedelta(hours=24) > datetime.now()) \
         .all()
     latest_contribution = ProposalContribution.query \
         .filter_by(status=ContributionStatus.CONFIRMED) \

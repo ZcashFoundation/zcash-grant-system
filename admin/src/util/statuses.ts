@@ -128,7 +128,8 @@ export const PROPOSAL_STAGES: Array<StatusSoT<PROPOSAL_STAGE>> = [
     id: PROPOSAL_STAGE.CANCELED,
     tagDisplay: 'Canceled',
     tagColor: '#eb4118',
-    hint: 'Proposal was canceled by an admin and is currently refunding all contributors.',
+    hint:
+      'Proposal was canceled by an admin and is currently refunding all contributors.',
   },
 ];
 
@@ -190,9 +191,10 @@ export const CONTRIBUTION_STATUSES: Array<StatusSoT<CONTRIBUTION_STATUS>> = [
   },
   {
     id: CONTRIBUTION_STATUS.DELETED,
-    tagDisplay: 'Closed',
+    tagDisplay: 'Deleted',
     tagColor: '#eb4118',
-    hint: 'User deleted the contribution before it was sent or confirmed',
+    hint:
+      'User deleted the contribution before it was sent, or after it didn’t confirm after 24 hours',
   },
 ];
 

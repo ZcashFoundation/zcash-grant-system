@@ -80,9 +80,11 @@ example_email_args = {
         'proposal': proposal,
         'contribution': contribution,
         'contributor': user,
+        # 'contributor': None,
         'funded': '50',
         'proposal_url': 'http://someproposal.com',
         'contributor_url': 'http://someuser.com',
+        # 'contributor_url': None,
     },
     'proposal_comment': {
         'author': user,

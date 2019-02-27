@@ -63,7 +63,6 @@ async function scanBlock(height: number) {
     consecutiveBlockFailures++;
     // If we fail a certain number of times, it's reasonable to
     // assume that the blockchain is down, and we should just quit.
-    // TODO: Scream at sentry or something!
     if (consecutiveBlockFailures >= MAXIMUM_BLOCK_FAILURES) {
       captureException(err);
       log.error('Maximum consecutive failures reached, exiting!');
