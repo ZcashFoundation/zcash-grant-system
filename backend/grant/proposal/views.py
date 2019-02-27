@@ -125,6 +125,9 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     if g.current_user.silenced:
         return {"message": "Your account has been silenced, commenting is disabled."}, 403
 
+    if len(comment) > 1000:
+        return {"message": "Please make sure your comment is less than 1000 characters long"}, 400
+
     # Make the comment
     comment = Comment(
         proposal_id=proposal_id,
