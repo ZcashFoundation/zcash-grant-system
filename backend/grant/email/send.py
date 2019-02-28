@@ -86,7 +86,7 @@ def proposal_contribution(email_args):
         'subject': 'You just got a contribution!',
         'title': 'You just got a contribution',
         'preview': '{} just contributed {} to your proposal {}'.format(
-            email_args['contributor'].display_name,
+            email_args['contributor'].display_name if email_args['contributor'] else 'An anonymous contributor',
             email_args['contribution'].amount,
             email_args['proposal'].title,
         ),

@@ -26,8 +26,9 @@ export default class PaymentInfo extends React.Component<Props, State> {
   };
 
   render() {
-    const { contribution, text } = this.props;
+    const { contribution } = this.props;
     const { sendType } = this.state;
+    let text = this.props.text;
     let address;
     let memo;
     let amount;
@@ -103,14 +104,24 @@ export default class PaymentInfo extends React.Component<Props, State> {
       );
     }
 
+    if (!text) {
+      if (contribution && contribution.isAnonymous) {
+        text = `
+          Thank you for contributing! Just send using whichever method works best for
+          you, and your contribution will show up anonymously once it's been confirmed.
+        `
+      } else {
+        text = `
+          Thank you for contributing! Just send using whichever method works best for
+          you, and we'll let you know once it's been confirmed.
+        `;
+      }
+    }
+
     return (
       <Form className="PaymentInfo" layout="vertical">
         <div className="PaymentInfo-text">
-          {text ||
-            `
-            Thank you for contributing! Just send using whichever method works best for
-            you, and we'll let you know when your contribution has been confirmed.
-          `}
+          {text}
         </div>
         <Radio.Group
           className="PaymentInfo-types"

@@ -78,12 +78,13 @@ class ProposalDeadline:
                 'proposal': proposal,
             })
         for c in proposal.contributions:
-            send_email(c.user.email_address, 'contribution_proposal_failed', {
-                'contribution': c,
-                'proposal': proposal,
-                'refund_address': c.user.settings.refund_address,
-                'account_settings_url': make_url('/profile/settings?tab=account')
-            })
+            if c.user:
+                send_email(c.user.email_address, 'contribution_proposal_failed', {
+                    'contribution': c,
+                    'proposal': proposal,
+                    'refund_address': c.user.settings.refund_address,
+                    'account_settings_url': make_url('/profile/settings?tab=account')
+                })
 
 
 JOBS = {
