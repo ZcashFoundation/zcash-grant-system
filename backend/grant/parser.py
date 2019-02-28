@@ -2,7 +2,7 @@ import functools
 
 from animal_case import animalify
 from webargs.core import dict2schema
-from webargs.flaskparser import FlaskParser
+from webargs.flaskparser import FlaskParser, abort
 
 try:
     from collections.abc import Mapping
@@ -68,6 +68,10 @@ class Parser(FlaskParser):
             return wrapper
 
         return decorator
+
+    def handle_invalid_json_error(self, error, req, *args, **kwargs):
+        print(error)
+        abort(400, exc=error, messages={"json": ["Invalid JSON body."]})
 
 
 parser = Parser()
