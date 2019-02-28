@@ -16,6 +16,7 @@ ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
 SITE_URL = env.str('SITE_URL', default='https://zfnd.org')
 SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL")
+SQLALCHEMY_ECHO = False # True will print queries to log
 QUEUES = ["default"]
 SECRET_KEY = env.str("SECRET_KEY")
 BCRYPT_LOG_ROUNDS = env.int("BCRYPT_LOG_ROUNDS", default=13)
@@ -50,8 +51,6 @@ LINKEDIN_CLIENT_SECRET = env.str("LINKEDIN_CLIENT_SECRET")
 
 BLOCKCHAIN_REST_API_URL = env.str("BLOCKCHAIN_REST_API_URL")
 BLOCKCHAIN_API_SECRET = env.str("BLOCKCHAIN_API_SECRET")
-
-ADMIN_PASS_HASH = env.str("ADMIN_PASS_HASH")
 
 EXPLORER_URL = env.str("EXPLORER_URL", default="https://explorer.zcha.in/")
 

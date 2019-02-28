@@ -9,9 +9,9 @@ from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
     'home_url': make_url('/'),
-    'account_url': make_url('/user'),
-    'email_settings_url': make_url('/settings'),
-    'unsubscribe_url': make_url('/unsubscribe'),
+    'account_url': make_url('/profile'),
+    'email_settings_url': make_url('/profile/settings?tab=emails'),
+    'unsubscribe_url': make_url('/profile/settings?tab=emails'),
 }
 
 
@@ -86,7 +86,7 @@ def proposal_contribution(email_args):
         'subject': 'You just got a contribution!',
         'title': 'You just got a contribution',
         'preview': '{} just contributed {} to your proposal {}'.format(
-            email_args['contributor'].display_name,
+            email_args['contributor'].display_name if email_args['contributor'] else 'An anonymous contributor',
             email_args['contribution'].amount,
             email_args['proposal'].title,
         ),
@@ -103,6 +103,27 @@ def proposal_comment(email_args):
             email_args['proposal'].title,
         ),
         'subscription': EmailSubscription.MY_PROPOSAL_COMMENT,
+    }
+
+
+def proposal_failed(email_args):
+    return {
+        'subject': 'Your proposal failed to get funding',
+        'title': 'Proposal failed',
+        'preview': 'Your proposal entitled {} failed to get enough funding by the deadline'.format(
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
+    }
+
+
+def proposal_canceled(email_args):
+    return {
+        'subject': 'Your proposal has been canceled',
+        'title': 'Proposal canceled',
+        'preview': 'Your proposal entitled {} has been canceled, and your contributors will be refunded'.format(
+            email_args['proposal'].title,
+        ),
     }
 
 
@@ -142,6 +163,39 @@ def contribution_update(email_args):
             email_args['proposal_update'].title,
         ),
         'subscription': EmailSubscription.FUNDED_PROPOSAL_UPDATE,
+    }
+
+
+def contribution_refunded(email_args):
+    return {
+        'subject': 'Your contribution has been refunded!',
+        'title': 'Contribution refunded',
+        'preview': 'Your recent contribution to {} has been refunded!'.format(
+            email_args['proposal'].title
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_CONTRIBUTION,
+    }
+
+
+def contribution_proposal_failed(email_args):
+    return {
+        'subject': 'A proposal you contributed to failed to get funding',
+        'title': 'Proposal failed',
+        'preview': 'The proposal entitled {} failed to get funding, here’s how to get a refund'.format(
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_FUNDED,
+    }
+
+
+def contribution_proposal_canceled(email_args):
+    return {
+        'subject': 'A proposal you contributed to has been canceled',
+        'title': 'Proposal canceled',
+        'preview': 'The proposal entitled {} has been canceled, here’s how to get a refund'.format(
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_FUNDED,
     }
 
 
@@ -220,9 +274,14 @@ get_info_lookup = {
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
+    'proposal_failed': proposal_failed,
+    'proposal_canceled': proposal_canceled,
     'staking_contribution_confirmed': staking_contribution_confirmed,
     'contribution_confirmed': contribution_confirmed,
     'contribution_update': contribution_update,
+    'contribution_refunded': contribution_refunded,
+    'contribution_proposal_failed': contribution_proposal_failed,
+    'contribution_proposal_canceled': contribution_proposal_canceled,
     'comment_reply': comment_reply,
     'proposal_arbiter': proposal_arbiter,
     'milestone_request': milestone_request,
@@ -232,7 +291,7 @@ get_info_lookup = {
 }
 
 
-def generate_email(type, email_args):
+def generate_email(type, email_args, user=None):
     info = get_info_lookup[type](email_args)
     body_text = render_template(
         'emails/%s.txt' % (type),
@@ -245,10 +304,15 @@ def generate_email(type, email_args):
         UI=UI,
     )
 
+    template_args = { **default_template_args }
+    if user:
+        template_args['unsubscribe_url'] = make_url('/email/unsubscribe?code={}'.format(user.email_verification.code))
+
+
     html = render_template(
         'emails/template.html',
         args={
-            **default_template_args,
+            **template_args,
             **info,
             'body': Markup(body_html),
         },
@@ -257,7 +321,7 @@ def generate_email(type, email_args):
     text = render_template(
         'emails/template.txt',
         args={
-            **default_template_args,
+            **template_args,
             **info,
             'body': body_text,
         },
@@ -275,17 +339,18 @@ def send_email(to, type, email_args):
     if current_app and current_app.config.get("TESTING"):
         return
 
+    from grant.user.models import User
+    user = User.get_by_email(to)
     info = get_info_lookup[type](email_args)
 
-    if 'subscription' in info and 'user' in email_args:
-        user = email_args['user']
+    if user and 'subscription' in info:
         sub = info['subscription']
-        if not is_subscribed(user.settings.email_subscriptions, sub):
+        if user and not is_subscribed(user.settings.email_subscriptions, sub):
             print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
             return
 
     try:
-        email = generate_email(type, email_args)
+        email = generate_email(type, email_args, user)
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
 
         mail = Mail(

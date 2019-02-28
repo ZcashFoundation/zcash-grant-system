@@ -164,8 +164,7 @@ class ProfileEdit extends React.PureComponent<Props, State> {
                             loading={loading}
                             block
                           >
-                            {!loading && s.icon}
-                            Connect to {s.name}
+                            {!loading && s.icon} <>Connect to {s.name}</>
                           </Button>
                         )}
                       </Form.Item>

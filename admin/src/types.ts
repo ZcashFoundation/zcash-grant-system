@@ -85,6 +85,8 @@ export enum PROPOSAL_STAGE {
   FUNDING_REQUIRED = 'FUNDING_REQUIRED',
   WIP = 'WIP',
   COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELED = 'CANCELED',
 }
 export interface Proposal {
   proposalId: number;
@@ -104,7 +106,6 @@ export interface Proposal {
   currentMilestone?: Milestone;
   team: User[];
   comments: Comment[];
-  contractStatus: string;
   target: string;
   contributed: string;
   funded: string;
@@ -114,11 +115,19 @@ export interface Proposal {
   arbiter: ProposalArbiter;
 }
 export interface Comment {
-  commentId: string;
+  id: number;
+  userId: User['userid'];
+  author?: User;
   proposalId: Proposal['proposalId'];
   proposal?: Proposal;
   dateCreated: number;
   content: string;
+  hidden: boolean;
+  reported: boolean;
+}
+export interface CommentArgs {
+  hidden: boolean;
+  reported: boolean;
 }
 // NOTE: sync with backend/utils/enums.py
 export enum CONTRIBUTION_STATUS {
@@ -132,20 +141,24 @@ export interface Contribution {
   txId: null | string;
   amount: string;
   dateCreated: number;
-  user: User;
+  user: User | null;
   proposal: Proposal;
   addresses: {
     transparent: string;
     sprout: string;
     memo: string;
   };
+  staking: boolean;
+  refundAddress?: string;
+  refundTxId?: string;
 }
 export interface ContributionArgs {
-  proposalId: string | number;
-  userId: string | number;
-  amount: string;
-  status: string;
+  proposalId?: string | number;
+  userId?: string | number;
+  amount?: string;
+  status?: string;
   txId?: string;
+  refundTxId?: string;
 }
 export interface User {
   accountAddress: string;
@@ -161,6 +174,7 @@ export interface User {
   silenced: boolean;
   banned: boolean;
   bannedReason: string;
+  isAdmin: boolean;
 }
 
 export interface EmailExample {

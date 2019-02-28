@@ -18,5 +18,4 @@ export interface SocialInfo {
 export enum SOCIAL_SERVICE {
   GITHUB = 'GITHUB',
   TWITTER = 'TWITTER',
-  LINKEDIN = 'LINKEDIN',
 }

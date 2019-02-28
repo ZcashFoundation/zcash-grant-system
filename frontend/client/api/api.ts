@@ -8,7 +8,7 @@ import {
   TeamInvite,
   TeamInviteWithProposal,
   SOCIAL_SERVICE,
-  ContributionWithAddresses,
+  ContributionWithAddressesAndUser,
   EmailSubscriptions,
   RFP,
   ProposalPageParams,
@@ -43,6 +43,10 @@ export function getProposal(proposalId: number | string): Promise<{ data: Propos
 
 export function getProposalComments(proposalId: number | string, params: PageParams) {
   return axios.get(`/api/v1/proposals/${proposalId}/comments`, { params });
+}
+
+export function reportProposalComment(proposalId: number, commentId: number) {
+  return axios.put(`/api/v1/proposals/${proposalId}/comments/${commentId}/report`);
 }
 
 export function getProposalUpdates(proposalId: number | string) {
@@ -127,11 +131,15 @@ export function getUserSettings(userId: string | number): Promise<any> {
   return axios.get(`/api/v1/users/${userId}/settings`);
 }
 
+interface SettingsArgs {
+  emailSubscriptions?: EmailSubscriptions;
+  refundAddress?: string;
+}
 export function updateUserSettings(
   userId: string | number,
-  emailSubscriptions?: EmailSubscriptions,
+  args?: SettingsArgs,
 ): Promise<any> {
-  return axios.put(`/api/v1/users/${userId}/settings`, { emailSubscriptions });
+  return axios.put(`/api/v1/users/${userId}/settings`, args);
 }
 
 export function updateUserArbiter(
@@ -229,6 +237,10 @@ export async function putProposalPublish(
   });
 }
 
+export async function deleteProposalRFPLink(proposalId: number): Promise<any> {
+  return axios.delete(`/api/v1/proposals/${proposalId}/rfp`);
+}
+
 export async function requestProposalPayout(
   proposalId: number,
   milestoneId: number,
@@ -297,9 +309,11 @@ export function putInviteResponse(
 export function postProposalContribution(
   proposalId: number,
   amount: string,
-): Promise<{ data: ContributionWithAddresses }> {
+  anonymous?: boolean,
+): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
     amount,
+    anonymous,
   });
 }
 
@@ -319,13 +333,13 @@ export function deleteProposalContribution(contributionId: string | number) {
 export function getProposalContribution(
   proposalId: number,
   contributionId: number,
-): Promise<{ data: ContributionWithAddresses }> {
+): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
 }
 
 export function getProposalStakingContribution(
   proposalId: number,
-): Promise<{ data: ContributionWithAddresses }> {
+): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.get(`/api/v1/proposals/${proposalId}/stake`);
 }
 

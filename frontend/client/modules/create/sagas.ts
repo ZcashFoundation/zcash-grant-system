@@ -6,6 +6,7 @@ import {
   getProposalDrafts,
   putProposal,
   deleteProposalDraft,
+  getProposal,
 } from 'api/api';
 import { getDrafts, getDraftById, getFormState } from './selectors';
 import {
@@ -120,12 +121,21 @@ export function* handleInitializeForm(
   action: ReturnType<typeof initializeForm>,
 ): SagaIterator {
   try {
-    let draft: Yielded<typeof getDraftById> = yield select(getDraftById, action.payload);
+    const proposalId = action.payload;
+    let draft: Yielded<typeof getDraftById> = yield select(getDraftById, proposalId);
     if (!draft) {
       yield call(handleFetchDrafts);
-      draft = yield select(getDraftById, action.payload);
+      draft = yield select(getDraftById, proposalId);
       if (!draft) {
-        throw new Error('Proposal not found');
+        // If it's a real proposal, just not in draft form, redirect to it
+        try {
+          yield call(getProposal, proposalId);
+          yield put({ type: types.INITIALIZE_FORM_REJECTED });
+          yield put(replace(`/proposals/${action.payload}`));
+          return;
+        } catch (err) {
+          throw new Error('Proposal not found');
+        }
       }
     }
     yield put({

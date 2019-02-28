@@ -40,7 +40,7 @@ class ContributionForm extends React.Component<Props> {
       }
       defaults = {
         proposalId: contribution.proposal.proposalId,
-        userId: contribution.user.userid,
+        userId: contribution.user ? contribution.user.userid : '',
         amount: contribution.amount,
         txId: contribution.txId || '',
       };
@@ -68,14 +68,11 @@ class ContributionForm extends React.Component<Props> {
         <Form.Item label="User ID">
           {getFieldDecorator('userId', {
             initialValue: defaults.userId,
-            rules: [
-              { required: true, message: 'User ID is required' },
-            ],
           })(
             <Input
               autoComplete="off"
               name="userId"
-              placeholder="Must be an existing user id"
+              placeholder="Existing user id or blank for anonymous"
             />,
           )}
         </Form.Item>
@@ -152,6 +149,10 @@ class ContributionForm extends React.Component<Props> {
       };
       let msg;
       if (id) {
+        // Explicitly make it zero of omitted to indicate to remove user
+        if (!args.userId) {
+          args.userId = 0;
+        }
         await store.editContribution(id, args);
         msg = 'Successfully updated contribution';
       } else {

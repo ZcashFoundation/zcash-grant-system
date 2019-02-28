@@ -49,7 +49,6 @@ interface State {
   isBodyOverflowing: boolean;
   isUpdateOpen: boolean;
   isCancelOpen: boolean;
-  bodyId: string;
 }
 
 export class ProposalDetail extends React.Component<Props, State> {
@@ -58,8 +57,9 @@ export class ProposalDetail extends React.Component<Props, State> {
     isBodyOverflowing: false,
     isUpdateOpen: false,
     isCancelOpen: false,
-    bodyId: `body-${Math.floor(Math.random() * 1000000)}`,
   };
+
+  bodyEl: HTMLElement | null = null;
 
   componentDidMount() {
     // always refresh from server
@@ -87,13 +87,7 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   render() {
     const { user, detail: proposal, isPreview, detailError } = this.props;
-    const {
-      isBodyExpanded,
-      isBodyOverflowing,
-      isCancelOpen,
-      isUpdateOpen,
-      bodyId,
-    } = this.state;
+    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, isUpdateOpen } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
     const wrongProposal = proposal && proposal.proposalId !== this.props.proposalId;
 
@@ -104,13 +98,7 @@ export class ProposalDetail extends React.Component<Props, State> {
       return <Loader size="large" />;
     }
 
-    const deadline = 0; // TODO: Use actual date for deadline
-    // TODO: isTrustee - determine rework to isAdmin?
-    // for now: check if authed user in member of proposal team
     const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
-    const hasBeenFunded = false; // TODO: deterimne if proposal has reached funding
-    const isProposalActive = !hasBeenFunded && deadline > Date.now();
-    const canCancel = false; // TODO: Allow canceling if proposal hasn't gone live yet
     const isLive = proposal.status === STATUS.LIVE;
 
     const adminMenu = (
@@ -118,17 +106,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         <Menu.Item disabled={!isLive} onClick={this.openUpdateModal}>
           Post an Update
         </Menu.Item>
-        <Menu.Item
-          onClick={() => alert('Sorry, not yet implemented!')}
-          disabled={!isProposalActive}
-        >
-          Edit proposal
-        </Menu.Item>
-        <Menu.Item
-          style={{ color: canCancel ? '#e74c3c' : undefined }}
-          onClick={this.openCancelModal}
-          disabled={!canCancel}
-        >
+        <Menu.Item disabled={!isLive} onClick={this.openCancelModal}>
           Cancel proposal
         </Menu.Item>
       </Menu>
@@ -209,7 +187,7 @@ export class ProposalDetail extends React.Component<Props, State> {
             </h1>
             <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
               <div
-                id={bodyId}
+                ref={el => (this.bodyEl = el)}
                 className={classnames({
                   ['Proposal-top-main-block-bodyText']: true,
                   ['is-expanded']: isBodyExpanded,
@@ -291,20 +269,17 @@ export class ProposalDetail extends React.Component<Props, State> {
   };
 
   private checkBodyOverflow = () => {
-    const { isBodyExpanded, bodyId, isBodyOverflowing } = this.state;
-    if (isBodyExpanded) {
+    const { isBodyExpanded, isBodyOverflowing } = this.state;
+    if (isBodyExpanded || !this.bodyEl) {
       return;
     }
 
-    // Use id instead of ref because styled component ref doesn't return html element
-    const bodyEl = document.getElementById(bodyId);
-    if (!bodyEl) {
-      return;
-    }
-
-    if (isBodyOverflowing && bodyEl.scrollHeight <= bodyEl.clientHeight) {
+    if (isBodyOverflowing && this.bodyEl.scrollHeight <= this.bodyEl.clientHeight) {
       this.setState({ isBodyOverflowing: false });
-    } else if (!isBodyOverflowing && bodyEl.scrollHeight > bodyEl.clientHeight) {
+    } else if (
+      !isBodyOverflowing &&
+      this.bodyEl.scrollHeight > this.bodyEl.clientHeight
+    ) {
       this.setState({ isBodyOverflowing: true });
     }
   };

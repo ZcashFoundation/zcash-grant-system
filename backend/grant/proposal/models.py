@@ -3,6 +3,7 @@ from functools import reduce
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from decimal import Decimal
+from marshmallow import post_dump
 
 from grant.comment.models import Comment
 from grant.email.send import send_email
@@ -19,6 +20,7 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage
 )
+from grant.utils.stubs import anonymous_user
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -78,19 +80,23 @@ class ProposalContribution(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     status = db.Column(db.String(255), nullable=False)
     amount = db.Column(db.String(255), nullable=False)
-    tx_id = db.Column(db.String(255))
+    tx_id = db.Column(db.String(255), nullable=True)
+    refund_tx_id = db.Column(db.String(255), nullable=True)
+    staking = db.Column(db.Boolean, nullable=False)
 
     user = db.relationship("User")
 
     def __init__(
             self,
             proposal_id: int,
-            user_id: int,
-            amount: str
+            amount: str,
+            user_id: int = None,
+            staking: bool = False,
     ):
         self.proposal_id = proposal_id
-        self.user_id = user_id
         self.amount = amount
+        self.user_id = user_id
+        self.staking = staking
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
 
@@ -108,6 +114,7 @@ class ProposalContribution(db.Model):
         return ProposalContribution.query \
             .filter(ProposalContribution.user_id == user_id) \
             .filter(ProposalContribution.status != ContributionStatus.DELETED) \
+            .filter(ProposalContribution.staking == False) \
             .order_by(ProposalContribution.date_created.desc()) \
             .all()
 
@@ -155,6 +162,10 @@ class ProposalContribution(db.Model):
         self.status = ContributionStatus.CONFIRMED
         self.tx_id = tx_id
         self.amount = amount
+
+    @hybrid_property
+    def refund_address(self):
+        return self.user.settings.refund_address if self.user else None
 
 
 class ProposalArbiter(db.Model):
@@ -207,7 +218,7 @@ class Proposal(db.Model):
     category = db.Column(db.String(255), nullable=False)
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
-    reject_reason = db.Column(db.String(255))
+    reject_reason = db.Column(db.String())
 
     # Payment info
     target = db.Column(db.String(255), nullable=False)
@@ -328,11 +339,12 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
 
-    def create_contribution(self, user_id: int, amount):
+    def create_contribution(self, amount, user_id: int = None, staking: bool = False):
         contribution = ProposalContribution(
             proposal_id=self.id,
+            amount=amount,
             user_id=user_id,
-            amount=amount
+            staking=staking,
         )
         db.session.add(contribution)
         db.session.commit()
@@ -344,12 +356,17 @@ class Proposal(db.Model):
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
+            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
             ).first()
             if not contribution:
-                contribution = self.create_contribution(user_id, str(remaining.normalize()))
+                contribution = self.create_contribution(
+                    user_id=user_id,
+                    amount=str(remaining.normalize()),
+                    staking=True,
+                )
 
         return contribution
 
@@ -423,7 +440,7 @@ class Proposal(db.Model):
         self.set_funded_when_ready()
 
     def set_funded_when_ready(self):
-        if self.status == ProposalStatus.LIVE and self.is_funded:
+        if self.status == ProposalStatus.LIVE and self.stage == ProposalStage.FUNDING_REQUIRED and self.is_funded:
             self.set_funded()
 
     # state: stage FUNDING_REQUIRED -> WIP
@@ -453,10 +470,32 @@ class Proposal(db.Model):
         else:
             raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
 
+    def cancel(self):
+        print(self.status)
+        if self.status != ProposalStatus.LIVE:
+            raise ValidationException("Cannot cancel a proposal until it's live")
+
+        self.stage = ProposalStage.CANCELED
+        db.session.add(self)
+        db.session.flush()
+        # Send emails to team & contributors
+        for u in self.team:
+            send_email(u.email_address, 'proposal_canceled', {
+                'proposal': self,
+                'support_url': make_url('/contact'),
+            })
+        for c in self.contributions:
+            send_email(c.user.email_address, 'contribution_proposal_canceled', {
+                'contribution': c,
+                'proposal': self,
+                'refund_address': c.user.settings.refund_address,
+                'account_settings_url': make_url('/profile/settings?tab=account')
+            })
+
     @hybrid_property
     def contributed(self):
         contributions = ProposalContribution.query \
-            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=False) \
             .all()
         funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
@@ -477,16 +516,23 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_staked(self):
-        return Decimal(self.contributed) >= PROPOSAL_STAKING_AMOUNT
+        # Don't use self.contributed since that ignores stake contributions
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
+            .all()
+        funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        return Decimal(funded) >= PROPOSAL_STAKING_AMOUNT
 
     @hybrid_property
     def is_funded(self):
-        return Decimal(self.funded) >= Decimal(self.target)
+        return self.is_staked and Decimal(self.funded) >= Decimal(self.target)
 
     @hybrid_property
     def is_failed(self):
         if not self.status == ProposalStatus.LIVE or not self.date_published:
             return False
+        if self.stage == ProposalStage.FAILED or self.stage == ProposalStage.CANCELED:
+            return True
         deadline = self.date_published + datetime.timedelta(seconds=self.deadline_duration)
         passed = deadline < datetime.datetime.now()
         return passed and not self.is_funded
@@ -669,6 +715,60 @@ class ProposalContributionSchema(ma.Schema):
             "amount",
             "date_created",
             "addresses",
+            "is_anonymous",
+        )
+
+    proposal = ma.Nested("ProposalSchema")
+    user = ma.Nested("UserSchema", default=anonymous_user)
+    date_created = ma.Method("get_date_created")
+    addresses = ma.Method("get_addresses")
+    is_anonymous = ma.Method("get_is_anonymous")
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+    def get_addresses(self, obj):
+        # Omit 'memo' and 'sprout' for now
+        # TODO: Add back in 'sapling' when ready
+        addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
+        return {
+            'transparent': addresses['transparent'],
+        }
+    
+    def get_is_anonymous(self, obj):
+        return not obj.user_id
+
+    @post_dump
+    def stub_anonymous_user(self, data):
+        if 'user' in data and data['user'] is None:
+            data['user'] = anonymous_user
+        return data
+
+
+proposal_contribution_schema = ProposalContributionSchema()
+proposal_contributions_schema = ProposalContributionSchema(many=True)
+user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 'addresses'])
+user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
+proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
+proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
+
+
+class AdminProposalContributionSchema(ma.Schema):
+    class Meta:
+        model = ProposalContribution
+        # Fields to expose
+        fields = (
+            "id",
+            "proposal",
+            "user",
+            "status",
+            "tx_id",
+            "amount",
+            "date_created",
+            "addresses",
+            "refund_address",
+            "refund_tx_id",
+            "staking"
         )
 
     proposal = ma.Nested("ProposalSchema")
@@ -683,12 +783,8 @@ class ProposalContributionSchema(ma.Schema):
         return blockchain_get('/contribution/addresses', {'contributionId': obj.id})
 
 
-proposal_contribution_schema = ProposalContributionSchema()
-proposal_contributions_schema = ProposalContributionSchema(many=True)
-user_proposal_contribution_schema = ProposalContributionSchema(exclude=['user', 'addresses'])
-user_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['user', 'addresses'])
-proposal_proposal_contribution_schema = ProposalContributionSchema(exclude=['proposal', 'addresses'])
-proposal_proposal_contributions_schema = ProposalContributionSchema(many=True, exclude=['proposal', 'addresses'])
+admin_proposal_contribution_schema = AdminProposalContributionSchema()
+admin_proposal_contributions_schema = AdminProposalContributionSchema(many=True)
 
 
 class ProposalArbiterSchema(ma.Schema):

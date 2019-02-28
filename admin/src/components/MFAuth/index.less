@@ -1,0 +1,83 @@
+.MFAuth {
+  max-width: 500px;
+  margin: 2rem auto;
+
+  h1 {
+    margin-top: 1rem;
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  & .ant-alert {
+    margin-bottom: 0.8rem;
+  }
+
+  &-codes {
+    margin: 1.5rem 0;
+    font-size: 1rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+
+    ul {
+      margin-bottom: 0;
+
+      li {
+        display: inline-block;
+        text-align: center;
+        width: 50%;
+      }
+    }
+
+    &-qrcode {
+      min-height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  .is-active {
+    color: #1890ff;
+  }
+
+  &-verify {
+    display: flex;
+    & > div {
+      white-space: nowrap;
+      line-height: 2rem;
+      margin-right: 0.5rem;
+      font-weight: bold;
+    }
+  }
+
+  &-controls {
+    display: flex;
+    margin-top: 1rem;
+    justify-content: flex-end;
+
+    &-label {
+      white-space: nowrap;
+      line-height: 2rem;
+      font-weight: bold;
+    }
+
+    & > * + * {
+      margin-left: 0.5rem;
+    }
+  }
+
+  ol {
+    margin-left: 1rem;
+    margin-bottom: 2rem;
+
+    & > li {
+      margin: 1rem 0;
+    }
+  }
+
+  & > div {
+    margin-bottom: 0.5rem;
+  }
+}

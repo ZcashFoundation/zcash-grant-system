@@ -1,7 +1,11 @@
 <p style="margin: 0 0 20px;">
     Your proposal <strong>{{ args.proposal.title }}</strong> just got a
     <strong>{{ args.contribution.amount }} ZEC</strong> contribution from
+    {% if args.contributor %}
     <a href="{{ args.contributor_url }}" target="_blank">{{ args.contributor.display_name }}</a>.
+    {% else %}
+    an anonymous contributor.
+    {% endif %}
     Your proposal is now at
     <strong>{{ args.funded }} / {{ args.proposal.target }} ZEC</strong>.
 </p>

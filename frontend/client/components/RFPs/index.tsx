@@ -14,6 +14,7 @@ import './index.less';
 interface StateProps {
   rfps: AppState['rfps']['rfps'];
   isFetchingRfps: AppState['rfps']['isFetchingRfps'];
+  hasFetchedRfps: AppState['rfps']['hasFetchedRfps'];
   fetchRfpsError: AppState['rfps']['fetchRfpsError'];
 }
 
@@ -29,7 +30,7 @@ class RFPs extends React.Component<Props> {
   }
 
   render() {
-    const { rfps, isFetchingRfps, fetchRfpsError } = this.props;
+    const { rfps, isFetchingRfps, hasFetchedRfps, fetchRfpsError } = this.props;
 
     let rfpsEl;
     if (fetchRfpsError) {
@@ -41,7 +42,7 @@ class RFPs extends React.Component<Props> {
           />
         </div>
       );
-    } else if (!isFetchingRfps) {
+    } else if (!hasFetchedRfps && isFetchingRfps) {
       rfpsEl = (
         <div className="RFPs-loading">
           <Loader size="large" />
@@ -95,6 +96,7 @@ class RFPs extends React.Component<Props> {
           <Placeholder
             title="No requests are currently active"
             subtitle="Check back later for more opportunities"
+            loading={this.props.isFetchingRfps}
           />
         )}
       </div>
@@ -106,6 +108,7 @@ export default connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
     rfps: state.rfps.rfps,
     isFetchingRfps: state.rfps.isFetchingRfps,
+    hasFetchedRfps: state.rfps.hasFetchedRfps,
     fetchRfpsError: state.rfps.fetchRfpsError,
   }),
   { fetchRfps },

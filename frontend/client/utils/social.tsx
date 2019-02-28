@@ -16,12 +16,6 @@ export const SOCIAL_INFO: { [key in SOCIAL_SERVICE]: SocialInfo } = {
     format: `https://twitter.com/${accountNameRegex}`,
     icon: <Icon type="twitter" />,
   },
-  [SOCIAL_SERVICE.LINKEDIN]: {
-    service: SOCIAL_SERVICE.LINKEDIN,
-    name: 'LinkedIn',
-    format: `https://linkedin.com/in/${accountNameRegex}`,
-    icon: <Icon type="linkedin" />,
-  },
 };
 
 export function socialMediaToUrl(service: SOCIAL_SERVICE, username: string): string {
