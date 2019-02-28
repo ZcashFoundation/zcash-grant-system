@@ -74,3 +74,5 @@ webargs==5.1.2
 # 2fa - totp
 pyotp==2.2.7
 
+# JSON formatting
+animal-case=0.4.1
