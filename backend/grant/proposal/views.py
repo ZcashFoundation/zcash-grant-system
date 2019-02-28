@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from flask import Blueprint, g, request
-from marshmallow import fields
+from marshmallow import fields, validate
 from sqlalchemy import or_
 
 from grant.comment.models import Comment, comment_schema, comments_schema
@@ -22,6 +22,7 @@ from grant.utils.auth import (
     get_authed_user,
     internal_webhook
 )
+from grant.utils.enums import Category
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat
@@ -215,11 +216,11 @@ def get_proposal_drafts():
 
 @blueprint.route("/<proposal_id>", methods=["PUT"])
 @requires_team_member_auth
-# TODO - add more specific validation
+# TODO add gaurd (minimum, maximum, shape)
 @body({
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
-    "category": fields.Str(required=True),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "content": fields.Str(required=True),
     "target": fields.Str(required=True),
     "payoutAddress": fields.Str(required=True),
@@ -464,6 +465,7 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
+# TODO add gaurd (minimum, maximum)
 @body({
     "amount": fields.Str(required=True),
     "anonymous": fields.Bool(required=False, missing=None)

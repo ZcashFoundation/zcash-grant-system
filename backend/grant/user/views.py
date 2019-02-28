@@ -110,6 +110,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
 
 @blueprint.route("/", methods=["POST"])
 @body({
+    # TODO guard all (valid, minimum, maximum)
     "emailAddress": fields.Str(required=True),
     "password": fields.Str(required=True),
     "displayName": fields.Str(required=True),
@@ -148,6 +149,7 @@ def auth_user(email, password):
 
 @blueprint.route("/me/password", methods=["PUT"])
 @auth.requires_auth
+# TODO gaurd password (minimum)
 @body({
     "currentPassword": fields.Str(required=True),
     "password": fields.Str(required=True)
@@ -161,6 +163,7 @@ def update_user_password(current_password, password):
 
 @blueprint.route("/me/email", methods=["PUT"])
 @auth.requires_auth
+# TODO gaurd all (valid, minimum)
 @body({
     "email": fields.Str(required=True),
     "password": fields.Str(required=True)
@@ -237,6 +240,7 @@ def recover_user(email):
 
 
 @blueprint.route("/recover/<code>", methods=["POST"])
+# TODO gaurd length
 @body({
     "password": fields.Str(required=True)
 })
@@ -281,6 +285,7 @@ def delete_avatar(url):
 @blueprint.route("/<user_id>", methods=["PUT"])
 @auth.requires_auth
 @auth.requires_same_user_auth
+# TODO gaurd all (minimum, minimum, shape, uri)
 @body({
     "displayName": fields.Str(required=True),
     "title": fields.Str(required=True),
@@ -355,6 +360,7 @@ def get_user_settings(user_id):
 
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @auth.requires_same_user_auth
+# TODO guard all (shape, validity)
 @body({
     "emailSubscriptions": fields.Dict(required=True),
     "refundAddress": fields.Str(required=False, missing=None)

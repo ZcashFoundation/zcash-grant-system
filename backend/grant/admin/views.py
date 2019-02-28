@@ -3,7 +3,7 @@ from decimal import Decimal
 from functools import reduce
 
 from flask import Blueprint, request
-from marshmallow import fields
+from marshmallow import fields, validate
 from sqlalchemy import func, or_
 
 import grant.utils.admin as admin
@@ -27,6 +27,7 @@ from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.settings import EXPLORER_URL
 from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.utils import pagination
+from grant.utils.enums import Category
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -320,12 +321,7 @@ def set_arbiter(proposal_id, user_id):
 
 
 @blueprint.route("/proposals", methods=["GET"])
-@query({
-    "page": fields.Int(required=False, missing=None),
-    "filters": fields.List(fields.Str(), required=False, missing=None),
-    "search": fields.Str(required=False, missing=None),
-    "sort": fields.Str(required=False, missing=None),
-})
+@query(paginated_fields)
 @admin.admin_auth_required
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
@@ -468,9 +464,9 @@ def get_rfps():
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "content": fields.Str(required=True),
-    "category": fields.Str(required=True),
-    "bounty": fields.Str(required=True),
-    "matching": fields.Bool(required=True, default=False, missing=False),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
+    "bounty": fields.Str(required=False, missing=0),
+    "matching": fields.Bool(required=False, missing=False),
     "dateCloses": fields.Int(required=True)
 })
 @admin.admin_auth_required
@@ -481,7 +477,7 @@ def create_rfp(date_closes, **kwargs):
     )
     db.session.add(rfp)
     db.session.commit()
-    return admin_rfp_schema.dump(rfp), 201
+    return admin_rfp_schema.dump(rfp), 200
 
 
 @blueprint.route('/rfps/<rfp_id>', methods=['GET'])
@@ -499,7 +495,7 @@ def get_rfp(rfp_id):
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "content": fields.Str(required=True),
-    "category": fields.Str(required=True),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=True),
     "matching": fields.Bool(required=True, default=False, missing=False),
     "dateCloses": fields.Int(required=True)
@@ -566,6 +562,7 @@ def get_contributions(page, filters, search, sort):
 @body({
     "proposalId": fields.Int(required=True),
     "userId": fields.Int(required=True),
+    # TODO guard status
     "status": fields.Str(required=True),
     "amount": fields.Str(required=True),
     "txId": fields.Str(required=False, missing=None)
@@ -578,6 +575,7 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
         user_id=user_id,
         amount=amount,
     )
+    # TODO guard status
     contribution.status = status
     contribution.tx_id = tx_id
 
@@ -605,6 +603,7 @@ def get_contribution(contribution_id):
 @body({
     "proposalId": fields.Int(required=False, missing=None),
     "userId": fields.Int(required=False, missing=None),
+    # TODO guard status
     "status": fields.Str(required=False, missing=None),
     "amount": fields.Str(required=False, missing=None),
     "txId": fields.Str(required=False, missing=None)

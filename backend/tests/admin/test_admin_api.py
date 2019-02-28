@@ -289,8 +289,6 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
             data=json.dumps({"isApprove": False, "rejectReason": "Funnzies."})
         )
-        print(resp)
-        print(resp.json)
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
         self.assertEqual(resp.json["rejectReason"], "Funnzies.")
@@ -310,3 +308,36 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         self.assert200(resp)
         # TODO - more tests
+
+    def test_create_rfp_succeeds(self):
+        self.login_admin()
+
+        resp = self.app.post(
+            "/api/v1/admin/rfps",
+            data=json.dumps({
+              "brief": "Some brief",
+              "category": "CORE_DEV",
+              "content": "CONTENT",
+              "dateCloses": 1553980004,
+              "status": "DRAFT",
+              "title": "TITLE"
+            })
+        )
+        self.assert200(resp)
+
+    def test_create_rfp_fails_with_bad_category(self):
+        self.login_admin()
+
+        resp = self.app.post(
+            "/api/v1/admin/rfps",
+            data=json.dumps({
+              "brief": "Some brief",
+              "category": "NOT_CORE_DEV",
+              "content": "CONTENT",
+              "dateCloses": 1553980004,
+              "status": "DRAFT",
+              "title": "TITLE"
+            })
+        )
+        self.assert400(resp)
+
