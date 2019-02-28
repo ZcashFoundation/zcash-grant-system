@@ -48,8 +48,8 @@ class Home extends React.Component {
       ),
       !!contributionRefundableCount && (
         <div>
-          <Icon type="exclamation-circle" /> There are{' '}
-          <b>{contributionRefundableCount}</b> contributions <b>ready to be refunded</b>.{' '}
+          <Icon type="exclamation-circle" /> There are <b>{contributionRefundableCount}</b>{' '}
+          contributions <b>ready to be refunded</b>.{' '}
           <Link to="/contributions?filters[]=REFUNDABLE">Click here</Link> to view them.
         </div>
       ),

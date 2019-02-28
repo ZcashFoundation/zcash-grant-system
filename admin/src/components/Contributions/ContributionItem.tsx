@@ -18,27 +18,18 @@ export default class ContributionItem extends React.PureComponent<Props> {
     return (
       <List.Item
         className="ContributionItem"
-        actions={[
-          <Link key="edit" to={`/contributions/${id}/edit`}>
-            edit
-          </Link>,
-        ]}
+        actions={[<Link key="edit" to={`/contributions/${id}/edit`}>edit</Link>]}
       >
         <Link to={`/contributions/${id}`}>
           <h2>
-            {user ? user.displayName : <em>Anonymous</em>} <small>for</small>{' '}
-            {proposal.title}
+            {user ? user.displayName : <em>Anonymous</em>} <small>for</small> {proposal.title}
             <Tooltip title={status.hint}>
               <Tag color={status.tagColor}>{status.tagDisplay}</Tag>
             </Tooltip>
           </h2>
           <p>
-            <span>
-              <strong>Amount:</strong> {amount} ZEC
-            </span>
-            <span>
-              <strong>Created:</strong> {formatDateSeconds(dateCreated)}
-            </span>
+            <span><strong>Amount:</strong> {amount} ZEC</span>
+            <span><strong>Created:</strong> {formatDateSeconds(dateCreated)}</span>
           </p>
         </Link>
       </List.Item>

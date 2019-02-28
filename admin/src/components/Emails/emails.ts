@@ -60,14 +60,12 @@ export default [
   {
     id: 'proposal_failed',
     title: 'Proposal failed',
-    description:
-      'Sent to the proposal team when the deadline is reached and it didn’t get fully funded',
+    description: 'Sent to the proposal team when the deadline is reached and it didn’t get fully funded',
   },
   {
     id: 'proposal_canceled',
     title: 'Proposal canceled',
-    description:
-      'Sent to the proposal team when an admin cancels the proposal after funding',
+    description: 'Sent to the proposal team when an admin cancels the proposal after funding',
   },
   {
     id: 'contribution_confirmed',
@@ -87,8 +85,7 @@ export default [
   {
     id: 'contribution_proposal_failed',
     title: 'Contribution proposal failed',
-    description:
-      'Sent to contributors when the deadline is reached and the proposal didn’t get fully funded',
+    description: 'Sent to contributors when the deadline is reached and the proposal didn’t get fully funded',
   },
   {
     id: 'contribution_proposal_canceled',

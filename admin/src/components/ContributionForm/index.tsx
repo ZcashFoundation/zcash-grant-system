@@ -52,7 +52,9 @@ class ContributionForm extends React.Component<Props> {
         <Form.Item label="Proposal ID">
           {getFieldDecorator('proposalId', {
             initialValue: defaults.proposalId,
-            rules: [{ required: true, message: 'Proposal ID is required' }],
+            rules: [
+              { required: true, message: 'Proposal ID is required' },
+            ],
           })(
             <Input
               autoComplete="off"
@@ -78,7 +80,9 @@ class ContributionForm extends React.Component<Props> {
         <Form.Item label="Contribution amount">
           {getFieldDecorator('amount', {
             initialValue: defaults.amount,
-            rules: [{ required: true, message: 'Must have an amount specified' }],
+            rules: [
+              { required: true, message: 'Must have an amount specified' },
+            ],
           })(
             <Input
               autoComplete="off"
@@ -93,8 +97,7 @@ class ContributionForm extends React.Component<Props> {
           help={`
             Providing a txid will set status to CONFIRMED, leaving
             blank will set status to PENDING.
-          `}
-        >
+          `}>
           {getFieldDecorator('txId', {
             initialValue: defaults.txId,
           })(
@@ -140,7 +143,9 @@ class ContributionForm extends React.Component<Props> {
       const id = this.getId();
       const args = {
         ...values,
-        status: values.txId ? CONTRIBUTION_STATUS.CONFIRMED : CONTRIBUTION_STATUS.PENDING,
+        status: values.txId
+          ? CONTRIBUTION_STATUS.CONFIRMED
+          : CONTRIBUTION_STATUS.PENDING,
       };
       let msg;
       if (id) {
