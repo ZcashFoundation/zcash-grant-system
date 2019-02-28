@@ -75,4 +75,4 @@ webargs==5.1.2
 pyotp==2.2.7
 
 # JSON formatting
-animal-case=0.4.1
+animal_case=0.4.1
