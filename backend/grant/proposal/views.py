@@ -240,9 +240,9 @@ def update_proposal(milestones, proposal_id, **kwargs):
             m = Milestone(
                 title=mdata["title"],
                 content=mdata["content"],
-                date_estimated=datetime.fromtimestamp(mdata["dateEstimated"]),
-                payout_percent=str(mdata["payoutPercent"]),
-                immediate_payout=mdata["immediatePayout"],
+                date_estimated=datetime.fromtimestamp(mdata["date_estimated"]),
+                payout_percent=str(mdata["payout_percent"]),
+                immediate_payout=mdata["immediate_payout"],
                 proposal_id=g.current_proposal.id,
                 index=i
             )
