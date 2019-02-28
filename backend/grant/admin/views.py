@@ -3,7 +3,6 @@ from decimal import Decimal
 from functools import reduce
 
 from flask import Blueprint, request
-from flask_yoloapi import endpoint, parameter
 from marshmallow import fields
 from sqlalchemy import func, or_
 
@@ -13,7 +12,7 @@ from grant.comment.models import Comment, user_comments_schema, admin_comments_s
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
 from grant.milestone.models import Milestone
-from grant.parser import body, query
+from grant.parser import body, query, paginated_fields
 from grant.proposal.models import (
     Proposal,
     ProposalArbiter,
@@ -191,12 +190,7 @@ def delete_user(user_id):
 
 
 @blueprint.route("/users", methods=["GET"])
-@query({
-    "page": fields.Int(required=False, missing=None),
-    "filters": fields.List(fields.Str(), required=False, missing=None),
-    "search": fields.Str(required=False, missing=None),
-    "sort": fields.Str(required=False, missing=None)
-})
+@query(paginated_fields)
 @admin.admin_auth_required
 def get_users(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
@@ -554,12 +548,7 @@ def delete_rfp(rfp_id):
 
 
 @blueprint.route('/contributions', methods=['GET'])
-@query({
-    "page": fields.Int(required=False, missing=None),
-    "filters": fields.List(fields.Str(), required=False, missing=None),
-    "search": fields.Str(required=False, missing=None),
-    "sort": fields.Str(required=False, missing=None)
-})
+@query(paginated_fields)
 @admin.admin_auth_required
 def get_contributions(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')

@@ -3,6 +3,7 @@ import functools
 from animal_case import animalify
 from webargs.core import dict2schema
 from webargs.flaskparser import FlaskParser, abort
+from marshmallow import fields
 
 try:
     from collections.abc import Mapping
@@ -81,3 +82,10 @@ use_kwargs = parser.use_kwargs
 # default kwargs
 query = functools.partial(use_kwargs, locations=("query",))
 body = functools.partial(use_kwargs, locations=("json",))
+
+paginated_fields = {
+    "page": fields.Int(required=False, missing=None),
+    "filters": fields.List(fields.Str(), required=False, missing=None),
+    "search": fields.Str(required=False, missing=None),
+    "sort": fields.Str(required=False, missing=None)
+}
