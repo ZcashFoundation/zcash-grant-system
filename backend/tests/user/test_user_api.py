@@ -104,10 +104,10 @@ class TestUserAPI(BaseUserConfig):
             }),
             content_type="application/json"
         )
-        # self.assert403(user_auth_resp)
-        # self.assertTrue(user_auth_resp.json['message'] is not None)
-        self.assert500(user_auth_resp)
-        self.assertIn('Invalid pass', user_auth_resp.json['data'])
+        self.assert403(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
+        # self.assert500(user_auth_resp)
+        # self.assertIn('Invalid pass', user_auth_resp.json['data'])
 
     def test_user_auth_bad_email(self):
         user_auth_resp = self.app.post(
@@ -118,10 +118,10 @@ class TestUserAPI(BaseUserConfig):
             }),
             content_type="application/json"
         )
-        # self.assert400(user_auth_resp)
-        # self.assertTrue(user_auth_resp.json['message'] is not None)
-        self.assert500(user_auth_resp)
-        self.assertIn('No user', user_auth_resp.json['data'])
+        self.assert403(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
+        # self.assert500(user_auth_resp)
+        # self.assertIn('No user', user_auth_resp.json['data'])
 
     def test_user_auth_banned(self):
         self.user.set_banned(True, 'reason for banning')
