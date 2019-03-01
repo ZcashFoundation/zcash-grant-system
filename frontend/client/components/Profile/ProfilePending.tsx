@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popconfirm, message, Tag } from 'antd';
-import { UserProposal, STATUS, ContributionWithAddresses } from 'types';
+import { UserProposal, STATUS, ContributionWithAddressesAndUser } from 'types';
 import ContributionModal from 'components/ContributionModal';
 import { getProposalStakingContribution } from 'api/api';
 import { deletePendingProposal, publishPendingProposal } from 'modules/users/actions';
@@ -29,7 +29,7 @@ interface State {
   isDeleting: boolean;
   isPublishing: boolean;
   isLoadingStake: boolean;
-  stakeContribution: ContributionWithAddresses | null;
+  stakeContribution: ContributionWithAddressesAndUser | null;
 }
 
 class ProfilePending extends React.Component<Props, State> {
