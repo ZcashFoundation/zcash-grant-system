@@ -353,7 +353,7 @@ def delete_proposal(id):
 
 @blueprint.route('/proposals/<id>', methods=['PUT'])
 @body({
-    "contributionMatching": fields.Int(required=False, missing=None)
+    "contributionMatching": fields.Int(required=False, missing=None),
     "contributionBounty": fields.Str(required=False, missing=None)
 })
 @admin.admin_auth_required
