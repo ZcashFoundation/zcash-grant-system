@@ -1,14 +1,11 @@
 from flask import Blueprint
-from flask_yoloapi import endpoint
 
 from .models import EmailVerification, db
-from grant.utils.enums import ProposalArbiterStatus
 
 blueprint = Blueprint("email", __name__, url_prefix="/api/v1/email")
 
 
 @blueprint.route("/<code>/verify", methods=["POST"])
-@endpoint.api()
 def verify_email(code):
     ev = EmailVerification.query.filter_by(code=code).first()
     if ev:
@@ -20,7 +17,6 @@ def verify_email(code):
 
 
 @blueprint.route("/<code>/unsubscribe", methods=["POST"])
-@endpoint.api()
 def unsubscribe_email(code):
     ev = EmailVerification.query.filter_by(code=code).first()
     if ev:
@@ -32,7 +28,6 @@ def unsubscribe_email(code):
 
 
 @blueprint.route("/<code>/arbiter/<proposal_id>", methods=["POST"])
-@endpoint.api()
 def accept_arbiter(code, proposal_id):
     ev = EmailVerification.query.filter_by(code=code).first()
     if ev:

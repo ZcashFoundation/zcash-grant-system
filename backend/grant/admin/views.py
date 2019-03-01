@@ -1,13 +1,18 @@
-from functools import reduce
-from flask import Blueprint, request, session
-from flask_yoloapi import endpoint, parameter
-from decimal import Decimal
 from datetime import datetime
-from sqlalchemy import text
+from decimal import Decimal
+from functools import reduce
 
+from flask import Blueprint, request
+from marshmallow import fields, validate
+from sqlalchemy import func, or_
+
+import grant.utils.admin as admin
+import grant.utils.auth as auth
 from grant.comment.models import Comment, user_comments_schema, admin_comments_schema, admin_comment_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
+from grant.milestone.models import Milestone
+from grant.parser import body, query, paginated_fields
 from grant.proposal.models import (
     Proposal,
     ProposalArbiter,
@@ -18,12 +23,11 @@ from grant.proposal.models import (
     admin_proposal_contribution_schema,
     admin_proposal_contributions_schema,
 )
-from grant.milestone.models import Milestone
-from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
-import grant.utils.admin as admin
-import grant.utils.auth as auth
-from grant.utils.misc import make_url
+from grant.settings import EXPLORER_URL
+from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
+from grant.utils import pagination
+from grant.utils.enums import Category
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -32,10 +36,7 @@ from grant.utils.enums import (
     MilestoneStage,
     RFPStatus,
 )
-from grant.utils import pagination
-from grant.settings import EXPLORER_URL
-from sqlalchemy import func, or_
-
+from grant.utils.misc import make_url
 from .example_emails import example_email_args
 
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
@@ -59,16 +60,15 @@ def make_login_state():
 
 
 @blueprint.route("/checklogin", methods=["GET"])
-@endpoint.api()
 def loggedin():
     return make_login_state()
 
 
 @blueprint.route("/login", methods=["POST"])
-@endpoint.api(
-    parameter('username', type=str, required=False),
-    parameter('password', type=str, required=False),
-)
+@body({
+    "username": fields.Str(required=False, missing=None),
+    "password": fields.Str(required=False, missing=None)
+})
 def login(username, password):
     if auth.auth_user(username, password):
         if admin.admin_is_authed():
@@ -77,9 +77,9 @@ def login(username, password):
 
 
 @blueprint.route("/refresh", methods=["POST"])
-@endpoint.api(
-    parameter('password', type=str, required=True),
-)
+@body({
+    "password": fields.Str(required=True)
+})
 def refresh(password):
     if auth.refresh_auth(password):
         return make_login_state()
@@ -88,7 +88,6 @@ def refresh(password):
 
 
 @blueprint.route("/2fa", methods=["GET"])
-@endpoint.api()
 def get_2fa():
     if not admin.admin_is_authed():
         return {"message": "Must be authenticated"}, 403
@@ -96,18 +95,17 @@ def get_2fa():
 
 
 @blueprint.route("/2fa/init", methods=["GET"])
-@endpoint.api()
 def get_2fa_init():
     admin.throw_on_2fa_not_allowed()
     return admin.make_2fa_setup()
 
 
 @blueprint.route("/2fa/enable", methods=["POST"])
-@endpoint.api(
-    parameter('backupCodes', type=list, required=True),
-    parameter('totpSecret', type=str, required=True),
-    parameter('verifyCode', type=str, required=True),
-)
+@body({
+    "backupCodes": fields.List(fields.Str(), required=True),
+    "totpSecret": fields.Str(required=True),
+    "verifyCode": fields.Str(required=True)
+})
 def post_2fa_enable(backup_codes, totp_secret, verify_code):
     admin.throw_on_2fa_not_allowed()
     admin.check_and_set_2fa_setup(backup_codes, totp_secret, verify_code)
@@ -116,9 +114,9 @@ def post_2fa_enable(backup_codes, totp_secret, verify_code):
 
 
 @blueprint.route("/2fa/verify", methods=["POST"])
-@endpoint.api(
-    parameter('verifyCode', type=str, required=True),
-)
+@body({
+    "verifyCode": fields.Str(required=True)
+})
 def post_2fa_verify(verify_code):
     admin.throw_on_2fa_not_allowed(allow_stale=True)
     admin.admin_auth_2fa(verify_code)
@@ -127,7 +125,6 @@ def post_2fa_verify(verify_code):
 
 
 @blueprint.route("/logout", methods=["GET"])
-@endpoint.api()
 def logout():
     admin.logout()
     return {
@@ -137,7 +134,6 @@ def logout():
 
 
 @blueprint.route("/stats", methods=["GET"])
-@endpoint.api()
 @admin.admin_auth_required
 def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
@@ -162,9 +158,9 @@ def stats():
         .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
         .filter(or_(
-            Proposal.stage == ProposalStage.FAILED,
-            Proposal.stage == ProposalStage.CANCELED,
-        )) \
+        Proposal.stage == ProposalStage.FAILED,
+        Proposal.stage == ProposalStage.CANCELED,
+    )) \
         .join(ProposalContribution.user) \
         .join(UserSettings) \
         .filter(UserSettings.refund_address != None) \
@@ -183,7 +179,6 @@ def stats():
 
 
 @blueprint.route('/users/<user_id>', methods=['DELETE'])
-@endpoint.api()
 @admin.admin_auth_required
 def delete_user(user_id):
     user = User.query.filter(User.id == user_id).first()
@@ -192,16 +187,11 @@ def delete_user(user_id):
 
     db.session.delete(user)
     db.session.commit()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/users", methods=["GET"])
-@endpoint.api(
-    parameter('page', type=int, required=False),
-    parameter('filters', type=list, required=False),
-    parameter('search', type=str, required=False),
-    parameter('sort', type=str, required=False)
-)
+@query(paginated_fields)
 @admin.admin_auth_required
 def get_users(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
@@ -217,7 +207,6 @@ def get_users(page, filters, search, sort):
 
 
 @blueprint.route('/users/<id>', methods=['GET'])
-@endpoint.api()
 @admin.admin_auth_required
 def get_user(id):
     user_db = User.query.filter(User.id == id).first()
@@ -235,12 +224,12 @@ def get_user(id):
 
 
 @blueprint.route('/users/<user_id>', methods=['PUT'])
-@endpoint.api(
-    parameter('silenced', type=bool, required=False),
-    parameter('banned', type=bool, required=False),
-    parameter('bannedReason', type=str, required=False),
-    parameter('isAdmin', type=bool, required=False)
-)
+@body({
+    "silenced": fields.Bool(required=False, missing=None),
+    "banned": fields.Bool(required=False, missing=None),
+    "bannedReason": fields.Str(required=False, missing=None),
+    "isAdmin": fields.Bool(required=False, missing=None),
+})
 @admin.admin_auth_required
 def edit_user(user_id, silenced, banned, banned_reason, is_admin):
     user = User.query.filter(User.id == user_id).first()
@@ -266,9 +255,9 @@ def edit_user(user_id, silenced, banned, banned_reason, is_admin):
 
 
 @blueprint.route("/arbiters", methods=["GET"])
-@endpoint.api(
-    parameter('search', type=str, required=False),
-)
+@query({
+    "search": fields.Str(required=False, missing=None)
+})
 @admin.admin_auth_required
 def get_arbiters(search):
     results = []
@@ -289,10 +278,10 @@ def get_arbiters(search):
 
 
 @blueprint.route('/arbiters', methods=['PUT'])
-@endpoint.api(
-    parameter('proposalId', type=int, required=True),
-    parameter('userId', type=int, required=True)
-)
+@body({
+    "proposalId": fields.Int(required=True),
+    "userId": fields.Int(required=True),
+})
 @admin.admin_auth_required
 def set_arbiter(proposal_id, user_id):
     proposal = Proposal.query.filter(Proposal.id == proposal_id).first()
@@ -323,21 +312,16 @@ def set_arbiter(proposal_id, user_id):
     db.session.commit()
 
     return {
-        'proposal': proposal_schema.dump(proposal),
-        'user': admin_user_schema.dump(user)
-    }, 200
+               'proposal': proposal_schema.dump(proposal),
+               'user': admin_user_schema.dump(user)
+           }, 200
 
 
 # PROPOSALS
 
 
 @blueprint.route("/proposals", methods=["GET"])
-@endpoint.api(
-    parameter('page', type=int, required=False),
-    parameter('filters', type=list, required=False),
-    parameter('search', type=str, required=False),
-    parameter('sort', type=str, required=False)
-)
+@query(paginated_fields)
 @admin.admin_auth_required
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
@@ -353,7 +337,6 @@ def get_proposals(page, filters, search, sort):
 
 
 @blueprint.route('/proposals/<id>', methods=['GET'])
-@endpoint.api()
 @admin.admin_auth_required
 def get_proposal(id):
     proposal = Proposal.query.filter(Proposal.id == id).first()
@@ -363,16 +346,15 @@ def get_proposal(id):
 
 
 @blueprint.route('/proposals/<id>', methods=['DELETE'])
-@endpoint.api()
 @admin.admin_auth_required
 def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
 
 @blueprint.route('/proposals/<id>', methods=['PUT'])
-@endpoint.api(
-    parameter('contributionMatching', type=float, required=False, default=None)
-)
+@body({
+    "contributionMatching": fields.Int(required=False, missing=None)
+})
 @admin.admin_auth_required
 def update_proposal(id, contribution_matching):
     proposal = Proposal.query.filter(Proposal.id == id).first()
@@ -389,10 +371,10 @@ def update_proposal(id, contribution_matching):
 
 
 @blueprint.route('/proposals/<id>/approve', methods=['PUT'])
-@endpoint.api(
-    parameter('isApprove', type=bool, required=True),
-    parameter('rejectReason', type=str, required=False)
-)
+@body({
+    "isApprove": fields.Bool(required=True),
+    "rejectReason": fields.Str(required=False, missing=None)
+})
 @admin.admin_auth_required
 def approve_proposal(id, is_approve, reject_reason=None):
     proposal = Proposal.query.filter_by(id=id).first()
@@ -405,7 +387,6 @@ def approve_proposal(id, is_approve, reject_reason=None):
 
 
 @blueprint.route('/proposals/<id>/cancel', methods=['PUT'])
-@endpoint.api()
 @admin.admin_auth_required
 def cancel_proposal(id):
     proposal = Proposal.query.filter_by(id=id).first()
@@ -419,9 +400,9 @@ def cancel_proposal(id):
 
 
 @blueprint.route("/proposals/<id>/milestone/<mid>/paid", methods=["PUT"])
-@endpoint.api(
-    parameter('txId', type=str, required=True),
-)
+@body({
+    "txId": fields.Str(required=True),
+})
 @admin.admin_auth_required
 def paid_milestone_payout_request(id, mid, tx_id):
     proposal = Proposal.query.filter_by(id=id).first()
@@ -459,7 +440,6 @@ def paid_milestone_payout_request(id, mid, tx_id):
 
 
 @blueprint.route('/email/example/<type>', methods=['GET'])
-@endpoint.api()
 @admin.admin_auth_required
 def get_email_example(type):
     email = generate_email(type, example_email_args.get(type))
@@ -473,7 +453,6 @@ def get_email_example(type):
 
 
 @blueprint.route('/rfps', methods=['GET'])
-@endpoint.api()
 @admin.admin_auth_required
 def get_rfps():
     rfps = RFP.query.all()
@@ -481,15 +460,15 @@ def get_rfps():
 
 
 @blueprint.route('/rfps', methods=['POST'])
-@endpoint.api(
-    parameter('title', type=str),
-    parameter('brief', type=str),
-    parameter('content', type=str),
-    parameter('category', type=str),
-    parameter('bounty', type=str),
-    parameter('matching', type=bool, default=False),
-    parameter('dateCloses', type=int),
-)
+@body({
+    "title": fields.Str(required=True),
+    "brief": fields.Str(required=True),
+    "content": fields.Str(required=True),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
+    "bounty": fields.Str(required=False, missing=0),
+    "matching": fields.Bool(required=False, missing=False),
+    "dateCloses": fields.Int(required=True)
+})
 @admin.admin_auth_required
 def create_rfp(date_closes, **kwargs):
     rfp = RFP(
@@ -498,11 +477,10 @@ def create_rfp(date_closes, **kwargs):
     )
     db.session.add(rfp)
     db.session.commit()
-    return admin_rfp_schema.dump(rfp), 201
+    return admin_rfp_schema.dump(rfp), 200
 
 
 @blueprint.route('/rfps/<rfp_id>', methods=['GET'])
-@endpoint.api()
 @admin.admin_auth_required
 def get_rfp(rfp_id):
     rfp = RFP.query.filter(RFP.id == rfp_id).first()
@@ -513,16 +491,15 @@ def get_rfp(rfp_id):
 
 
 @blueprint.route('/rfps/<rfp_id>', methods=['PUT'])
-@endpoint.api(
-    parameter('title', type=str),
-    parameter('brief', type=str),
-    parameter('content', type=str),
-    parameter('category', type=str),
-    parameter('bounty', type=str),
-    parameter('matching', type=bool, default=False),
-    parameter('dateCloses', type=int),
-    parameter('status', type=str),
-)
+@body({
+    "title": fields.Str(required=True),
+    "brief": fields.Str(required=True),
+    "content": fields.Str(required=True),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
+    "bounty": fields.Str(required=True),
+    "matching": fields.Bool(required=True, default=False, missing=False),
+    "dateCloses": fields.Int(required=True)
+})
 @admin.admin_auth_required
 def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_closes, status):
     rfp = RFP.query.filter(RFP.id == rfp_id).first()
@@ -552,7 +529,6 @@ def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_c
 
 
 @blueprint.route('/rfps/<rfp_id>', methods=['DELETE'])
-@endpoint.api()
 @admin.admin_auth_required
 def delete_rfp(rfp_id):
     rfp = RFP.query.filter(RFP.id == rfp_id).first()
@@ -561,19 +537,14 @@ def delete_rfp(rfp_id):
 
     db.session.delete(rfp)
     db.session.commit()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 # Contributions
 
 
 @blueprint.route('/contributions', methods=['GET'])
-@endpoint.api(
-    parameter('page', type=int, required=False),
-    parameter('filters', type=list, required=False),
-    parameter('search', type=str, required=False),
-    parameter('sort', type=str, required=False)
-)
+@query(paginated_fields)
 @admin.admin_auth_required
 def get_contributions(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
@@ -588,13 +559,14 @@ def get_contributions(page, filters, search, sort):
 
 
 @blueprint.route('/contributions', methods=['POST'])
-@endpoint.api(
-    parameter('proposalId', type=int, required=True),
-    parameter('userId', type=int, required=False, default=None),
-    parameter('status', type=str, required=True),
-    parameter('amount', type=str, required=True),
-    parameter('txId', type=str, required=False),
-)
+@body({
+    "proposalId": fields.Int(required=True),
+    "userId": fields.Int(required=True),
+    # TODO guard status
+    "status": fields.Str(required=True),
+    "amount": fields.Str(required=True),
+    "txId": fields.Str(required=False, missing=None)
+})
 @admin.admin_auth_required
 def create_contribution(proposal_id, user_id, status, amount, tx_id):
     # Some fields set manually since we're admin, and normally don't do this
@@ -603,6 +575,7 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
         user_id=user_id,
         amount=amount,
     )
+    # TODO guard status
     contribution.status = status
     contribution.tx_id = tx_id
 
@@ -617,7 +590,6 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
 
 
 @blueprint.route('/contributions/<contribution_id>', methods=['GET'])
-@endpoint.api()
 @admin.admin_auth_required
 def get_contribution(contribution_id):
     contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
@@ -628,14 +600,14 @@ def get_contribution(contribution_id):
 
 
 @blueprint.route('/contributions/<contribution_id>', methods=['PUT'])
-@endpoint.api(
-    parameter('proposalId', type=int, required=False),
-    parameter('userId', type=int, required=False),
-    parameter('status', type=str, required=False),
-    parameter('amount', type=str, required=False),
-    parameter('txId', type=str, required=False),
-    parameter('refundTxId', type=str, required=False),
-)
+@body({
+    "proposalId": fields.Int(required=False, missing=None),
+    "userId": fields.Int(required=False, missing=None),
+    # TODO guard status
+    "status": fields.Str(required=False, missing=None),
+    "amount": fields.Str(required=False, missing=None),
+    "txId": fields.Str(required=False, missing=None)
+})
 @admin.admin_auth_required
 def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id, refund_tx_id):
     contribution = ProposalContribution.query.filter(ProposalContribution.id == contribution_id).first()
@@ -694,12 +666,12 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
 
 
 @blueprint.route('/comments', methods=['GET'])
-@endpoint.api(
-    parameter('page', type=int, required=False),
-    parameter('filters', type=list, required=False),
-    parameter('search', type=str, required=False),
-    parameter('sort', type=str, required=False)
-)
+@body({
+    "page": fields.Int(required=False, missing=None),
+    "filters": fields.List(fields.Str(), required=False, missing=None),
+    "search": fields.Str(required=False, missing=None),
+    "sort": fields.Str(required=False, missing=None),
+})
 @admin.admin_auth_required
 def get_comments(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
@@ -714,10 +686,11 @@ def get_comments(page, filters, search, sort):
 
 
 @blueprint.route('/comments/<comment_id>', methods=['PUT'])
-@endpoint.api(
-    parameter('hidden', type=bool, required=False),
-    parameter('reported', type=bool, required=False),
-)
+@body({
+    "hidden": fields.Bool(required=False, missing=None),
+    "reported": fields.Bool(required=False, missing=None),
+
+})
 @admin.admin_auth_required
 def edit_comment(comment_id, hidden, reported):
     comment = Comment.query.filter(Comment.id == comment_id).first()

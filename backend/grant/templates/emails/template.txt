@@ -2,8 +2,8 @@
 
 ===============
 
-{{ UI.NAME }}
-123 Address Street
-City, ST 12345
+Zcash Foundation
+1390 Chain Bridge Road, #A132
+McLean, VA 22101
 
 Don't want any more emails? Unsubscribe here: {{ args.unsubscribe_url }}

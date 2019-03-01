@@ -2,6 +2,7 @@ from datetime import datetime
 from grant.extensions import ma, db
 from grant.utils.enums import RFPStatus
 from grant.utils.misc import dt_to_unix
+from grant.utils.enums import Category
 
 
 class RFP(db.Model):
@@ -46,6 +47,8 @@ class RFP(db.Model):
         matching: bool = False,
         status: str = RFPStatus.DRAFT,
     ):
+        # TODO add status assert
+        assert Category.includes(category)
         self.date_created = datetime.now()
         self.title = title
         self.brief = brief
