@@ -45,7 +45,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
             data=json.dumps(new_proposal),
             content_type='application/json'
         )
-
+        print(resp)
         self.assert200(resp)
         self.assertEqual(resp.json["title"], new_title)
         self.assertEqual(self.proposal.title, new_title)

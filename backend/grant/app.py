@@ -1,19 +1,54 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
 import sentry_sdk
-from flask import Flask
+from animal_case import animalify
+from flask import Flask, Response, jsonify
 from flask_cors import CORS
 from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
+from sentry_sdk.integrations.flask import FlaskIntegration
+
 from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp
 from grant.extensions import bcrypt, migrate, db, ma, security
 from grant.settings import SENTRY_RELEASE, ENV
-from sentry_sdk.integrations.flask import FlaskIntegration
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
+from grant.utils.exceptions import ValidationException
+
+
+class JSONResponse(Response):
+    @classmethod
+    def force_type(cls, rv, environ=None):
+        if isinstance(rv, dict) or isinstance(rv, list) or isinstance(rv, tuple):
+            rv = jsonify(animalify(rv))
+        elif rv is None:
+            rv = jsonify(data=None), 204
+
+        return super(JSONResponse, cls).force_type(rv, environ)
 
 
 def create_app(config_objects=["grant.settings"]):
     app = Flask(__name__.split(".")[0])
+    app.response_class = JSONResponse
+
+    # Return validation errors
+    @app.errorhandler(ValidationException)
+    def handle_validation_error(err):
+        return jsonify({"message": str(err)}), 400
+
+    @app.errorhandler(422)
+    @app.errorhandler(400)
+    def handle_error(err):
+        headers = err.data.get("headers", None)
+        messages = err.data.get("messages", "Invalid request.")
+        error_message = "Something went wrong with your request. That's all we know"
+        if type(messages) == dict:
+            if 'json' in messages:
+                error_message = messages['json'][0]
+        if headers:
+            return jsonify({"message": error_message}), err.code, headers
+        else:
+            return jsonify({"message": error_message}), err.code
+
     for conf in config_objects:
         app.config.from_object(conf)
     app.url_map.strict_slashes = False
@@ -85,7 +120,6 @@ def register_commands(app):
     app.cli.add_command(commands.lint)
     app.cli.add_command(commands.clean)
     app.cli.add_command(commands.urls)
-
     app.cli.add_command(proposal.commands.create_proposal)
     app.cli.add_command(proposal.commands.create_proposals)
     app.cli.add_command(user.commands.set_admin)
