@@ -371,16 +371,20 @@ def delete_proposal(id):
 
 @blueprint.route('/proposals/<id>', methods=['PUT'])
 @endpoint.api(
-    parameter('contributionMatching', type=float, required=False, default=None)
+    parameter('contributionMatching', type=float, required=False, default=None),
+    parameter('contributionBounty', type=str, required=False, default=None),
 )
 @admin.admin_auth_required
-def update_proposal(id, contribution_matching):
+def update_proposal(id, contribution_matching, contribution_bounty):
     proposal = Proposal.query.filter(Proposal.id == id).first()
     if not proposal:
         return {"message": f"Could not find proposal with id {id}"}, 404
 
     if contribution_matching is not None:
         proposal.set_contribution_matching(contribution_matching)
+
+    if contribution_bounty is not None:
+        proposal.set_contribution_bounty(contribution_bounty)
 
     db.session.add(proposal)
     db.session.commit()

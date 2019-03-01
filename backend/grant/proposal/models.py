@@ -223,6 +223,8 @@ class Proposal(db.Model):
     payout_address = db.Column(db.String(255), nullable=False)
     deadline_duration = db.Column(db.Integer(), nullable=False)
     contribution_matching = db.Column(db.Float(), nullable=False, default=0, server_default=db.text("0"))
+    contribution_bounty = db.Column(db.String(255), nullable=False, default='0', server_default=db.text("'0'"))
+    rfp_opt_in = db.Column(db.Boolean(), nullable=True)
     contributed = db.column_property()
 
     # Relations
@@ -336,6 +338,18 @@ class Proposal(db.Model):
         self.payout_address = payout_address
         self.deadline_duration = deadline_duration
         Proposal.validate(vars(self))
+
+    def update_rfp_opt_in(self, opt_in: bool):
+        self.rfp_opt_in = opt_in
+        # add/remove matching and/or bounty values from RFP
+        if opt_in and self.rfp:
+            if self.rfp.matching:
+                self.set_contribution_matching(1 if self.rfp.matching else 0)
+            if self.rfp.bounty:
+                self.set_contribution_bounty(self.rfp.bounty)
+        else:
+            self.set_contribution_matching(0)
+            self.set_contribution_bounty('0')
 
     def create_contribution(self, user_id: int, amount, staking: bool = False):
         contribution = ProposalContribution(
@@ -455,6 +469,16 @@ class Proposal(db.Model):
         # check the first step, if immediate payout bump it to accepted
         self.current_milestone.accept_immediate()
 
+    def set_contribution_bounty(self, bounty: str):
+        # do not allow changes on funded/WIP proposals
+        if self.is_funded:
+            raise ValidationException("Cannot change contribution bounty on fully-funded proposal")
+        # wrap in Decimal so it throws for non-decimal strings
+        self.contribution_bounty = str(Decimal(bounty))
+        db.session.add(self)
+        db.session.flush()
+        self.set_funded_when_ready()
+
     def set_contribution_matching(self, matching: float):
         # do not allow on funded/WIP proposals
         if self.is_funded:
@@ -469,7 +493,6 @@ class Proposal(db.Model):
             raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
 
     def cancel(self):
-        print(self.status)
         if self.status != ProposalStatus.LIVE:
             raise ValidationException("Cannot cancel a proposal until it's live")
 
@@ -503,9 +526,9 @@ class Proposal(db.Model):
         target = Decimal(self.target)
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
-        # apply bounty, if available
-        if self.rfp:
-            funded = funded + Decimal(self.rfp.bounty)
+        # apply bounty
+        if self.contribution_bounty:
+            funded = funded + Decimal(self.contribution_bounty)
         # if funded > target, just set as target
         if funded > target:
             return str(target)
@@ -573,8 +596,10 @@ class ProposalSchema(ma.Schema):
             "payout_address",
             "deadline_duration",
             "contribution_matching",
+            "contribution_bounty",
             "invites",
             "rfp",
+            "rfp_opt_in",
             "arbiter"
         )
 
