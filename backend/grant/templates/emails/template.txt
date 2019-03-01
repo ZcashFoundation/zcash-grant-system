@@ -2,7 +2,6 @@
 
 ===============
 
-{{ UI.NAME }}
 Zcash Foundation
 1390 Chain Bridge Road, #A132
 McLean, VA 22101
