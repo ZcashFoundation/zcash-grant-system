@@ -57,7 +57,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     const needsArbiter =
       PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
       p.status === PROPOSAL_STATUS.LIVE &&
-      !p.isFailed;
+      !p.isFailed &&
+      p.stage !== PROPOSAL_STAGE.COMPLETED;
     const refundablePct = p.milestones.reduce((prev, m) => {
       return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
     }, 100);
@@ -113,7 +114,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           type: 'default',
           className: 'ProposalDetail-controls-control',
           block: true,
-          disabled: p.status !== PROPOSAL_STATUS.LIVE || p.isFailed,
+          disabled:
+            p.status !== PROPOSAL_STATUS.LIVE ||
+            p.isFailed ||
+            p.stage === PROPOSAL_STAGE.COMPLETED,
         }}
       />
     );
@@ -141,7 +145,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         >
           <Switch
             checked={p.contributionMatching === 1}
-            loading={false}
+            loading={store.proposalDetailUpdating}
             disabled={
               p.isFailed ||
               [PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)
@@ -161,6 +165,23 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             }
           />
         </span>
+      </div>
+    );
+
+    const renderBountyControl = () => (
+      <div className="ProposalDetail-controls-control">
+        <Button
+          icon="dollar"
+          className="ProposalDetail-controls-control"
+          loading={store.proposalDetailUpdating}
+          onClick={this.handleSetBounty}
+          disabled={
+            p.isFailed || [PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)
+          }
+          block
+        >
+          Set bounty
+        </Button>
       </div>
     );
 
@@ -388,6 +409,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeleteControl()}
               {renderCancelControl()}
               {renderArbiterControl()}
+              {renderBountyControl()}
               {renderMatchingControl()}
             </Card>
 
@@ -413,6 +435,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
+              {renderDeetItem('bounty', p.contributionBounty)}
+              {renderDeetItem('rfpOptIn', JSON.stringify(p.rfpOptIn))}
               {renderDeetItem(
                 'arbiter',
                 <>
@@ -479,7 +503,29 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       // we lock this to be 1 or 0 for now, we may support more values later on
       const contributionMatching =
         store.proposalDetail.contributionMatching === 0 ? 1 : 0;
-      store.updateProposalDetail({ contributionMatching });
+      await store.updateProposalDetail({ contributionMatching });
+      message.success('Updated matching');
+    }
+  };
+
+  private handleSetBounty = async () => {
+    if (store.proposalDetail) {
+      FeedbackModal.open({
+        title: 'Set bounty?',
+        content:
+          'Set the bounty for this proposal. The bounty will count towards the funding goal.',
+        type: 'input',
+        inputProps: {
+          addonBefore: 'Amount',
+          addonAfter: 'ZEC',
+          placeholder: '1.5',
+        },
+        okText: 'Set bounty',
+        onOk: async contributionBounty => {
+          await store.updateProposalDetail({ contributionBounty });
+          message.success('Updated bounty');
+        },
+      });
     }
   };
 
