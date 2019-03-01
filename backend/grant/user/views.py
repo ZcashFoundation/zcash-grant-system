@@ -1,8 +1,11 @@
 from animal_case import keys_to_snake_case
 from flask import Blueprint, g
-from flask_yoloapi import endpoint, parameter
+from marshmallow import fields
+
+import grant.utils.auth as auth
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.models import EmailRecovery
+from grant.parser import query, body
 from grant.proposal.models import (
     Proposal,
     proposal_team,
@@ -13,12 +16,10 @@ from grant.proposal.models import (
     user_proposals_schema,
     user_proposal_arbiters_schema
 )
-import grant.utils.auth as auth
+from grant.utils.enums import ProposalStatus, ContributionStatus
 from grant.utils.exceptions import ValidationException
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
-from grant.utils.enums import ProposalStatus, ContributionStatus
-from flask import current_app
 from .models import (
     User,
     SocialMedia,
@@ -34,9 +35,9 @@ blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
 
 @blueprint.route("/", methods=["GET"])
-@endpoint.api(
-    parameter('proposalId', type=str, required=False)
-)
+@query({
+    "proposalId": fields.Str(required=False, missing=None)
+})
 def get_users(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
@@ -44,10 +45,10 @@ def get_users(proposal_id):
     else:
         users = (
             User.query
-            .join(proposal_team)
-            .join(Proposal)
-            .filter(proposal_team.c.proposal_id == proposal.id)
-            .all()
+                .join(proposal_team)
+                .join(Proposal)
+                .filter(proposal_team.c.proposal_id == proposal.id)
+                .all()
         )
     result = users_schema.dump(users)
     return result
@@ -55,20 +56,19 @@ def get_users(proposal_id):
 
 @blueprint.route("/me", methods=["GET"])
 @auth.requires_auth
-@endpoint.api()
 def get_me():
     dumped_user = self_user_schema.dump(g.current_user)
     return dumped_user
 
 
 @blueprint.route("/<user_id>", methods=["GET"])
-@endpoint.api(
-    parameter("withProposals", type=bool, required=False),
-    parameter("withComments", type=bool, required=False),
-    parameter("withFunded", type=bool, required=False),
-    parameter("withPending", type=bool, required=False),
-    parameter("withArbitrated", type=bool, required=False)
-)
+@query({
+    "withProposals": fields.Bool(required=False, missing=None),
+    "withComments": fields.Bool(required=False, missing=None),
+    "withFunded": fields.Bool(required=False, missing=None),
+    "withPending": fields.Bool(required=False, missing=None),
+    "withArbitrated": fields.Bool(required=False, missing=None)
+})
 def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated):
     user = User.get_by_id(user_id)
     if user:
@@ -109,12 +109,13 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
 
 
 @blueprint.route("/", methods=["POST"])
-@endpoint.api(
-    parameter('emailAddress', type=str, required=True),
-    parameter('password', type=str, required=True),
-    parameter('displayName', type=str, required=True),
-    parameter('title', type=str, required=True)
-)
+@body({
+    # TODO guard all (valid, minimum, maximum)
+    "emailAddress": fields.Str(required=True),
+    "password": fields.Str(required=True),
+    "displayName": fields.Str(required=True),
+    "title": fields.Str(required=True),
+})
 def create_user(
         email_address,
         password,
@@ -137,10 +138,10 @@ def create_user(
 
 
 @blueprint.route("/auth", methods=["POST"])
-@endpoint.api(
-    parameter('email', type=str, required=True),
-    parameter('password', type=str, required=True)
-)
+@body({
+    "email": fields.Str(required=True),
+    "password": fields.Str(required=True)
+})
 def auth_user(email, password):
     authed_user = auth.auth_user(email, password)
     return self_user_schema.dump(authed_user)
@@ -148,49 +149,48 @@ def auth_user(email, password):
 
 @blueprint.route("/me/password", methods=["PUT"])
 @auth.requires_auth
-@endpoint.api(
-    parameter('currentPassword', type=str, required=True),
-    parameter('password', type=str, required=True),
-)
+# TODO gaurd password (minimum)
+@body({
+    "currentPassword": fields.Str(required=True),
+    "password": fields.Str(required=True)
+})
 def update_user_password(current_password, password):
     if not g.current_user.check_password(current_password):
         return {"message": "Current password incorrect"}, 403
     g.current_user.set_password(password)
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/me/email", methods=["PUT"])
 @auth.requires_auth
-@endpoint.api(
-    parameter('email', type=str, required=True),
-    parameter('password', type=str, required=True)
-)
+# TODO gaurd all (valid, minimum)
+@body({
+    "email": fields.Str(required=True),
+    "password": fields.Str(required=True)
+})
 def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
     g.current_user.set_email(email)
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/me/resend-verification", methods=["PUT"])
 @auth.requires_auth
-@endpoint.api()
 def resend_email_verification():
     g.current_user.send_verification_email()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/logout", methods=["POST"])
 @auth.requires_auth
-@endpoint.api()
 def logout_user():
     auth.logout_current_user()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/social/<service>/authurl", methods=["GET"])
 @auth.requires_auth
-@endpoint.api()
 def get_user_social_auth_url(service):
     try:
         return {"url": get_social_login_url(service)}
@@ -201,9 +201,9 @@ def get_user_social_auth_url(service):
 
 @blueprint.route("/social/<service>/verify", methods=["POST"])
 @auth.requires_auth
-@endpoint.api(
-    parameter('code', type=str, required=True)
-)
+@body({
+    "code": fields.Str(required=True)
+})
 def verify_user_social(service, code):
     try:
         # 1. verify with 3rd party
@@ -227,22 +227,23 @@ def verify_user_social(service, code):
 
 
 @blueprint.route("/recover", methods=["POST"])
-@endpoint.api(
-    parameter('email', type=str, required=True)
-)
+@body({
+    "email": fields.Str(required=True)
+})
 def recover_user(email):
     existing_user = User.get_by_email(email)
     if not existing_user:
         return {"message": "No user exists with that email"}, 400
     auth.throw_on_banned(existing_user)
     existing_user.send_recovery_email()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/recover/<code>", methods=["POST"])
-@endpoint.api(
-    parameter('password', type=str, required=True),
-)
+# TODO gaurd length
+@body({
+    "password": fields.Str(required=True)
+})
 def recover_email(code, password):
     er = EmailRecovery.query.filter_by(code=code).first()
     if er:
@@ -252,16 +253,16 @@ def recover_email(code, password):
         er.user.set_password(password)
         db.session.delete(er)
         db.session.commit()
-        return None, 200
+        return {"message": "ok"}, 200
 
     return {"message": "Invalid reset code"}, 400
 
 
 @blueprint.route("/avatar", methods=["POST"])
 @auth.requires_auth
-@endpoint.api(
-    parameter('mimetype', type=str, required=True)
-)
+@body({
+    "mimetype": fields.Str(required=True)
+})
 def upload_avatar(mimetype):
     user = g.current_user
     try:
@@ -273,9 +274,9 @@ def upload_avatar(mimetype):
 
 @blueprint.route("/avatar", methods=["DELETE"])
 @auth.requires_auth
-@endpoint.api(
-    parameter('url', type=str, required=True)
-)
+@body({
+    "url": fields.Str(required=True)
+})
 def delete_avatar(url):
     user = g.current_user
     remove_avatar(url, user.id)
@@ -284,12 +285,13 @@ def delete_avatar(url):
 @blueprint.route("/<user_id>", methods=["PUT"])
 @auth.requires_auth
 @auth.requires_same_user_auth
-@endpoint.api(
-    parameter('displayName', type=str, required=True),
-    parameter('title', type=str, required=True),
-    parameter('socialMedias', type=list, required=True),
-    parameter('avatar', type=str, required=True)
-)
+# TODO gaurd all (minimum, minimum, shape, uri)
+@body({
+    "displayName": fields.Str(required=True),
+    "title": fields.Str(required=True),
+    "socialMedias": fields.List(fields.Dict(), required=True),
+    "avatar": fields.Str(required=True)
+})
 def update_user(user_id, display_name, title, social_medias, avatar):
     user = g.current_user
 
@@ -324,7 +326,6 @@ def update_user(user_id, display_name, title, social_medias, avatar):
 
 @blueprint.route("/<user_id>/invites", methods=["GET"])
 @auth.requires_same_user_auth
-@endpoint.api()
 def get_user_invites(user_id):
     invites = ProposalTeamInvite.get_pending_for_user(g.current_user)
     return invites_with_proposal_schema.dump(invites)
@@ -332,9 +333,9 @@ def get_user_invites(user_id):
 
 @blueprint.route("/<user_id>/invites/<invite_id>/respond", methods=["PUT"])
 @auth.requires_same_user_auth
-@endpoint.api(
-    parameter('response', type=bool, required=True)
-)
+@body({
+    "response": fields.Bool(required=True)
+})
 def respond_to_invite(user_id, invite_id, response):
     invite = ProposalTeamInvite.query.filter_by(id=invite_id).first()
     if not invite:
@@ -348,22 +349,22 @@ def respond_to_invite(user_id, invite_id, response):
         db.session.add(invite)
 
     db.session.commit()
-    return None, 200
+    return {"message": "ok"}, 200
 
 
 @blueprint.route("/<user_id>/settings", methods=["GET"])
 @auth.requires_same_user_auth
-@endpoint.api()
 def get_user_settings(user_id):
     return user_settings_schema.dump(g.current_user.settings)
 
 
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @auth.requires_same_user_auth
-@endpoint.api(
-    parameter('emailSubscriptions', type=dict),
-    parameter('refundAddress', type=str)
-)
+# TODO guard all (shape, validity)
+@body({
+    "emailSubscriptions": fields.Dict(required=True),
+    "refundAddress": fields.Str(required=False, missing=None)
+})
 def set_user_settings(user_id, email_subscriptions, refund_address):
     if email_subscriptions:
         try:
@@ -381,9 +382,9 @@ def set_user_settings(user_id, email_subscriptions, refund_address):
 
 @blueprint.route("/<user_id>/arbiter/<proposal_id>", methods=["PUT"])
 @auth.requires_same_user_auth
-@endpoint.api(
-    parameter('isAccept', type=bool)
-)
+@body({
+    "isAccept": fields.Bool(required=False, missing=None)
+})
 def set_user_arbiter(user_id, proposal_id, is_accept):
     try:
         proposal = Proposal.query.filter_by(id=int(proposal_id)).first()
@@ -399,5 +400,3 @@ def set_user_arbiter(user_id, proposal_id, is_accept):
 
     except ValidationException as e:
         return {"message": str(e)}, 400
-
-    return user_settings_schema.dump(g.current_user.settings)

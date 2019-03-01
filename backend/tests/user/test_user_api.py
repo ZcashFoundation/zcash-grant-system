@@ -104,10 +104,10 @@ class TestUserAPI(BaseUserConfig):
             }),
             content_type="application/json"
         )
-        # self.assert403(user_auth_resp)
-        # self.assertTrue(user_auth_resp.json['message'] is not None)
-        self.assert500(user_auth_resp)
-        self.assertIn('Invalid pass', user_auth_resp.json['data'])
+        self.assert403(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
+        # self.assert500(user_auth_resp)
+        # self.assertIn('Invalid pass', user_auth_resp.json['data'])
 
     def test_user_auth_bad_email(self):
         user_auth_resp = self.app.post(
@@ -118,10 +118,10 @@ class TestUserAPI(BaseUserConfig):
             }),
             content_type="application/json"
         )
-        # self.assert400(user_auth_resp)
-        # self.assertTrue(user_auth_resp.json['message'] is not None)
-        self.assert500(user_auth_resp)
-        self.assertIn('No user', user_auth_resp.json['data'])
+        self.assert403(user_auth_resp)
+        self.assertTrue(user_auth_resp.json['message'] is not None)
+        # self.assert500(user_auth_resp)
+        # self.assertIn('No user', user_auth_resp.json['data'])
 
     def test_user_auth_banned(self):
         self.user.set_banned(True, 'reason for banning')
@@ -134,8 +134,8 @@ class TestUserAPI(BaseUserConfig):
             content_type="application/json"
         )
         # in test mode we get 500s instead of 403
-        self.assert500(user_auth_resp)
-        self.assertIn('banned', user_auth_resp.json['data'])
+        self.assert403(user_auth_resp)
+        self.assertIn('banned', user_auth_resp.json['message'])
 
     def test_create_user_duplicate_400(self):
         # self.user is identical to test_user, should throw
@@ -152,7 +152,7 @@ class TestUserAPI(BaseUserConfig):
         self.login_default_user()
         updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
         updated_user["displayName"] = 'new display name'
-        updated_user["avatar"] = {}
+        updated_user["avatar"] = '' # TODO confirm avatar is no longer a dict
         updated_user["socialMedias"] = []
 
         user_update_resp = self.app.put(
@@ -253,8 +253,9 @@ class TestUserAPI(BaseUserConfig):
             content_type='application/json'
         )
         # 404 outside testing mode
-        self.assertStatus(response, 500)
-        self.assertIn('banned', response.json['data'])
+        self.assertStatus(response, 403)
+        print(response.json)
+        self.assertIn('banned', response.json['message'])
 
     def test_recover_user_no_user(self):
         response = self.app.post(
@@ -301,8 +302,8 @@ class TestUserAPI(BaseUserConfig):
             content_type='application/json'
         )
         # 403 outside of testing mode
-        self.assertStatus(reset_resp, 500)
-        self.assertIn('banned', reset_resp.json['data'])
+        self.assertStatus(reset_resp, 403)
+        self.assertIn('banned', reset_resp.json['message'])
 
     @patch('grant.user.views.verify_social')
     def test_user_verify_social(self, mock_verify_social):
