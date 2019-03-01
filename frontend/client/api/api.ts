@@ -213,7 +213,11 @@ export function deleteProposalDraft(proposalId: number): Promise<any> {
 
 export function putProposal(proposal: ProposalDraft): Promise<{ data: ProposalDraft }> {
   // Exclude some keys
-  const { proposalId, stage, dateCreated, team, ...rest } = proposal;
+  const { proposalId, stage, dateCreated, team, rfpOptIn, ...rest } = proposal;
+  // add rfpOptIn if it is not null
+  if (rfpOptIn !== null) {
+    (rest as any).rfpOptIn = rfpOptIn;
+  }
   return axios.put(`/api/v1/proposals/${proposal.proposalId}`, rest);
 }
 

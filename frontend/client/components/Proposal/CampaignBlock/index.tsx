@@ -63,10 +63,10 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
       // Get bounty from RFP. If it exceeds proposal target, show bounty as full amount
       let bounty;
-      if (proposal.rfp && proposal.rfp.bounty) {
-        bounty = proposal.rfp.bounty.gt(proposal.target)
+      if (proposal.contributionBounty && proposal.contributionBounty.gtn(0)) {
+        bounty = proposal.contributionBounty.gt(proposal.target)
           ? proposal.target
-          : proposal.rfp.bounty;
+          : proposal.contributionBounty;
       }
 
       content = (

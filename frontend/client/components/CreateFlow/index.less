@@ -25,7 +25,7 @@
       margin-bottom: 0.5rem;
       text-align: center;
     }
-    
+
     &-subtitle {
       font-size: 1.4rem;
       margin-bottom: 0;
@@ -79,7 +79,7 @@
 
       &.is-primary {
         background: @primary-color;
-        color: #FFF;
+        color: #fff;
         border: none;
       }
 
@@ -107,6 +107,25 @@
 
       &:hover {
         opacity: 0.5;
+      }
+    }
+  }
+
+  &-rfpAlert {
+    margin-bottom: 2rem;
+
+    .ant-radio-group {
+      display: block;
+      margin: 1.5rem 0 0 1.5rem;
+
+      .ant-radio-wrapper {
+        display: flex;
+        margin: 1rem 0;
+
+        span.ant-radio + * {
+          white-space: normal;
+          margin-top: -0.2rem;
+        }
       }
     }
   }

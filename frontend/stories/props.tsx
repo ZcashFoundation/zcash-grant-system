@@ -155,6 +155,7 @@ export function generateProposal({
     funded: fundedBn,
     percentFunded,
     contributionMatching: 0,
+    contributionBounty: new BN(0),
     title: 'Crowdfund Title',
     brief: 'A cool test crowdfund',
     content: 'body',
