@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import UnitDisplay from 'components/UnitDisplay';
 import { RFP } from 'types';
 import './RFPItem.less';
+import BN from 'bn.js';
 
 interface Props {
   rfp: RFP;
@@ -30,7 +31,7 @@ export default class RFPItem extends React.Component<Props> {
 
     const tags = [];
     if (!isSmall) {
-      if (bounty) {
+      if (bounty && bounty.gt(new BN(0))) {
         tags.push(
           <Tag key="bounty" color="#CF8A00">
             <UnitDisplay value={bounty} symbol="ZEC" /> bounty
