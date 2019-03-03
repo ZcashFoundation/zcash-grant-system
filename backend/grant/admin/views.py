@@ -499,6 +499,7 @@ def get_rfp(rfp_id):
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "content": fields.Str(required=True),
+    "status": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=True),
     "matching": fields.Bool(required=True, default=False, missing=False),
