@@ -346,33 +346,30 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
     };
 
-    const renderFailed = () => {
-      return (
-        p.isFailed && (
-          <Alert
-            showIcon
-            type="error"
-            message={
-              p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'
-            }
-            description={
-              p.stage === PROPOSAL_STAGE.FAILED ? (
-                <>
-                  This proposal failed to reach its funding goal of <b>{p.target} ZEC</b>{' '}
-                  by <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>. All
-                  contributors will need to be refunded.
-                </>
-              ) : (
-                <>
-                  This proposal was canceled by an admin, and will be refunding
-                  contributors <b>{refundablePct}%</b> of their contributions.
-                </>
-              )
-            }
-          />
-        )
+    const renderFailed = () =>
+      p.isFailed && (
+        <Alert
+          showIcon
+          type="error"
+          message={
+            p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'
+          }
+          description={
+            p.stage === PROPOSAL_STAGE.FAILED ? (
+              <>
+                This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
+                <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>. All
+                contributors will need to be refunded.
+              </>
+            ) : (
+              <>
+                This proposal was canceled by an admin, and will be refunding contributors{' '}
+                <b>{refundablePct}%</b> of their contributions.
+              </>
+            )
+          }
+        />
       );
-    };
 
     const renderDeetItem = (name: string, val: any) => (
       <div className="ProposalDetail-deet">
