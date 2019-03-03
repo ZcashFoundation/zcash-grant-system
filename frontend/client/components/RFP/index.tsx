@@ -13,6 +13,7 @@ import Markdown from 'components/Markdown';
 import ProposalCard from 'components/Proposals/ProposalCard';
 import UnitDisplay from 'components/UnitDisplay';
 import './index.less';
+import BN from 'bn.js';
 
 interface OwnProps {
   rfpId: number;
@@ -57,7 +58,7 @@ class RFPDetail extends React.Component<Props> {
       );
     }
 
-    if (rfp.bounty) {
+    if (rfp.bounty && rfp.bounty.gt(new BN(0))) {
       tags.push(
         <Tag key="bounty" color="#CF8A00">
           <UnitDisplay value={rfp.bounty} symbol="ZEC" /> bounty
