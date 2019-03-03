@@ -499,6 +499,7 @@ def get_rfp(rfp_id):
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "content": fields.Str(required=True),
+    # TODO guard status
     "status": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=True),
@@ -580,7 +581,6 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
         user_id=user_id,
         amount=amount,
     )
-    # TODO guard status
     contribution.status = status
     contribution.tx_id = tx_id
 
@@ -671,13 +671,9 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
 
 
 @blueprint.route('/comments', methods=['GET'])
-@body({
-    "page": fields.Int(required=False, missing=None),
-    "filters": fields.List(fields.Str(), required=False, missing=None),
-    "search": fields.Str(required=False, missing=None),
-    "sort": fields.Str(required=False, missing=None),
-})
+@body(paginated_fields)
 @admin.admin_auth_required
+# TODO update filters
 def get_comments(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.comment(
@@ -694,7 +690,6 @@ def get_comments(page, filters, search, sort):
 @body({
     "hidden": fields.Bool(required=False, missing=None),
     "reported": fields.Bool(required=False, missing=None),
-
 })
 @admin.admin_auth_required
 def edit_comment(comment_id, hidden, reported):
