@@ -499,8 +499,7 @@ def get_rfp(rfp_id):
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "content": fields.Str(required=True),
-    # TODO guard status
-    "status": fields.Str(required=True),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=True),
     "matching": fields.Bool(required=True, default=False, missing=False),
@@ -568,8 +567,7 @@ def get_contributions(page, filters, search, sort):
 @body({
     "proposalId": fields.Int(required=True),
     "userId": fields.Int(required=True),
-    # TODO guard status
-    "status": fields.Str(required=True),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
     "amount": fields.Str(required=True),
     "txId": fields.Str(required=False, missing=None)
 })
@@ -608,8 +606,7 @@ def get_contribution(contribution_id):
 @body({
     "proposalId": fields.Int(required=False, missing=None),
     "userId": fields.Int(required=False, missing=None),
-    # TODO guard status
-    "status": fields.Str(required=False, missing=None),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
     "amount": fields.Str(required=False, missing=None),
     "txId": fields.Str(required=False, missing=None)
 })

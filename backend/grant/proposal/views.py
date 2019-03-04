@@ -157,6 +157,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 
 @blueprint.route("/", methods=["GET"])
 @query(paginated_fields)
+# TODO fix filters
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     query = Proposal.query.filter_by(status=ProposalStatus.LIVE) \
@@ -229,6 +230,7 @@ def get_proposal_drafts():
 def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields
     try:
+        # TODO - don't allow updates to LIVE proposals
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
@@ -352,6 +354,7 @@ def get_proposal_update(proposal_id, update_id):
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
 @requires_team_member_auth
+# TODO add validation on max
 @body({
     "title": fields.Str(required=True),
     "content": fields.Str(required=True)
@@ -640,6 +643,7 @@ def accept_milestone_payout_request(proposal_id, milestone_id):
 # reject MS payout (arbiter) (reason)
 @blueprint.route("/<proposal_id>/milestone/<milestone_id>/reject", methods=["PUT"])
 @requires_arbiter_auth
+# TODO add validation (min, max)
 @body({
     "reason": fields.Str(required=True)
 })
