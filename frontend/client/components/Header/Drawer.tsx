@@ -34,7 +34,7 @@ class HeaderDrawer extends React.Component<Props> {
   }
 
   render() {
-    const { isOpen, onClose, user } = this.props;
+    const { isOpen, onClose, user, location } = this.props;
 
     let userTitle: React.ReactNode = 'Account';
     if (user) {
@@ -53,31 +53,36 @@ class HeaderDrawer extends React.Component<Props> {
         placement="left"
       >
         <div className="HeaderDrawer-title">Navigation</div>
-        <Menu mode="inline" style={{ borderRight: 0 }}>
+        <Menu mode="inline" style={{ borderRight: 0 }} selectedKeys={[location.pathname]}>
           <Menu.ItemGroup className="HeaderDrawer-user" title={userTitle}>
             {user ? (
               [
-                <Menu.Item key="profile">
-                  <Link to="/profile">Profile</Link>
+                <Menu.Item key={`/profile/${user.userid}`}>
+                  <Link to={`/profile/${user.userid}`}>Profile</Link>
                 </Menu.Item>,
-                <Menu.Item key="settings">
+                <Menu.Item key="/profile/settings">
                   <Link to="/profile/settings">Settings</Link>
                 </Menu.Item>,
-                <Menu.Item key="sign-out">
+                <Menu.Item key="/auth/sign-out">
                   <Link to="/auth/sign-out">Sign out</Link>
                 </Menu.Item>,
               ]
             ) : (
-              <Menu.Item>
-                <Link to="/auth">Sign in</Link>
-              </Menu.Item>
+              [
+                <Menu.Item key="/auth/sign-in">
+                  <Link to="/auth/sign-in">Sign in</Link>
+                </Menu.Item>,
+                <Menu.Item key="/auth/sign-up">
+                  <Link to="/auth/sign-up">Create account</Link>
+                </Menu.Item>
+              ]
             )}
           </Menu.ItemGroup>
           <Menu.ItemGroup title="Proposals">
-            <Menu.Item>
+            <Menu.Item key="/proposals">
               <Link to="/proposals">Browse proposals</Link>
             </Menu.Item>
-            <Menu.Item>
+            <Menu.Item key="/create">
               <Link to="/create">Start a proposal</Link>
             </Menu.Item>
           </Menu.ItemGroup>
