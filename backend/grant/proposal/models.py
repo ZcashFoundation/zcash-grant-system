@@ -506,7 +506,7 @@ class Proposal(db.Model):
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
         # apply bounty, if available
-        if self.rfp:
+        if self.rfp and self.rfp.bounty and self.rfp.bounty != "":
             funded = funded + Decimal(self.rfp.bounty)
         # if funded > target, just set as target
         if funded > target:

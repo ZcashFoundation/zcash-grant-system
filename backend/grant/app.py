@@ -38,6 +38,7 @@ def create_app(config_objects=["grant.settings"]):
     @app.errorhandler(422)
     @app.errorhandler(400)
     def handle_error(err):
+        print(err)
         headers = err.data.get("headers", None)
         messages = err.data.get("messages", "Invalid request.")
         error_message = "Something went wrong with your request. That's all we know"
