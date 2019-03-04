@@ -1,7 +1,7 @@
 from datetime import datetime
 from grant.extensions import ma, db
 from grant.utils.enums import RFPStatus
-from grant.utils.misc import dt_to_unix
+from grant.utils.misc import dt_to_unix, gen_random_id
 from grant.utils.enums import Category
 
 
@@ -49,6 +49,7 @@ class RFP(db.Model):
     ):
         # TODO add status assert
         assert Category.includes(category)
+        self.id = gen_random_id(RFP)
         self.date_created = datetime.now()
         self.title = title
         self.brief = brief
