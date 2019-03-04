@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Drawer, Menu } from 'antd';
+import { withRouter, RouteComponentProps } from 'react-router';
 import { Link } from 'react-router-dom';
 import UserAvatar from 'components/UserAvatar';
 import { AppState } from 'store/reducers';
@@ -15,7 +16,7 @@ interface OwnProps {
   onClose(): void;
 }
 
-type Props = StateProps & OwnProps;
+type Props = StateProps & OwnProps & RouteComponentProps;
 
 class HeaderDrawer extends React.Component<Props> {
   componentDidMount() {
@@ -24,6 +25,12 @@ class HeaderDrawer extends React.Component<Props> {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.props.onClose);
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.props.location.pathname !== prevProps.location.pathname) {
+      this.props.onClose();
+    }
   }
 
   render() {
@@ -82,4 +89,4 @@ class HeaderDrawer extends React.Component<Props> {
 
 export default connect<StateProps, {}, OwnProps, AppState>(state => ({
   user: state.auth.user,
-}))(HeaderDrawer);
+}))(withRouter(HeaderDrawer));
