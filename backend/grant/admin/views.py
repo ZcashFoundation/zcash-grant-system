@@ -496,9 +496,10 @@ def get_rfp(rfp_id):
     "brief": fields.Str(required=True),
     "content": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
-    "bounty": fields.Str(required=True),
-    "matching": fields.Bool(required=True, default=False, missing=False),
-    "dateCloses": fields.Int(required=True)
+    "bounty": fields.Str(required=False, missing=""),
+    "matching": fields.Bool(required=False, default=False, missing=False),
+    "dateCloses": fields.Int(required=False, missing=None),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
 })
 @admin.admin_auth_required
 def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_closes, status):
@@ -511,8 +512,8 @@ def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_c
     rfp.brief = brief
     rfp.content = content
     rfp.category = category
-    rfp.bounty = bounty
     rfp.matching = matching
+    rfp.bounty = bounty if bounty and bounty != "" else None
     rfp.date_closes = datetime.fromtimestamp(date_closes) if date_closes else None
 
     # Update timestamps if status changed
