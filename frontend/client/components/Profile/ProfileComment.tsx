@@ -28,7 +28,7 @@ export default class Profile extends React.Component<OwnProps> {
           >
             {proposal.title}
           </Link>{' '}
-          {moment(dateCreated).from(Date.now())}
+          {moment(dateCreated * 1000).from(Date.now())}
         </div>
         <Markdown source={content} type={MARKDOWN_TYPE.REDUCED} />
       </div>
