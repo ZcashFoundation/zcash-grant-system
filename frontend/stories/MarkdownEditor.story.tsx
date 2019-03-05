@@ -21,12 +21,16 @@ consequatur?
 storiesOf('MarkdownEditor', module)
   .add('basic', () => (
     <div style={{ padding: '2em' }}>
-      <MarkdownEditor onChange={_ => null} />
+      <MarkdownEditor onChange={_ => null} minHeight={200} />
     </div>
   ))
   .add('initial markdown', () => (
     <div style={{ padding: '2em' }}>
-      <MarkdownEditor initialMarkdown={initialMarkdown} onChange={_ => null} />
+      <MarkdownEditor
+        initialMarkdown={initialMarkdown}
+        onChange={_ => null}
+        minHeight={200}
+      />
     </div>
   ))
   .add('type - reduced', () => (
@@ -35,6 +39,7 @@ storiesOf('MarkdownEditor', module)
         type={MARKDOWN_TYPE.REDUCED}
         initialMarkdown={initialMarkdown}
         onChange={_ => null}
+        minHeight={200}
       />
     </div>
   ));
