@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { UserComment } from 'types';
+import Markdown from 'components/Markdown';
+import { MARKDOWN_TYPE } from 'utils/markdown';
 import './ProfileComment.less';
 
 interface OwnProps {
@@ -28,7 +30,7 @@ export default class Profile extends React.Component<OwnProps> {
           </Link>{' '}
           {moment(dateCreated).from(Date.now())}
         </div>
-        <div className="ProfileComment-body">{content}</div>
+        <Markdown source={content} type={MARKDOWN_TYPE.REDUCED} />
       </div>
     );
   }
