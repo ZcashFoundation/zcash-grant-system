@@ -3,6 +3,7 @@ import datetime
 from functools import reduce
 from grant.extensions import ma, db
 from grant.utils.ma_fields import UnixDate
+from grant.utils.misc import gen_random_id
 from sqlalchemy.orm import raiseload
 
 HIDDEN_CONTENT = '~~comment removed by admin~~'
@@ -25,6 +26,7 @@ class Comment(db.Model):
     replies = db.relationship("Comment")
 
     def __init__(self, proposal_id, user_id, parent_comment_id, content):
+        self.id = gen_random_id(Comment)
         self.proposal_id = proposal_id
         self.user_id = user_id
         self.parent_comment_id = parent_comment_id

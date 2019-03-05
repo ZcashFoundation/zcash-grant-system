@@ -34,14 +34,6 @@ class TestUserAPI(BaseUserConfig):
         # should not be able to add social
         self.assertFalse(user_db.social_medias)
 
-    def test_get_all_users(self):
-        users_get_resp = self.app.get(
-            "/api/v1/users/"
-        )
-        self.assert200(users_get_resp)
-        users_json = users_get_resp.json
-        self.assertEqual(users_json[0]["displayName"], self.user.display_name)
-
     def test_get_single_user_by_id(self):
         users_get_resp = self.app.get(
             "/api/v1/users/{}".format(self.user.id)
@@ -163,11 +155,12 @@ class TestUserAPI(BaseUserConfig):
         self.assert200(user_update_resp, user_update_resp.json)
 
         user_json = user_update_resp.json
+        print(user_json)
         self.assertFalse(user_json["avatar"])
         self.assertFalse(len(user_json["socialMedias"]))
         self.assertEqual(user_json["displayName"], updated_user["displayName"])
         self.assertEqual(user_json["title"], updated_user["title"])
-        mock_remove_avatar.assert_called_with(test_user["avatar"]["link"], 1)
+        mock_remove_avatar.assert_called_with(test_user["avatar"]["link"], self.user.id)
 
     def test_update_user_400_when_required_param_not_passed(self):
         self.login_default_user()
