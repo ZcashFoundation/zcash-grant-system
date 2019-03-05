@@ -9,7 +9,7 @@ from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import dt_to_unix, make_url
+from grant.utils.misc import dt_to_unix, make_url, gen_random_id
 from grant.utils.requests import blockchain_get
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.utils.enums import (
@@ -64,6 +64,7 @@ class ProposalUpdate(db.Model):
     content = db.Column(db.Text, nullable=False)
 
     def __init__(self, proposal_id: int, title: str, content: str):
+        self.id = gen_random_id(ProposalUpdate)
         self.proposal_id = proposal_id
         self.title = title
         self.content = content
@@ -93,6 +94,7 @@ class ProposalContribution(db.Model):
             user_id: int = None,
             staking: bool = False,
     ):
+        self.id = gen_random_id(ProposalUpdate)
         self.proposal_id = proposal_id
         self.amount = amount
         self.user_id = user_id
@@ -180,6 +182,7 @@ class ProposalArbiter(db.Model):
     user = db.relationship("User", uselist=False, lazy=True, back_populates="arbiter_proposals")
 
     def __init__(self, proposal_id: int, user_id: int = None, status: str = ProposalArbiterStatus.MISSING):
+        self.id = gen_random_id(ProposalArbiter)
         self.proposal_id = proposal_id
         self.user_id = user_id
         self.status = status
@@ -251,6 +254,7 @@ class Proposal(db.Model):
             deadline_duration: int = 5184000,  # 60 days
             category: str = ''
     ):
+        self.id = gen_random_id(Proposal)
         self.date_created = datetime.datetime.now()
         self.status = status
         self.title = title

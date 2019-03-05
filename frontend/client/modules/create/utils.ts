@@ -6,7 +6,12 @@ import {
   PROPOSAL_ARBITER_STATUS,
 } from 'types';
 import { User } from 'types';
-import { getAmountError, isValidAddress } from 'utils/validators';
+import {
+  getAmountError,
+  isValidSaplingAddress,
+  isValidTAddress,
+  isValidSproutAddress,
+} from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
@@ -97,8 +102,14 @@ export function getCreateErrors(
   }
 
   // Payout address
-  if (payoutAddress && !isValidAddress(payoutAddress)) {
-    errors.payoutAddress = 'That doesn’t look like a valid zcash address';
+  if (payoutAddress && !isValidSaplingAddress(payoutAddress)) {
+    if (isValidSproutAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling address, not a Sprout address';
+    } else if (isValidTAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling Z address, not a T address';
+    } else {
+      errors.payoutAddress = 'That doesn’t look like a valid Sapling address';
+    }
   }
 
   // Milestones

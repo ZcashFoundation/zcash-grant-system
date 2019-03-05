@@ -111,7 +111,7 @@ class CreateReview extends React.Component<Props> {
       },
       {
         step: CREATE_STEP.PAYMENT,
-        name: 'Governance',
+        name: 'Payment',
         fields: [
           {
             key: 'payoutAddress',
