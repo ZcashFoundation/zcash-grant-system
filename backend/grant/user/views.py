@@ -34,26 +34,6 @@ from .models import (
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
 
-@blueprint.route("/", methods=["GET"])
-@query({
-    "proposalId": fields.Str(required=False, missing=None)
-})
-def get_users(proposal_id):
-    proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if not proposal:
-        users = User.query.all()
-    else:
-        users = (
-            User.query
-                .join(proposal_team)
-                .join(Proposal)
-                .filter(proposal_team.c.proposal_id == proposal.id)
-                .all()
-        )
-    result = users_schema.dump(users)
-    return result
-
-
 @blueprint.route("/me", methods=["GET"])
 @auth.requires_auth
 def get_me():

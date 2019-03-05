@@ -29,18 +29,22 @@ export default class CreateFlowPayment extends React.Component<Props, State> {
   render() {
     const { payoutAddress, deadlineDuration } = this.state;
     const errors = getCreateErrors(this.state, true);
+    const payoutHelp = errors.payoutAddress || `
+      This must be a Sapling Z address
+    `;
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
         <Form.Item
           label="Payout address"
           validateStatus={errors.payoutAddress ? 'error' : undefined}
-          help={errors.payoutAddress}
+          help={payoutHelp}
+          style={{ marginBottom: '2rem' }}
         >
           <Input
             size="large"
             name="payoutAddress"
-            placeholder={DONATION.ZCASH_SPROUT}
+            placeholder={DONATION.ZCASH_SAPLING}
             type="text"
             value={payoutAddress}
             onChange={this.handleInputChange}
