@@ -4,6 +4,7 @@ from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.ma_fields import UnixDate
 from grant.utils.enums import MilestoneStage
+from grant.utils.misc import gen_random_id
 
 
 class MilestoneException(Exception):
@@ -52,6 +53,7 @@ class Milestone(db.Model):
             stage: str = MilestoneStage.IDLE,
             proposal_id=int,
     ):
+        self.id = gen_random_id(Milestone)
         self.title = title
         self.content = content
         self.stage = stage

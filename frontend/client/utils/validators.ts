@@ -17,19 +17,29 @@ export function isValidEmail(email: string): boolean {
   return /\S+@\S+\.\S+/.test(email);
 }
 
+
 // Uses simple regex to validate addresses, doesn't check checksum or network
-export function isValidAddress(address: string): boolean {
-  // T address
+export function isValidTAddress(address: string): boolean {
   if (/^t[a-zA-Z0-9]{34}$/.test(address)) {
     return true;
   }
-  // Sprout address
+  return false;
+}
+
+export function isValidSproutAddress(address: string): boolean {
   if (/^z[a-zA-Z0-9]{94}$/.test(address)) {
     return true;
   }
-  // Sapling address
+  return false;
+}
+
+export function isValidSaplingAddress(address: string): boolean {
   if (/^z(s)?(reg)?(testsapling)?[a-zA-Z0-9]{76}$/.test(address)) {
     return true;
   }
   return false;
+}
+
+export function isValidAddress(a: string): boolean {
+  return isValidTAddress(a) || isValidSproutAddress(a) || isValidSaplingAddress(a);
 }

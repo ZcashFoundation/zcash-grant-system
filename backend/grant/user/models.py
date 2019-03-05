@@ -10,7 +10,7 @@ from grant.email.subscription_settings import (
     email_subscriptions_to_dict
 )
 from grant.extensions import ma, db, security
-from grant.utils.misc import make_url
+from grant.utils.misc import make_url, gen_random_id
 from grant.utils.social import generate_social_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils import totp_2fa
@@ -96,6 +96,7 @@ class Avatar(db.Model):
         self._image_url = extract_avatar_filename(image_url)
 
     def __init__(self, image_url, user_id):
+        self.id = gen_random_id(Avatar)
         self.image_url = image_url
         self.user_id = user_id
 
@@ -143,6 +144,7 @@ class User(db.Model, UserMixin):
             display_name=None,
             title=None,
     ):
+        self.id = gen_random_id(User)
         self.email_address = email_address
         self.display_name = display_name
         self.title = title
