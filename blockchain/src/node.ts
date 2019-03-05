@@ -194,7 +194,8 @@ export async function getBootstrapBlockHeight(txid: string | undefined) {
     try {
       const tx = await node.gettransaction(txid);
       const block = await node.getblock(tx.blockhash);
-      return block.height.toString();
+      const height = block.height - parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
+      return height.toString();
     } catch(err) {
       console.warn(`Attempted to get block height for tx ${txid} but failed with the following error:\n`, err);
       console.warn('Falling back to hard-coded starter blocks');
