@@ -30,7 +30,7 @@ export default class CreateFlowPayment extends React.Component<Props, State> {
     const { payoutAddress, deadlineDuration } = this.state;
     const errors = getCreateErrors(this.state, true);
     const payoutHelp = errors.payoutAddress || `
-      To ensure the privacy of contributors, this must be a Sapling Z address
+      This must be a Sapling Z address
     `;
 
     return (
