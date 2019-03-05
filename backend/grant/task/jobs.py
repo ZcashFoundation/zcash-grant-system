@@ -63,8 +63,8 @@ class ProposalDeadline:
         from grant.proposal.models import Proposal
         proposal = Proposal.query.filter_by(id=task.blob["proposal_id"]).first()
 
-        # If it was deleted or successful, just noop out
-        if not proposal or proposal.is_funded:
+        # If it was deleted, canceled, or successful, just noop out
+        if not proposal or proposal.is_funded or proposal.stage != ProposalStage.FUNDING_REQUIRED:
             return
         
         # Otherwise, mark it as failed and inform everyone
