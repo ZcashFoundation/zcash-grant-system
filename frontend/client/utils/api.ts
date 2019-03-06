@@ -183,6 +183,13 @@ export function massageSerializedState(state: AppState) {
       return c;
     });
   });
+  // RFPs
+  state.rfps.rfps = state.rfps.rfps.map(rfp => {
+    if (rfp.bounty) {
+      rfp.bounty = new BN(rfp.bounty, 16);
+    }
+    return rfp;
+  });
 
   return state;
 }
