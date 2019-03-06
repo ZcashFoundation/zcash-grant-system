@@ -93,14 +93,14 @@ export default class ContributionModal extends React.Component<Props, State> {
           description={
             <>
               You are about to contribute anonymously. Your contribution will show up
-              without attribution, and even if you're logged in, will not
-              appear anywhere on your account after you close this modal.
+              without attribution, and even if you're logged in, will not appear anywhere
+              on your account after you close this modal.
               <br /> <br />
               In the case of a refund, your contribution will be treated as a donation to
               the Zcash Foundation instead.
               <br /> <br />
-              If you would like to have your contribution attached to an account, you
-              can close this modal, make sure you're logged in, and don't check the
+              If you would like to have your contribution attached to an account, you can
+              close this modal, make sure you're logged in, and don't check the
               "Contribute anonymously" checkbox.
             </>
           }
@@ -116,15 +116,14 @@ export default class ContributionModal extends React.Component<Props, State> {
           description={
             <>
               Your transaction should be confirmed in about 20 minutes.{' '}
-              {isAnonymous
-                ? 'Once it’s confirmed, it’ll show up in the contributions tab.'
-                : (
-                  <>
-                    You can keep an eye on it at the{' '}
-                    <Link to="/profile?tab=funded">funded tab on your profile</Link>.
-                  </>
-                )
-              }
+              {isAnonymous ? (
+                'Once it’s confirmed, it’ll show up in the contributions tab.'
+              ) : (
+                <>
+                  You can keep an eye on it at the{' '}
+                  <Link to="/profile?tab=funded">funded tab on your profile</Link>.
+                </>
+              )}
             </>
           }
           style={{ width: '90%' }}

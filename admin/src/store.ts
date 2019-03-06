@@ -273,6 +273,8 @@ const app = store({
   proposalDetailApproving: false,
   proposalDetailMarkingMilestonePaid: false,
   proposalDetailCanceling: false,
+  proposalDetailUpdating: false,
+  proposalDetailUpdated: false,
 
   comments: {
     page: createDefaultPageData<Comment>('CREATED:DESC'),
@@ -501,15 +503,19 @@ const app = store({
     if (!app.proposalDetail) {
       return;
     }
+    app.proposalDetailUpdating = true;
+    app.proposalDetailUpdated = false;
     try {
       const res = await updateProposal({
         ...updates,
         proposalId: app.proposalDetail.proposalId,
       });
       app.updateProposalInStore(res);
+      app.proposalDetailUpdated = true;
     } catch (e) {
       handleApiError(e);
     }
+    app.proposalDetailUpdating = false;
   },
 
   async deleteProposal(id: number) {

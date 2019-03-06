@@ -55,28 +55,26 @@ class HeaderDrawer extends React.Component<Props> {
         <div className="HeaderDrawer-title">Navigation</div>
         <Menu mode="inline" style={{ borderRight: 0 }} selectedKeys={[location.pathname]}>
           <Menu.ItemGroup className="HeaderDrawer-user" title={userTitle}>
-            {user ? (
-              [
-                <Menu.Item key={`/profile/${user.userid}`}>
-                  <Link to={`/profile/${user.userid}`}>Profile</Link>
-                </Menu.Item>,
-                <Menu.Item key="/profile/settings">
-                  <Link to="/profile/settings">Settings</Link>
-                </Menu.Item>,
-                <Menu.Item key="/auth/sign-out">
-                  <Link to="/auth/sign-out">Sign out</Link>
-                </Menu.Item>,
-              ]
-            ) : (
-              [
-                <Menu.Item key="/auth/sign-in">
-                  <Link to="/auth/sign-in">Sign in</Link>
-                </Menu.Item>,
-                <Menu.Item key="/auth/sign-up">
-                  <Link to="/auth/sign-up">Create account</Link>
-                </Menu.Item>
-              ]
-            )}
+            {user
+              ? [
+                  <Menu.Item key={`/profile/${user.userid}`}>
+                    <Link to={`/profile/${user.userid}`}>Profile</Link>
+                  </Menu.Item>,
+                  <Menu.Item key="/profile/settings">
+                    <Link to="/profile/settings">Settings</Link>
+                  </Menu.Item>,
+                  <Menu.Item key="/auth/sign-out">
+                    <Link to="/auth/sign-out">Sign out</Link>
+                  </Menu.Item>,
+                ]
+              : [
+                  <Menu.Item key="/auth/sign-in">
+                    <Link to="/auth/sign-in">Sign in</Link>
+                  </Menu.Item>,
+                  <Menu.Item key="/auth/sign-up">
+                    <Link to="/auth/sign-up">Create account</Link>
+                  </Menu.Item>,
+                ]}
           </Menu.ItemGroup>
           <Menu.ItemGroup title="Proposals">
             <Menu.Item key="/proposals">
