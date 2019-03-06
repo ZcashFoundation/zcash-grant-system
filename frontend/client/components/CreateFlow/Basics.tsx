@@ -1,7 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Input, Form, Icon, Select, Alert, Popconfirm, message } from 'antd';
+import BN from 'bn.js';
+import { Input, Form, Icon, Select, Alert, Popconfirm, message, Radio } from 'antd';
 import { SelectValue } from 'antd/lib/select';
+import { RadioChangeEvent } from 'antd/lib/radio';
 import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
 import { ProposalDraft, RFP } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
@@ -63,13 +65,17 @@ class CreateFlowBasics extends React.Component<Props, State> {
 
   render() {
     const { isUnlinkingProposalRFP } = this.props;
-    const { title, brief, category, target, rfp } = this.state;
+    const { title, brief, category, target, rfp, rfpOptIn } = this.state;
     const errors = getCreateErrors(this.state, true);
+
+    const rfpOptInRequired =
+      rfp && (rfp.matching || (rfp.bounty && new BN(rfp.bounty).gtn(0)));
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
         {rfp && (
           <Alert
+            className="CreateFlow-rfpAlert"
             type="info"
             message="This proposal is linked to a request"
             description={
@@ -89,8 +95,43 @@ class CreateFlowBasics extends React.Component<Props, State> {
                 to do so.
               </>
             }
-            style={{ marginBottom: '2rem' }}
             showIcon
+          />
+        )}
+
+        {rfpOptInRequired && (
+          <Alert
+            className="CreateFlow-rfpAlert"
+            type="warning"
+            message="KYC (know your customer)"
+            description={
+              <>
+                <div>
+                  This RFP offers either a bounty or matching. This will require ZFGrants
+                  to fulfill{' '}
+                  <a
+                    target="_blank"
+                    href="https://en.wikipedia.org/wiki/Know_your_customer"
+                  >
+                    KYC
+                  </a>{' '}
+                  due dilligence. In the event your proposal is successful, you will need
+                  to provide identifying information to ZFGrants.
+                  <Radio.Group onChange={this.handleRfpOptIn}>
+                    <Radio value={true} checked={rfpOptIn && rfpOptIn === true}>
+                      <b>Yes</b>, I am willing to provide KYC information
+                    </Radio>
+                    <Radio
+                      value={false}
+                      checked={rfpOptIn !== null && rfpOptIn === false}
+                    >
+                      <b>No</b>, I do not wish to provide KYC information and understand I
+                      will not receive any matching or bounty funds from ZFGrants
+                    </Radio>
+                  </Radio.Group>
+                </div>
+              </>
+            }
           />
         )}
 
@@ -172,6 +213,12 @@ class CreateFlowBasics extends React.Component<Props, State> {
 
   private handleCategoryChange = (value: SelectValue) => {
     this.setState({ category: value as PROPOSAL_CATEGORY }, () => {
+      this.props.updateForm(this.state);
+    });
+  };
+
+  private handleRfpOptIn = (e: RadioChangeEvent) => {
+    this.setState({ rfpOptIn: e.target.value }, () => {
       this.props.updateForm(this.state);
     });
   };

@@ -83,7 +83,7 @@ class UpdateModal extends React.Component<Props, State> {
                 placeholder="Title (60 char max)"
                 onChange={this.handleChangeTitle}
               />
-              <MarkdownEditor onChange={this.handleChangeContent} />
+              <MarkdownEditor onChange={this.handleChangeContent} minHeight={200} />
             </div>
           )}
           {error && (

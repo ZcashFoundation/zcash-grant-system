@@ -86,6 +86,7 @@ export function formatProposalFromGet(p: any): Proposal {
   proposal.proposalUrlId = generateSlugUrl(proposal.proposalId, proposal.title);
   proposal.target = toZat(p.target);
   proposal.funded = toZat(p.funded);
+  proposal.contributionBounty = toZat(p.contributionBounty);
   proposal.percentFunded = proposal.target.isZero()
     ? 0
     : proposal.funded.div(proposal.target.divn(100)).toNumber();
@@ -145,6 +146,8 @@ export function massageSerializedState(state: AppState) {
       (state.proposal.detail.funded as any) as string,
       16,
     );
+    state.proposal.detail.contributionBounty = new BN((state.proposal.detail
+      .contributionBounty as any) as string);
     if (state.proposal.detail.rfp && state.proposal.detail.rfp.bounty) {
       state.proposal.detail.rfp.bounty = new BN(
         (state.proposal.detail.rfp.bounty as any) as string,
@@ -157,6 +160,7 @@ export function massageSerializedState(state: AppState) {
     ...p,
     target: new BN((p.target as any) as string, 16),
     funded: new BN((p.funded as any) as string, 16),
+    contributionBounty: new BN((p.contributionMatching as any) as string, 16),
     milestones: p.milestones.map(m => ({
       ...m,
       amount: new BN((m.amount as any) as string, 16),

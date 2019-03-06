@@ -11,4 +11,4 @@ blueprint = Blueprint("blockchain", __name__, url_prefix="/api/v1/blockchain")
 def get_bootstrap_info():
     print('Bootstrap data requested from blockchain watcher microservice...')
     send_bootstrap_data()
-    return True
+    return {"message": "ok"}, 200

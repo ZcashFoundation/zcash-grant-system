@@ -6,7 +6,12 @@ import {
   PROPOSAL_ARBITER_STATUS,
 } from 'types';
 import { User } from 'types';
-import { getAmountError, isValidAddress } from 'utils/validators';
+import {
+  getAmountError,
+  isValidSaplingAddress,
+  isValidTAddress,
+  isValidSproutAddress,
+} from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
@@ -18,6 +23,7 @@ import {
 export const TARGET_ZEC_LIMIT = 1000;
 
 interface CreateFormErrors {
+  rfpOptIn?: string;
   title?: string;
   brief?: string;
   category?: string;
@@ -31,6 +37,7 @@ interface CreateFormErrors {
 
 export type KeyOfForm = keyof CreateFormErrors;
 export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
+  rfpOptIn: 'RFP KYC',
   title: 'Title',
   brief: 'Brief',
   category: 'Category',
@@ -57,7 +64,7 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, target, payoutAddress } = form;
+  const { title, team, milestones, target, payoutAddress, rfp, rfpOptIn } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -75,6 +82,11 @@ export function getCreateErrors(
     }
   }
 
+  // RFP opt-in
+  if (rfp && (rfp.bounty || rfp.matching) && rfpOptIn === null) {
+    errors.rfpOptIn = 'Please accept or decline KYC';
+  }
+
   // Title
   if (title && title.length > 60) {
     errors.title = 'Title can only be 60 characters maximum';
@@ -90,8 +102,14 @@ export function getCreateErrors(
   }
 
   // Payout address
-  if (payoutAddress && !isValidAddress(payoutAddress)) {
-    errors.payoutAddress = 'That doesn’t look like a valid zcash address';
+  if (payoutAddress && !isValidSaplingAddress(payoutAddress)) {
+    if (isValidSproutAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling address, not a Sprout address';
+    } else if (isValidTAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling Z address, not a T address';
+    } else {
+      errors.payoutAddress = 'That doesn’t look like a valid Sapling address';
+    }
   }
 
   // Milestones
@@ -206,6 +224,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     target: toZat(draft.target),
     funded: Zat('0'),
     contributionMatching: 0,
+    contributionBounty: Zat('0'),
     percentFunded: 0,
     stage: PROPOSAL_STAGE.PREVIEW,
     category: draft.category || PROPOSAL_CATEGORY.CORE_DEV,

@@ -9,9 +9,11 @@ interface Props {
   extra?: React.ReactNode;
 }
 
-const Wrap = ({ user, children }: { user: User, children: React.ReactNode }) => {
+const Wrap = ({ user, children }: { user: User; children: React.ReactNode }) => {
   if (user.userid) {
-    return <Link to={`/profile/${user.userid}`} className="UserRow" children={children} />;
+    return (
+      <Link to={`/profile/${user.userid}`} className="UserRow" children={children} />
+    );
   } else {
     return <div className="UserRow" children={children} />;
   }
@@ -26,11 +28,7 @@ const UserRow = ({ user, extra }: Props) => (
       <div className="UserRow-info-main">{user.displayName}</div>
       <p className="UserRow-info-secondary">{user.title}</p>
     </div>
-    {extra && (
-      <div className="UserRow-extra">
-        {extra}
-      </div>
-    )}
+    {extra && <div className="UserRow-extra">{extra}</div>}
   </Wrap>
 );
 
