@@ -158,9 +158,9 @@ def stats():
         .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
         .filter(or_(
-        Proposal.stage == ProposalStage.FAILED,
-        Proposal.stage == ProposalStage.CANCELED,
-    )) \
+            Proposal.stage == ProposalStage.FAILED,
+            Proposal.stage == ProposalStage.CANCELED,
+        )) \
         .join(ProposalContribution.user) \
         .join(UserSettings) \
         .filter(UserSettings.refund_address != None) \
@@ -312,9 +312,9 @@ def set_arbiter(proposal_id, user_id):
     db.session.commit()
 
     return {
-               'proposal': proposal_schema.dump(proposal),
-               'user': admin_user_schema.dump(user)
-           }, 200
+        'proposal': proposal_schema.dump(proposal),
+        'user': admin_user_schema.dump(user)
+    }, 200
 
 
 # PROPOSALS
@@ -501,7 +501,7 @@ def get_rfp(rfp_id):
     "content": fields.Str(required=True),
     "status": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
-    "bounty": fields.Str(required=False, missing=""),
+    "bounty": fields.Str(required=False, allow_none=True, missing=None),
     "matching": fields.Bool(required=False, default=False, missing=False),
     "dateCloses": fields.Int(required=False, missing=None),
     "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
@@ -518,7 +518,7 @@ def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_c
     rfp.content = content
     rfp.category = category
     rfp.matching = matching
-    rfp.bounty = bounty if bounty and bounty != "" else None
+    rfp.bounty = bounty
     rfp.date_closes = datetime.fromtimestamp(date_closes) if date_closes else None
 
     # Update timestamps if status changed
@@ -612,7 +612,8 @@ def get_contribution(contribution_id):
     # TODO guard status
     "status": fields.Str(required=False, missing=None),
     "amount": fields.Str(required=False, missing=None),
-    "txId": fields.Str(required=False, missing=None)
+    "txId": fields.Str(required=False, missing=None),
+    "refundTxId": fields.Str(required=False, allow_none=True, missing=None),
 })
 @admin.admin_auth_required
 def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_id, refund_tx_id):

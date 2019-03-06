@@ -349,10 +349,8 @@ class Proposal(db.Model):
         self.rfp_opt_in = opt_in
         # add/remove matching and/or bounty values from RFP
         if opt_in and self.rfp:
-            if self.rfp.matching:
-                self.set_contribution_matching(1 if self.rfp.matching else 0)
-            if self.rfp.bounty:
-                self.set_contribution_bounty(self.rfp.bounty)
+            self.set_contribution_matching(1 if self.rfp.matching else 0)
+            self.set_contribution_bounty(self.rfp.bounty or '0')
         else:
             self.set_contribution_matching(0)
             self.set_contribution_bounty('0')
