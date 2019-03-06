@@ -353,8 +353,10 @@ class Proposal(db.Model):
         )
         db.session.add(contribution)
         db.session.flush()
-        task = ContributionExpired(contribution)
-        task.make_task()
+        if user_id:
+            task = ContributionExpired(contribution)
+            task.make_task()
+        db.session.commit()
         return contribution
 
     def get_staking_contribution(self, user_id: int):
