@@ -706,3 +706,71 @@ def edit_comment(comment_id, hidden, reported):
 
     db.session.commit()
     return admin_comment_schema.dump(comment)
+
+
+# Financials
+
+@blueprint.route("/financials", methods=["GET"])
+@admin.admin_auth_required
+def financials():
+    contributions = {
+        'total': '0',
+        'funding': '0',
+        'funded': '0',
+        'refunding': '0',
+        'refunded': '0',
+        'by_stage': {},
+    }
+
+    payouts = {
+        'total': '0',
+        'due': '0',
+        'paid': '0',
+        'future': '0',
+    }
+
+    def add_str_dec(a: str, b: str):
+        return str(Decimal(a) + Decimal(b))
+
+    def add_cont(amount, stage, is_refunded):
+        contributions['total'] += amount
+
+        if stage in contributions['by_stage']:
+            contributions['by_stage'][stage] = add_str_dec(contributions['by_stage'][stage], amount)
+        else:
+            contributions['by_stage'][stage] = add_str_dec('0', amount)
+
+        if stage in [ProposalStage.FUNDING_REQUIRED]:
+            contributions['funding'] = add_str_dec(contributions['funding'], amount)
+        if stage in [ProposalStage.COMPLETED, ProposalStage.WIP]:
+            contributions['funded'] = add_str_dec(contributions['funded'], amount)
+        if stage in [ProposalStage.CANCELED, ProposalStage.FAILED]:
+            if is_refunded:
+                contributions['refunded'] = add_str_dec(contributions['refunded'], amount)
+            else:
+                contributions['refunding'] = add_str_dec(contributions['refunding'], amount)
+
+    proposals = Proposal.query.all()
+
+    for p in proposals:
+        if p.status == ProposalStatus.LIVE:
+            for c in p.contributions:
+                if c.status == ContributionStatus.CONFIRMED:
+                    add_cont(c.amount, p.stage, True if c.refund_tx_id else False)
+            if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
+                for m in p.milestones:
+                    amount = str(Decimal(m.payout_percent) * Decimal(p.target) / 100)
+                    payouts['total'] = add_str_dec(payouts['total'], amount)
+                    if m.stage == MilestoneStage.ACCEPTED:
+                        payouts['due'] = add_str_dec(payouts['due'], amount)
+                    if m.stage == MilestoneStage.PAID:
+                        payouts['paid'] = add_str_dec(payouts['paid'], amount)
+                    if m.stage in [MilestoneStage.REQUESTED, MilestoneStage.REJECTED, MilestoneStage.IDLE]:
+                        payouts['future'] = add_str_dec(payouts['future'], amount)
+
+    contributions['by_stage'] = [{ 'stage': k, 'amount': v } for k, v in contributions['by_stage'].items()]
+
+    return {
+        'contributions': contributions,
+        'payouts': payouts,
+    }
