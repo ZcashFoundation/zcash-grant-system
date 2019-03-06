@@ -1,6 +1,33 @@
 @import '~styles/markdown-styles-mixin.less';
 
 .MarkdownEditor {
+  .react-mde .grip {
+    display: none;
+  }
+
+  .mde-header {
+    position: relative;
+  }
+
+  .mde-tabs {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    button {
+      opacity: 0.5;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
+    .selected {
+      display: none;
+    }
+  }
+
   .mde-preview .mde-preview-content {
     font-size: 1.1rem;
     .markdown-styles-mixin();
@@ -20,20 +47,14 @@
       font-size: 0.8rem;
       background: none;
 
+      .mde-header-item {
+        margin: 0 0.15rem;
+      }
+
       ul.mde-header-group {
         padding: 0.25rem 0.1rem;
         margin-right: 0.75rem;
       }
-    }
-
-    .react-mde-tabbed-layout .mde-tabs .mde-tab {
-      padding: 0.25rem 0.1rem;
-      margin-right: 0;
-    }
-
-    .mde-text .public-DraftEditor-content,
-    .mde-preview {
-      min-height: 100px;
     }
   }
 }

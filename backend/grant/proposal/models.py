@@ -94,7 +94,6 @@ class ProposalContribution(db.Model):
             user_id: int = None,
             staking: bool = False,
     ):
-        self.id = gen_random_id(ProposalUpdate)
         self.proposal_id = proposal_id
         self.amount = amount
         self.user_id = user_id
