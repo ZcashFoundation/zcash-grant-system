@@ -17,7 +17,6 @@ export function isValidEmail(email: string): boolean {
   return /\S+@\S+\.\S+/.test(email);
 }
 
-
 // Uses simple regex to validate addresses, doesn't check checksum or network
 export function isValidTAddress(address: string): boolean {
   if (/^t[a-zA-Z0-9]{34}$/.test(address)) {

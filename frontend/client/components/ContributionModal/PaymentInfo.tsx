@@ -109,7 +109,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
         text = `
           Thank you for contributing! Just send using whichever method works best for
           you, and your contribution will show up anonymously once it's been confirmed.
-        `
+        `;
       } else {
         text = `
           Thank you for contributing! Just send using whichever method works best for
@@ -120,9 +120,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
 
     return (
       <Form className="PaymentInfo" layout="vertical">
-        <div className="PaymentInfo-text">
-          {text}
-        </div>
+        <div className="PaymentInfo-text">{text}</div>
         <Radio.Group
           className="PaymentInfo-types"
           onChange={this.handleChangeSendType}

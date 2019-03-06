@@ -11,7 +11,7 @@ const HomeActions: React.SFC<WithNamespaces> = ({ t }) => (
         {t('home.actions.proposals')}
       </Link>
       <Link className="HomeActions-buttons-button is-dark" to="/requests">
-      {t('home.actions.requests')}
+        {t('home.actions.requests')}
       </Link>
     </div>
   </div>
