@@ -25,7 +25,6 @@ const i18nLanguage = window && (window as any).__PRELOADED_I18N__;
 i18n.changeLanguage(i18nLanguage.locale);
 i18n.addResourceBundle(i18nLanguage.locale, 'common', i18nLanguage.resources, true);
 
-
 const App = hot(module)(() => (
   <I18nextProvider i18n={i18n}>
     <Provider store={store}>

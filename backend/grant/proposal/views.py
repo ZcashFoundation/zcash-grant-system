@@ -187,8 +187,6 @@ def make_proposal_draft(rfp_id):
         if not rfp:
             return {"message": "The request this proposal was made for doesn’t exist"}, 400
         proposal.category = rfp.category
-        if rfp.matching:
-            proposal.contribution_matching = 1.0
         rfp.proposals.append(proposal)
         db.session.add(rfp)
 
@@ -226,14 +224,20 @@ def get_proposal_drafts():
     "payoutAddress": fields.Str(required=True),
     "deadlineDuration": fields.Int(required=True),
     "milestones": fields.List(fields.Dict(), required=True),
+    "rfpOptIn": fields.Bool(required=False, missing=None)
 })
-def update_proposal(milestones, proposal_id, **kwargs):
+def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields
     try:
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
     db.session.add(g.current_proposal)
+
+    # twiddle rfp opt-in (modifies proposal matching and/or bounty)
+    if rfp_opt_in is not None:
+        g.current_proposal.update_rfp_opt_in(rfp_opt_in)
+
     # Delete & re-add milestones
     [db.session.delete(x) for x in g.current_proposal.milestones]
     if milestones:
@@ -258,6 +262,9 @@ def update_proposal(milestones, proposal_id, **kwargs):
 @requires_team_member_auth
 def unlink_proposal_from_rfp(proposal_id):
     g.current_proposal.rfp_id = None
+    # this will zero matching and bounty
+    g.current_proposal.update_rfp_opt_in(False)
+    g.current_proposal.rfp_opt_in = None
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200

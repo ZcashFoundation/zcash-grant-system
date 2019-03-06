@@ -38,6 +38,6 @@ const HomeIntro: React.SFC<Props> = ({ t, authUser }) => (
   </div>
 );
 
-export default connect<StateProps, {}, {}, AppState>(
-  state => ({ authUser: state.auth.user }),
-)(withNamespaces()(HomeIntro));
+export default connect<StateProps, {}, {}, AppState>(state => ({
+  authUser: state.auth.user,
+}))(withNamespaces()(HomeIntro));

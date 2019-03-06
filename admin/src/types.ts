@@ -111,6 +111,8 @@ export interface Proposal {
   funded: string;
   rejectReason: string;
   contributionMatching: number;
+  contributionBounty: string;
+  rfpOptIn: null | boolean;
   rfp?: RFP;
   arbiter: ProposalArbiter;
 }

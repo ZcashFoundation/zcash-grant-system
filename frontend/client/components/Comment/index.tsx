@@ -93,6 +93,7 @@ class Comment extends React.Component<Props> {
                 <MarkdownEditor
                   onChange={this.handleChangeReply}
                   type={MARKDOWN_TYPE.REDUCED}
+                  minHeight={100}
                 />
                 <div style={{ marginTop: '0.5rem' }} />
                 <Button

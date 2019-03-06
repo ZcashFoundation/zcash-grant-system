@@ -67,24 +67,20 @@ class HomeRequests extends React.Component<Props> {
       <div className="HomeRequests">
         <div className="HomeRequests-divider" />
         <div className="HomeRequests-text">
-          <h2 className="HomeRequests-text-title">
-            {t('home.requests.title')}
-          </h2>
+          <h2 className="HomeRequests-text-title">{t('home.requests.title')}</h2>
           <div className="HomeRequests-text-description">
-            {t('home.requests.description').split('\n').map((s: string, idx: number) =>
-              <p key={idx}>{s}</p>
-            )}
+            {t('home.requests.description')
+              .split('\n')
+              .map((s: string, idx: number) => (
+                <p key={idx}>{s}</p>
+              ))}
           </div>
         </div>
-        <div className="HomeRequests-content">
-          {content}
-        </div>
+        <div className="HomeRequests-content">{content}</div>
       </div>
     );
   }
 }
-
-
 
 export default connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
