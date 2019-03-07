@@ -336,7 +336,7 @@ class Routes extends React.PureComponent<Props> {
 
     return (
       <Template {...currentRoute.template}>
-        <ErrorWrap>
+        <ErrorWrap key={currentRoute.route.path as string}>
           <Switch>{routeComponents}</Switch>
         </ErrorWrap>
       </Template>
