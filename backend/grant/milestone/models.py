@@ -1,9 +1,8 @@
 import datetime
 
 from grant.extensions import ma, db
-from grant.utils.exceptions import ValidationException
-from grant.utils.ma_fields import UnixDate
 from grant.utils.enums import MilestoneStage
+from grant.utils.ma_fields import UnixDate
 from grant.utils.misc import gen_random_id
 
 
@@ -63,11 +62,6 @@ class Milestone(db.Model):
         self.proposal_id = proposal_id
         self.date_created = datetime.datetime.now()
         self.index = index
-
-    @staticmethod
-    def validate(milestone):
-        if len(milestone.title) > 60:
-            raise ValidationException("Milestone title must be no more than 60 chars")
 
     def request_payout(self, user_id: int):
         if self.stage not in [MilestoneStage.IDLE, MilestoneStage.REJECTED]:

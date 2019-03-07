@@ -671,7 +671,6 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
 @blueprint.route('/comments', methods=['GET'])
 @body(paginated_fields)
 @admin.admin_auth_required
-# TODO update filters
 def get_comments(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.comment(

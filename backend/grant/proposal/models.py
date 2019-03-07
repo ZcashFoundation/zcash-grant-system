@@ -1,16 +1,14 @@
 import datetime
+from decimal import Decimal
 from functools import reduce
+
+from marshmallow import post_dump, validate
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from decimal import Decimal
-from marshmallow import post_dump
 
 from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
-from grant.utils.exceptions import ValidationException
-from grant.utils.misc import dt_to_unix, make_url, gen_random_id
-from grant.utils.requests import blockchain_get
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.utils.enums import (
     ProposalStatus,
@@ -20,6 +18,9 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage
 )
+from grant.utils.exceptions import ValidationException
+from grant.utils.misc import dt_to_unix, make_url, gen_random_id
+from grant.utils.requests import blockchain_get
 from grant.utils.stubs import anonymous_user
 
 proposal_team = db.Table(
@@ -270,6 +271,7 @@ class Proposal(db.Model):
         title = proposal.get('title')
         stage = proposal.get('stage')
         category = proposal.get('category')
+
         if title and len(title) > 60:
             raise ValidationException("Proposal title cannot be longer than 60 characters")
         if stage and not ProposalStage.includes(stage):
@@ -278,6 +280,32 @@ class Proposal(db.Model):
             raise ValidationException("Category {} not a valid category".format(category))
 
     def validate_publishable(self):
+        payout_total = 0.0
+        for i, milestone in enumerate(self.milestones):
+            if milestone.immediate_payout and i != 0:
+                raise ValidationException("Only the first milestone can have an immediate payout")
+
+            if len(milestone.title) > 60:
+                raise ValidationException("Milestone title must be no more than 60 chars")
+
+            if len(milestone.content) > 6000:
+                raise ValidationException("Milestone title must be no more than 6000 chars")
+
+            payout_total += float(milestone.payout_percent)
+
+            try:
+                present = datetime.datetime.now()
+                date_estimated = datetime.datetime.fromtimestamp(milestone.date_estimated)
+                if present > date_estimated:
+                    raise ValidationException("Milestone date_estimated must be in the future ")
+
+            # TODO specify exception
+            except:
+                raise ValidationException("date_estimated does not convert to a datetime")
+
+        if payout_total != 100.0:
+            raise ValidationException("payoutPercent across milestones must sum to exactly 100")
+
         # Require certain fields
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
         for field in required_fields:
@@ -829,3 +857,5 @@ class ProposalArbiterSchema(ma.Schema):
 
 user_proposal_arbiter_schema = ProposalArbiterSchema(exclude=['user'])
 user_proposal_arbiters_schema = ProposalArbiterSchema(many=True, exclude=['user'])
+
+

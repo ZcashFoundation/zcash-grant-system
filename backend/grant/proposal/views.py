@@ -215,7 +215,6 @@ def get_proposal_drafts():
 
 @blueprint.route("/<proposal_id>", methods=["PUT"])
 @requires_team_member_auth
-# TODO add gaurd (minimum, maximum, shape)
 @body({
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
@@ -230,7 +229,11 @@ def get_proposal_drafts():
 def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields
     try:
-        # TODO - don't allow updates to LIVE proposals
+        if g.current_proposal.status not in [ProposalStatus.DRAFT,
+                                             ProposalStatus.REJECTED]:
+            raise ValidationException(
+                "Proposal with status: {} are not authorized for updates".format(g.current_proposal.status)
+            )
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
@@ -317,6 +320,7 @@ def get_proposal_stake(proposal_id):
 @requires_team_member_auth
 def publish_proposal(proposal_id):
     try:
+        # TODO validate publishable
         g.current_proposal.publish()
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
@@ -354,10 +358,9 @@ def get_proposal_update(proposal_id, update_id):
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
 @requires_team_member_auth
-# TODO add validation on max
 @body({
-    "title": fields.Str(required=True),
-    "content": fields.Str(required=True)
+    "title": fields.Str(required=True, validate=lambda p: 3 <= len(p) <= 30),
+    "content": fields.Str(required=True, validate=lambda p: 5 <= len(p) <= 3000),
 })
 def post_proposal_update(proposal_id, title, content):
     update = ProposalUpdate(
@@ -475,9 +478,8 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
-# TODO add gaurd (minimum, maximum)
 @body({
-    "amount": fields.Str(required=True),
+    "amount": fields.Str(required=True, validate=lambda p: 0.0000001 <= float(p) <= 1000000),
     "anonymous": fields.Bool(required=False, missing=None)
 })
 def post_proposal_contribution(proposal_id, amount, anonymous):
@@ -643,9 +645,8 @@ def accept_milestone_payout_request(proposal_id, milestone_id):
 # reject MS payout (arbiter) (reason)
 @blueprint.route("/<proposal_id>/milestone/<milestone_id>/reject", methods=["PUT"])
 @requires_arbiter_auth
-# TODO add validation (min, max)
 @body({
-    "reason": fields.Str(required=True)
+    "reason": fields.Str(required=True, validate=lambda p: 6 <= len(p) <= 100),
 })
 def reject_milestone_payout_request(proposal_id, milestone_id, reason):
     if not g.current_proposal.is_funded:
