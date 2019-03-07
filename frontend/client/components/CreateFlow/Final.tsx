@@ -112,7 +112,6 @@ class CreateFinal extends React.Component<Props, State> {
                     </>
                   }
                   contribution={contribution}
-                  error={contributionError}
                 />
               </div>
               <p className="CreateFinal-staked">
