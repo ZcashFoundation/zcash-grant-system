@@ -227,8 +227,16 @@ const app = store({
   financialsFetched: false,
   financialsFetching: false,
   financials: {
+    net: '0',
+    grants: {
+      total: '0',
+      matching: '0',
+      bounty: '0',
+    },
     contributions: {
       total: '0',
+      gross: '0',
+      staking: '0',
       funding: '0',
       funded: '0',
       refunding: '0',

@@ -1,5 +1,56 @@
 .Financials {
+  &-zcash {
+    font-size: 0.8rem;
+    vertical-align: text-top;
+    display: inline-block;
+    padding-top: 0.15rem;
+  }
+
+  &-bottomLine {
+    & > div {
+      display: flex;
+      justify-content: space-between;
+
+      &.is-net {
+        margin-top: 0.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.65);
+        padding-top: 0.5rem;
+      }
+
+      & .Info {
+        font-size: 0.9rem;
+      }
+
+      & > div + div {
+        font-family: 'Courier New', Courier, monospace;
+        min-width: 250px;
+      }
+
+      small {
+        display: inline-block;
+        padding-right: 0.1rem;
+      }
+    }
+    font-size: 1.2rem;
+  }
+
   h1 {
     font-size: 1.5rem;
+  }
+
+  .ant-card {
+    margin-bottom: 16px;
+  }
+
+  .antd-pro-charts-pie-total {
+    .pie-sub-title {
+      margin: 0;
+    }
+  }
+
+  .antd-pro-charts-pie-legend {
+    li {
+      margin-bottom: 0;
+    }
   }
 }
