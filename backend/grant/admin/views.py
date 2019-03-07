@@ -719,15 +719,21 @@ def edit_comment(comment_id, hidden, reported):
 @blueprint.route("/financials", methods=["GET"])
 @admin.admin_auth_required
 def financials():
+    grants = {
+        'total': '0',
+        'matching': '0',
+        'bounty': '0',
+    }
     contributions = {
         'total': '0',
+        'staking': '0',
         'funding': '0',
         'funded': '0',
         'refunding': '0',
         'refunded': '0',
+        'gross': '0',
         'by_stage': {},
     }
-
     payouts = {
         'total': '0',
         'due': '0',
@@ -738,8 +744,12 @@ def financials():
     def add_str_dec(a: str, b: str):
         return str(Decimal(a) + Decimal(b))
 
-    def add_cont(amount, stage, is_refunded):
-        contributions['total'] += amount
+    def add_cont(amount, stage, is_refunded, is_staking):
+        contributions['total'] = add_str_dec(contributions['total'], amount)
+        if is_staking:
+            contributions['staking'] = add_str_dec(contributions['staking'], amount)
+            # staking only counts towards total & staking
+            return
 
         if stage in contributions['by_stage']:
             contributions['by_stage'][stage] = add_str_dec(contributions['by_stage'][stage], amount)
@@ -760,9 +770,29 @@ def financials():
 
     for p in proposals:
         if p.status == ProposalStatus.LIVE:
+            if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
+                # matching
+                matching = Decimal(p.contributed) * Decimal(p.contribution_matching)
+                remaining = Decimal(p.target) - Decimal(p.contributed)
+                if matching > remaining:
+                    matching = remaining
+
+                # bounty
+                bounty = Decimal(p.contribution_bounty)
+                remaining = Decimal(p.target) - (matching + Decimal(p.contributed))
+                if bounty > remaining:
+                    bounty = remaining
+
+                grants['matching'] = add_str_dec(grants['matching'], matching)
+                grants['bounty'] = add_str_dec(grants['bounty'], bounty)
+                grants['total'] = add_str_dec(grants['total'], matching + bounty)
+            
+            # contributions
             for c in p.contributions:
                 if c.status == ContributionStatus.CONFIRMED:
-                    add_cont(c.amount, p.stage, True if c.refund_tx_id else False)
+                    add_cont(c.amount, p.stage, True if c.refund_tx_id else False, c.staking)
+
+            # milestones/payouts
             if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
                 for m in p.milestones:
                     amount = str(Decimal(m.payout_percent) * Decimal(p.target) / 100)
@@ -775,8 +805,10 @@ def financials():
                         payouts['future'] = add_str_dec(payouts['future'], amount)
 
     contributions['by_stage'] = [{ 'stage': k, 'amount': v } for k, v in contributions['by_stage'].items()]
-
+    contributions['gross'] = str(Decimal(contributions['total']) - Decimal(contributions['refunded']))
     return {
+        'grants': grants,
         'contributions': contributions,
         'payouts': payouts,
+        'net': str(Decimal(contributions['gross']) - Decimal(payouts['paid']))
     }
