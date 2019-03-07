@@ -16,7 +16,7 @@ ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
 SITE_URL = env.str('SITE_URL', default='https://zfnd.org')
 SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL")
-SQLALCHEMY_ECHO = False # True will print queries to log
+SQLALCHEMY_ECHO = False  # True will print queries to log
 QUEUES = ["default"]
 SECRET_KEY = env.str("SECRET_KEY")
 BCRYPT_LOG_ROUNDS = env.int("BCRYPT_LOG_ROUNDS", default=13)
@@ -24,6 +24,9 @@ DEBUG_TB_ENABLED = DEBUG
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 CACHE_TYPE = "simple"  # Can be "memcached", "redis", etc.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# so backend session cookies are first-party
+SESSION_COOKIE_DOMAIN = env.str('SESSION_COOKIE_DOMAIN', default=None)
 
 SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
 SENDGRID_DEFAULT_FROM = "noreply@zfnd.org"
