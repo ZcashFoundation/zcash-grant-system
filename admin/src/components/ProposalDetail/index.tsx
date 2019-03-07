@@ -36,6 +36,7 @@ type Props = RouteComponentProps<any>;
 
 const STATE = {
   paidTxId: '',
+  showCancelAndRefundPopover: false,
 };
 
 type State = typeof STATE;
@@ -77,10 +78,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     );
 
     const renderCancelControl = () => {
-      const disabled =
-        p.status !== PROPOSAL_STATUS.LIVE ||
-        p.stage === PROPOSAL_STAGE.FAILED ||
-        p.stage === PROPOSAL_STAGE.CANCELED;
+      const disabled = this.getCancelAndRefundDisabled();
 
       return (
         <Popconfirm
@@ -94,16 +92,18 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           placement="left"
           cancelText="cancel"
           okText="confirm"
-          visible={!disabled}
+          visible={this.state.showCancelAndRefundPopover}
           okButtonProps={{
             loading: store.proposalDetailCanceling,
           }}
-          onConfirm={this.handleCancel}
+          onCancel={this.handleCancelCancel}
+          onConfirm={this.handleConfirmCancel}
         >
           <Button
             icon="close-circle"
             className="ProposalDetail-controls-control"
             loading={store.proposalDetailCanceling}
+            onClick={this.handleCancelAndRefundClick}
             disabled={disabled}
             block
           >
@@ -477,6 +477,28 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     );
   }
 
+  private getCancelAndRefundDisabled = () => {
+    const { proposalDetail: p } = store;
+    if (!p) {
+      return true;
+    }
+    return (
+      p.status !== PROPOSAL_STATUS.LIVE ||
+      p.stage === PROPOSAL_STAGE.FAILED ||
+      p.stage === PROPOSAL_STAGE.CANCELED ||
+      p.isFailed
+    );
+  };
+
+  private handleCancelAndRefundClick = () => {
+    const disabled = this.getCancelAndRefundDisabled();
+    if (!disabled) {
+      if (!this.state.showCancelAndRefundPopover) {
+        this.setState({ showCancelAndRefundPopover: true });
+      }
+    }
+  };
+
   private getIdFromQuery = () => {
     return Number(this.props.match.params.id);
   };
@@ -490,9 +512,14 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     store.deleteProposal(store.proposalDetail.proposalId);
   };
 
-  private handleCancel = () => {
+  private handleCancelCancel = () => {
+    this.setState({ showCancelAndRefundPopover: false });
+  };
+
+  private handleConfirmCancel = () => {
     if (!store.proposalDetail) return;
     store.cancelProposal(store.proposalDetail.proposalId);
+    this.setState({ showCancelAndRefundPopover: false });
   };
 
   private handleApprove = () => {

@@ -9,7 +9,7 @@ import {
   LoadableProposalPage,
   Moreable,
 } from 'types';
-import { PROPOSAL_SORT } from 'api/constants';
+import { PROPOSAL_SORT, PROPOSAL_STAGE } from 'api/constants';
 
 export interface ProposalDetail extends Proposal {
   isRequestingPayout: boolean;
@@ -62,7 +62,7 @@ export const INITIAL_STATE: ProposalState = {
     sort: PROPOSAL_SORT.NEWEST,
     filters: {
       category: [],
-      stage: [],
+      stage: [PROPOSAL_STAGE.FUNDING_REQUIRED],
     },
     items: [],
     hasFetched: false,

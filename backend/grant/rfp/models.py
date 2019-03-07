@@ -1,7 +1,9 @@
 from datetime import datetime
+from decimal import Decimal
 from grant.extensions import ma, db
+from sqlalchemy.ext.hybrid import hybrid_property
 from grant.utils.enums import RFPStatus
-from grant.utils.misc import dt_to_unix
+from grant.utils.misc import dt_to_unix, gen_random_id
 from grant.utils.enums import Category
 
 
@@ -17,7 +19,7 @@ class RFP(db.Model):
     category = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(255), nullable=False)
     matching = db.Column(db.Boolean, default=False, nullable=False)
-    bounty = db.Column(db.String(255), nullable=True)
+    _bounty = db.Column("bounty", db.String(255), nullable=True)
     date_closes = db.Column(db.DateTime, nullable=True)
     date_opened = db.Column(db.DateTime, nullable=True)
     date_closed = db.Column(db.DateTime, nullable=True)
@@ -36,6 +38,17 @@ class RFP(db.Model):
         cascade="all, delete-orphan",
     )
 
+    @hybrid_property
+    def bounty(self):
+        return self._bounty
+
+    @bounty.setter
+    def bounty(self, bounty: str):
+        if bounty and Decimal(bounty) > 0:
+            self._bounty = bounty
+        else:
+            self._bounty = None
+
     def __init__(
         self,
         title: str,
@@ -49,6 +62,7 @@ class RFP(db.Model):
     ):
         # TODO add status assert
         assert Category.includes(category)
+        self.id = gen_random_id(RFP)
         self.date_created = datetime.now()
         self.title = title
         self.brief = brief
@@ -101,6 +115,7 @@ class RFPSchema(ma.Schema):
     def get_date_closed(self, obj):
         return dt_to_unix(obj.date_closed) if obj.date_closed else None
 
+
 rfp_schema = RFPSchema()
 rfps_schema = RFPSchema(many=True)
 
@@ -140,15 +155,16 @@ class AdminRFPSchema(ma.Schema):
 
     def get_date_created(self, obj):
         return dt_to_unix(obj.date_created)
-    
+
     def get_date_closes(self, obj):
         return dt_to_unix(obj.date_closes) if obj.date_closes else None
-    
+
     def get_date_opened(self, obj):
         return dt_to_unix(obj.date_opened) if obj.date_opened else None
-    
+
     def get_date_closed(self, obj):
         return dt_to_unix(obj.date_closes) if obj.date_closes else None
+
 
 admin_rfp_schema = AdminRFPSchema()
 admin_rfps_schema = AdminRFPSchema(many=True)

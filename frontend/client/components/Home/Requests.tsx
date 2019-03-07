@@ -1,4 +1,5 @@
 import React from 'react';
+import BN from 'bn.js';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { withNamespaces, WithNamespaces } from 'react-i18next';
@@ -28,8 +29,15 @@ class HomeRequests extends React.Component<Props> {
 
   render() {
     const { t, rfps, isFetchingRfps } = this.props;
+
+    // 2 live RFPs, sorted by highest bounty first
     const activeRfps = (rfps || [])
       .filter(rfp => rfp.status === RFP_STATUS.LIVE)
+      .sort((a, b) => {
+        const aBounty = a.bounty || new BN(0);
+        const bBounty = b.bounty || new BN(0);
+        return bBounty.sub(aBounty).toNumber();
+      })
       .slice(0, 2);
 
     let content;
