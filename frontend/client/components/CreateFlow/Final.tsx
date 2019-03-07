@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Icon } from 'antd';
 import { Link } from 'react-router-dom';
+import Result from 'ant-design-pro/lib/Result';
 import Loader from 'components/Loader';
 import { createActions } from 'modules/create';
 import { AppState } from 'store/reducers';
@@ -28,6 +29,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 const STATE = {
   contribution: null as null | ContributionWithAddresses,
+  contributionError: null as null | Error,
 };
 
 type State = typeof STATE;
@@ -49,7 +51,7 @@ class CreateFinal extends React.Component<Props, State> {
 
   render() {
     const { submittedProposal, submitError, goBack } = this.props;
-    const { contribution } = this.state;
+    const { contribution, contributionError } = this.state;
 
     const ready = submittedProposal && (submittedProposal.isStaked || contribution);
     const staked = submittedProposal && submittedProposal.isStaked;
@@ -110,6 +112,7 @@ class CreateFinal extends React.Component<Props, State> {
                     </>
                   }
                   contribution={contribution}
+                  error={contributionError}
                 />
               </div>
               <p className="CreateFinal-staked">
@@ -119,6 +122,20 @@ class CreateFinal extends React.Component<Props, State> {
             </>
           )}
         </>
+      );
+    } else if (contributionError) {
+      content = (
+        <Result
+          type="error"
+          title="Something went wrong"
+          description={
+            <>
+              We were unable to get your staking contribution started. You can finish
+              staking from <Link to="/profile?tab=pending">your profile</Link>, please try
+              again from there soon.
+            </>
+          }
+        />
       );
     } else {
       content = <Loader size="large" tip="Submitting your proposal..." />;
@@ -136,8 +153,12 @@ class CreateFinal extends React.Component<Props, State> {
   private getStakingContribution = async () => {
     const { submittedProposal } = this.props;
     if (submittedProposal) {
-      const res = await getProposalStakingContribution(submittedProposal.proposalId);
-      this.setState({ contribution: res.data });
+      try {
+        const res = await getProposalStakingContribution(submittedProposal.proposalId);
+        this.setState({ contribution: res.data });
+      } catch (err) {
+        this.setState({ contributionError: err });
+      }
     }
   };
 }
