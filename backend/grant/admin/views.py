@@ -498,12 +498,12 @@ def get_rfp(rfp_id):
 @body({
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
     "content": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=False, allow_none=True, missing=None),
     "matching": fields.Bool(required=False, default=False, missing=False),
     "dateCloses": fields.Int(required=False, missing=None),
-    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
 })
 @admin.admin_auth_required
 def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_closes, status):

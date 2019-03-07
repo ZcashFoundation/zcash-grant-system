@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 from functools import reduce
 
-from marshmallow import post_dump, validate
+from marshmallow import post_dump
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -279,7 +279,7 @@ class Proposal(db.Model):
         if category and not Category.includes(category):
             raise ValidationException("Category {} not a valid category".format(category))
 
-    def validate_publishable(self):
+    def validate_publishable_values(self):
         payout_total = 0.0
         for i, milestone in enumerate(self.milestones):
             if milestone.immediate_payout and i != 0:
@@ -305,6 +305,9 @@ class Proposal(db.Model):
 
         if payout_total != 100.0:
             raise ValidationException("payoutPercent across milestones must sum to exactly 100")
+
+    def validate_publishable(self):
+        # self.validate_publishable_values()
 
         # Require certain fields
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
@@ -857,5 +860,3 @@ class ProposalArbiterSchema(ma.Schema):
 
 user_proposal_arbiter_schema = ProposalArbiterSchema(exclude=['user'])
 user_proposal_arbiters_schema = ProposalArbiterSchema(many=True, exclude=['user'])
-
-
