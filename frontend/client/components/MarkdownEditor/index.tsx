@@ -39,7 +39,10 @@ const commands: { [key in MARKDOWN_TYPE]: ReactMdeProps['commands'] } = {
       ],
     },
     {
-      commands: [ReactMdeCommands.linkCommand, ReactMdeCommands.quoteCommand],
+      commands: [
+        ReactMdeCommands.linkCommand,
+        ReactMdeCommands.quoteCommand,
+      ],
     },
     {
       commands: [
@@ -101,7 +104,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
     const { randomKey, value, tab } = this.state;
     return (
       <div
-        ref={el => (this.el = el)}
+        ref={(el) => this.el = el}
         className={classnames({
           MarkdownEditor: true,
           ['is-reduced']: type === MARKDOWN_TYPE.REDUCED,
