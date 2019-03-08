@@ -11,6 +11,9 @@ import {
 import loadable from '@loadable/component';
 import AuthRoute from 'components/AuthRoute';
 import Template, { TemplateProps } from 'components/Template';
+import ErrorWrap from 'components/ErrorWrap';
+import Loader from 'components/Loader';
+import 'styles/style.less';
 
 // wrap components in loadable...import & they will be split
 // Make sure you specify chunkname! Must replace slashes with dashes.
@@ -37,9 +40,6 @@ const UnsubscribeEmail = loadable(() => import('pages/email-unsubscribe'), opts)
 const ArbiterEmail = loadable(() => import('pages/email-arbiter'), opts);
 const RFP = loadable(() => import('pages/rfp'), opts);
 const RFPs = loadable(() => import('pages/rfps'), opts);
-
-import 'styles/style.less';
-import Loader from 'components/Loader';
 
 interface RouteConfig extends RouteProps {
   route: RouteProps;
@@ -336,7 +336,9 @@ class Routes extends React.PureComponent<Props> {
 
     return (
       <Template {...currentRoute.template}>
-        <Switch>{routeComponents}</Switch>
+        <ErrorWrap key={currentRoute.route.path as string}>
+          <Switch>{routeComponents}</Switch>
+        </ErrorWrap>
       </Template>
     );
   }
