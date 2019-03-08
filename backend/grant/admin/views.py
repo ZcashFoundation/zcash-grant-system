@@ -4,7 +4,7 @@ from functools import reduce
 
 from flask import Blueprint, request
 from marshmallow import fields, validate
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 
 import grant.utils.admin as admin
 import grant.utils.auth as auth
@@ -719,93 +719,89 @@ def edit_comment(comment_id, hidden, reported):
 @blueprint.route("/financials", methods=["GET"])
 @admin.admin_auth_required
 def financials():
+
+    nfmt = '999999.99999999'  # smallest unit of ZEC
+
+    def sql_pc(where: str):
+        return f"SELECT SUM(TO_NUMBER(amount, '{nfmt}')) FROM proposal_contribution WHERE {where}"
+
+    def sql_pc_p(where: str):
+        return f'''
+            SELECT SUM(TO_NUMBER(amount, '{nfmt}'))
+                FROM proposal_contribution as pc
+                INNER JOIN proposal as p ON pc.proposal_id = p.id
+                WHERE {where}
+        '''
+
+    def sql_ms(where: str):
+        return f'''
+            SELECT SUM(TO_NUMBER(ms.payout_percent, '999')/100 * TO_NUMBER(p.target, '999999.99999999'))
+                FROM milestone as ms
+                INNER JOIN proposal as p ON ms.proposal_id = p.id
+                WHERE {where}
+        '''
+
+    def ex(sql: str):
+        res = db.engine.execute(text(sql))
+        return [row[0] for row in res][0].normalize()
+
+    contributions = {
+        'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
+        'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
+        'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
+        'funded': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
+        'refunding': str(ex(sql_pc_p(
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'refunded': str(ex(sql_pc_p(
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NOT NULL AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
+    }
+
+    po_due = ex(sql_ms("ms.stage = 'ACCEPTED'"))  # payments accepted but not yet marked as paid
+    po_paid = ex(sql_ms("ms.stage = 'PAID'"))  # will catch paid ms from all proposals regardless of status/stage
+    # expected payments
+    po_future = ex(sql_ms("ms.stage IN ('IDLE', 'REJECTED', 'REQUESTED') AND p.stage IN ('WIP', 'COMPLETED')"))
+    po_total = po_due + po_paid + po_future
+
+    payouts = {
+        'total': str(po_total),
+        'due': str(po_due),
+        'paid': str(po_paid),
+        'future': str(po_future),
+    }
+
     grants = {
         'total': '0',
         'matching': '0',
         'bounty': '0',
     }
-    contributions = {
-        'total': '0',
-        'staking': '0',
-        'funding': '0',
-        'funded': '0',
-        'refunding': '0',
-        'refunded': '0',
-        'gross': '0',
-        'by_stage': {},
-    }
-    payouts = {
-        'total': '0',
-        'due': '0',
-        'paid': '0',
-        'future': '0',
-    }
 
     def add_str_dec(a: str, b: str):
         return str(Decimal(a) + Decimal(b))
 
-    def add_cont(amount, stage, is_refunded, is_staking):
-        contributions['total'] = add_str_dec(contributions['total'], amount)
-        if is_staking:
-            contributions['staking'] = add_str_dec(contributions['staking'], amount)
-            # staking only counts towards total & staking
-            return
-
-        if stage in contributions['by_stage']:
-            contributions['by_stage'][stage] = add_str_dec(contributions['by_stage'][stage], amount)
-        else:
-            contributions['by_stage'][stage] = add_str_dec('0', amount)
-
-        if stage in [ProposalStage.FUNDING_REQUIRED]:
-            contributions['funding'] = add_str_dec(contributions['funding'], amount)
-        if stage in [ProposalStage.COMPLETED, ProposalStage.WIP]:
-            contributions['funded'] = add_str_dec(contributions['funded'], amount)
-        if stage in [ProposalStage.CANCELED, ProposalStage.FAILED]:
-            if is_refunded:
-                contributions['refunded'] = add_str_dec(contributions['refunded'], amount)
-            else:
-                contributions['refunding'] = add_str_dec(contributions['refunding'], amount)
-
     proposals = Proposal.query.all()
 
     for p in proposals:
-        if p.status == ProposalStatus.LIVE:
-            if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
-                # matching
-                matching = Decimal(p.contributed) * Decimal(p.contribution_matching)
-                remaining = Decimal(p.target) - Decimal(p.contributed)
-                if matching > remaining:
-                    matching = remaining
+        # CANCELED proposals excluded, though they could have had milestones paid out with grant funds
+        if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
+            # matching
+            matching = Decimal(p.contributed) * Decimal(p.contribution_matching)
+            remaining = Decimal(p.target) - Decimal(p.contributed)
+            if matching > remaining:
+                matching = remaining
 
-                # bounty
-                bounty = Decimal(p.contribution_bounty)
-                remaining = Decimal(p.target) - (matching + Decimal(p.contributed))
-                if bounty > remaining:
-                    bounty = remaining
+            # bounty
+            bounty = Decimal(p.contribution_bounty)
+            remaining = Decimal(p.target) - (matching + Decimal(p.contributed))
+            if bounty > remaining:
+                bounty = remaining
 
-                grants['matching'] = add_str_dec(grants['matching'], matching)
-                grants['bounty'] = add_str_dec(grants['bounty'], bounty)
-                grants['total'] = add_str_dec(grants['total'], matching + bounty)
-            
-            # contributions
-            for c in p.contributions:
-                if c.status == ContributionStatus.CONFIRMED:
-                    add_cont(c.amount, p.stage, True if c.refund_tx_id else False, c.staking)
+            grants['matching'] = add_str_dec(grants['matching'], matching)
+            grants['bounty'] = add_str_dec(grants['bounty'], bounty)
+            grants['total'] = add_str_dec(grants['total'], matching + bounty)
 
-            # milestones/payouts
-            if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
-                for m in p.milestones:
-                    amount = str(Decimal(m.payout_percent) * Decimal(p.target) / 100)
-                    payouts['total'] = add_str_dec(payouts['total'], amount)
-                    if m.stage == MilestoneStage.ACCEPTED:
-                        payouts['due'] = add_str_dec(payouts['due'], amount)
-                    if m.stage == MilestoneStage.PAID:
-                        payouts['paid'] = add_str_dec(payouts['paid'], amount)
-                    if m.stage in [MilestoneStage.REQUESTED, MilestoneStage.REJECTED, MilestoneStage.IDLE]:
-                        payouts['future'] = add_str_dec(payouts['future'], amount)
-
-    contributions['by_stage'] = [{ 'stage': k, 'amount': v } for k, v in contributions['by_stage'].items()]
-    contributions['gross'] = str(Decimal(contributions['total']) - Decimal(contributions['refunded']))
     return {
         'grants': grants,
         'contributions': contributions,

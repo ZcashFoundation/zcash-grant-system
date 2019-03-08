@@ -241,7 +241,6 @@ const app = store({
       funded: '0',
       refunding: '0',
       refunded: '0',
-      byStage: {} as any,
     },
     payouts: {
       total: '0',

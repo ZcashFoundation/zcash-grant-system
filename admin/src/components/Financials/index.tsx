@@ -109,7 +109,27 @@ class Financials extends React.Component {
               />
             </Card>
 
-            <Card size="small" title="Grants">
+            <Card
+              size="small"
+              title={
+                <Info
+                  content={
+                    <>
+                      <p>
+                        Matching and bounty obligations for active and completed
+                        proposals.
+                      </p>
+                      <b>matching</b> - total matching amount pleged
+                      <br />
+                      <b>bounties</b> - total bounty amount pledged
+                      <br />
+                    </>
+                  }
+                >
+                  Grants
+                </Info>
+              }
+            >
               <Charts.Pie
                 hasLegend
                 title="Grants"
@@ -130,7 +150,28 @@ class Financials extends React.Component {
               />
             </Card>
 
-            <Card size="small" title="Payouts">
+            <Card
+              size="small"
+              title={
+                <Info
+                  content={
+                    <>
+                      <p>Milestone payouts.</p>
+                      <b>due</b> - payouts currently accepted but not paid
+                      <br />
+                      <b>future</b> - payouts that are not yet paid, but expected to be
+                      requested in the future
+                      <br />
+                      <b>paid</b> - total milestone payouts marked as paid, regardless of
+                      proposal status
+                      <br />
+                    </>
+                  }
+                >
+                  Payouts
+                </Info>
+              }
+            >
               <Charts.Pie
                 hasLegend
                 title="Payouts"
