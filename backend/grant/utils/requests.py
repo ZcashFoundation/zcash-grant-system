@@ -1,5 +1,5 @@
 import requests
-from grant.settings import BLOCKCHAIN_REST_API_URL, BLOCKCHAIN_API_SECRET
+from grant.settings import BLOCKCHAIN_REST_API_URL, BLOCKCHAIN_API_SECRET, E2E_TESTING
 
 
 ### REST API ###
@@ -21,9 +21,21 @@ def blockchain_get(path, params=None):
 
 
 def blockchain_post(path, data=None):
+    if E2E_TESTING:
+        return blockchain_post_e2e(path, data)
     res = requests.post(
         f'{BLOCKCHAIN_REST_API_URL}{path}',
         headers={'authorization': BLOCKCHAIN_API_SECRET},
         json=data,
     )
     return handle_res(res)
+
+
+def blockchain_post_e2e(path, data):
+    if path == '/bootstrap':
+        return {
+            'startHeight': 123,
+            'currentHeight': 456,
+        }
+
+    raise Exception(f'blockchain_post_e2e does not recognize path: {path}')

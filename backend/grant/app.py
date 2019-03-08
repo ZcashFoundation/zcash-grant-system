@@ -8,9 +8,9 @@ from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
 from sentry_sdk.integrations.flask import FlaskIntegration
 
-from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp
+from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp, e2e
 from grant.extensions import bcrypt, migrate, db, ma, security
-from grant.settings import SENTRY_RELEASE, ENV
+from grant.settings import SENTRY_RELEASE, ENV, E2E_TESTING
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
 from grant.utils.exceptions import ValidationException
 
@@ -102,6 +102,9 @@ def register_blueprints(app):
     app.register_blueprint(blockchain.views.blueprint)
     app.register_blueprint(task.views.blueprint)
     app.register_blueprint(rfp.views.blueprint)
+    if E2E_TESTING:
+        print('Warning: e2e end-points are open, this should only be the case for development or testing')
+        app.register_blueprint(e2e.views.blueprint)
 
 
 def register_shellcontext(app):

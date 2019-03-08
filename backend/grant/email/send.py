@@ -1,6 +1,6 @@
 import sendgrid
 from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
 from grant.utils.misc import make_url
 from python_http_client import HTTPError
 from sendgrid.helpers.mail import Email, Mail, Content
@@ -304,10 +304,9 @@ def generate_email(type, email_args, user=None):
         UI=UI,
     )
 
-    template_args = { **default_template_args }
+    template_args = {**default_template_args}
     if user:
         template_args['unsubscribe_url'] = make_url('/email/unsubscribe?code={}'.format(user.email_verification.code))
-
 
     html = render_template(
         'emails/template.html',
@@ -361,8 +360,14 @@ def send_email(to, type, email_args):
         mail.add_content(Content('text/plain', email['text']))
         mail.add_content(Content('text/html', email['html']))
 
-        res = sg.client.mail.send.post(request_body=mail.get())
-        print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+        if E2E_TESTING:
+            from grant.e2e import views
+            views.last_email = mail.get()
+            print(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
+        else:
+            res = sg.client.mail.send.post(request_body=mail.get())
+            print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+
     except HTTPError as e:
         print('An HTTP error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
         print(e.body)
