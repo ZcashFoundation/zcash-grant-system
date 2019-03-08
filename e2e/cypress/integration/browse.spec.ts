@@ -1,14 +1,43 @@
 /// <reference types="cypress"/>
 
+Cypress.on("uncaught:exception", (err, runnable) => {
+  // returning false here prevents Cypress from
+  // failing the test
+  return false;
+});
 describe("browse", () => {
+  let stubs;
+  before(() => {
+    cy.request("http://localhost:5000/api/v1/e2e/setup").then(
+      r => (stubs = r.body)
+    );
+  });
   it("should load and be able to browse pages", () => {
     // cy.visit("http://localhost:3000");
     cy.visit("/");
     cy.title().should("include", "ZF Grants - Home");
+    cy.get("html").then(el =>
+      console.log("scrollBehavior", (el[0].style.scrollBehavior = "auto"))
+    );
 
     cy.contains("a", "Proposals").click();
 
-    cy.contains("Grant.io T-Shirts").click({ force: true });
+    cy.contains(".ant-select", "Newest").click();
+    cy.contains(".ant-select-dropdown", "Oldest").click();
+
+    cy.contains(
+      ".ProposalCard",
+      "Fake Proposal #0 COMMUNITY FUNDING_REQ"
+    ).click();
+    cy.contains("h1", "Fake Proposal #0 COMMUNITY FUNDING_REQ");
+    cy.wait(1000);
+    cy.contains(".ant-tabs-tab", "Discussion").click();
+    cy.contains("Fake comment #30");
+    cy.contains("Fake comment #21");
+    cy.get(".ProposalComments").should("not.contain", "Fake comment #20");
+    cy.contains("button", "Older Comments").click();
+    cy.contains("Fake comment #11");
+    cy.get(".ProposalComments").should("not.contain", "Fake comment #10");
 
     cy.contains("a", "Requests").click();
 
