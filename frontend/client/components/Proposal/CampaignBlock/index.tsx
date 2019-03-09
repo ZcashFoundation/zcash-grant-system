@@ -191,8 +191,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 {amountToRaise &&
                   !!authUser && (
                     <Checkbox checked={isAnonymous} onChange={this.handleChangeAnonymity}>
-                      Contribute anonymously
-                      <Tooltip title="Contribute with no attribution to your account. This will make you ineligible for refunds.">
+                      Contribute without attribution
+                      <Tooltip title="Your contribution will not be publicly linked to your account. ZF Grants cannot refund non-attributed contributions.">
                         <Icon type="question-circle" />
                       </Tooltip>
                     </Checkbox>
