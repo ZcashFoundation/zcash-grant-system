@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal
 
 from flask import Blueprint, g, request
@@ -242,8 +241,6 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     if rfp_opt_in is not None:
         g.current_proposal.update_rfp_opt_in(rfp_opt_in)
 
-    print(milestones)
-
     Milestone.make(milestones, g.current_proposal)
 
     # Commit
@@ -426,24 +423,24 @@ def get_proposal_contributions(proposal_id):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    top_contributions = ProposalContribution.query \
-        .filter_by(
+    top_contributions = ProposalContribution.query.filter_by(
         proposal_id=proposal_id,
         status=ContributionStatus.CONFIRMED,
         staking=False,
-    ) \
-        .order_by(ProposalContribution.amount.desc()) \
-        .limit(5) \
-        .all()
-    latest_contributions = ProposalContribution.query \
-        .filter_by(
+    ).order_by(
+        ProposalContribution.amount.desc()
+    ).limit(
+        5
+    ).all()
+    latest_contributions = ProposalContribution.query.filter_by(
         proposal_id=proposal_id,
         status=ContributionStatus.CONFIRMED,
         staking=False,
-    ) \
-        .order_by(ProposalContribution.date_created.desc()) \
-        .limit(5) \
-        .all()
+    ).order_by(
+        ProposalContribution.date_created.desc()
+    ).limit(
+        5
+    ).all()
 
     return {
         'top': proposal_proposal_contributions_schema.dump(top_contributions),

@@ -70,7 +70,6 @@ class Milestone(db.Model):
             # Delete & re-add milestones
             [db.session.delete(x) for x in proposal.milestones]
             for i, milestone_data in enumerate(milestones):
-                print(milestone_data)
                 m = Milestone(
                     title=milestone_data["title"],
                     content=milestone_data["content"],

@@ -8,7 +8,6 @@ from grant.email.models import EmailRecovery
 from grant.parser import query, body
 from grant.proposal.models import (
     Proposal,
-    proposal_team,
     ProposalTeamInvite,
     invites_with_proposal_schema,
     ProposalContribution,
@@ -26,7 +25,6 @@ from .models import (
     Avatar,
     self_user_schema,
     user_schema,
-    users_schema,
     user_settings_schema,
     db
 )
@@ -90,10 +88,13 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
 
 @blueprint.route("/", methods=["POST"])
 @body({
-    # TODO guard all (valid, minimum, maximum)
+    # TODO isValid
     "emailAddress": fields.Str(required=True),
+    # TODO min, max
     "password": fields.Str(required=True),
+    # TODO min, max
     "displayName": fields.Str(required=True),
+    # TODO min, max
     "title": fields.Str(required=True),
 })
 def create_user(
@@ -129,7 +130,6 @@ def auth_user(email, password):
 
 @blueprint.route("/me/password", methods=["PUT"])
 @auth.requires_auth
-# TODO gaurd password (minimum)
 @body({
     "currentPassword": fields.Str(required=True),
     "password": fields.Str(required=True)
@@ -143,14 +143,15 @@ def update_user_password(current_password, password):
 
 @blueprint.route("/me/email", methods=["PUT"])
 @auth.requires_auth
-# TODO gaurd all (valid, minimum)
 @body({
+    # TODO isValid
     "email": fields.Str(required=True),
     "password": fields.Str(required=True)
 })
 def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
+    # TODO - add log
     g.current_user.set_email(email)
     return {"message": "ok"}, 200
 
@@ -220,7 +221,6 @@ def recover_user(email):
 
 
 @blueprint.route("/recover/<code>", methods=["POST"])
-# TODO gaurd length
 @body({
     "password": fields.Str(required=True)
 })
@@ -265,11 +265,14 @@ def delete_avatar(url):
 @blueprint.route("/<user_id>", methods=["PUT"])
 @auth.requires_auth
 @auth.requires_same_user_auth
-# TODO gaurd all (minimum, minimum, shape, uri)
 @body({
+    # TODO min, max
     "displayName": fields.Str(required=True),
+    # TODO min, max
     "title": fields.Str(required=True),
+    # TODO min, max, shape
     "socialMedias": fields.List(fields.Dict(), required=True),
+    # TODO isURL
     "avatar": fields.Str(required=True)
 })
 def update_user(user_id, display_name, title, social_medias, avatar):
