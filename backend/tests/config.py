@@ -1,14 +1,15 @@
 import json
-from mock import patch
 
 from flask_testing import TestCase
+from mock import patch
+
 from grant.app import create_app
-from grant.proposal.models import Proposal, ProposalContribution
+from grant.milestone.models import Milestone
+from grant.proposal.models import Proposal
+from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
-from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.utils.enums import ProposalStatus
-
 from .test_data import test_user, test_other_user, test_proposal, mock_blockchain_api_requests
 
 
@@ -34,7 +35,7 @@ class BaseTestConfig(TestCase):
         """
 
         message = message or 'HTTP Status %s expected but got %s. Response json: %s' \
-            % (status_code, response.status_code, response.json or response.data)
+                  % (status_code, response.status_code, response.json or response.data)
         self.assertEqual(response.status_code, status_code, message)
 
     assert_status = assertStatus
@@ -127,6 +128,26 @@ class BaseProposalCreatorConfig(BaseUserConfig):
         )
         self._proposal.team.append(self.user)
         db.session.add(self._proposal)
+        db.session.flush()
+
+        milestones = [
+            {
+                "title": "Milestone 1",
+                "content": "Content 1",
+                "date_estimated": 1591660203,  # random unix time in the future
+                "payout_percent": 50,
+                "immediate_payout": True
+            },
+            {
+                "title": "Milestone 2",
+                "content": "Content 2",
+                "date_estimated": 1611660203,  # random unix time in the future
+                "payout_percent": 50,
+                "immediate_payout": False
+            }
+        ]
+
+        Milestone.make(milestones, self._proposal)
 
         self._other_proposal = Proposal.create(status=ProposalStatus.DRAFT)
         self._other_proposal.team.append(self.other_user)

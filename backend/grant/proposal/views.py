@@ -157,7 +157,6 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 
 @blueprint.route("/", methods=["GET"])
 @query(paginated_fields)
-# TODO fix filters
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     query = Proposal.query.filter_by(status=ProposalStatus.LIVE) \
@@ -218,7 +217,7 @@ def get_proposal_drafts():
 @body({
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
-    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=[e for e in Category.list()] + [''])),
     "content": fields.Str(required=True),
     "target": fields.Str(required=True),
     "payoutAddress": fields.Str(required=True),
@@ -243,20 +242,9 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     if rfp_opt_in is not None:
         g.current_proposal.update_rfp_opt_in(rfp_opt_in)
 
-    # Delete & re-add milestones
-    [db.session.delete(x) for x in g.current_proposal.milestones]
-    if milestones:
-        for i, mdata in enumerate(milestones):
-            m = Milestone(
-                title=mdata["title"],
-                content=mdata["content"],
-                date_estimated=datetime.fromtimestamp(mdata["date_estimated"]),
-                payout_percent=str(mdata["payout_percent"]),
-                immediate_payout=mdata["immediate_payout"],
-                proposal_id=g.current_proposal.id,
-                index=i
-            )
-            db.session.add(m)
+    print(milestones)
+
+    Milestone.make(milestones, g.current_proposal)
 
     # Commit
     db.session.commit()
@@ -320,7 +308,6 @@ def get_proposal_stake(proposal_id):
 @requires_team_member_auth
 def publish_proposal(proposal_id):
     try:
-        # TODO validate publishable
         g.current_proposal.publish()
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
@@ -646,7 +633,7 @@ def accept_milestone_payout_request(proposal_id, milestone_id):
 @blueprint.route("/<proposal_id>/milestone/<milestone_id>/reject", methods=["PUT"])
 @requires_arbiter_auth
 @body({
-    "reason": fields.Str(required=True, validate=lambda p: 6 <= len(p) <= 100),
+    "reason": fields.Str(required=True, validate=lambda p: 2 <= len(p) <= 200),
 })
 def reject_milestone_payout_request(proposal_id, milestone_id, reason):
     if not g.current_proposal.is_funded:

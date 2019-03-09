@@ -44,6 +44,9 @@ def create_app(config_objects=["grant.settings"]):
         if type(messages) == dict:
             if 'json' in messages:
                 error_message = messages['json'][0]
+            else:
+                # TODO - add sentry log. Unexpected Error
+                print(messages)
         if headers:
             return jsonify({"message": error_message}), err.code, headers
         else:
