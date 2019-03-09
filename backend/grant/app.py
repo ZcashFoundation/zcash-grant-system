@@ -1,18 +1,54 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
 import sentry_sdk
-from flask import Flask
+from animal_case import animalify
+from flask import Flask, Response, jsonify
 from flask_cors import CORS
 from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
+from sentry_sdk.integrations.flask import FlaskIntegration
+
 from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp
 from grant.extensions import bcrypt, migrate, db, ma, security
 from grant.settings import SENTRY_RELEASE, ENV
-from sentry_sdk.integrations.flask import FlaskIntegration
+from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
+from grant.utils.exceptions import ValidationException
+
+
+class JSONResponse(Response):
+    @classmethod
+    def force_type(cls, rv, environ=None):
+        if isinstance(rv, dict) or isinstance(rv, list) or isinstance(rv, tuple):
+            rv = jsonify(animalify(rv))
+        elif rv is None:
+            rv = jsonify(data=None), 204
+
+        return super(JSONResponse, cls).force_type(rv, environ)
 
 
 def create_app(config_objects=["grant.settings"]):
     app = Flask(__name__.split(".")[0])
+    app.response_class = JSONResponse
+
+    # Return validation errors
+    @app.errorhandler(ValidationException)
+    def handle_validation_error(err):
+        return jsonify({"message": str(err)}), 400
+
+    @app.errorhandler(422)
+    @app.errorhandler(400)
+    def handle_error(err):
+        headers = err.data.get("headers", None)
+        messages = err.data.get("messages", "Invalid request.")
+        error_message = "Something went wrong with your request. That's all we know"
+        if type(messages) == dict:
+            if 'json' in messages:
+                error_message = messages['json'][0]
+        if headers:
+            return jsonify({"message": error_message}), err.code, headers
+        else:
+            return jsonify({"message": error_message}), err.code
+
     for conf in config_objects:
         app.config.from_object(conf)
     app.url_map.strict_slashes = False
@@ -20,12 +56,23 @@ def create_app(config_objects=["grant.settings"]):
     register_blueprints(app)
     register_shellcontext(app)
     register_commands(app)
+
     if not app.config.get("TESTING"):
         sentry_sdk.init(
             environment=ENV,
             release=SENTRY_RELEASE,
             integrations=[FlaskIntegration()]
         )
+
+    # handle all AuthExceptions thusly
+    # NOTE: testing mode does not honor this handler, and instead returns the generic 500 response
+    app.register_error_handler(AuthException, handle_auth_error)
+
+    @app.after_request
+    def grantio_authed(response):
+        response.headers["X-Grantio-Authed"] = 'yes' if get_authed_user() else 'no'
+        return response
+
     return app
 
 
@@ -39,7 +86,7 @@ def register_extensions(app):
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
 
     # supports_credentials for session cookies
-    CORS(app, supports_credentials=True)
+    CORS(app, supports_credentials=True, expose_headers='X-Grantio-Authed')
     SSLify(app)
     return None
 
@@ -73,9 +120,7 @@ def register_commands(app):
     app.cli.add_command(commands.lint)
     app.cli.add_command(commands.clean)
     app.cli.add_command(commands.urls)
-
     app.cli.add_command(proposal.commands.create_proposal)
     app.cli.add_command(proposal.commands.create_proposals)
-    app.cli.add_command(user.commands.delete_user)
-    app.cli.add_command(admin.commands.gen_admin_auth)
+    app.cli.add_command(user.commands.set_admin)
     app.cli.add_command(task.commands.create_task)

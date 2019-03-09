@@ -11,6 +11,7 @@ import {
   EmailExample,
   PageQuery,
   PageData,
+  CommentArgs,
 } from './types';
 
 // API
@@ -24,17 +25,48 @@ async function login(username: string, password: string) {
     username,
     password,
   });
-  return data.isLoggedIn;
+  return data;
+}
+
+export async function refresh(password: string) {
+  const { data } = await api.post('/admin/refresh', {
+    password,
+  });
+  return data;
 }
 
 async function logout() {
   const { data } = await api.get('/admin/logout');
-  return data.isLoggedIn;
+  return data;
 }
 
 async function checkLogin() {
   const { data } = await api.get('/admin/checklogin');
-  return data.isLoggedIn;
+  return data;
+}
+
+export async function get2fa() {
+  const { data } = await api.get('/admin/2fa');
+  return data;
+}
+
+export async function get2faInit() {
+  const { data } = await api.get('/admin/2fa/init');
+  return data;
+}
+
+export async function post2faEnable(args: {
+  backupCodes: string[];
+  totpSecret: string;
+  verifyCode: string;
+}) {
+  const { data } = await api.post('/admin/2fa/enable', args);
+  return data;
+}
+
+export async function post2faVerify(args: { verifyCode: string }) {
+  const { data } = await api.post('/admin/2fa/verify', args);
+  return data;
 }
 
 async function fetchStats() {
@@ -42,13 +74,18 @@ async function fetchStats() {
   return data;
 }
 
-async function fetchUsers() {
-  const { data } = await api.get('/admin/users');
+async function fetchUsers(params: Partial<PageQuery>) {
+  const { data } = await api.get('/admin/users', { params });
   return data;
 }
 
 async function fetchUserDetail(id: number) {
   const { data } = await api.get(`/admin/users/${id}`);
+  return data;
+}
+
+async function editUser(id: number, args: Partial<User>) {
+  const { data } = await api.put(`/admin/users/${id}`, args);
   return data;
 }
 
@@ -92,6 +129,21 @@ async function approveProposal(id: number, isApprove: boolean, rejectReason?: st
     isApprove,
     rejectReason,
   });
+  return data;
+}
+
+async function cancelProposal(id: number) {
+  const { data } = await api.put(`/admin/proposals/${id}/cancel`);
+  return data;
+}
+
+async function fetchComments(params: Partial<PageQuery>) {
+  const { data } = await api.get('/admin/comments', { params });
+  return data;
+}
+
+async function updateComment(id: number, args: Partial<CommentArgs>) {
+  const { data } = await api.put(`/admin/comments/${id}`, args);
   return data;
 }
 
@@ -153,6 +205,7 @@ const app = store({
 
   hasCheckedLogin: false,
   isLoggedIn: false,
+  is2faAuthed: false,
   loginError: '',
   generalError: [] as string[],
   statsFetched: false,
@@ -163,15 +216,22 @@ const app = store({
     proposalPendingCount: 0,
     proposalNoArbiterCount: 0,
     proposalMilestonePayoutsCount: 0,
+    contributionRefundableCount: 0,
   },
 
-  usersFetching: false,
-  usersFetched: false,
-  users: [] as User[],
+  users: {
+    page: createDefaultPageData<User>('EMAIL:DESC'),
+  },
+  userSaving: false,
+  userSaved: false,
+
   userDetailFetching: false,
   userDetail: null as null | User,
   userDeleting: false,
   userDeleted: false,
+
+  arbiterSaving: false,
+  arbiterSaved: false,
 
   arbitersSearch: {
     search: '',
@@ -188,6 +248,15 @@ const app = store({
   proposalDetailFetching: false,
   proposalDetailApproving: false,
   proposalDetailMarkingMilestonePaid: false,
+  proposalDetailCanceling: false,
+  proposalDetailUpdating: false,
+  proposalDetailUpdated: false,
+
+  comments: {
+    page: createDefaultPageData<Comment>('CREATED:DESC'),
+  },
+  commentSaving: false,
+  commentSaved: false,
 
   rfps: [] as RFP[],
   rfpsFetching: false,
@@ -225,25 +294,32 @@ const app = store({
   },
 
   updateUserInStore(u: User) {
-    const index = app.users.findIndex(x => x.userid === u.userid);
+    const index = app.users.page.items.findIndex(x => x.userid === u.userid);
     if (index > -1) {
-      app.users[index] = u;
+      app.users.page.items[index] = u;
     }
     if (app.userDetail && app.userDetail.userid === u.userid) {
-      app.userDetail = u;
+      app.userDetail = {
+        ...app.userDetail,
+        ...u,
+      };
     }
   },
 
   // Auth
 
   async checkLogin() {
-    app.isLoggedIn = await checkLogin();
+    const res = await checkLogin();
+    app.isLoggedIn = res.isLoggedIn;
+    app.is2faAuthed = res.is2faAuthed;
     app.hasCheckedLogin = true;
   },
 
   async login(username: string, password: string) {
     try {
-      app.isLoggedIn = await login(username, password);
+      const res = await login(username, password);
+      app.isLoggedIn = res.isLoggedIn;
+      app.is2faAuthed = res.is2faAuthed;
     } catch (e) {
       app.loginError = e.response.data.message;
     }
@@ -251,7 +327,9 @@ const app = store({
 
   async logout() {
     try {
-      app.isLoggedIn = await logout();
+      const res = await logout();
+      app.isLoggedIn = res.isLoggedIn;
+      app.is2faAuthed = res.is2faAuthed;
     } catch (e) {
       app.generalError.push(e.toString());
     }
@@ -271,14 +349,15 @@ const app = store({
   // Users
 
   async fetchUsers() {
-    app.usersFetching = true;
-    try {
-      app.users = await fetchUsers();
-      app.usersFetched = true;
-    } catch (e) {
-      handleApiError(e);
-    }
-    app.usersFetching = false;
+    return await pageFetch(app.users, fetchUsers);
+  },
+
+  setUserPageQuery(params: Partial<PageQuery>) {
+    setPageParams(app.users, params);
+  },
+
+  resetUserPageQuery() {
+    resetPageParams(app.users);
   },
 
   async fetchUserDetail(id: number) {
@@ -291,12 +370,25 @@ const app = store({
     app.userDetailFetching = false;
   },
 
+  async editUser(id: number, args: Partial<User>) {
+    app.userSaving = true;
+    app.userSaved = false;
+    try {
+      const user = await editUser(id, args);
+      app.updateUserInStore(user);
+      app.userSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.userSaving = false;
+  },
+
   async deleteUser(id: number) {
     app.userDeleting = false;
     app.userDeleted = false;
     try {
       await deleteUser(id);
-      app.users = app.users.filter(u => u.userid !== id);
+      app.users.page.items = app.users.page.items.filter(u => u.userid !== id);
       app.userDeleted = true;
       app.userDetail = null;
     } catch (e) {
@@ -335,49 +427,31 @@ const app = store({
   },
 
   async setArbiter(proposalId: number, userId: number) {
-    // let component handle errors for this one
-    const { proposal, user } = await setArbiter(proposalId, userId);
-    this.updateProposalInStore(proposal);
-    this.updateUserInStore(user);
+    app.arbiterSaving = true;
+    app.arbiterSaved = false;
+    try {
+      const { proposal, user } = await setArbiter(proposalId, userId);
+      this.updateProposalInStore(proposal);
+      this.updateUserInStore(user);
+      app.arbiterSaved = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.arbiterSaving = false;
   },
 
   // Proposals
 
   async fetchProposals() {
-    app.proposals.page.fetching = true;
-    try {
-      const page = await fetchProposals(app.getProposalPageQuery());
-      app.proposals.page = {
-        ...app.proposals.page,
-        ...page,
-        fetched: true,
-      };
-    } catch (e) {
-      handleApiError(e);
-    }
-    app.proposals.page.fetching = false;
+    return await pageFetch(app.proposals, fetchProposals);
   },
 
-  setProposalPageQuery(query: Partial<PageQuery>) {
-    // sometimes we need to reset page to 1
-    if (query.filters || query.search) {
-      query.page = 1;
-    }
-    app.proposals.page = {
-      ...app.proposals.page,
-      ...query,
-    };
-  },
-
-  getProposalPageQuery() {
-    return pick(app.proposals.page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+  setProposalPageQuery(params: Partial<PageQuery>) {
+    setPageParams(app.proposals, params);
   },
 
   resetProposalPageQuery() {
-    app.proposals.page.page = 1;
-    app.proposals.page.search = '';
-    app.proposals.page.sort = 'CREATED:DESC';
-    app.proposals.page.filters = [];
+    resetPageParams(app.proposals);
   },
 
   async fetchProposalDetail(id: number) {
@@ -394,15 +468,19 @@ const app = store({
     if (!app.proposalDetail) {
       return;
     }
+    app.proposalDetailUpdating = true;
+    app.proposalDetailUpdated = false;
     try {
       const res = await updateProposal({
         ...updates,
         proposalId: app.proposalDetail.proposalId,
       });
       app.updateProposalInStore(res);
+      app.proposalDetailUpdated = true;
     } catch (e) {
       handleApiError(e);
     }
+    app.proposalDetailUpdating = false;
   },
 
   async deleteProposal(id: number) {
@@ -434,6 +512,17 @@ const app = store({
     app.proposalDetailApproving = false;
   },
 
+  async cancelProposal(id: number) {
+    app.proposalDetailCanceling = true;
+    try {
+      const res = await cancelProposal(id);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailCanceling = false;
+  },
+
   async markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {
     app.proposalDetailMarkingMilestonePaid = true;
     try {
@@ -443,6 +532,33 @@ const app = store({
       handleApiError(e);
     }
     app.proposalDetailMarkingMilestonePaid = false;
+  },
+
+  // Comments
+
+  async fetchComments() {
+    return await pageFetch(app.comments, fetchComments);
+  },
+
+  setCommentPageParams(params: Partial<PageQuery>) {
+    setPageParams(app.comments, params);
+  },
+
+  resetCommentPageParams() {
+    resetPageParams(app.comments);
+  },
+
+  async updateComment(id: number, args: Partial<CommentArgs>) {
+    app.commentSaving = true;
+    app.commentSaved = false;
+    try {
+      await updateComment(id, args);
+      app.commentSaved = true;
+      await app.fetchComments();
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.commentSaving = false;
   },
 
   // Email
@@ -513,45 +629,15 @@ const app = store({
   // Contributions
 
   async fetchContributions() {
-    app.contributions.page.fetching = true;
-    try {
-      const page = await getContributions(app.getContributionPageQuery());
-      app.contributions.page = {
-        ...app.contributions.page,
-        ...page,
-        fetched: true,
-      };
-    } catch (e) {
-      handleApiError(e);
-    }
-    app.contributions.page.fetching = false;
+    return await pageFetch(app.contributions, getContributions);
   },
 
-  setContributionPageQuery(query: Partial<PageQuery>) {
-    // sometimes we need to reset page to 1
-    if (query.filters || query.search) {
-      query.page = 1;
-    }
-    app.contributions.page = {
-      ...app.contributions.page,
-      ...query,
-    };
-  },
-
-  getContributionPageQuery() {
-    return pick(app.contributions.page, [
-      'page',
-      'search',
-      'filters',
-      'sort',
-    ]) as PageQuery;
+  setContributionPageQuery(params: Partial<PageQuery>) {
+    setPageParams(app.contributions, params);
   },
 
   resetContributionPageQuery() {
-    app.contributions.page.page = 1;
-    app.contributions.page.search = '';
-    app.contributions.page.sort = 'CREATED:DESC';
-    app.contributions.page.filters = [];
+    resetPageParams(app.contributions);
   },
 
   async fetchContributionDetail(id: number) {
@@ -590,7 +676,7 @@ const app = store({
 });
 
 // Utils
-function handleApiError(e: AxiosError) {
+export function handleApiError(e: AxiosError) {
   if (e.response && e.response.data!.message) {
     app.generalError.push(e.response!.data.message);
   } else if (e.response && e.response.data!.data!) {
@@ -612,6 +698,49 @@ function createDefaultPageData<T>(sort: string): PageData<T> {
     fetching: false,
     fetched: false,
   };
+}
+
+type FNFetchPage = (params: PageQuery) => Promise<any>;
+interface PageParent<T> {
+  page: PageData<T>;
+}
+
+async function pageFetch<T>(ref: PageParent<T>, fetch: FNFetchPage) {
+  ref.page.fetching = true;
+  try {
+    const params = getPageParams(ref.page);
+    const newPage = await fetch(params);
+    ref.page = {
+      ...ref.page,
+      ...newPage,
+      fetched: true,
+    };
+  } catch (e) {
+    handleApiError(e);
+  }
+  ref.page.fetching = false;
+}
+
+function getPageParams<T>(page: PageData<T>) {
+  return pick(page, ['page', 'search', 'filters', 'sort']) as PageQuery;
+}
+
+function setPageParams<T>(ref: PageParent<T>, query: Partial<PageQuery>) {
+  // sometimes we need to reset page to 1
+  if (query.filters || query.search) {
+    query.page = 1;
+  }
+  ref.page = {
+    ...ref.page,
+    ...query,
+  };
+}
+
+function resetPageParams<T>(ref: PageParent<T>) {
+  ref.page.page = 1;
+  ref.page.search = '';
+  ref.page.sort = 'CREATED:DESC';
+  ref.page.filters = [];
 }
 
 // Attach to window for inspection

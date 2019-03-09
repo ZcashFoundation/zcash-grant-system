@@ -53,9 +53,6 @@ markdownify
 # email
 sendgrid==5.6.0
 
-# input validation
-flask-yolo2API==0.2.6
-
 #sentry
 sentry-sdk[flask]==0.5.5
 
@@ -70,3 +67,12 @@ Flask-Security==3.0.0
 
 # oauth
 requests-oauthlib==1.0.0
+
+# request parsing
+webargs==5.1.2
+
+# 2fa - totp
+pyotp==2.2.7
+
+# JSON formatting
+animal_case==0.4.1

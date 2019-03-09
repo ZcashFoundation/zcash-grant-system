@@ -10,29 +10,33 @@ import {
   Button,
   Collapse,
   Popconfirm,
-  Modal,
   Input,
   Switch,
   message,
 } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
-import { formatDateSeconds } from 'util/time';
-import { PROPOSAL_STATUS, PROPOSAL_ARBITER_STATUS, MILESTONE_STAGE } from 'src/types';
+import { formatDateSeconds, formatDurationSeconds } from 'util/time';
+import {
+  PROPOSAL_STATUS,
+  PROPOSAL_ARBITER_STATUS,
+  MILESTONE_STAGE,
+  PROPOSAL_STAGE,
+} from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Info from 'components/Info';
 import Markdown from 'components/Markdown';
 import ArbiterControl from 'components/ArbiterControl';
-import './index.less';
 import { toZat, fromZat } from 'src/util/units';
+import FeedbackModal from '../FeedbackModal';
+import './index.less';
 
 type Props = RouteComponentProps<any>;
 
 const STATE = {
-  showRejectModal: false,
-  rejectReason: '',
   paidTxId: '',
+  showCancelAndRefundPopover: false,
 };
 
 type State = typeof STATE;
@@ -45,12 +49,20 @@ class ProposalDetailNaked extends React.Component<Props, State> {
   }
   render() {
     const id = this.getIdFromQuery();
-    const { proposalDetail: p, proposalDetailFetching, proposalDetailApproving } = store;
-    const { rejectReason, showRejectModal } = this.state;
+    const { proposalDetail: p, proposalDetailFetching } = store;
 
     if (!p || (p && p.proposalId !== id) || proposalDetailFetching) {
       return 'loading proposal...';
     }
+
+    const needsArbiter =
+      PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
+      p.status === PROPOSAL_STATUS.LIVE &&
+      !p.isFailed &&
+      p.stage !== PROPOSAL_STAGE.COMPLETED;
+    const refundablePct = p.milestones.reduce((prev, m) => {
+      return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
+    }, 100);
 
     const renderDeleteControl = () => (
       <Popconfirm
@@ -65,6 +77,42 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       </Popconfirm>
     );
 
+    const renderCancelControl = () => {
+      const disabled = this.getCancelAndRefundDisabled();
+
+      return (
+        <Popconfirm
+          title={
+            <p>
+              Are you sure you want to cancel proposal and begin
+              <br />
+              the refund process? This cannot be undone.
+            </p>
+          }
+          placement="left"
+          cancelText="cancel"
+          okText="confirm"
+          visible={this.state.showCancelAndRefundPopover}
+          okButtonProps={{
+            loading: store.proposalDetailCanceling,
+          }}
+          onCancel={this.handleCancelCancel}
+          onConfirm={this.handleConfirmCancel}
+        >
+          <Button
+            icon="close-circle"
+            className="ProposalDetail-controls-control"
+            loading={store.proposalDetailCanceling}
+            onClick={this.handleCancelAndRefundClick}
+            disabled={disabled}
+            block
+          >
+            Cancel & refund
+          </Button>
+        </Popconfirm>
+      );
+    };
+
     const renderArbiterControl = () => (
       <ArbiterControl
         {...p}
@@ -72,7 +120,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           type: 'default',
           className: 'ProposalDetail-controls-control',
           block: true,
-          disabled: p.status !== PROPOSAL_STATUS.LIVE,
+          disabled:
+            p.status !== PROPOSAL_STATUS.LIVE ||
+            p.isFailed ||
+            p.stage === PROPOSAL_STAGE.COMPLETED,
         }}
       />
     );
@@ -98,7 +149,14 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           okText="ok"
           cancelText="cancel"
         >
-          <Switch checked={p.contributionMatching === 1} loading={false} />{' '}
+          <Switch
+            checked={p.contributionMatching === 1}
+            loading={store.proposalDetailUpdating}
+            disabled={
+              p.isFailed ||
+              [PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)
+            }
+          />{' '}
         </Popconfirm>
         <span>
           matching{' '}
@@ -108,10 +166,28 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               <span>
                 <b>Contribution matching</b>
                 <br /> Funded amount will be multiplied by 2.
+                <br /> <i>Disabled after proposal is fully-funded.</i>
               </span>
             }
           />
         </span>
+      </div>
+    );
+
+    const renderBountyControl = () => (
+      <div className="ProposalDetail-controls-control">
+        <Button
+          icon="dollar"
+          className="ProposalDetail-controls-control"
+          loading={store.proposalDetailUpdating}
+          onClick={this.handleSetBounty}
+          disabled={
+            p.isFailed || [PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)
+          }
+          block
+        >
+          Set bounty
+        </Button>
       </div>
     );
 
@@ -127,35 +203,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           `}
         />
       );
-
-    const rejectModal = (
-      <Modal
-        visible={showRejectModal}
-        title="Reject this proposal"
-        onOk={this.handleReject}
-        onCancel={() => this.setState({ showRejectModal: false })}
-        okButtonProps={{
-          disabled: rejectReason.length === 0,
-          loading: proposalDetailApproving,
-        }}
-        cancelButtonProps={{
-          loading: proposalDetailApproving,
-        }}
-      >
-        Please provide a reason ({!!rejectReason.length && `${rejectReason.length}/`}
-        250 chars max):
-        <Input.TextArea
-          ref={ta => (this.rejectInput = ta)}
-          rows={4}
-          maxLength={250}
-          required={true}
-          value={rejectReason}
-          onChange={e => {
-            this.setState({ rejectReason: e.target.value });
-          }}
-        />
-      </Modal>
-    );
 
     const renderReview = () =>
       p.status === PROPOSAL_STATUS.PENDING && (
@@ -179,16 +226,16 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 icon="close"
                 type="danger"
                 onClick={() => {
-                  this.setState({ showRejectModal: true });
-                  // hacky way of waiting for modal to render in before focus
-                  setTimeout(() => {
-                    if (this.rejectInput) this.rejectInput.focus();
-                  }, 200);
+                  FeedbackModal.open({
+                    title: 'Reject this proposal?',
+                    label: 'Please provide a reason:',
+                    okText: 'Reject',
+                    onOk: this.handleReject,
+                  });
                 }}
               >
                 Reject
               </Button>
-              {rejectModal}
             </div>
           }
         />
@@ -215,8 +262,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderNominateArbiter = () =>
-      PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
-      p.status === PROPOSAL_STATUS.LIVE && (
+      needsArbiter && (
         <Alert
           showIcon
           type="warning"
@@ -250,6 +296,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderMilestoneAccepted = () => {
+      if (p.stage === PROPOSAL_STAGE.FAILED || p.stage === PROPOSAL_STAGE.CANCELED) {
+        return;
+      }
       if (
         !(
           p.status === PROPOSAL_STATUS.LIVE &&
@@ -297,6 +346,31 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
     };
 
+    const renderFailed = () =>
+      p.isFailed && (
+        <Alert
+          showIcon
+          type="error"
+          message={
+            p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'
+          }
+          description={
+            p.stage === PROPOSAL_STAGE.FAILED ? (
+              <>
+                This proposal failed to reach its funding goal of <b>{p.target} ZEC</b> by{' '}
+                <b>{formatDateSeconds(p.datePublished + p.deadlineDuration)}</b>. All
+                contributors will need to be refunded.
+              </>
+            ) : (
+              <>
+                This proposal was canceled by an admin, and will be refunding contributors{' '}
+                <b>{refundablePct}%</b> of their contributions.
+              </>
+            )
+          }
+        />
+      );
+
     const renderDeetItem = (name: string, val: any) => (
       <div className="ProposalDetail-deet">
         <span>{name}</span>
@@ -317,6 +391,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderNominateArbiter()}
             {renderNominatedArbiter()}
             {renderMilestoneAccepted()}
+            {renderFailed()}
             <Collapse defaultActiveKey={['brief', 'content']}>
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
@@ -338,15 +413,27 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
               {renderDeleteControl()}
+              {renderCancelControl()}
               {renderArbiterControl()}
+              {renderBountyControl()}
               {renderMatchingControl()}
-              {/* TODO - other actions */}
             </Card>
 
             {/* DETAILS */}
             <Card title="Details" size="small">
               {renderDeetItem('id', p.proposalId)}
               {renderDeetItem('created', formatDateSeconds(p.dateCreated))}
+              {renderDeetItem('published', formatDateSeconds(p.datePublished))}
+              {renderDeetItem(
+                'deadlineDuration',
+                formatDurationSeconds(p.deadlineDuration),
+              )}
+              {p.datePublished &&
+                renderDeetItem(
+                  '(deadline)',
+                  formatDateSeconds(p.datePublished + p.deadlineDuration),
+                )}
+              {renderDeetItem('isFailed', JSON.stringify(p.isFailed))}
               {renderDeetItem('status', p.status)}
               {renderDeetItem('stage', p.stage)}
               {renderDeetItem('category', p.category)}
@@ -354,6 +441,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}
               {renderDeetItem('matching', p.contributionMatching)}
+              {renderDeetItem('bounty', p.contributionBounty)}
+              {renderDeetItem('rfpOptIn', JSON.stringify(p.rfpOptIn))}
               {renderDeetItem(
                 'arbiter',
                 <>
@@ -388,6 +477,28 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     );
   }
 
+  private getCancelAndRefundDisabled = () => {
+    const { proposalDetail: p } = store;
+    if (!p) {
+      return true;
+    }
+    return (
+      p.status !== PROPOSAL_STATUS.LIVE ||
+      p.stage === PROPOSAL_STAGE.FAILED ||
+      p.stage === PROPOSAL_STAGE.CANCELED ||
+      p.isFailed
+    );
+  };
+
+  private handleCancelAndRefundClick = () => {
+    const disabled = this.getCancelAndRefundDisabled();
+    if (!disabled) {
+      if (!this.state.showCancelAndRefundPopover) {
+        this.setState({ showCancelAndRefundPopover: true });
+      }
+    }
+  };
+
   private getIdFromQuery = () => {
     return Number(this.props.match.params.id);
   };
@@ -401,13 +512,23 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     store.deleteProposal(store.proposalDetail.proposalId);
   };
 
+  private handleCancelCancel = () => {
+    this.setState({ showCancelAndRefundPopover: false });
+  };
+
+  private handleConfirmCancel = () => {
+    if (!store.proposalDetail) return;
+    store.cancelProposal(store.proposalDetail.proposalId);
+    this.setState({ showCancelAndRefundPopover: false });
+  };
+
   private handleApprove = () => {
     store.approveProposal(true);
   };
 
-  private handleReject = async () => {
-    await store.approveProposal(false, this.state.rejectReason);
-    this.setState({ showRejectModal: false });
+  private handleReject = async (reason: string) => {
+    await store.approveProposal(false, reason);
+    message.info('Proposal rejected');
   };
 
   private handleToggleMatching = async () => {
@@ -415,7 +536,29 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       // we lock this to be 1 or 0 for now, we may support more values later on
       const contributionMatching =
         store.proposalDetail.contributionMatching === 0 ? 1 : 0;
-      store.updateProposalDetail({ contributionMatching });
+      await store.updateProposalDetail({ contributionMatching });
+      message.success('Updated matching');
+    }
+  };
+
+  private handleSetBounty = async () => {
+    if (store.proposalDetail) {
+      FeedbackModal.open({
+        title: 'Set bounty?',
+        content:
+          'Set the bounty for this proposal. The bounty will count towards the funding goal.',
+        type: 'input',
+        inputProps: {
+          addonBefore: 'Amount',
+          addonAfter: 'ZEC',
+          placeholder: '1.5',
+        },
+        okText: 'Set bounty',
+        onOk: async contributionBounty => {
+          await store.updateProposalDetail({ contributionBounty });
+          message.success('Updated bounty');
+        },
+      });
     }
   };
 

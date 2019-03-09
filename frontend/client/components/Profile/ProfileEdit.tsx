@@ -12,7 +12,7 @@ import { Input, Form, Col, Row, Button, Alert, Icon } from 'antd';
 import { SOCIAL_INFO } from 'utils/social';
 import { SOCIAL_SERVICE, User } from 'types';
 import { UserState } from 'modules/users/reducers';
-import { getCreateTeamMemberError } from 'modules/create/utils';
+import { validateUserProfile } from 'modules/create/utils';
 import AvatarEdit from './AvatarEdit';
 import './ProfileEdit.less';
 
@@ -85,8 +85,8 @@ class ProfileEdit extends React.PureComponent<Props, State> {
       socialVerificationError,
       activeSocialService,
     } = this.state;
-    const error = getCreateTeamMemberError(fields);
-    const isMissingField = !fields.displayName || !fields.title || !fields.emailAddress;
+    const error = validateUserProfile(fields);
+    const isMissingField = !fields.displayName || !fields.title;
     const isDisabled =
       !!error ||
       isMissingField ||
@@ -132,18 +132,6 @@ class ProfileEdit extends React.PureComponent<Props, State> {
                 />
               </Form.Item>
 
-              <Form.Item>
-                <Input
-                  name="emailAddress"
-                  disabled={true}
-                  placeholder="Email address (Required)"
-                  type="email"
-                  autoComplete="email"
-                  value={fields.emailAddress}
-                  onChange={this.handleChangeField}
-                />
-              </Form.Item>
-
               <Row gutter={12}>
                 {Object.values(SOCIAL_INFO).map(s => {
                   const field = fields.socialMedias.find(sm => sm.service === s.service);
@@ -176,8 +164,7 @@ class ProfileEdit extends React.PureComponent<Props, State> {
                             loading={loading}
                             block
                           >
-                            {!loading && s.icon}
-                            Connect to {s.name}
+                            {!loading && s.icon} <>Connect to {s.name}</>
                           </Button>
                         )}
                       </Form.Item>

@@ -7,19 +7,24 @@ export interface Contribution {
   amount: string;
   dateCreated: number;
   status: 'PENDING' | 'CONFIRMED';
+  isAnonymous: boolean;
 }
 
 export interface ContributionWithAddresses extends Contribution {
   addresses: {
-    sprout: string;
     transparent: string;
-    memo: string;
+    // TODO: Add sapling and memo in when ready
+    // sprout: string;
+    // memo: string;
   };
 }
 
 export interface ContributionWithUser extends Contribution {
   user: User;
 }
+
+export type ContributionWithAddressesAndUser = ContributionWithAddresses &
+  ContributionWithUser;
 
 export interface UserContribution extends Omit<Contribution, 'amount' | 'txId'> {
   amount: Zat;

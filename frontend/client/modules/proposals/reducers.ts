@@ -1,14 +1,15 @@
 import types from './types';
-import { findComment } from 'utils/helpers';
+import { cloneDeep } from 'lodash';
+import { pendingMoreablePage, fulfilledMoreablePage } from 'utils/helpers';
 import {
   Proposal,
-  ProposalComments,
   ProposalUpdates,
   Comment,
   ProposalContributions,
   LoadableProposalPage,
+  Moreable,
 } from 'types';
-import { PROPOSAL_SORT } from 'api/constants';
+import { PROPOSAL_SORT, PROPOSAL_STAGE } from 'api/constants';
 
 export interface ProposalDetail extends Proposal {
   isRequestingPayout: boolean;
@@ -26,9 +27,7 @@ export interface ProposalState {
   isFetchingDetail: boolean;
   detailError: null | string;
 
-  proposalComments: { [id: string]: ProposalComments };
-  commentsError: null | string;
-  isFetchingComments: boolean;
+  detailComments: Moreable<Comment>;
 
   proposalUpdates: { [id: string]: ProposalUpdates };
   updatesError: null | string;
@@ -63,7 +62,7 @@ export const INITIAL_STATE: ProposalState = {
     sort: PROPOSAL_SORT.NEWEST,
     filters: {
       category: [],
-      stage: [],
+      stage: [PROPOSAL_STAGE.FUNDING_REQUIRED],
     },
     items: [],
     hasFetched: false,
@@ -76,9 +75,21 @@ export const INITIAL_STATE: ProposalState = {
   isFetchingDetail: false,
   detailError: null,
 
-  proposalComments: {},
-  commentsError: null,
-  isFetchingComments: false,
+  detailComments: {
+    pages: [],
+    hasMore: false,
+    page: 1,
+    pageSize: 0,
+    total: 0,
+    search: '',
+    sort: '',
+    filters: [],
+    isFetching: false,
+    hasFetched: false,
+    fetchError: '',
+    fetchTime: 0,
+    parentId: null,
+  },
 
   proposalUpdates: {},
   updatesError: null,
@@ -94,17 +105,6 @@ export const INITIAL_STATE: ProposalState = {
   isDeletingContribution: false,
   deleteContributionError: null,
 };
-
-function addComments(state: ProposalState, payload: { data: ProposalComments }) {
-  return {
-    ...state,
-    proposalComments: {
-      ...state.proposalComments,
-      [payload.data.proposalId]: payload.data,
-    },
-    isFetchingComments: false,
-  };
-}
 
 function addUpdates(state: ProposalState, payload: ProposalUpdates) {
   return {
@@ -134,36 +134,76 @@ interface PostCommentPayload {
   parentCommentId?: Comment['id'];
 }
 function addPostedComment(state: ProposalState, payload: PostCommentPayload) {
-  const { proposalId, comment, parentCommentId } = payload;
-  const newComments = state.proposalComments[proposalId]
-    ? {
-        ...state.proposalComments[proposalId],
-        totalComments: state.proposalComments[proposalId].totalComments + 1,
-        comments: [...state.proposalComments[proposalId].comments],
-      }
-    : {
-        proposalId: payload.proposalId,
-        totalComments: 1,
-        comments: [],
-      };
-
-  if (parentCommentId) {
-    const parentComment = findComment(parentCommentId, newComments.comments);
-    if (parentComment) {
-      // FIXME: Object mutation because I'm lazy, but this probably shouldn’t
-      // exist once API hookup is done. We'll just re-request from server.
-      parentComment.replies.unshift(comment);
+  const { comment, parentCommentId } = payload;
+  // clone so we can mutate with great abandon!
+  const pages = cloneDeep(state.detailComments.pages);
+  if (!parentCommentId) {
+    // its a new comment, pop it into the very first position
+    if (pages[0]) {
+      pages[0].unshift(comment);
+    } else {
+      pages[0] = [comment];
     }
   } else {
-    newComments.comments.unshift(comment);
+    // recursive populate replies for nested comment
+    const f = (id: number, p: Comment) => {
+      if (p.id === id) {
+        p.replies.unshift(comment);
+        return;
+      } else {
+        p.replies.forEach(x => f(id, x));
+      }
+    };
+    // pages > page > comments
+    pages.forEach(p =>
+      p.forEach(c => {
+        f(parentCommentId, c);
+      }),
+    );
   }
+  return {
+    ...state,
+    isPostCommentPending: false,
+    detailComments: {
+      ...state.detailComments,
+      pages,
+      total: state.detailComments.total + 1,
+    },
+  };
+}
+
+function updateCommentInStore(
+  state: ProposalState,
+  commentId: Comment['id'],
+  update: Partial<Comment>,
+) {
+  // clone so we can mutate with great abandon!
+  const pages = cloneDeep(state.detailComments.pages);
+  // recursive populate replies for nested comment
+  const f = (id: number, p: Comment) => {
+    if (p.id === id) {
+      Object.entries(update).forEach(([k, v]) => {
+        (p as any)[k] = v;
+      });
+      return;
+    } else {
+      p.replies.forEach(x => f(id, x));
+    }
+  };
+  // pages > page > comments
+  pages.forEach(p =>
+    p.forEach(c => {
+      f(commentId, c);
+    }),
+  );
 
   return {
     ...state,
     isPostCommentPending: false,
-    proposalComments: {
-      ...state.proposalComments,
-      [payload.proposalId]: newComments,
+    detailComments: {
+      ...state.detailComments,
+      pages,
+      total: state.detailComments.total + 1,
     },
   };
 }
@@ -314,18 +354,26 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.PROPOSAL_COMMENTS_PENDING:
       return {
         ...state,
-        commentsError: null,
-        isFetchingComments: true,
+        detailComments: pendingMoreablePage(state.detailComments, payload),
       };
     case types.PROPOSAL_COMMENTS_FULFILLED:
-      return addComments(state, payload);
+      return {
+        ...state,
+        detailComments: fulfilledMoreablePage(state.detailComments, payload),
+      };
     case types.PROPOSAL_COMMENTS_REJECTED:
       return {
         ...state,
-        // TODO: Get action to send real error
-        commentsError: 'Failed to fetch comments',
-        isFetchingComments: false,
+        detailComments: {
+          ...state.detailComments,
+          hasFetched: true,
+          isFetching: false,
+          fetchError: (payload && payload.message) || payload.toString(),
+        },
       };
+
+    case types.REPORT_PROPOSAL_COMMENT_FULFILLED:
+      return updateCommentInStore(state, payload.commentId, { reported: true });
 
     case types.PROPOSAL_UPDATES_PENDING:
       return {

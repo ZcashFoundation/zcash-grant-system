@@ -2,9 +2,8 @@ import json
 
 from grant.proposal.models import Proposal, db
 from grant.utils.enums import ProposalStatus
-
 from ..config import BaseUserConfig
-from ..test_data import test_comment, test_reply
+from ..test_data import test_comment, test_reply, test_comment_large
 
 
 class TestProposalCommentAPI(BaseUserConfig):
@@ -111,3 +110,42 @@ class TestProposalCommentAPI(BaseUserConfig):
         )
 
         self.assertStatus(comment_res, 403)
+
+    def test_create_new_proposal_comment_fails_with_large_comment(self):
+        self.login_default_user()
+
+        proposal = Proposal(
+            status="LIVE"
+        )
+        db.session.add(proposal)
+        db.session.commit()
+        proposal_id = proposal.id
+
+        comment_res = self.app.post(
+            "/api/v1/proposals/{}/comments".format(proposal_id),
+            data=json.dumps(test_comment_large),
+            content_type='application/json'
+        )
+
+        self.assertStatus(comment_res, 400)
+        self.assertIn('less than', comment_res.json['message'])
+
+    def test_create_new_proposal_comment_fails_with_silenced_user(self):
+        self.login_default_user()
+        self.user.set_silenced(True)
+
+        proposal = Proposal(
+            status="LIVE"
+        )
+        db.session.add(proposal)
+        db.session.commit()
+        proposal_id = proposal.id
+
+        comment_res = self.app.post(
+            "/api/v1/proposals/{}/comments".format(proposal_id),
+            data=json.dumps(test_comment),
+            content_type='application/json'
+        )
+
+        self.assertStatus(comment_res, 403)
+        self.assertIn('silenced', comment_res.json['message'])

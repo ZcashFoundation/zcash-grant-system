@@ -45,7 +45,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
             data=json.dumps(new_proposal),
             content_type='application/json'
         )
-
+        print(resp)
         self.assert200(resp)
         self.assertEqual(resp.json["title"], new_title)
         self.assertEqual(self.proposal.title, new_title)
@@ -139,7 +139,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.stake_proposal()
         resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
         print(resp)
-        self.assert404(resp)
+        self.assert400(resp)
 
     # /publish
     @patch('requests.get', side_effect=mock_blockchain_api_requests)

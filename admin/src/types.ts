@@ -36,19 +36,27 @@ export enum RFP_STATUS {
 export interface RFP {
   id: number;
   dateCreated: number;
+  dateOpened: number | null;
+  dateClosed: number | null;
   title: string;
   brief: string;
   content: string;
   category: string;
   status: string;
   proposals: Proposal[];
+  matching: boolean;
+  bounty: string | null;
+  dateCloses: number | null;
 }
 export interface RFPArgs {
   title: string;
   brief: string;
   content: string;
   category: string;
-  status?: string;
+  matching: boolean;
+  dateCloses: number | null | undefined;
+  bounty: string | null | undefined;
+  status: string;
 }
 // NOTE: sync with backend/grant/utils/enums.py ProposalArbiterStatus
 export enum PROPOSAL_ARBITER_STATUS {
@@ -71,6 +79,15 @@ export enum PROPOSAL_STATUS {
   DELETED = 'DELETED',
   STAKING = 'STAKING',
 }
+// NOTE: sync with backend/grant/utils/enums.py ProposalStage
+export enum PROPOSAL_STAGE {
+  PREVIEW = 'PREVIEW',
+  FUNDING_REQUIRED = 'FUNDING_REQUIRED',
+  WIP = 'WIP',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELED = 'CANCELED',
+}
 export interface Proposal {
   proposalId: number;
   brief: string;
@@ -79,29 +96,40 @@ export interface Proposal {
   dateCreated: number;
   dateApproved: number;
   datePublished: number;
+  deadlineDuration: number;
+  isFailed: boolean;
   title: string;
   content: string;
-  stage: string;
+  stage: PROPOSAL_STAGE;
   category: string;
   milestones: Milestone[];
   currentMilestone?: Milestone;
   team: User[];
   comments: Comment[];
-  contractStatus: string;
   target: string;
   contributed: string;
   funded: string;
   rejectReason: string;
   contributionMatching: number;
+  contributionBounty: string;
+  rfpOptIn: null | boolean;
   rfp?: RFP;
   arbiter: ProposalArbiter;
 }
 export interface Comment {
-  commentId: string;
+  id: number;
+  userId: User['userid'];
+  author?: User;
   proposalId: Proposal['proposalId'];
   proposal?: Proposal;
   dateCreated: number;
   content: string;
+  hidden: boolean;
+  reported: boolean;
+}
+export interface CommentArgs {
+  hidden: boolean;
+  reported: boolean;
 }
 // NOTE: sync with backend/utils/enums.py
 export enum CONTRIBUTION_STATUS {
@@ -115,20 +143,24 @@ export interface Contribution {
   txId: null | string;
   amount: string;
   dateCreated: number;
-  user: User;
+  user: User | null;
   proposal: Proposal;
   addresses: {
     transparent: string;
     sprout: string;
     memo: string;
   };
+  staking: boolean;
+  refundAddress?: string;
+  refundTxId?: string;
 }
 export interface ContributionArgs {
-  proposalId: string | number;
-  userId: string | number;
-  amount: string;
-  status: string;
+  proposalId?: string | number;
+  userId?: string | number;
+  amount?: string;
+  status?: string;
   txId?: string;
+  refundTxId?: string;
 }
 export interface User {
   accountAddress: string;
@@ -141,6 +173,10 @@ export interface User {
   proposals: Proposal[];
   comments: Comment[];
   contributions: Contribution[];
+  silenced: boolean;
+  banned: boolean;
+  bannedReason: string;
+  isAdmin: boolean;
 }
 
 export interface EmailExample {
@@ -154,7 +190,6 @@ export interface EmailExample {
 }
 
 export enum PROPOSAL_CATEGORY {
-  DAPP = 'DAPP',
   DEV_TOOL = 'DEV_TOOL',
   CORE_DEV = 'CORE_DEV',
   COMMUNITY = 'COMMUNITY',

@@ -1,6 +1,6 @@
 from flask_security import UserMixin, RoleMixin
 from flask_security.core import current_user
-from flask_security.utils import hash_password, verify_and_update_password, login_user, logout_user
+from flask_security.utils import hash_password, verify_and_update_password, login_user
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification, EmailRecovery
 from grant.email.send import send_email
@@ -10,9 +10,10 @@ from grant.email.subscription_settings import (
     email_subscriptions_to_dict
 )
 from grant.extensions import ma, db, security
-from grant.utils.misc import make_url
+from grant.utils.misc import make_url, gen_random_id
 from grant.utils.social import generate_social_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
+from grant.utils import totp_2fa
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
@@ -53,8 +54,10 @@ class UserSettings(db.Model):
     __tablename__ = "user_settings"
 
     id = db.Column(db.Integer(), primary_key=True)
-    _email_subscriptions = db.Column("email_subscriptions", db.Integer, default=0)  # bitmask
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    _email_subscriptions = db.Column("email_subscriptions", db.Integer, default=0)  # bitmask
+    refund_address = db.Column(db.String(255), unique=False, nullable=True)
+
     user = db.relationship("User", back_populates="settings")
 
     @hybrid_property
@@ -93,6 +96,7 @@ class Avatar(db.Model):
         self._image_url = extract_avatar_filename(image_url)
 
     def __init__(self, image_url, user_id):
+        self.id = gen_random_id(Avatar)
         self.image_url = image_url
         self.user_id = user_id
 
@@ -106,7 +110,16 @@ class User(db.Model, UserMixin):
     display_name = db.Column(db.String(255), unique=False, nullable=True)
     title = db.Column(db.String(255), unique=False, nullable=True)
     active = db.Column(db.Boolean, default=True)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False, server_default=db.text("FALSE"))
+    totp_secret = db.Column(db.String(255), nullable=True)
+    backup_codes = db.Column(db.String(), nullable=True)
 
+    # moderation
+    silenced = db.Column(db.Boolean, default=False)
+    banned = db.Column(db.Boolean, default=False)
+    banned_reason = db.Column(db.String(), nullable=True)
+
+    # relations
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
@@ -131,6 +144,7 @@ class User(db.Model, UserMixin):
             display_name=None,
             title=None,
     ):
+        self.id = gen_random_id(User)
         self.email_address = email_address
         self.display_name = display_name
         self.title = title
@@ -167,10 +181,6 @@ class User(db.Model, UserMixin):
     @staticmethod
     def get_by_email(email_address: str):
         return security.datastore.get_user(email_address)
-
-    @staticmethod
-    def logout_current_user():
-        logout_user()  # logs current user out
 
     def check_password(self, password: str):
         return verify_and_update_password(password, self)
@@ -227,6 +237,42 @@ class User(db.Model, UserMixin):
             'recover_url': make_url(f'/email/recover?code={er.code}'),
         })
 
+    def set_banned(self, is_ban: bool, reason: str=None):
+        self.banned = is_ban
+        self.banned_reason = reason
+        db.session.add(self)
+        db.session.flush()
+
+    def set_silenced(self, is_silence: bool):
+        self.silenced = is_silence
+        db.session.add(self)
+        db.session.flush()
+
+    def set_admin(self, is_admin: bool):
+        # TODO: audit entry & possibly email user
+        self.is_admin = is_admin
+        db.session.add(self)
+        db.session.flush()
+
+    def set_2fa(self, codes, secret):
+        self.totp_secret = secret
+        self.backup_codes = totp_2fa.serialize_backup_codes(codes)
+        db.session.add(self)
+        db.session.flush()
+
+    def set_serialized_backup_codes(self, codes):
+        self.backup_codes = codes
+        db.session.add(self)
+        db.session.flush()
+
+    def has_2fa(self):
+        return self.totp_secret is not None
+
+    def get_backup_code_count(self):
+        if not self.backup_codes:
+            return 0
+        return len(totp_2fa.deserialize_backup_codes(self.backup_codes))
+
 
 class SelfUserSchema(ma.Schema):
     class Meta:
@@ -241,6 +287,10 @@ class SelfUserSchema(ma.Schema):
             "userid",
             "email_verified",
             "arbiter_proposals",
+            "silenced",
+            "banned",
+            "banned_reason",
+            "is_admin",
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
@@ -327,7 +377,10 @@ avatar_schemas = AvatarSchema(many=True)
 class UserSettingsSchema(ma.Schema):
     class Meta:
         model = UserSettings
-        fields = ("email_subscriptions",)
+        fields = (
+            "email_subscriptions",
+            "refund_address",
+        )
 
 
 user_settings_schema = UserSettingsSchema()

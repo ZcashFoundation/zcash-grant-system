@@ -4,6 +4,7 @@ from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.ma_fields import UnixDate
 from grant.utils.enums import MilestoneStage
+from grant.utils.misc import gen_random_id
 
 
 class MilestoneException(Exception):
@@ -52,6 +53,7 @@ class Milestone(db.Model):
             stage: str = MilestoneStage.IDLE,
             proposal_id=int,
     ):
+        self.id = gen_random_id(Milestone)
         self.title = title
         self.content = content
         self.stage = stage
@@ -81,6 +83,14 @@ class Milestone(db.Model):
         self.date_rejected = datetime.datetime.now()
         self.reject_reason = reason
         self.reject_arbiter_id = arbiter_id
+
+    def accept_immediate(self):
+        if self.immediate_payout and self.index == 0:
+            self.date_requested = datetime.datetime.now()
+            self.stage = MilestoneStage.ACCEPTED
+            self.date_accepted = datetime.datetime.now()
+            db.session.add(self)
+            db.session.flush()
 
     def accept_request(self, arbiter_id: int):
         if self.stage != MilestoneStage.REQUESTED:

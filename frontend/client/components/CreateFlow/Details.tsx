@@ -27,6 +27,7 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
         <MarkdownEditor
           onChange={this.handleChange}
           initialMarkdown={this.state.content}
+          minHeight={200}
         />
       </Form>
     );

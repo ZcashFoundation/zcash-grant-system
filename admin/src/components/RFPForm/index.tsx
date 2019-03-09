@@ -1,7 +1,21 @@
 import React from 'react';
+import moment from 'moment';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { Form, Input, Select, Icon, Button, message, Spin } from 'antd';
+import { Link } from 'react-router-dom';
+import {
+  Form,
+  Input,
+  Select,
+  Icon,
+  Button,
+  message,
+  Spin,
+  Checkbox,
+  Row,
+  Col,
+  DatePicker,
+} from 'antd';
 import Exception from 'ant-design-pro/lib/Exception';
 import { FormComponentProps } from 'antd/lib/form';
 import { PROPOSAL_CATEGORY, RFP_STATUS, RFPArgs } from 'src/types';
@@ -34,7 +48,7 @@ class RFPForm extends React.Component<Props, State> {
 
   render() {
     const { isShowingPreview } = this.state;
-    const { getFieldDecorator, getFieldValue } = this.props.form;
+    const { getFieldDecorator, getFieldValue, isFieldsTouched } = this.props.form;
 
     let defaults: RFPArgs = {
       title: '',
@@ -42,6 +56,9 @@ class RFPForm extends React.Component<Props, State> {
       content: '',
       category: '',
       status: '',
+      matching: false,
+      bounty: undefined,
+      dateCloses: undefined,
     };
     const rfpId = this.getRFPId();
     if (rfpId) {
@@ -57,11 +74,19 @@ class RFPForm extends React.Component<Props, State> {
           content: rfp.content,
           category: rfp.category,
           status: rfp.status,
+          matching: rfp.matching,
+          bounty: rfp.bounty,
+          dateCloses: rfp.dateCloses || undefined,
         };
       } else {
         return <Exception type="404" desc="This RFP does not exist" />;
       }
     }
+
+    const dateCloses = isFieldsTouched(['dateCloses'])
+      ? getFieldValue('dateCloses')
+      : defaults.dateCloses && moment(defaults.dateCloses * 1000);
+    const forceClosed = dateCloses && dateCloses.isBefore(moment.now());
 
     return (
       <Form className="RFPForm" layout="vertical" onSubmit={this.handleSubmit}>
@@ -85,12 +110,17 @@ class RFPForm extends React.Component<Props, State> {
         </Form.Item>
 
         {rfpId && (
-          <Form.Item label="Status">
+          <Form.Item
+            label="Status"
+            help={
+              forceClosed && 'Status is forced to "Closed" when close date is in the past'
+            }
+          >
             {getFieldDecorator('status', {
               initialValue: defaults.status,
               rules: [{ required: true, message: 'Status is required' }],
             })(
-              <Select size="large" placeholder="Select a status">
+              <Select size="large" placeholder="Select a status" disabled={forceClosed}>
                 {typedKeys(RFP_STATUS).map(c => (
                   <Select.Option value={c} key={c}>
                     {getStatusById(RFP_STATUSES, c).tagDisplay}
@@ -164,13 +194,57 @@ class RFPForm extends React.Component<Props, State> {
           )}
         </Form.Item>
 
+        <Row>
+          <Col sm={12} xs={12}>
+            <Form.Item className="RFPForm-bounty" label="Bounty">
+              {getFieldDecorator('bounty', {
+                initialValue: defaults.bounty,
+              })(
+                <Input
+                  autoComplete="off"
+                  name="bounty"
+                  placeholder="100"
+                  addonAfter="ZEC"
+                  size="large"
+                />,
+              )}
+              {getFieldDecorator('matching', {
+                initialValue: defaults.matching,
+              })(
+                <Checkbox
+                  className="RFPForm-bounty-matching"
+                  name="matching"
+                  defaultChecked={defaults.matching}
+                >
+                  Match community contributions for approved proposals
+                </Checkbox>,
+              )}
+            </Form.Item>
+          </Col>
+          <Col sm={12} xs={24}>
+            <Form.Item
+              className="RFPForm-date"
+              label="Close date"
+              help="Date that proposals will stop being submittable by"
+            >
+              {getFieldDecorator('dateCloses', {
+                initialValue: defaults.dateCloses
+                  ? moment(defaults.dateCloses * 1000)
+                  : undefined,
+              })(<DatePicker size="large" />)}
+            </Form.Item>
+          </Col>
+        </Row>
+
         <div className="RFPForm-buttons">
           <Button type="primary" htmlType="submit" size="large">
             Submit
           </Button>
-          <Button type="ghost" size="large">
-            Cancel
-          </Button>
+          <Link to="/rfps">
+            <Button type="ghost" size="large">
+              Cancel
+            </Button>
+          </Link>
         </div>
       </Form>
     );
@@ -189,10 +263,14 @@ class RFPForm extends React.Component<Props, State> {
 
   private handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    this.props.form.validateFieldsAndScroll(async (err: any, values: any) => {
+    this.props.form.validateFieldsAndScroll(async (err: any, rawValues: any) => {
       if (err) return;
 
       const rfpId = this.getRFPId();
+      const values = {
+        ...rawValues,
+        dateCloses: rawValues.dateCloses && rawValues.dateCloses.unix(),
+      };
       let msg;
       if (rfpId) {
         await store.editRFP(rfpId, values);

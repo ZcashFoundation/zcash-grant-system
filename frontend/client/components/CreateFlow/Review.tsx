@@ -25,6 +25,7 @@ interface Field {
   key: KeyOfForm;
   content: React.ReactNode;
   error: string | Falsy;
+  isHide?: boolean;
 }
 
 interface Section {
@@ -47,6 +48,12 @@ class CreateReview extends React.Component<Props> {
             key: 'title',
             content: <h2 style={{ fontSize: '1.6rem', margin: 0 }}>{form.title}</h2>,
             error: errors.title,
+          },
+          {
+            key: 'rfpOptIn',
+            content: <div>{form.rfpOptIn ? 'Accepted' : 'Declined'}</div>,
+            error: errors.rfpOptIn,
+            isHide: !form.rfp || (form.rfp && !form.rfp.matching && !form.rfp.bounty),
           },
           {
             key: 'brief',
@@ -104,7 +111,7 @@ class CreateReview extends React.Component<Props> {
       },
       {
         step: CREATE_STEP.PAYMENT,
-        name: 'Governance',
+        name: 'Payment',
         fields: [
           {
             key: 'payoutAddress',
@@ -126,21 +133,26 @@ class CreateReview extends React.Component<Props> {
       <div className="CreateReview">
         {sections.map(s => (
           <div className="CreateReview-section" key={s.step}>
-            {s.fields.map(f => (
-              <div className="ReviewField" key={f.key}>
-                <div className="ReviewField-label">
-                  {FIELD_NAME_MAP[f.key]}
-                  {f.error && <div className="ReviewField-label-error">{f.error}</div>}
-                </div>
-                <div className="ReviewField-content">
-                  {this.isEmpty(form[f.key]) ? (
-                    <div className="ReviewField-content-empty">N/A</div>
-                  ) : (
-                    f.content
-                  )}
-                </div>
-              </div>
-            ))}
+            {s.fields.map(
+              f =>
+                !f.isHide && (
+                  <div className="ReviewField" key={f.key}>
+                    <div className="ReviewField-label">
+                      {FIELD_NAME_MAP[f.key]}
+                      {f.error && (
+                        <div className="ReviewField-label-error">{f.error}</div>
+                      )}
+                    </div>
+                    <div className="ReviewField-content">
+                      {this.isEmpty(form[f.key]) ? (
+                        <div className="ReviewField-content-empty">N/A</div>
+                      ) : (
+                        f.content
+                      )}
+                    </div>
+                  </div>
+                ),
+            )}
             <div className="ReviewField">
               <div className="ReviewField-label" />
               <div className="ReviewField-content">
@@ -163,6 +175,9 @@ class CreateReview extends React.Component<Props> {
   };
 
   private isEmpty(value: any) {
+    if (typeof value === 'boolean') {
+      return false; // defined booleans are never empty
+    }
     return !value || value.length === 0;
   }
 }
@@ -180,13 +195,15 @@ const ReviewMilestones = ({
     {milestones.map(m => (
       <Timeline.Item key={m.title}>
         <div className="ReviewMilestone">
-          <div className="ReviewMilestone-title">{m.title}</div>
+          <div className="ReviewMilestone-title">{m.title || <em>No title</em>}</div>
           <div className="ReviewMilestone-info">
             {moment(m.dateEstimated * 1000).format('MMMM YYYY')}
             {' – '}
             {m.payoutPercent}% of funds
           </div>
-          <div className="ReviewMilestone-description">{m.content}</div>
+          <div className="ReviewMilestone-description">
+            {m.content || <em>No description</em>}
+          </div>
         </div>
       </Timeline.Item>
     ))}

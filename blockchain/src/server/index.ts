@@ -19,10 +19,11 @@ import log from '../log';
 
 // Configure server
 const app = express();
+const limit = '50mb';
 app.set('port', env.PORT);
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit }));
+app.use(bodyParser.urlencoded({ extended: true, limit }));
 app.use(authMiddleware);
 
 // Routes

@@ -6,7 +6,12 @@ import {
   PROPOSAL_ARBITER_STATUS,
 } from 'types';
 import { User } from 'types';
-import { getAmountError, isValidAddress } from 'utils/validators';
+import {
+  getAmountError,
+  isValidSaplingAddress,
+  isValidTAddress,
+  isValidSproutAddress,
+} from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
 import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
@@ -18,6 +23,7 @@ import {
 export const TARGET_ZEC_LIMIT = 1000;
 
 interface CreateFormErrors {
+  rfpOptIn?: string;
   title?: string;
   brief?: string;
   category?: string;
@@ -31,6 +37,7 @@ interface CreateFormErrors {
 
 export type KeyOfForm = keyof CreateFormErrors;
 export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
+  rfpOptIn: 'RFP KYC',
   title: 'Title',
   brief: 'Brief',
   category: 'Category',
@@ -57,7 +64,7 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, target, payoutAddress } = form;
+  const { title, team, milestones, target, payoutAddress, rfp, rfpOptIn } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -75,6 +82,11 @@ export function getCreateErrors(
     }
   }
 
+  // RFP opt-in
+  if (rfp && (rfp.bounty || rfp.matching) && rfpOptIn === null) {
+    errors.rfpOptIn = 'Please accept or decline KYC';
+  }
+
   // Title
   if (title && title.length > 60) {
     errors.title = 'Title can only be 60 characters maximum';
@@ -90,50 +102,65 @@ export function getCreateErrors(
   }
 
   // Payout address
-  if (payoutAddress && !isValidAddress(payoutAddress)) {
-    errors.payoutAddress = 'That doesn’t look like a valid zcash address';
+  if (payoutAddress && !isValidSaplingAddress(payoutAddress)) {
+    if (isValidSproutAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling address, not a Sprout address';
+    } else if (isValidTAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling Z address, not a T address';
+    } else {
+      errors.payoutAddress = 'That doesn’t look like a valid Sapling address';
+    }
   }
 
   // Milestones
   if (milestones) {
-    let didMilestoneError = false;
     let cumulativeMilestonePct = 0;
     const milestoneErrors = milestones.map((ms, idx) => {
-      if (!ms.title || !ms.content || !ms.dateEstimated || !ms.payoutPercent) {
-        didMilestoneError = true;
-        return '';
+      if (!ms.title) {
+        return 'Title is required';
+      } else if (ms.title.length > 40) {
+        return 'Title length can only be 40 characters maximum';
       }
 
-      let err = '';
-      if (ms.title.length > 40) {
-        err = 'Title length can only be 40 characters maximum';
+      if (!ms.content) {
+        return 'Description is required';
       } else if (ms.content.length > 200) {
-        err = 'Description can only be 200 characters maximum';
+        return 'Description can only be 200 characters maximum';
+      }
+
+      if (!ms.dateEstimated) {
+        return 'Estimate date is required';
+      }
+
+      if (!ms.payoutPercent) {
+        return 'Payout percent is required';
+      } else if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
+        return 'Payout percent must be a valid number';
       }
 
       // Last one shows percentage errors
       cumulativeMilestonePct += parseInt(ms.payoutPercent, 10);
-      if (idx === milestones.length - 1 && cumulativeMilestonePct !== 100) {
-        err = `Payout percentages doesn’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
+      if (
+        idx === milestones.length - 1 &&
+        cumulativeMilestonePct !== 100 &&
+        !Number.isNaN(cumulativeMilestonePct)
+      ) {
+        return `Payout percentages don’t add up to 100% (currently ${cumulativeMilestonePct}%)`;
       }
-
-      didMilestoneError = didMilestoneError || !!err;
-      return err;
+      return '';
     });
-    if (didMilestoneError) {
+    if (milestoneErrors.find(err => !!err)) {
       errors.milestones = milestoneErrors;
     }
   }
   return errors;
 }
 
-export function getCreateTeamMemberError(user: User) {
+export function validateUserProfile(user: User) {
   if (user.displayName.length > 30) {
     return 'Display name can only be 30 characters maximum';
   } else if (user.title.length > 30) {
     return 'Title can only be 30 characters maximum';
-  } else if (!user.emailAddress || !/.+\@.+\..+/.test(user.emailAddress)) {
-    return 'That doesn’t look like a valid email address';
   }
 
   return '';
@@ -197,6 +224,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     target: toZat(draft.target),
     funded: Zat('0'),
     contributionMatching: 0,
+    contributionBounty: Zat('0'),
     percentFunded: 0,
     stage: PROPOSAL_STAGE.PREVIEW,
     category: draft.category || PROPOSAL_CATEGORY.CORE_DEV,

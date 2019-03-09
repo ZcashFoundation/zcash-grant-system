@@ -1,15 +1,69 @@
 from functools import wraps
+from datetime import datetime, timedelta
 
 import sentry_sdk
-from flask import request, g, jsonify
+from flask import request, g, jsonify, session
 from flask_security.core import current_user
+from flask_security.utils import logout_user
 from grant.proposal.models import Proposal
 from grant.settings import BLOCKCHAIN_API_SECRET
 from grant.user.models import User
 
 
+class AuthException(Exception):
+    pass
+
+
+# use with app.register_error_handler (app.py)
+def handle_auth_error(e):
+    return jsonify(message=str(e)), 403
+
+
 def get_authed_user():
-    return current_user if current_user.is_authenticated else None
+    return current_user if current_user.is_authenticated and not current_user.banned else None
+
+
+def throw_on_banned(user):
+    if user.banned:
+        raise AuthException("You are banned")
+
+
+def is_auth_fresh(minutes: int=20):
+    if 'last_login_time' in session:
+        last = session['last_login_time']
+        now = datetime.now()
+        return now - last < timedelta(minutes=minutes)
+
+
+def is_email_verified():
+    user = get_authed_user()
+    return user.email_verification.has_verified
+
+
+def auth_user(email, password):
+    existing_user = User.get_by_email(email)
+    if not existing_user:
+        raise AuthException("No user exists with that email")
+    if not existing_user.check_password(password):
+        raise AuthException("Invalid password")
+    throw_on_banned(existing_user)
+    existing_user.login()
+    session['last_login_time'] = datetime.now()
+    return existing_user
+
+
+def logout_current_user():
+    logout_user()
+
+
+def refresh_auth(password):
+    user = get_authed_user()
+    if not user:
+        raise AuthException("Not logged in")
+    if not user.check_password(password):
+        raise AuthException("Bad password")
+    session['last_login_time'] = datetime.now()
+    return True
 
 
 def requires_auth(f):
@@ -17,6 +71,7 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated:
             return jsonify(message="Authentication is required to access this resource"), 401
+        throw_on_banned(current_user)
         g.current_user = current_user
         with sentry_sdk.configure_scope() as scope:
             scope.user = {

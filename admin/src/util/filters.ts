@@ -4,6 +4,7 @@ import {
   CONTRIBUTION_STATUSES,
   PROPOSAL_ARBITER_STATUSES,
   MILESTONE_STAGES,
+  PROPOSAL_STAGES,
 } from './statuses';
 
 export interface Filter {
@@ -35,6 +36,14 @@ const PROPOSAL_FILTERS = PROPOSAL_STATUSES.map(s => ({
   group: 'Status',
 }))
   // proposal has extra filters
+  .concat(
+    PROPOSAL_STAGES.map(s => ({
+      id: `STAGE_${s.id}`,
+      display: `Stage: ${s.tagDisplay}`,
+      color: s.tagColor,
+      group: 'Stage',
+    })),
+  )
   .concat(
     PROPOSAL_ARBITER_STATUSES.map(s => ({
       id: `ARBITER_${s.id}`,
@@ -78,9 +87,62 @@ const CONTRIBUTION_FILTERS = CONTRIBUTION_STATUSES.map(s => ({
   display: `Status: ${s.tagDisplay}`,
   color: s.tagColor,
   group: 'Status',
-}));
+})).concat([{
+  id: 'REFUNDABLE',
+  display: 'Refundable',
+  color: '#afd500',
+  group: 'Refundable',
+}]);
 
 export const contributionFilters: Filters = {
   list: CONTRIBUTION_FILTERS,
   getById: getFilterById(CONTRIBUTION_FILTERS),
+};
+
+// User
+const USER_FILTERS = [
+  {
+    id: `BANNED`,
+    display: `Banned`,
+    color: 'rgb(235, 65, 24)',
+    group: 'Misc',
+  },
+  {
+    id: `SILENCED`,
+    display: `Silenced`,
+    color: 'rgb(255, 170, 0)',
+    group: 'Misc',
+  },
+  {
+    id: `ARBITER`,
+    display: `Arbiter`,
+    color: 'rgb(16, 142, 233)',
+    group: 'Misc',
+  },
+];
+
+export const userFilters: Filters = {
+  list: USER_FILTERS,
+  getById: getFilterById(USER_FILTERS),
+};
+
+// Comment
+const COMMENT_FILTERS = [
+  {
+    id: `REPORTED`,
+    display: `Reported`,
+    color: '#ffaa00',
+    group: 'Misc',
+  },
+  {
+    id: `HIDDEN`,
+    display: `Hidden`,
+    color: '#bebebe',
+    group: 'Misc',
+  },
+];
+
+export const commentFilters = {
+  list: COMMENT_FILTERS,
+  getById: getFilterById(COMMENT_FILTERS),
 };

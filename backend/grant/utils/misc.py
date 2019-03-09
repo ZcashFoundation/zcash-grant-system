@@ -7,6 +7,7 @@ import time
 from grant.settings import SITE_URL
 
 epoch = datetime.datetime.utcfromtimestamp(0)
+RANDOM_CHARS = string.ascii_letters + string.digits
 
 
 def dt_from_ms(ms):
@@ -24,8 +25,12 @@ def dt_to_unix(dt):
 
 def gen_random_code(length=32):
     return ''.join(
-        [random.choice(string.ascii_letters + string.digits) for n in range(length)]
+        [random.choice(RANDOM_CHARS) for n in range(length)]
     )
+
+
+def clean_random_code(code: str):
+    return ''.join(c for c in code if c in RANDOM_CHARS)
 
 
 def make_url(path: str):
@@ -59,3 +64,16 @@ def make_preview(content: str, max_length: int):
         truncated = True
 
     return content + '...' if truncated else content
+
+
+def gen_random_id(model):
+    min_id = 100000
+    max_id = pow(2, 31) - 1
+    random_id = random.randint(min_id, max_id)
+
+    # If it already exists, generate a new one (recursively)
+    existing = model.query.filter_by(id=random_id).first()
+    if existing:
+        random_id = gen_random_id(model)
+
+    return random_id

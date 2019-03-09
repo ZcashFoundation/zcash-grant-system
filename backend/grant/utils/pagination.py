@@ -1,7 +1,10 @@
 import abc
 from sqlalchemy import or_, and_
 
+from grant.comment.models import Comment, comments_schema
 from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
+from grant.comment.models import Comment, comments_schema
+from grant.user.models import User, UserSettings, users_schema
 from grant.milestone.models import Milestone
 from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, MilestoneStage
 
@@ -83,10 +86,8 @@ class ProposalPagination(Pagination):
 
             if status_filters:
                 query = query.filter(Proposal.status.in_(status_filters))
-            # TODO: figure out what is going to happen with stages
             if stage_filters:
-                self._raise('stage filters not yet supported')
-            #     query = query.filter(Proposal.stage.in_(stage_filters))
+                query = query.filter(Proposal.stage.in_(stage_filters))
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
             if arbiter_filters:
@@ -120,6 +121,7 @@ class ProposalPagination(Pagination):
 class ContributionPagination(Pagination):
     def __init__(self):
         self.FILTERS = [f'STATUS_{s}' for s in ContributionStatus.list()]
+        self.FILTERS.extend(['REFUNDABLE'])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': ProposalContribution.date_created.desc(),
@@ -148,6 +150,20 @@ class ContributionPagination(Pagination):
             if status_filters:
                 query = query.filter(ProposalContribution.status.in_(status_filters))
 
+            if 'REFUNDABLE' in filters:
+                query = query.filter(ProposalContribution.refund_tx_id == None) \
+                    .filter(ProposalContribution.staking == False) \
+                    .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
+                    .join(Proposal) \
+                    .filter(or_(
+                        Proposal.stage == ProposalStage.FAILED,
+                        Proposal.stage == ProposalStage.CANCELED,
+                    )) \
+                    .join(ProposalContribution.user) \
+                    .join(UserSettings) \
+                    .filter(UserSettings.refund_address != None) \
+
+
         # SORT (see self.SORT_MAP)
         if sort:
             self.validate_sort(sort)
@@ -172,8 +188,118 @@ class ContributionPagination(Pagination):
         }
 
 
+class UserPagination(Pagination):
+    def __init__(self):
+        self.FILTERS = ['BANNED', 'SILENCED', 'ARBITER']
+        self.PAGE_SIZE = 9
+        self.SORT_MAP = {
+            'EMAIL:DESC': User.email_address.desc(),
+            'EMAIL:ASC': User.email_address,
+            'NAME:DESC': User.display_name.desc(),
+            'NAME:ASC': User.display_name,
+        }
+
+    def paginate(
+        self,
+        schema: ma.Schema=users_schema,
+        query: db.Query=None,
+        page: int=1,
+        filters: list=None,
+        search: str=None,
+        sort: str='EMAIL:DESC',
+    ):
+        query = query or Proposal.query
+        sort = sort or 'EMAIL:DESC'
+
+        # FILTER
+        if filters:
+            self.validate_filters(filters)
+            if 'BANNED' in filters:
+                query = query.filter(User.banned == True)
+            if 'SILENCED' in filters:
+                query = query.filter(User.silenced == True)
+            if 'ARBITER' in filters:
+                query = query.join(User.arbiter_proposals) \
+                    .filter(ProposalArbiter.status == ProposalArbiterStatus.ACCEPTED)
+
+        # SORT (see self.SORT_MAP)
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
+
+        # SEARCH
+        if search:
+            query = query.filter(
+                User.email_address.ilike(f'%{search}%') |
+                User.display_name.ilike(f'%{search}%')
+            )
+
+        res = query.paginate(page, self.PAGE_SIZE, False)
+        return {
+            'page': res.page,
+            'total': res.total,
+            'page_size': self.PAGE_SIZE,
+            'items': schema.dump(res.items),
+            'filters': filters,
+            'search': search,
+            'sort': sort
+        }
+
+
+class CommentPagination(Pagination):
+    def __init__(self):
+        self.FILTERS = ['REPORTED', 'HIDDEN']
+        self.PAGE_SIZE = 10
+        self.SORT_MAP = {
+            'CREATED:DESC': Comment.date_created.desc(),
+            'CREATED:ASC': Comment.date_created,
+        }
+
+    def paginate(
+        self,
+        schema: ma.Schema=comments_schema,
+        query: db.Query=None,
+        page: int=1,
+        filters: list=None,
+        search: str=None,
+        sort: str='CREATED:DESC',
+    ):
+        query = query or Comment.query
+        sort = sort or 'CREATED:DESC'
+
+        # FILTER
+        if filters:
+            self.validate_filters(filters)
+            if 'REPORTED' in filters:
+                query = query.filter(Comment.reported == True)
+            if 'HIDDEN' in filters:
+                query = query.filter(Comment.hidden == True)
+
+        # SORT (see self.SORT_MAP)
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
+
+        # SEARCH
+        if search:
+            query = query.filter(
+                Comment.content.ilike(f'%{search}%')
+            )
+
+        res = query.paginate(page, self.PAGE_SIZE, False)
+        return {
+            'page': res.page,
+            'total': res.total,
+            'page_size': self.PAGE_SIZE,
+            'items': schema.dump(res.items),
+            'filters': filters,
+            'search': search,
+            'sort': sort
+        }
+
+
 # expose pagination methods here
 proposal = ProposalPagination().paginate
 contribution = ContributionPagination().paginate
-# comment = CommentPagination().paginate
-# user = UserPagination().paginate
+comment = CommentPagination().paginate
+user = UserPagination().paginate

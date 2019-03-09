@@ -4,6 +4,7 @@ import {
   CONTRIBUTION_STATUS,
   PROPOSAL_ARBITER_STATUS,
   MILESTONE_STAGE,
+  PROPOSAL_STAGE,
 } from 'src/types';
 
 export interface StatusSoT<E> {
@@ -92,6 +93,46 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
   },
 ];
 
+export const PROPOSAL_STAGES: Array<StatusSoT<PROPOSAL_STAGE>> = [
+  {
+    id: PROPOSAL_STAGE.PREVIEW,
+    tagDisplay: 'Preview',
+    tagColor: '#afd500',
+    hint: 'Proposal is not yet published.',
+  },
+  {
+    id: PROPOSAL_STAGE.FUNDING_REQUIRED,
+    tagDisplay: 'Funding',
+    tagColor: '#bebebe',
+    hint: 'Proposal has been published but still needs funding.',
+  },
+  {
+    id: PROPOSAL_STAGE.WIP,
+    tagDisplay: 'WIP',
+    tagColor: '#8d8d8d',
+    hint: 'Proposal is fully funded and the work is being done.',
+  },
+  {
+    id: PROPOSAL_STAGE.COMPLETED,
+    tagDisplay: 'Completed',
+    tagColor: '#108ee9',
+    hint: 'Proposal was accepted, published, funded and all funds paid out.',
+  },
+  {
+    id: PROPOSAL_STAGE.FAILED,
+    tagDisplay: 'Failed',
+    tagColor: '#eb4118',
+    hint: 'Proposal failed to meet target and is currently refunding all contributors.',
+  },
+  {
+    id: PROPOSAL_STAGE.CANCELED,
+    tagDisplay: 'Canceled',
+    tagColor: '#eb4118',
+    hint:
+      'Proposal was canceled by an admin and is currently refunding all contributors.',
+  },
+];
+
 export const PROPOSAL_ARBITER_STATUSES: Array<StatusSoT<PROPOSAL_ARBITER_STATUS>> = [
   {
     id: PROPOSAL_ARBITER_STATUS.MISSING,
@@ -150,9 +191,10 @@ export const CONTRIBUTION_STATUSES: Array<StatusSoT<CONTRIBUTION_STATUS>> = [
   },
   {
     id: CONTRIBUTION_STATUS.DELETED,
-    tagDisplay: 'Closed',
+    tagDisplay: 'Deleted',
     tagColor: '#eb4118',
-    hint: 'User deleted the contribution before it was sent or confirmed',
+    hint:
+      'User deleted the contribution before it was sent, or after it didn’t confirm after 24 hours',
   },
 ];
 

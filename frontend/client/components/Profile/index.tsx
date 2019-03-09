@@ -95,6 +95,8 @@ class Profile extends React.Component<Props, State> {
       invites,
       arbitrated,
     } = user;
+
+    const isLoading = user.isFetching;
     const nonePending = pendingProposals.length === 0;
     const noneCreated = proposals.length === 0;
     const noneFunded = contributions.length === 0;
@@ -123,7 +125,7 @@ class Profile extends React.Component<Props, State> {
           />
         </Switch>
         <div className="Profile-tabs">
-          <LinkableTabs defaultActiveKey="pending">
+          <LinkableTabs defaultActiveKey={(isAuthedUser && 'pending') || 'created'}>
             {isAuthedUser && (
               <Tabs.TabPane
                 tab={TabTitle('Pending', pendingProposals.length)}
@@ -132,6 +134,7 @@ class Profile extends React.Component<Props, State> {
                 <div>
                   {nonePending && (
                     <Placeholder
+                      loading={isLoading}
                       title="No pending proposals"
                       subtitle="You do not have any proposals awaiting approval."
                     />
@@ -143,7 +146,11 @@ class Profile extends React.Component<Props, State> {
             <Tabs.TabPane tab={TabTitle('Created', proposals.length)} key="created">
               <div>
                 {noneCreated && (
-                  <Placeholder subtitle="Has not created any proposals yet" />
+                  <Placeholder
+                    loading={isLoading}
+                    title="No created proposals"
+                    subtitle="There have not been any created proposals."
+                  />
                 )}
                 {proposals.map(p => (
                   <ProfileProposal key={p.proposalId} proposal={p} />
@@ -153,7 +160,11 @@ class Profile extends React.Component<Props, State> {
             <Tabs.TabPane tab={TabTitle('Funded', contributions.length)} key="funded">
               <div>
                 {noneFunded && (
-                  <Placeholder subtitle="Has not funded any proposals yet" />
+                  <Placeholder
+                    loading={isLoading}
+                    title="No proposals funded"
+                    subtitle="There have not been any proposals funded."
+                  />
                 )}
                 {contributions.map(c => (
                   <ProfileContribution
@@ -168,7 +179,11 @@ class Profile extends React.Component<Props, State> {
             <Tabs.TabPane tab={TabTitle('Comments', comments.length)} key="comments">
               <div>
                 {noneCommented && (
-                  <Placeholder subtitle="Has not made any comments yet" />
+                  <Placeholder
+                    loading={isLoading}
+                    title="No comments"
+                    subtitle="There have not been any comments made"
+                  />
                 )}
                 {comments.map(c => (
                   <ProfileComment key={c.id} userName={user.displayName} comment={c} />
@@ -184,7 +199,8 @@ class Profile extends React.Component<Props, State> {
                 <div>
                   {noneInvites && (
                     <Placeholder
-                      title="No invites here!"
+                      loading={isLoading}
+                      title="No invitations"
                       subtitle="You’ll be notified when you’ve been invited to join a proposal"
                     />
                   )}
@@ -201,6 +217,7 @@ class Profile extends React.Component<Props, State> {
               >
                 {noneArbitrated && (
                   <Placeholder
+                    loading={isLoading}
                     title="No arbitrations"
                     subtitle="You are not an arbiter of any proposals"
                   />
