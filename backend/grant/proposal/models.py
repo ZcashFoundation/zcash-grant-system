@@ -21,6 +21,7 @@ from grant.utils.enums import (
     MilestoneStage
 )
 from grant.utils.stubs import anonymous_user
+from grant.task.jobs import ContributionExpired
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -362,6 +363,10 @@ class Proposal(db.Model):
             staking=staking,
         )
         db.session.add(contribution)
+        db.session.flush()
+        if user_id:
+            task = ContributionExpired(contribution)
+            task.make_task()
         db.session.commit()
         return contribution
 
