@@ -743,7 +743,7 @@ def financials():
 
     def ex(sql: str):
         res = db.engine.execute(text(sql))
-        return [row[0] for row in res][0].normalize()
+        return [row[0] if row[0] else Decimal(0) for row in res][0].normalize()
 
     contributions = {
         'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
