@@ -343,9 +343,10 @@ def get_user_settings(user_id):
 
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @auth.requires_same_user_auth
-# TODO guard all (shape, validity)
 @body({
+    # TODO shape, validity
     "emailSubscriptions": fields.Dict(required=True),
+    # TODO validity - use proposal.model.validate
     "refundAddress": fields.Str(required=False, missing=None)
 })
 def set_user_settings(user_id, email_subscriptions, refund_address):

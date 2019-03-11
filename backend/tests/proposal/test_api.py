@@ -107,9 +107,6 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         )
         self.assert200(resp)
 
-
-
-
     def test_invalid_proposal_update_proposal_draft(self):
         new_title = "Updated!"
         new_proposal = test_proposal.copy()

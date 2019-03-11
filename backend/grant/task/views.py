@@ -18,6 +18,6 @@ def task():
             db.session.add(each_task)
         except Exception as e:
             # replace with Sentry logging
-            print("Oops, something went wrong: {}".format(e))
+            print(f"Oops, something went wrong: {e}")
     db.session.commit()
     return jsonify(tasks_schema.dump(tasks))
