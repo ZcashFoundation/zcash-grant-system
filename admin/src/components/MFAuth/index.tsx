@@ -173,7 +173,7 @@ class MFAuth extends React.Component<Props, State> {
           <ol>
             <li>Save two-factor recovery codes</li>
             <li>
-              Setup up TOTP authentication device, typically a smartphone with Google
+              Setup TOTP authentication device, typically a smartphone with Google
               Authenticator, Authy, 1Password or other compatible authenticator app.
             </li>
           </ol>
