@@ -1,12 +1,36 @@
-This document exists to provide information to contact the Zcash Foundation and Grant.io teams to responsibly disclose severe vulnerabilities.
+# Responsible Disclosure Policy
 
-A full responsible response process and policy scope will be made available at a future time.
+We greatly appreciate any and all disclosures of bugs and vulnerabilities that are done in a responsible manner.  We will engage responsible disclosures according to this policy and put forth our best effort to fix disclosed vulnerabilities as well as reaching out to numerous node operators to deploy fixes in a timely manner.
+
+## Responsible Disclosure Guidelines
+
+Non-critical bugs can be repoted by creating an issue on [GitHub](https://github.com/grant-project/zcash-grant-system). Do not disclose critical bug or vulnerability on public forums, message boards, mailing lists, etc. prior to responsibly disclosing to the Zcash Foundation / Grant.io teams and giving sufficient time for the issue to be fixed and deployed.
+
+## Reporting a Bug or Vulnerability
+
+When reporting a bug or vulnerability, please provide the following to contact@grant.io / contact@zfnd.org. 
+* A short summary of the potential impact of the issue (if known).
+* Details explaining how to reproduce the issue or how an exploit may be formed.
+* Your name (optional).  If provided, we will provide credit for disclosure.  Otherwise, you will be treated anonymously and your privacy will be respected.
+* Your email or other means of contacting you.
+* A PGP key/fingerprint for us to provide encrypted responses to your disclosure.  If this is not provided, we cannot guarantee that you will receive a response prior to a fix being made and deployed.
+
+## Encrypting the Disclosure
+
+We highly encourage all disclosures to be encrypted to prevent interception and exploitation by third-parties prior to a fix being developed and deployed.  Please encrypt using the PGP public key with fingerprint: `46CD57E95AF395A1499C18A3F01C867EEB456C7A`
+
+It may be obtained via:
+```
+gpg --recv-keys 46CD57E95AF395A1499C18A3F01C867EEB456C7A
+```
+
+Alternatively, it may be optained by copying the following into a file, and imported it via:
 
 ```
-Grant.io Team
-email: contact [AT] grant.io
-fingerprit: 46CD57E95AF395A1499C18A3F01C867EEB456C7A
+gpg --import <filename>
+```
 
+```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: Keybase OpenPGP v2.1.0
 Comment: https://keybase.io/crypto
