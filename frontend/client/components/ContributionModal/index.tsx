@@ -106,7 +106,7 @@ export default class ContributionModal extends React.Component<Props, State> {
               remain eligible for refunds, you can close this modal, make sure you're
               logged in, and don't check the "Contribute without attribution" checkbox.
               <br /> <br />
-              The Zcash Foundation is unable to accept donations of more than $5000 USD.
+              NOTE: The Zcash Foundation is unable to accept donations of more than $5,000 USD worth of ZEC from anonymous users.
             </>
           }
         />
