@@ -69,7 +69,7 @@ Flask-Security==3.0.0
 requests-oauthlib==1.0.0
 
 # request parsing
-webargs==5.1.2
+webargs==5.1.3
 
 # 2fa - totp
 pyotp==2.2.7

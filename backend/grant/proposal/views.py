@@ -230,7 +230,7 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
         if g.current_proposal.status not in [ProposalStatus.DRAFT,
                                              ProposalStatus.REJECTED]:
             raise ValidationException(
-                "Proposal with status: {} are not authorized for updates".format(g.current_proposal.status)
+               f"Proposal with status: {g.current_proposal.status} are not authorized for updates"
             )
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
