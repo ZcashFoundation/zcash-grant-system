@@ -89,19 +89,19 @@ export default class ContributionModal extends React.Component<Props, State> {
         <Alert
           className="PaymentInfo-anonymous"
           type="warning"
-          message="This contribution is anonymous"
+          message="This contribution will not be attributed"
           description={
             <>
-              You are about to contribute anonymously. Your contribution will show up
-              without attribution, and even if you're logged in, will not appear anywhere
+              Your contribution will show up
+              without attribution. Even if you're logged in, the contribution will not appear anywhere
               on your account after you close this modal.
               <br /> <br />
-              In the case of a refund, your contribution will be treated as a donation to
-              the Zcash Foundation instead.
+              ZF Grants is unable to offer refunds for non-attributed contributions. If refunds for this campaign are issued, your contribution will be treated as a donation to
+              the Zcash Foundation.
               <br /> <br />
-              If you would like to have your contribution attached to an account, you can
+              If you would like to have your contribution attached to an account and remain eligible for refunds, you can
               close this modal, make sure you're logged in, and don't check the
-              "Contribute anonymously" checkbox.
+              "Contribute without attribution" checkbox.
             </>
           }
         />
