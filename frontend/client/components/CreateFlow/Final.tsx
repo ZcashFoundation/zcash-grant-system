@@ -102,8 +102,8 @@ class CreateFinal extends React.Component<Props, State> {
                         <Link to={`/profile?tab=funded`}>profile's funded tab</Link>.
                       </p>
                       <p>
-                        Once your payment has been sent and confirmed, you will receive an
-                        email. Visit your{' '}
+                        Once your payment has been sent and processed with 6 confirmations, you
+                        will receive an email. Visit your{' '}
                         <Link to={`/profile?tab=pending`}>
                           profile's pending proposals tab
                         </Link>{' '}
