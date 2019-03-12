@@ -8,7 +8,7 @@ Non-critical bugs can be repoted by creating an issue on [GitHub](https://github
 
 ## Reporting a Bug or Vulnerability
 
-When reporting a bug or vulnerability, please provide the following to contact@grant.io / contact@zfnd.org. 
+When reporting a bug or vulnerability, please provide the following to contact@grant.io and contact@zfnd.org. 
 * A short summary of the potential impact of the issue (if known).
 * Details explaining how to reproduce the issue or how an exploit may be formed.
 * Your name (optional).  If provided, we will provide credit for disclosure.  Otherwise, you will be treated anonymously and your privacy will be respected.
@@ -107,9 +107,7 @@ YuE2wMSvdPhaQSs1siFICIBrCu/nH1AcgLO2R20vtWi3azx+zLq20l1mQXgUDvfB
 Xy9U/6jQi/pDWSFTLF/tj9ctvfGJXs03lkTrKyp7xAu5MA==
 =1KTe
 -----END PGP PUBLIC KEY BLOCK-----
-
-Zcash Foundation
-email: contact [AT] zfnd.org
 ```
+
 
 ##### Inspired by [this](https://github.com/Bitcoin-ABC/bitcoin-abc/blob/master/DISCLOSURE_POLICY.md) dislosure policy
