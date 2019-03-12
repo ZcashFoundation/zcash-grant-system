@@ -1,5 +1,5 @@
 @import '~styles/variables.less';
-@header-height: 68px;
+@header-height: 64px;
 @header-transition: 200ms;
 @link-padding: 0.7rem;
 @small-query: ~'(max-width: 820px)';
@@ -44,22 +44,22 @@
     transition: transform 100ms ease, opacity 100ms ease;
     flex-grow: 1;
     text-align: center;
-    opacity: 0.8;
+    opacity: 0.7;
 
     &:hover,
     &:focus {
       color: inherit;
-      transform: translateY(-2px) translate(-50%, -50%);
       opacity: 0.9;
     }
 
     &-logo {
-      height: 3.6rem;
+      height: 2rem;
       width: auto;
+      transform: translateY(-7%);
       transition: transform @header-transition ease;
 
       .is-transparent & {
-        transform: scale(1.4) translateY(20%);
+        transform: scale(1.4) translateY(18%);
       }
     }
   }
