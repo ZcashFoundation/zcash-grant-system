@@ -517,12 +517,13 @@ class Proposal(db.Model):
                 'support_url': make_url('/contact'),
             })
         for c in self.contributions:
-            send_email(c.user.email_address, 'contribution_proposal_canceled', {
-                'contribution': c,
-                'proposal': self,
-                'refund_address': c.user.settings.refund_address,
-                'account_settings_url': make_url('/profile/settings?tab=account')
-            })
+            if c.user:
+                send_email(c.user.email_address, 'contribution_proposal_canceled', {
+                    'contribution': c,
+                    'proposal': self,
+                    'refund_address': c.user.settings.refund_address,
+                    'account_settings_url': make_url('/profile/settings?tab=account')
+                })
 
     @hybrid_property
     def contributed(self):
