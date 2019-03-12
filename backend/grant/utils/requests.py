@@ -12,6 +12,8 @@ def handle_res(res):
 
 
 def blockchain_get(path, params=None):
+    if E2E_TESTING:
+        return blockchain_rest_e2e(path, params)
     res = requests.get(
         f'{BLOCKCHAIN_REST_API_URL}{path}',
         headers={'authorization': BLOCKCHAIN_API_SECRET},
@@ -22,7 +24,7 @@ def blockchain_get(path, params=None):
 
 def blockchain_post(path, data=None):
     if E2E_TESTING:
-        return blockchain_post_e2e(path, data)
+        return blockchain_rest_e2e(path, data)
     res = requests.post(
         f'{BLOCKCHAIN_REST_API_URL}{path}',
         headers={'authorization': BLOCKCHAIN_API_SECRET},
@@ -31,11 +33,15 @@ def blockchain_post(path, data=None):
     return handle_res(res)
 
 
-def blockchain_post_e2e(path, data):
-    if path == '/bootstrap':
+def blockchain_rest_e2e(path, data):
+    if '/bootstrap' in path:
         return {
             'startHeight': 123,
             'currentHeight': 456,
+        }
+    if '/contribution/addresses' in path:
+        return {
+            'transparent': 't123',
         }
 
     raise Exception(f'blockchain_post_e2e does not recognize path: {path}')
