@@ -71,6 +71,7 @@ export default class ContributionModal extends React.Component<Props, State> {
       this.setState({
         contribution: null,
         hasConfirmedAnonymous: false,
+        hasSent: false,
         error: null,
       });
     }
@@ -93,16 +94,17 @@ export default class ContributionModal extends React.Component<Props, State> {
           message="This contribution will not be attributed"
           description={
             <>
-              Your contribution will show up
-              without attribution. Even if you're logged in, the contribution will not appear anywhere
-              on your account after you close this modal.
+              Your contribution will show up without attribution. Even if you're logged
+              in, the contribution will not appear anywhere on your account after you
+              close this modal.
               <br /> <br />
-              ZF Grants is unable to offer refunds for non-attributed contributions. If refunds for this campaign are issued, your contribution will be treated as a donation to
-              the Zcash Foundation.
+              ZF Grants is unable to offer refunds for non-attributed contributions. If
+              refunds for this campaign are issued, your contribution will be treated as a
+              donation to the Zcash Foundation.
               <br /> <br />
-              If you would like to have your contribution attached to an account and remain eligible for refunds, you can
-              close this modal, make sure you're logged in, and don't check the
-              "Contribute without attribution" checkbox.
+              If you would like to have your contribution attached to an account and
+              remain eligible for refunds, you can close this modal, make sure you're
+              logged in, and don't check the "Contribute without attribution" checkbox.
             </>
           }
         />
