@@ -30,6 +30,12 @@ Alternatively, it may be optained by copying the following into a file, and impo
 gpg --import <filename>
 ```
 
+Signing example:
+
+```
+gpg --encrypt --sign --armor -r contact@grant.io <path/to/filename>
+```
+
 ```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: Keybase OpenPGP v2.1.0
