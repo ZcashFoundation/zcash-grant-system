@@ -8,6 +8,7 @@ import { formatTxExplorerUrl } from 'utils/formatters';
 import { deleteContribution } from 'modules/users/actions';
 import { UserContribution } from 'types';
 import './ProfileContribution.less';
+import { PROPOSAL_STAGE } from 'api/constants';
 
 interface OwnProps {
   userId: number;
@@ -26,7 +27,10 @@ class ProfileContribution extends React.Component<Props> {
     const { contribution } = this.props;
     const { proposal } = contribution;
     const isConfirmed = contribution.status === 'CONFIRMED';
-    const isExpired = !isConfirmed && contribution.dateCreated < Date.now() / 1000 - ONE_DAY;
+    const isExpired =
+      (!isConfirmed && contribution.dateCreated < Date.now() / 1000 - ONE_DAY) ||
+      (proposal.stage === PROPOSAL_STAGE.CANCELED ||
+        proposal.stage === PROPOSAL_STAGE.FAILED);
 
     let tag;
     let actions: React.ReactNode;
@@ -43,15 +47,14 @@ class ProfileContribution extends React.Component<Props> {
     } else if (isExpired) {
       tag = <Tag color="red">Expired</Tag>;
       // TODO: Link to support
-      actions = <>
-        <Popconfirm
-          title="Are you sure?"
-          onConfirm={this.deleteContribution}
-        >
-          <a>Delete</a>
-        </Popconfirm>
-        <Link to="/support">Contact support</Link>
-      </>;
+      actions = (
+        <>
+          <Popconfirm title="Are you sure?" onConfirm={this.deleteContribution}>
+            <a>Delete</a>
+          </Popconfirm>
+          <Link to="/support">Contact support</Link>
+        </>
+      );
     } else {
       tag = <Tag color="orange">Pending</Tag>;
       actions = (
@@ -76,9 +79,7 @@ class ProfileContribution extends React.Component<Props> {
           <div className="ProfileContribution-state-amount">
             +<UnitDisplay value={contribution.amount} symbol="ZEC" />
           </div>
-          <div className="ProfileContribution-state-actions">
-            {actions}
-          </div>
+          <div className="ProfileContribution-state-actions">{actions}</div>
         </div>
       </div>
     );
@@ -89,6 +90,9 @@ class ProfileContribution extends React.Component<Props> {
   };
 }
 
-export default connect<{}, DispatchProps, OwnProps, {}>(undefined, {
-  deleteContribution,
-})(ProfileContribution);
+export default connect<{}, DispatchProps, OwnProps, {}>(
+  undefined,
+  {
+    deleteContribution,
+  },
+)(ProfileContribution);
