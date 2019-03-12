@@ -8,7 +8,7 @@ Non-critical bugs can be repoted by creating an issue on [GitHub](https://github
 
 ## Reporting a Bug or Vulnerability
 
-When reporting a bug or vulnerability, please provide the following to contact@grant.io and contact@zfnd.org. 
+When reporting a bug or vulnerability, please provide the following to contact@grant.io and CC contact@zfnd.org. 
 * A short summary of the potential impact of the issue (if known).
 * Details explaining how to reproduce the issue or how an exploit may be formed.
 * Your name (optional).  If provided, we will provide credit for disclosure.  Otherwise, you will be treated anonymously and your privacy will be respected.
