@@ -227,7 +227,6 @@ const app = store({
   financialsFetched: false,
   financialsFetching: false,
   financials: {
-    net: '0',
     grants: {
       total: '0',
       matching: '0',

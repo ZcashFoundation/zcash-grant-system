@@ -12,7 +12,7 @@ class Financials extends React.Component {
   }
 
   render() {
-    const { contributions, grants, payouts, net } = store.financials;
+    const { contributions, grants, payouts } = store.financials;
     if (!store.financialsFetched) {
       return <Spin tip="Loading financials..." />;
     }
@@ -20,70 +20,6 @@ class Financials extends React.Component {
     return (
       <div className="Financials">
         <Row gutter={16}>
-          <Col span={12}>
-            <Card title="Accounting" size="small">
-              <div className="Financials-bottomLine">
-                <div>
-                  <div>
-                    <Info
-                      content={
-                        <>
-                          Total amount of confirmed <b>conributions</b> (including
-                          staking).
-                        </>
-                      }
-                    />{' '}
-                    gross
-                  </div>
-                  <div>
-                    <small>&nbsp;ⓩ</small>
-                    <b>{contributions.total}</b>
-                  </div>
-                </div>
-                <div>
-                  <div>
-                    <Info
-                      content={
-                        <>
-                          Total amount of refunded <b>conributions</b> (have refund
-                          transaction ids).
-                        </>
-                      }
-                    />{' '}
-                    refunds
-                  </div>
-                  <div>
-                    <small>-ⓩ</small>
-                    <b>{contributions.refunded}</b>
-                  </div>
-                </div>
-                <div>
-                  <div>
-                    <Info
-                      content={
-                        <>
-                          Total milestone payouts that have been made. These payouts may
-                          have been made with grants in addition to contributions.
-                        </>
-                      }
-                    />{' '}
-                    payouts
-                  </div>
-                  <div>
-                    <small>-ⓩ</small>
-                    <b>{payouts.paid}</b>
-                  </div>
-                </div>
-                <div className="is-net">
-                  <div>net</div>
-                  <div>
-                    <small>&nbsp;ⓩ</small>
-                    <b>{net}</b>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </Col>
           <Col span={12}>
             <Card size="small" title="Contributions">
               <Charts.Pie
@@ -194,7 +130,6 @@ class Financials extends React.Component {
             </Card>
           </Col>
         </Row>
-        {/* <pre>{JSON.stringify(store.financials, null, 2)}</pre> */}
       </div>
     );
   }
