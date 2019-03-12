@@ -126,6 +126,13 @@ example_email_args = {
         'refund_address': 'ztqdzvnK2SE27FCWg69EdissCBn7twnfd1XWLrftiZaT4rSFCkp7eQGQDSWXBF43sM5cyA4c8qyVjBP9Cf4zTcFJxf71ve8',
         'account_settings_url': 'http://accountsettingsurl.com/',
     },
+    'contribution_expired': {
+        'proposal': proposal,
+        'contribution': contribution,
+        'contact_url': 'http://somecontacturl.com',
+        'profile_url': 'http://someprofile.com',
+        'proposal_url': 'http://someproposal.com',
+    },
     'comment_reply': {
         'author': user,
         'proposal': proposal,

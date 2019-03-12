@@ -199,6 +199,18 @@ def contribution_proposal_canceled(email_args):
     }
 
 
+def contribution_expired(email_args):
+    return {
+        'subject': 'Your contribution expired',
+        'title': 'Contribution expired',
+        'preview': 'Your {} ZEC contribution to {} could not be confirmed, and has expired'.format(
+            email_args['contribution'].amount,
+            email_args['proposal'].title,
+        ),
+        'subscription': EmailSubscription.FUNDED_PROPOSAL_CONTRIBUTION,
+    }
+
+
 def comment_reply(email_args):
     return {
         'subject': 'New reply from {}'.format(email_args['author'].display_name),
@@ -282,6 +294,7 @@ get_info_lookup = {
     'contribution_refunded': contribution_refunded,
     'contribution_proposal_failed': contribution_proposal_failed,
     'contribution_proposal_canceled': contribution_proposal_canceled,
+    'contribution_expired': contribution_expired,
     'comment_reply': comment_reply,
     'proposal_arbiter': proposal_arbiter,
     'milestone_request': milestone_request,
