@@ -111,3 +111,5 @@ Xy9U/6jQi/pDWSFTLF/tj9ctvfGJXs03lkTrKyp7xAu5MA==
 Zcash Foundation
 email: contact [AT] zfnd.org
 ```
+
+##### Inspired by [this](https://github.com/Bitcoin-ABC/bitcoin-abc/blob/master/DISCLOSURE_POLICY.md) dislosure policy
