@@ -1,46 +1,25 @@
 from datetime import datetime
-from decimal import Decimal
-from functools import reduce
 from random import randint
 from math import floor
 
-from flask import Blueprint, request
-from marshmallow import fields, validate
-from sqlalchemy import func, or_
+from flask import Blueprint
 
-import grant.utils.admin as admin
-import grant.utils.auth as auth
-from grant.comment.models import Comment, user_comments_schema, admin_comments_schema, admin_comment_schema
-from grant.email.send import generate_email, send_email
+from grant.comment.models import Comment
 from grant.extensions import db
 from grant.milestone.models import Milestone
-from grant.parser import body, query, paginated_fields
 from grant.proposal.models import (
     Proposal,
     ProposalArbiter,
     ProposalContribution,
-    proposals_schema,
-    proposal_schema,
-    user_proposal_contributions_schema,
-    admin_proposal_contribution_schema,
-    admin_proposal_contributions_schema,
 )
-from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
-from grant.settings import EXPLORER_URL
-from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
-from grant.utils import pagination
+from grant.user.models import User, admin_user_schema
 
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
     Category,
     ContributionStatus,
-    ProposalArbiterStatus,
-    MilestoneStage,
-    RFPStatus,
 )
-from grant.utils.misc import make_url
-# from .example_emails import example_email_args
 
 last_email = None
 
@@ -85,22 +64,36 @@ def create_proposals(count, category, stage, with_comments=False):
                     content=f'Fake comment #{j} on fake proposal #{i} {category} {stage}!'
                 )
                 db.session.add(c)
+        if stage == ProposalStage.FUNDING_REQUIRED:
+            stake = p.create_contribution('1', None, True)
+            stake.confirm('fakestaketxid', '1')
+            db.session.add(stake)
+            db.session.flush()
+            fund = p.create_contribution('100', None, False)
+            fund.confirm('fakefundtxid0', '100')
+            db.session.add(fund)
+            db.session.flush()
+            p.status = ProposalStatus.LIVE
+            db.session.add(p)
+            db.session.flush()
 
     # db.session.flush()
-    print(f'Added {count} LIVE fake proposals')
 
 
 def create_user(key: str):
+    pw = f"e2epassword{key}"
     user = User.create(
         email_address=f"{key}@testing.e2e",
-        password="e2epassword",
+        password=pw,
         display_name=f"{key} Endtoenderson",
         title=f"title{key}",
     )
     user.email_verification.has_verified = True
     db.session.add(user)
     db.session.flush()
-    return admin_user_schema.dump(user)
+    dump = admin_user_schema.dump(user)
+    dump['password'] = pw
+    return dump
 
 
 blueprint = Blueprint('e2e', __name__, url_prefix='/api/v1/e2e')
@@ -116,7 +109,7 @@ def setup():
     default_user = create_user('default')
     other_user = create_user('other')
     create_proposals(12, Category.COMMUNITY, ProposalStage.FUNDING_REQUIRED, True)
-    create_proposals(13, Category.CORE_DEV, ProposalStage.WIP)
+    create_proposals(13, Category.CORE_DEV, ProposalStage.WIP, False)
     create_proposals(15, Category.DOCUMENTATION, ProposalStage.COMPLETED)
     create_proposals(5, Category.ACCESSIBILITY, ProposalStage.FAILED)
     db.session.commit()
@@ -143,3 +136,15 @@ def setup():
 @blueprint.route("/email", methods=["GET"])
 def get_email():
     return last_email
+
+
+@blueprint.route("/contribution/confirm", methods=["GET"])
+def confirm_contributions():
+    contributions = ProposalContribution.query \
+        .filter(ProposalContribution.status == ContributionStatus.PENDING).all()
+    for c in contributions:
+        c.confirm('fakefundedtxid1', '23.456')
+        db.session.add(c)
+        c.proposal.set_funded_when_ready()
+    db.session.commit()
+    return {}
