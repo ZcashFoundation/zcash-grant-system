@@ -13,7 +13,7 @@ class CreatePage extends React.Component<Props> {
     return (
       <>
         <noscript className="noScript is-block">
-          Proposal creation requires Javascript. You’ll need to enable
+          Proposal creation requires Javascript. You’ll need to enable it to continue.
         </noscript>
         <DraftList createIfNone createWithRfpId={rfpId} />
       </>
