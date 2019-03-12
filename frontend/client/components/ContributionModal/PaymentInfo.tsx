@@ -113,7 +113,7 @@ export default class PaymentInfo extends React.Component<Props, State> {
       } else {
         text = `
           Thank you for contributing! Just send using whichever method works best for
-          you, and we'll let you know once it's been received with 6 confirmations.
+          you, and we'll let you know once it's been processed with 6 confirmations.
         `;
       }
     }
