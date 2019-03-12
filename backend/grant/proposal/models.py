@@ -286,7 +286,10 @@ class Proposal(db.Model):
                 raise ValidationException("Proposal must have a {}".format(field))
 
         # Check with node that the address is kosher
-        res = blockchain_get('/validate/address', {'address': self.payout_address})
+        try:
+            res = blockchain_get('/validate/address', {'address': self.payout_address})
+        except:
+            raise ValidationException("Could not validate your payout address due to an internal server error, please try again later")
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 

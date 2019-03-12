@@ -66,11 +66,12 @@ export default class ContributionModal extends React.Component<Props, State> {
     if (contribution !== this.props.contribution) {
       this.setState({ contribution: contribution || null });
     }
-    // When the modal is closed, clear out the contribution and anonymous check
+    // When the modal is closed, clear out the contribution, error, and anonymous check
     if (this.props.isVisible && !isVisible) {
       this.setState({
         contribution: null,
         hasConfirmedAnonymous: false,
+        error: null,
       });
     }
   }
@@ -133,7 +134,16 @@ export default class ContributionModal extends React.Component<Props, State> {
       if (error) {
         okText = 'Done';
         onOk = handleClose;
-        content = error;
+        content = (
+          <Result
+            type="error"
+            title="Something went wrong"
+            description={`
+              We were unable to get your contribution started. Please check back
+              soon, we're working to fix the problem as soon as possible.
+            `}
+          />
+        );
       } else {
         okText = 'I’ve sent it';
         onOk = this.confirmSend;

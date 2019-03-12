@@ -194,7 +194,8 @@ class ProfilePending extends React.Component<Props, State> {
         this.setState({ isLoadingStake: false });
       });
     } catch (err) {
-      message.error(err.message, 3);
+      console.error(err);
+      message.error('Failed to get staking contribution, try again later', 3);
       this.setState({ isLoadingStake: false });
     }
   };

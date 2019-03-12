@@ -48,6 +48,10 @@ def create_app(config_objects=["grant.settings"]):
             return jsonify({"message": error_message}), err.code, headers
         else:
             return jsonify({"message": error_message}), err.code
+    
+    @app.errorhandler(Exception)
+    def handle_exception(err):
+        return jsonify({"message": "Something went wrong"}), 500
 
     for conf in config_objects:
         app.config.from_object(conf)
