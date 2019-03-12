@@ -10,7 +10,14 @@ class CreatePage extends React.Component<Props> {
     const { location } = this.props;
     const parsed = parse(location.search);
     const rfpId = parsed.rfp ? parseInt(parsed.rfp, 10) : undefined;
-    return <DraftList createIfNone createWithRfpId={rfpId} />;
+    return (
+      <>
+        <noscript className="noScript is-block">
+          Proposal creation requires Javascript. You’ll need to enable
+        </noscript>
+        <DraftList createIfNone createWithRfpId={rfpId} />
+      </>
+    );
   }
 }
 

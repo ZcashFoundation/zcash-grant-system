@@ -53,7 +53,15 @@ class AuthRoute extends React.Component<Props> {
       if (onlyLoggedOut) {
         newLocation = authForwardLocation || { ...location, pathname: '/profile' };
       }
-      return <Redirect to={{ ...newLocation }} />;
+      return (
+        <>
+          <noscript className="noScript is-block">
+            This page requires you to login before you can access it, but you have
+            Javascript disabled. Please enable Javascript and login to continue.
+          </noscript>
+          <Redirect to={{ ...newLocation }} />
+        </>
+      );
     }
   }
   private setAuthForward = () => {
