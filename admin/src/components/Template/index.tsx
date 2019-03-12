@@ -63,6 +63,12 @@ class Template extends React.Component<Props> {
                 <span className="nav-text">Contributions</span>
               </Link>
             </Menu.Item>
+            <Menu.Item key="financials">
+              <Link to="/financials">
+                <Icon type="audit" />
+                <span className="nav-text">Financials</span>
+              </Link>
+            </Menu.Item>
             <Menu.Item key="emails">
               <Link to="/emails">
                 <Icon type="mail" />
