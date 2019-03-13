@@ -64,11 +64,11 @@ class Milestone(db.Model):
         self.index = index
 
     @staticmethod
-    def make(milestones, proposal):
-        if milestones:
+    def make(milestones_data, proposal):
+        if milestones_data:
             # Delete & re-add milestones
             [db.session.delete(x) for x in proposal.milestones]
-            for i, milestone_data in enumerate(milestones):
+            for i, milestone_data in enumerate(milestones_data):
                 m = Milestone(
                     title=milestone_data["title"],
                     content=milestone_data["content"],
