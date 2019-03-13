@@ -21,4 +21,4 @@ Tests can be found in `cypress/integration`. Cypress will hot-reload open tests 
 
 ### CI
 
-TODO
+Coming soon.
