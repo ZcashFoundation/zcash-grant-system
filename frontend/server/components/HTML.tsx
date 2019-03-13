@@ -34,13 +34,6 @@ const HTML: React.SFC<Props> = ({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#fff" />
         <meta name="theme-color" content="#fff" />
-        {/* TODO: import from @fortawesome */}
-        {/* <link
-          rel="stylesheet"
-          href="https://use.fontawesome.com/releases/v5.2.0/css/all.css"
-          integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ"
-          crossOrigin="anonymous"
-        /> */}
         {/* Custom link & meta tags from webpack */}
         {extractor.getLinkElements()}
         {linkTags.map((l, idx) => (

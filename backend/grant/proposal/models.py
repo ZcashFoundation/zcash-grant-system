@@ -289,7 +289,8 @@ class Proposal(db.Model):
         try:
             res = blockchain_get('/validate/address', {'address': self.payout_address})
         except:
-            raise ValidationException("Could not validate your payout address due to an internal server error, please try again later")
+            raise ValidationException(
+                "Could not validate your payout address due to an internal server error, please try again later")
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 
@@ -379,10 +380,10 @@ class Proposal(db.Model):
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
-            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
+                staking=True,
             ).first()
             if not contribution:
                 contribution = self.create_contribution(
@@ -712,9 +713,6 @@ proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
 
 
-# TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
-
-
 class InviteWithProposalSchema(ma.Schema):
     class Meta:
         model = ProposalTeamInvite
@@ -764,7 +762,7 @@ class ProposalContributionSchema(ma.Schema):
 
     def get_addresses(self, obj):
         # Omit 'memo' and 'sprout' for now
-        # TODO: Add back in 'sapling' when ready
+        # NOTE: Add back in 'sapling' when ready
         addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
         return {
             'transparent': addresses['transparent'],

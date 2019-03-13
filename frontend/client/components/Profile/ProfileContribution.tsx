@@ -46,7 +46,7 @@ class ProfileContribution extends React.Component<Props> {
       );
     } else if (isExpired) {
       tag = <Tag color="red">Expired</Tag>;
-      // TODO: Link to support
+      // TODO: Link to support (issue #337)
       actions = (
         <>
           <Popconfirm title="Are you sure?" onConfirm={this.deleteContribution}>

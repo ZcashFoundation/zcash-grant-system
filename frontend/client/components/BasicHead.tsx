@@ -41,7 +41,6 @@ class BasicHead extends React.Component<Props> {
           <meta property="og:url" content={defaultOgpUrl} />
           <meta property="og:image" content={defaultOgpImage} />
           <meta property="og:locale" content="en_US" />
-          {/* TODO: i18n */}
           {/* <meta property="og:locale:alternate" content="en_US" /> */}
           {/* <meta property="og:locale:alternate" content="de_DE" /> */}
 
