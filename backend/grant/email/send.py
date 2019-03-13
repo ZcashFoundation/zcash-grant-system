@@ -1,8 +1,8 @@
 import sendgrid
-import time
 from threading import Thread
 from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
+from sentry_sdk import capture_exception
 from grant.utils.misc import make_url
 from python_http_client import HTTPError
 from sendgrid.helpers.mail import Email, Mail, Content
@@ -35,8 +35,8 @@ def team_invite_info(email_args):
 
 def recover_info(email_args):
     return {
-        'subject': '{} account recovery'.format(UI['NAME']),
-        'title': '{} account recovery'.format(UI['NAME']),
+        'subject': 'Recover your account',
+        'title': 'Recover your account',
         'preview': 'Use the link to recover your account.'
     }
 
@@ -366,13 +366,12 @@ def make_envelope(to, type, email_args):
     if user and 'subscription' in info:
         sub = info['subscription']
         if user and not is_subscribed(user.settings.email_subscriptions, sub):
-            print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
+            app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
             return None
 
     email = generate_email(type, email_args, user)
-
     mail = Mail(
-        from_email=Email(SENDGRID_DEFAULT_FROM),
+        from_email=Email(SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME),
         to_email=Email(to),
         subject=email['info']['subject'],
     )
@@ -389,12 +388,17 @@ def sendgrid_send(mail):
     try:
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
         res = sg.client.mail.send.post(request_body=mail.get())
-        print('Just sent an email to %s of type %s, response code: %s' % (mail.___to, mail.___type, res.status_code))
+        current_app.logger.info('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
     except HTTPError as e:
-        print('An HTTP error occured while sending an email to %s - %s: %s' % (mail.___to, e.__class__.__name__, e))
-        print(e.body)
+        current_app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
+                                (to, e.__class__.__name__, e))
+        current_app.logger.debug(e.body)
+        capture_exception(e)
     except Exception as e:
-        print('An unknown error occured while sending an email to %s - %s: %s' % (mail.___to, e.__class__.__name__, e))
+        current_app.logger.info('An unknown error occured while sending an email to %s - %s: %s' %
+                                (to, e.__class__.__name__, e))
+        current_app.logger.debug(e)
+        capture_exception(e)
 
 
 class EmailSender(Thread):
@@ -408,6 +412,5 @@ class EmailSender(Thread):
             self.envelopes.append(env)
 
     def run(self):
-        # time.sleep(5)
         for envelope in self.envelopes:
             sendgrid_send(envelope)
