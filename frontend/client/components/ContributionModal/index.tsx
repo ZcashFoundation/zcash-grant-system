@@ -93,16 +93,17 @@ export default class ContributionModal extends React.Component<Props, State> {
           message="This contribution will not be attributed"
           description={
             <>
-              Your contribution will show up
-              without attribution. Even if you're logged in, the contribution will not appear anywhere
-              on your account after you close this modal.
+              Your contribution will show up without attribution. Even if you're logged
+              in, the contribution will not appear anywhere on your account after you
+              close this modal.
               <br /> <br />
-              ZF Grants is unable to offer refunds for non-attributed contributions. If refunds for this campaign are issued, your contribution will be treated as a donation to
-              the Zcash Foundation.
+              ZF Grants is unable to offer refunds for non-attributed contributions. If
+              refunds for this campaign are issued, your contribution will be treated as a
+              donation to the Zcash Foundation.
               <br /> <br />
-              If you would like to have your contribution attached to an account and remain eligible for refunds, you can
-              close this modal, make sure you're logged in, and don't check the
-              "Contribute without attribution" checkbox.
+              If you would like to have your contribution attached to an account and
+              remain eligible for refunds, you can close this modal, make sure you're
+              logged in, and don't check the "Contribute without attribution" checkbox.
             </>
           }
         />
@@ -134,16 +135,24 @@ export default class ContributionModal extends React.Component<Props, State> {
       if (error) {
         okText = 'Done';
         onOk = handleClose;
-        content = (
-          <Result
-            type="error"
-            title="Something went wrong"
-            description={`
-              We were unable to get your contribution started. Please check back
-              soon, we're working to fix the problem as soon as possible.
-            `}
-          />
-        );
+        // This should probably key on non-display text, but oh well.
+        let title;
+        let description;
+        if (error.includes('too many times')) {
+          title = 'Take it easy!';
+          description = `
+            We appreciate your enthusiasm, but you've made too many
+            contributions too fast. Please wait for your other contributions,
+            and try again later.
+          `;
+        } else {
+          title = 'Something went wrong';
+          description = `
+            We were unable to get your contribution started. Please check back
+            soon, we're working to fix the problem as soon as possible.
+          `;
+        }
+        content = <Result type="error" title={title} description={description} />;
       } else {
         okText = 'I’ve sent it';
         onOk = this.confirmSend;
