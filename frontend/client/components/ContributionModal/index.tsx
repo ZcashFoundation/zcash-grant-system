@@ -268,12 +268,18 @@ class ContributionModal extends React.Component<Props, State> {
   };
 
   private confirmRefundAddressSet = () => {
-    this.setState({ needsRefundAddress: false }, () => {
-      const { state, props } = this;
-      if (!state.contribution && !props.contribution && props.proposalId) {
-        this.fetchAddresses(props.proposalId, props.contributionId, state.noRefund);
-      }
-    });
+    this.setState(
+      {
+        needsRefundAddress: false,
+        noRefund: false,
+      },
+      () => {
+        const { state, props } = this;
+        if (!state.contribution && !props.contribution && props.proposalId) {
+          this.fetchAddresses(props.proposalId, props.contributionId, state.noRefund);
+        }
+      },
+    );
   };
 
   private confirmNoRefund = () => {

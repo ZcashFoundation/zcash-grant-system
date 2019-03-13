@@ -90,10 +90,11 @@ export default class SetRefundAddress extends React.Component<Props, State> {
     this.setState({ isSaving: true });
     try {
       await updateUserSettings(userid, { refundAddress });
+      this.props.onSetRefundAddress();
     } catch (err) {
       console.error(err);
       message.error(err.message || err.toString(), 5);
+      this.setState({ isSaving: false });
     }
-    this.setState({ isSaving: false });
   };
 }
