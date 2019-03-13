@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 from functools import reduce
 
+from flask import current_app
 from marshmallow import post_dump
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -10,6 +11,7 @@ from grant.comment.models import Comment
 from grant.email.send import send_email, EmailSender
 from grant.extensions import ma, db
 from grant.settings import PROPOSAL_STAKING_AMOUNT
+from grant.task.jobs import ContributionExpired
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -22,7 +24,6 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url, gen_random_id
 from grant.utils.requests import blockchain_get
 from grant.utils.stubs import anonymous_user
-from grant.task.jobs import ContributionExpired
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -284,8 +285,6 @@ class Proposal(db.Model):
         payout_total = 0.0
         for i, milestone in enumerate(self.milestones):
 
-            # TODO ensure that estimated dates are at least 10 minutes apart
-
             if milestone.immediate_payout and i != 0:
                 raise ValidationException("Only the first milestone can have an immediate payout")
 
@@ -302,9 +301,10 @@ class Proposal(db.Model):
                 if present > milestone.date_estimated:
                     raise ValidationException("Milestone date_estimated must be in the future ")
 
-            # TODO specify exception
             except Exception as e:
-                print(e)
+                current_app.logger.warn(
+                    f"Unexpected validation error - client prohibits {e}"
+                )
                 raise ValidationException("date_estimated does not convert to a datetime")
 
         if payout_total != 100.0:
