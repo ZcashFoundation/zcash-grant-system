@@ -51,9 +51,10 @@ class CreateFlowTeam extends React.Component<Props, State> {
 
   render() {
     const { team, invites, address } = this.state;
-    const inviteError = address && !isValidEmail(address) &&
-      'That doesn’t look like a valid email address';
-    const inviteDisabled = !!inviteError || !address;
+    const inviteError =
+      address && !isValidEmail(address) && 'That doesn’t look like a valid email address';
+    const maxedOut = invites.length >= MAX_TEAM_SIZE - 1;
+    const inviteDisabled = !!inviteError || !address || maxedOut;
     const pendingInvites = invites.filter(inv => inv.accepted === null);
 
     return (
@@ -79,39 +80,39 @@ class CreateFlowTeam extends React.Component<Props, State> {
             ))}
           </div>
         )}
-        {team.length < MAX_TEAM_SIZE && (
-          <div className="TeamForm-add">
-            <h3 className="TeamForm-add-title">Add a team member</h3>
-            <Form className="TeamForm-add-form" onSubmit={this.handleAddSubmit}>
-              <Form.Item
-                className="TeamForm-add-form-field"
-                validateStatus={inviteError ? 'error' : undefined}
-                help={
-                  inviteError ||
-                  'They will be notified and will have to accept the invitation before being added'
-                }
-              >
-                <Input
-                  className="TeamForm-add-form-field-input"
-                  placeholder="Email address"
-                  size="large"
-                  value={address}
-                  onChange={this.handleChangeInviteAddress}
-                />
-              </Form.Item>
-              <Button
-                className="TeamForm-add-form-submit"
-                type="primary"
-                disabled={inviteDisabled}
-                htmlType="submit"
-                icon="user-add"
+        <div className="TeamForm-add">
+          <h3 className="TeamForm-add-title">Add a team member</h3>
+          <Form className="TeamForm-add-form" onSubmit={this.handleAddSubmit}>
+            <Form.Item
+              className="TeamForm-add-form-field"
+              validateStatus={inviteError ? 'error' : undefined}
+              help={
+                inviteError ||
+                (maxedOut && 'You’ve invited the maximum number of teammates') ||
+                'They will be notified and will have to accept the invitation before being added'
+              }
+            >
+              <Input
+                className="TeamForm-add-form-field-input"
+                placeholder="Email address"
                 size="large"
-              >
-                Add
-              </Button>
-            </Form>
-          </div>
-        )}
+                value={address}
+                onChange={this.handleChangeInviteAddress}
+                disabled={maxedOut}
+              />
+            </Form.Item>
+            <Button
+              className="TeamForm-add-form-submit"
+              type="primary"
+              disabled={inviteDisabled}
+              htmlType="submit"
+              icon="user-add"
+              size="large"
+            >
+              Add
+            </Button>
+          </Form>
+        </div>
       </div>
     );
   }
@@ -133,7 +134,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
       })
       .catch((err: Error) => {
         console.error('Failed to send invite', err);
-        message.error('Failed to send invite', 3);
+        message.error(err.message, 3);
       });
   };
 
@@ -146,7 +147,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
       })
       .catch((err: Error) => {
         console.error('Failed to remove invite', err);
-        message.error('Failed to remove invite', 3);
+        message.error(err.message, 3);
       });
   };
 }

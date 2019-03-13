@@ -286,7 +286,10 @@ class Proposal(db.Model):
                 raise ValidationException("Proposal must have a {}".format(field))
 
         # Check with node that the address is kosher
-        res = blockchain_get('/validate/address', {'address': self.payout_address})
+        try:
+            res = blockchain_get('/validate/address', {'address': self.payout_address})
+        except:
+            raise ValidationException("Could not validate your payout address due to an internal server error, please try again later")
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 
@@ -514,12 +517,13 @@ class Proposal(db.Model):
                 'support_url': make_url('/contact'),
             })
         for c in self.contributions:
-            send_email(c.user.email_address, 'contribution_proposal_canceled', {
-                'contribution': c,
-                'proposal': self,
-                'refund_address': c.user.settings.refund_address,
-                'account_settings_url': make_url('/profile/settings?tab=account')
-            })
+            if c.user:
+                send_email(c.user.email_address, 'contribution_proposal_canceled', {
+                    'contribution': c,
+                    'proposal': self,
+                    'refund_address': c.user.settings.refund_address,
+                    'account_settings_url': make_url('/profile/settings?tab=account')
+                })
 
     @hybrid_property
     def contributed(self):

@@ -1,10 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
 
-from flask import Blueprint, g, request
+from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
 from sqlalchemy import or_
 
+from grant.extensions import limiter
 from grant.comment.models import Comment, comment_schema, comments_schema
 from grant.email.send import send_email
 from grant.milestone.models import Milestone
@@ -94,6 +95,7 @@ def report_proposal_comment(proposal_id, comment_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
+@limiter.limit("30/hour;2/minute")
 @requires_email_verified_auth
 @body({
     "comment": fields.Str(required=True),
@@ -174,6 +176,7 @@ def get_proposals(page, filters, search, sort):
 
 
 @blueprint.route("/drafts", methods=["POST"])
+@limiter.limit("10/hour;3/minute")
 @requires_email_verified_auth
 @body({
     "rfpId": fields.Int(required=False, missing=None)
@@ -351,6 +354,7 @@ def get_proposal_update(proposal_id, update_id):
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
+@limiter.limit("5/day;1/minute")
 @requires_team_member_auth
 @body({
     "title": fields.Str(required=True),
@@ -380,11 +384,19 @@ def post_proposal_update(proposal_id, title, content):
 
 
 @blueprint.route("/<proposal_id>/invite", methods=["POST"])
+@limiter.limit("30/day;10/minute")
 @requires_team_member_auth
 @body({
     "address": fields.Str(required=True),
 })
 def post_proposal_team_invite(proposal_id, address):
+    existing_invite = ProposalTeamInvite.query.filter_by(
+        proposal_id=proposal_id,
+        address=address
+    ).first()
+    if existing_invite:
+        return {"message": f"You've already invited {address}"}, 400
+
     invite = ProposalTeamInvite(
         proposal_id=proposal_id,
         address=address
@@ -461,17 +473,18 @@ def get_proposal_contributions(proposal_id):
 @blueprint.route("/<proposal_id>/contributions/<contribution_id>", methods=["GET"])
 def get_proposal_contribution(proposal_id, contribution_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        contribution = ProposalContribution.query.filter_by(id=contribution_id).first()
-        if contribution:
-            return proposal_contribution_schema.dump(contribution)
-        else:
-            return {"message": "No contribution matching id"}
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+
+    contribution = ProposalContribution.query.filter_by(id=contribution_id).first()
+    if not contribution:
+        return {"message": "No contribution matching id"}, 404
+
+    return proposal_contribution_schema.dump(contribution)
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
+@limiter.limit("30/day;10/hour;2/minute")
 # TODO add gaurd (minimum, maximum)
 @body({
     "amount": fields.Str(required=True),
@@ -517,7 +530,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     if not contribution:
         # TODO: Log in sentry
-        print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
+        current_app.logger.warn(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
         return {"message": "No contribution matching id"}, 404
 
     if contribution.status == ContributionStatus.CONFIRMED:

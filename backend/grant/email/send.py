@@ -1,11 +1,16 @@
+from .subscription_settings import EmailSubscription, is_subscribed
+from sendgrid.helpers.mail import Email, Mail, Content
+from python_http_client import HTTPError
+from grant.utils.misc import make_url
+from sentry_sdk import capture_exception
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
 import sendgrid
 from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
-from grant.utils.misc import make_url
-from python_http_client import HTTPError
-from sendgrid.helpers.mail import Email, Mail, Content
+<< << << < HEAD
+== == == =
+>>>>>> > develop
 
-from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
     'home_url': make_url('/'),
@@ -33,8 +38,8 @@ def team_invite_info(email_args):
 
 def recover_info(email_args):
     return {
-        'subject': '{} account recovery'.format(UI['NAME']),
-        'title': '{} account recovery'.format(UI['NAME']),
+        'subject': 'Recover your account',
+        'title': 'Recover your account',
         'preview': 'Use the link to recover your account.'
     }
 
@@ -358,7 +363,7 @@ def send_email(to, type, email_args):
     if user and 'subscription' in info:
         sub = info['subscription']
         if user and not is_subscribed(user.settings.email_subscriptions, sub):
-            print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
+            app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
             return
 
     try:
@@ -366,7 +371,7 @@ def send_email(to, type, email_args):
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
 
         mail = Mail(
-            from_email=Email(SENDGRID_DEFAULT_FROM),
+            from_email=Email(SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME),
             to_email=Email(to),
             subject=email['info']['subject'],
         )
@@ -379,10 +384,16 @@ def send_email(to, type, email_args):
             print(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
         else:
             res = sg.client.mail.send.post(request_body=mail.get())
-            print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+            current_app.logger.info('Just sent an email to %s of type %s, response code: %s' %
+                                    (to, type, res.status_code))
 
     except HTTPError as e:
-        print('An HTTP error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
-        print(e.body)
+        current_app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
+                                (to, e.__class__.__name__, e))
+        current_app.logger.debug(e.body)
+        capture_exception(e)
     except Exception as e:
-        print('An unknown error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        current_app.logger.info('An unknown error occured while sending an email to %s - %s: %s' %
+                                (to, e.__class__.__name__, e))
+        current_app.logger.debug(e)
+        capture_exception(e)

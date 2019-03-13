@@ -8,6 +8,7 @@ from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.utils.enums import ProposalStatus
+from grant.extensions import limiter
 
 from .test_data import test_user, test_other_user, test_proposal, mock_blockchain_api_requests
 
@@ -17,6 +18,7 @@ class BaseTestConfig(TestCase):
     def create_app(self):
         app = create_app(['grant.settings', 'tests.settings'])
         app.config.from_object('tests.settings')
+        limiter.enabled = False
         return app
 
     def setUp(self):

@@ -29,6 +29,12 @@ export default class Template extends React.PureComponent<Props> {
     );
     return (
       <BasicHead title={title}>
+        {!isHeaderTransparent && (
+          <noscript className="noScript is-banner">
+            It looks like you have Javascript disabled. You may experience issues with
+            interactive parts of the site.
+          </noscript>
+        )}
         <div className={className}>
           <Header isTransparent={isHeaderTransparent} />
           <Layout.Content className="Template-content">

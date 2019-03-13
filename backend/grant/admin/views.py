@@ -4,7 +4,7 @@ from functools import reduce
 
 from flask import Blueprint, request
 from marshmallow import fields, validate
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 
 import grant.utils.admin as admin
 import grant.utils.auth as auth
@@ -712,3 +712,99 @@ def edit_comment(comment_id, hidden, reported):
 
     db.session.commit()
     return admin_comment_schema.dump(comment)
+
+
+# Financials
+
+@blueprint.route("/financials", methods=["GET"])
+@admin.admin_auth_required
+def financials():
+
+    nfmt = '999999.99999999'  # smallest unit of ZEC
+
+    def sql_pc(where: str):
+        return f"SELECT SUM(TO_NUMBER(amount, '{nfmt}')) FROM proposal_contribution WHERE {where}"
+
+    def sql_pc_p(where: str):
+        return f'''
+            SELECT SUM(TO_NUMBER(amount, '{nfmt}'))
+                FROM proposal_contribution as pc
+                INNER JOIN proposal as p ON pc.proposal_id = p.id
+                WHERE {where}
+        '''
+
+    def sql_ms(where: str):
+        return f'''
+            SELECT SUM(TO_NUMBER(ms.payout_percent, '999')/100 * TO_NUMBER(p.target, '999999.99999999'))
+                FROM milestone as ms
+                INNER JOIN proposal as p ON ms.proposal_id = p.id
+                WHERE {where}
+        '''
+
+    def ex(sql: str):
+        res = db.engine.execute(text(sql))
+        return [row[0] if row[0] else Decimal(0) for row in res][0].normalize()
+
+    contributions = {
+        'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
+        'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
+        'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
+        'funded': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
+        'refunding': str(ex(sql_pc_p(
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'refunded': str(ex(sql_pc_p(
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NOT NULL AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
+    }
+
+    po_due = ex(sql_ms("ms.stage = 'ACCEPTED'"))  # payments accepted but not yet marked as paid
+    po_paid = ex(sql_ms("ms.stage = 'PAID'"))  # will catch paid ms from all proposals regardless of status/stage
+    # expected payments
+    po_future = ex(sql_ms("ms.stage IN ('IDLE', 'REJECTED', 'REQUESTED') AND p.stage IN ('WIP', 'COMPLETED')"))
+    po_total = po_due + po_paid + po_future
+
+    payouts = {
+        'total': str(po_total),
+        'due': str(po_due),
+        'paid': str(po_paid),
+        'future': str(po_future),
+    }
+
+    grants = {
+        'total': '0',
+        'matching': '0',
+        'bounty': '0',
+    }
+
+    def add_str_dec(a: str, b: str):
+        return str(Decimal(a) + Decimal(b))
+
+    proposals = Proposal.query.all()
+
+    for p in proposals:
+        # CANCELED proposals excluded, though they could have had milestones paid out with grant funds
+        if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
+            # matching
+            matching = Decimal(p.contributed) * Decimal(p.contribution_matching)
+            remaining = Decimal(p.target) - Decimal(p.contributed)
+            if matching > remaining:
+                matching = remaining
+
+            # bounty
+            bounty = Decimal(p.contribution_bounty)
+            remaining = Decimal(p.target) - (matching + Decimal(p.contributed))
+            if bounty > remaining:
+                bounty = remaining
+
+            grants['matching'] = add_str_dec(grants['matching'], matching)
+            grants['bounty'] = add_str_dec(grants['bounty'], bounty)
+            grants['total'] = add_str_dec(grants['total'], matching + bounty)
+
+    return {
+        'grants': grants,
+        'contributions': contributions,
+        'payouts': payouts,
+        'net': str(Decimal(contributions['gross']) - Decimal(payouts['paid']))
+    }
