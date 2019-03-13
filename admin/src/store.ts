@@ -240,6 +240,7 @@ const app = store({
       funded: '0',
       refunding: '0',
       refunded: '0',
+      donations: '0',
     },
     payouts: {
       total: '0',
