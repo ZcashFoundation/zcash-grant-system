@@ -314,7 +314,6 @@ class Proposal(db.Model):
         self.validate_publishable_milestones()
 
         # Require certain fields
-        self.validate_publishable_milestones()
 
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
         for field in required_fields:
