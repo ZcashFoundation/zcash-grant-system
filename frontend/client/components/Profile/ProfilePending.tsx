@@ -143,8 +143,8 @@ class ProfilePending extends React.Component<Props, State> {
               <p>
                 Please send the staking contribution of{' '}
                 <b>{stakeContribution && stakeContribution.amount} ZEC</b> using the
-                instructions below. Once your payment has been sent and confirmed, you
-                will receive an email.
+                instructions below. Once your payment has been sent and received 6
+                confirmations, you will receive an email.
               </p>
             }
           />
@@ -194,7 +194,8 @@ class ProfilePending extends React.Component<Props, State> {
         this.setState({ isLoadingStake: false });
       });
     } catch (err) {
-      message.error(err.message, 3);
+      console.error(err);
+      message.error('Failed to get staking contribution, try again later', 3);
       this.setState({ isLoadingStake: false });
     }
   };

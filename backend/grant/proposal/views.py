@@ -463,14 +463,14 @@ def get_proposal_contributions(proposal_id):
 @blueprint.route("/<proposal_id>/contributions/<contribution_id>", methods=["GET"])
 def get_proposal_contribution(proposal_id, contribution_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
-    if proposal:
-        contribution = ProposalContribution.query.filter_by(id=contribution_id).first()
-        if contribution:
-            return proposal_contribution_schema.dump(contribution)
-        else:
-            return {"message": "No contribution matching id"}
-    else:
+    if not proposal:
         return {"message": "No proposal matching id"}, 404
+
+    contribution = ProposalContribution.query.filter_by(id=contribution_id).first()
+    if not contribution:
+        return {"message": "No contribution matching id"}, 404
+
+    return proposal_contribution_schema.dump(contribution)
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])

@@ -342,7 +342,7 @@ def get_user_settings(user_id):
 @auth.requires_same_user_auth
 # TODO guard all (shape, validity)
 @body({
-    "emailSubscriptions": fields.Dict(required=True),
+    "emailSubscriptions": fields.Dict(required=False, missing=None),
     "refundAddress": fields.Str(required=False, missing=None)
 })
 def set_user_settings(user_id, email_subscriptions, refund_address):
