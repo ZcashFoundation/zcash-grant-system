@@ -106,11 +106,12 @@ class ProposalContribution(db.Model):
         self.status = ContributionStatus.PENDING
 
     @staticmethod
-    def get_existing_contribution(user_id: int, proposal_id: int, amount: str):
+    def get_existing_contribution(user_id: int, proposal_id: int, amount: str, no_refund: bool = False):
         return ProposalContribution.query.filter_by(
             user_id=user_id,
             proposal_id=proposal_id,
             amount=amount,
+            no_refund=no_refund,
             status=ContributionStatus.PENDING,
         ).first()
 

@@ -504,7 +504,8 @@ def post_proposal_contribution(proposal_id, amount, anonymous, no_refund):
         user = get_authed_user()
 
     if user:
-        contribution = ProposalContribution.get_existing_contribution(user.id, proposal_id, amount)
+        contribution = ProposalContribution \
+            .get_existing_contribution(user.id, proposal_id, amount, no_refund)
 
     if not contribution:
         code = 201
