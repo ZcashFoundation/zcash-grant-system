@@ -1,5 +1,6 @@
 import sendgrid
 from flask import render_template, Markup, current_app
+from sentry_sdk import capture_exception
 from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI
 from grant.utils.misc import make_url
 from python_http_client import HTTPError
@@ -359,7 +360,7 @@ def send_email(to, type, email_args):
     if user and 'subscription' in info:
         sub = info['subscription']
         if user and not is_subscribed(user.settings.email_subscriptions, sub):
-            print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
+            app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
             return
 
     try:
@@ -375,9 +376,12 @@ def send_email(to, type, email_args):
         mail.add_content(Content('text/html', email['html']))
 
         res = sg.client.mail.send.post(request_body=mail.get())
-        print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+        current_app.logger.info('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
     except HTTPError as e:
-        print('An HTTP error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
-        print(e.body)
+        current_app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        current_app.logger.debug(e.body)
+        capture_exception(e)
     except Exception as e:
-        print('An unknown error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        current_app.logger.info('An unknown error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        current_app.logger.debug(e)
+        capture_exception(e)
