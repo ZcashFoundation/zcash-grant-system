@@ -139,16 +139,24 @@ export default class ContributionModal extends React.Component<Props, State> {
       if (error) {
         okText = 'Done';
         onOk = handleClose;
-        content = (
-          <Result
-            type="error"
-            title="Something went wrong"
-            description={`
-              We were unable to get your contribution started. Please check back
-              soon, we're working to fix the problem as soon as possible.
-            `}
-          />
-        );
+        // This should probably key on non-display text, but oh well.
+        let title;
+        let description;
+        if (error.includes('too many times')) {
+          title = 'Take it easy!';
+          description = `
+            We appreciate your enthusiasm, but you've made too many
+            contributions too fast. Please wait for your other contributions,
+            and try again later.
+          `;
+        } else {
+          title = 'Something went wrong';
+          description = `
+            We were unable to get your contribution started. Please check back
+            soon, we're working to fix the problem as soon as possible.
+          `;
+        }
+        content = <Result type="error" title={title} description={description} />;
       } else {
         okText = 'I’ve sent it';
         onOk = this.confirmSend;
