@@ -6,7 +6,7 @@ from decimal import Decimal
 from marshmallow import post_dump
 
 from grant.comment.models import Comment
-from grant.email.send import send_email
+from grant.email.send import send_email, EmailSender
 from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url, gen_random_id
@@ -507,19 +507,23 @@ class Proposal(db.Model):
         self.stage = ProposalStage.CANCELED
         db.session.add(self)
         db.session.flush()
+
         # Send emails to team & contributors
+        email_sender = EmailSender()
         for u in self.team:
-            send_email(u.email_address, 'proposal_canceled', {
+            email_sender.add(u.email_address, 'proposal_canceled', {
                 'proposal': self,
                 'support_url': make_url('/contact'),
             })
         for c in self.contributions:
-            send_email(c.user.email_address, 'contribution_proposal_canceled', {
-                'contribution': c,
-                'proposal': self,
-                'refund_address': c.user.settings.refund_address,
-                'account_settings_url': make_url('/profile/settings?tab=account')
-            })
+            if c.user:
+                email_sender.add(c.user.email_address, 'contribution_proposal_canceled', {
+                    'contribution': c,
+                    'proposal': self,
+                    'refund_address': c.user.settings.refund_address,
+                    'account_settings_url': make_url('/profile/settings?tab=account')
+                })
+        email_sender.start()
 
     @hybrid_property
     def contributed(self):
