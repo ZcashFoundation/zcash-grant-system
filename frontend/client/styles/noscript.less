@@ -1,0 +1,39 @@
+@import 'variables.less';
+
+.noScript {
+  display: block;
+
+  &.is-banner {
+    padding: 0.25rem 1rem;
+    text-align: center;
+    background: @warning-color;
+    color: #FFF;
+  }
+
+  &.is-block {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    max-width: 420px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border: 1px solid @warning-color;
+    background: rgba(@warning-color, 0.05);
+    border-radius: 2px;
+
+    &:before {
+      content: '!';
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+      font-size: 1.8rem;
+      width: 2.6rem;
+      height: 2.6rem;
+      margin-right: 1rem;
+      border: 2px solid @warning-color;
+      color: @warning-color;
+      border-radius: 100%;
+    }
+  }
+}

@@ -76,3 +76,6 @@ pyotp==2.2.7
 
 # JSON formatting
 animal_case==0.4.1
+
+# Rate limiting
+Flask-Limiter==1.0.1

@@ -12,7 +12,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp
-from grant.extensions import bcrypt, migrate, db, ma, security
+from grant.extensions import bcrypt, migrate, db, ma, security, limiter
 from grant.settings import SENTRY_RELEASE, ENV
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
 from grant.utils.exceptions import ValidationException
@@ -52,10 +52,18 @@ def create_app(config_objects=["grant.settings"]):
         else:
             return jsonify({"message": error_message}), err.code
 
+
     @app.errorhandler(404)
     def handle_notfound_error(err):
         error_message = "Unknown route '{} {}'".format(request.method, request.path)
         return jsonify({"message": error_message}), 404
+
+
+    @app.errorhandler(429)
+    def handle_limit_error(err):
+        app.logger.warn(f'Rate limited request to {request.method} {request.path} from ip {request.remote_addr}')
+        return jsonify({"message": "You’ve done that too many times, please wait and try again later"}), 429
+
 
     @app.errorhandler(Exception)
     def handle_exception(err):
@@ -101,6 +109,7 @@ def register_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
     ma.init_app(app)
+    limiter.init_app(app)
     user_datastore = SQLAlchemyUserDatastore(db, user.models.User, user.models.Role)
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
 
