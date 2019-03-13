@@ -7,7 +7,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from grant.comment.models import Comment
-from grant.email.send import send_email
+from grant.email.send import send_email, EmailSender
 from grant.extensions import ma, db
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.utils.enums import (
@@ -324,7 +324,8 @@ class Proposal(db.Model):
         try:
             res = blockchain_get('/validate/address', {'address': self.payout_address})
         except:
-            raise ValidationException("Could not validate your payout address due to an internal server error, please try again later")
+            raise ValidationException(
+                "Could not validate your payout address due to an internal server error, please try again later")
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 
@@ -410,14 +411,14 @@ class Proposal(db.Model):
 
     def get_staking_contribution(self, user_id: int):
         contribution = None
-        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.contributed)
+        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.amount_staked)
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
-            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
+                staking=True,
             ).first()
             if not contribution:
                 contribution = self.create_contribution(
@@ -545,20 +546,23 @@ class Proposal(db.Model):
         self.stage = ProposalStage.CANCELED
         db.session.add(self)
         db.session.flush()
+
         # Send emails to team & contributors
+        email_sender = EmailSender()
         for u in self.team:
-            send_email(u.email_address, 'proposal_canceled', {
+            email_sender.add(u.email_address, 'proposal_canceled', {
                 'proposal': self,
                 'support_url': make_url('/contact'),
             })
         for c in self.contributions:
             if c.user:
-                send_email(c.user.email_address, 'contribution_proposal_canceled', {
+                email_sender.add(c.user.email_address, 'contribution_proposal_canceled', {
                     'contribution': c,
                     'proposal': self,
                     'refund_address': c.user.settings.refund_address,
                     'account_settings_url': make_url('/profile/settings?tab=account')
                 })
+        email_sender.start()
 
     @hybrid_property
     def contributed(self):
@@ -567,6 +571,14 @@ class Proposal(db.Model):
             .all()
         funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
+
+    @hybrid_property
+    def amount_staked(self):
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=True) \
+            .all()
+        amount = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        return str(amount)
 
     @hybrid_property
     def funded(self):
@@ -747,9 +759,6 @@ proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
 
 
-# TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
-
-
 class InviteWithProposalSchema(ma.Schema):
     class Meta:
         model = ProposalTeamInvite
@@ -799,7 +808,7 @@ class ProposalContributionSchema(ma.Schema):
 
     def get_addresses(self, obj):
         # Omit 'memo' and 'sprout' for now
-        # TODO: Add back in 'sapling' when ready
+        # NOTE: Add back in 'sapling' when ready
         addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
         return {
             'transparent': addresses['transparent'],

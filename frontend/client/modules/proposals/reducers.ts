@@ -386,8 +386,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.PROPOSAL_UPDATES_REJECTED:
       return {
         ...state,
-        // TODO: Get action to send real error
-        updatesError: 'Failed to fetch updates',
+        updatesError: (payload && payload.message) || payload.toString(),
         isFetchingUpdates: false,
       };
 
@@ -402,8 +401,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.PROPOSAL_CONTRIBUTIONS_REJECTED:
       return {
         ...state,
-        // TODO: Get action to send real error
-        fetchContributionsError: 'Failed to fetch updates',
+        fetchContributionsError: (payload && payload.message) || payload.toString(),
         isFetchingContributions: false,
       };
 

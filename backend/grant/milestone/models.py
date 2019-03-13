@@ -22,7 +22,6 @@ class Milestone(db.Model):
     content = db.Column(db.Text, nullable=False)
     payout_percent = db.Column(db.String(255), nullable=False)
     immediate_payout = db.Column(db.Boolean)
-    # TODO: change to estimated_duration (sec or ms) -- FE can calc from dates on draft
     date_estimated = db.Column(db.DateTime, nullable=False)
 
     stage = db.Column(db.String(255), nullable=False)

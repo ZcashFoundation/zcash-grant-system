@@ -47,8 +47,7 @@ export default (state: RFPState = INITIAL_STATE, action: any): RFPState => {
     case types.FETCH_RFP_REJECTED:
       return {
         ...state,
-        // TODO: Get action to send real error
-        fetchRfpsError: 'Failed to fetch rfps',
+        fetchRfpsError: (payload && payload.message) || payload.toString(),
         isFetchingRfps: false,
       };
     case types.FETCH_RFPS_FULFILLED:
