@@ -752,10 +752,13 @@ def financials():
         'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
         'funded': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
         'refunding': str(ex(sql_pc_p(
-            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = FALSE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
         ))),
         'refunded': str(ex(sql_pc_p(
-            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NOT NULL AND p.stage IN ('CANCELED', 'FAILED')"
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = FALSE AND pc.refund_tx_id IS NOT NULL AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'donations': str(ex(sql_pc_p(
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = TRUE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
         ))),
         'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
     }
