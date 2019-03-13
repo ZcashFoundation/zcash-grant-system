@@ -54,7 +54,7 @@ class ModerationItem extends React.Component<Comment> {
           }
           description={
             <ShowMore height={100}>
-              <Markdown source={p.content} />
+              <Markdown source={p.content} reduced />
             </ShowMore>
           }
         />
