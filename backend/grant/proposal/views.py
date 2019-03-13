@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from flask import Blueprint, g, request
+from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
 from sqlalchemy import or_
 
@@ -517,7 +517,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
 
     if not contribution:
         # TODO: Log in sentry
-        print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
+        current_app.logger.warn(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
         return {"message": "No contribution matching id"}, 404
 
     if contribution.status == ContributionStatus.CONFIRMED:

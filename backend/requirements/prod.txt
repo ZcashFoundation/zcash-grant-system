@@ -54,7 +54,7 @@ markdownify
 sendgrid==5.6.0
 
 #sentry
-sentry-sdk[flask]==0.5.5
+sentry-sdk[flask]==0.7.6
 
 #boto3 (AWS sdk)
 boto3==1.9.52
