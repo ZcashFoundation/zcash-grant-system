@@ -270,7 +270,11 @@ class UserDetailNaked extends React.Component<Props, State> {
                               </Link>{' '}
                               at {formatDateMs(c.dateCreated)}
                             </div>
-                            <Markdown source={c.content} className="UserDetail-comment" />
+                            <Markdown
+                              source={c.content}
+                              reduced
+                              className="UserDetail-comment"
+                            />
                           </>
                         }
                       />

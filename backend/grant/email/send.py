@@ -385,6 +385,8 @@ def make_envelope(to, type, email_args):
 
 
 def sendgrid_send(mail):
+    to = mail.___to
+    type = mail.___type
     try:
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
         res = sg.client.mail.send.post(request_body=mail.get())
