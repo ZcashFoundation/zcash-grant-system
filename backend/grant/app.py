@@ -10,7 +10,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 
 from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp, e2e
 from grant.extensions import bcrypt, migrate, db, ma, security
-from grant.settings import SENTRY_RELEASE, ENV, E2E_TESTING
+from grant.settings import SENTRY_RELEASE, ENV, E2E_TESTING, DEBUG
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
 from grant.utils.exceptions import ValidationException
 
@@ -57,7 +57,7 @@ def create_app(config_objects=["grant.settings"]):
     register_shellcontext(app)
     register_commands(app)
 
-    if not app.config.get("TESTING"):
+    if not (app.config.get("TESTING") or E2E_TESTING):
         sentry_sdk.init(
             environment=ENV,
             release=SENTRY_RELEASE,
@@ -102,7 +102,7 @@ def register_blueprints(app):
     app.register_blueprint(blockchain.views.blueprint)
     app.register_blueprint(task.views.blueprint)
     app.register_blueprint(rfp.views.blueprint)
-    if E2E_TESTING:
+    if E2E_TESTING and DEBUG:
         print('Warning: e2e end-points are open, this should only be the case for development or testing')
         app.register_blueprint(e2e.views.blueprint)
 
