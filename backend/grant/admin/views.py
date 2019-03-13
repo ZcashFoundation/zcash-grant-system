@@ -758,7 +758,7 @@ def financials():
             "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = FALSE AND pc.refund_tx_id IS NOT NULL AND p.stage IN ('CANCELED', 'FAILED')"
         ))),
         'donations': str(ex(sql_pc_p(
-            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = TRUE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
+            "(pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NULL) AND (pc.no_refund = TRUE OR pc.user_id IS NULL) AND p.stage IN ('CANCELED', 'FAILED')"
         ))),
         'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
     }
