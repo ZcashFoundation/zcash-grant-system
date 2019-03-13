@@ -13,6 +13,7 @@ import {
   RFP,
   ProposalPageParams,
   PageParams,
+  UserSettings,
 } from 'types';
 import {
   formatUserForPost,
@@ -127,7 +128,9 @@ export function updateUser(user: User): Promise<{ data: User }> {
   return axios.put(`/api/v1/users/${user.userid}`, formatUserForPost(user));
 }
 
-export function getUserSettings(userId: string | number): Promise<any> {
+export function getUserSettings(
+  userId: string | number,
+): Promise<{ data: UserSettings }> {
   return axios.get(`/api/v1/users/${userId}/settings`);
 }
 
@@ -138,7 +141,7 @@ interface SettingsArgs {
 export function updateUserSettings(
   userId: string | number,
   args?: SettingsArgs,
-): Promise<any> {
+): Promise<{ data: UserSettings }> {
   return axios.put(`/api/v1/users/${userId}/settings`, args);
 }
 
@@ -313,11 +316,13 @@ export function putInviteResponse(
 export function postProposalContribution(
   proposalId: number,
   amount: string,
-  anonymous?: boolean,
+  anonymous: boolean = false,
+  noRefund: boolean = false,
 ): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
     amount,
     anonymous,
+    noRefund,
   });
 }
 
