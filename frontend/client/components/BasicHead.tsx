@@ -25,7 +25,6 @@ class BasicHead extends React.Component<Props> {
             name="keywords"
             content="Zcash, Zcash Foundation, Zcash Foundation Grants, Zcash Grants, Zcash Grant, ZF Grants, ZFGrants"
           />
-          <meta name={`${title} page`} content={`${title} page stuff`} />
           <link
             rel="stylesheet"
             href="https://use.fontawesome.com/releases/v5.2.0/css/all.css"
