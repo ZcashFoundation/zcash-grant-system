@@ -1,13 +1,14 @@
 from datetime import datetime
 from decimal import Decimal
 
-from flask import Blueprint, g, request
+from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
 from sqlalchemy import or_
+from sentry_sdk import capture_message
 
 from grant.extensions import limiter
 from grant.comment.models import Comment, comment_schema, comments_schema
-from grant.email.send import send_email
+from grant.email.send import send_email, EmailSender
 from grant.milestone.models import Milestone
 from grant.parser import body, query, paginated_fields
 from grant.rfp.models import RFP
@@ -136,7 +137,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     db.session.commit()
     dumped_comment = comment_schema.dump(comment)
 
-    # TODO: Email proposal team if top-level comment
+    # Email proposal team if top-level comment
     if not parent:
         for member in proposal.team:
             send_email(member.email_address, 'proposal_comment', {
@@ -370,14 +371,16 @@ def post_proposal_update(proposal_id, title, content):
     db.session.commit()
 
     # Send email to all contributors (even if contribution failed)
+    email_sender = EmailSender()
     contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
     for c in contributions:
         if c.user:
-            send_email(c.user.email_address, 'contribution_update', {
+            email_sender.add(c.user.email_address, 'contribution_update', {
                 'proposal': g.current_proposal,
                 'proposal_update': update,
                 'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
             })
+    email_sender.start()
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
@@ -405,7 +408,6 @@ def post_proposal_team_invite(proposal_id, address):
     db.session.commit()
 
     # Send email
-    # TODO: Move this to some background task / after request action
     email = address
     user = User.get_by_email(email_address=address)
     if user:
@@ -532,8 +534,9 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
         id=contribution_id).first()
 
     if not contribution:
-        # TODO: Log in sentry
-        print(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
+        msg = f'Unknown contribution {contribution_id} confirmed with txid {txid}, amount {amount}'
+        capture_message(msg)
+        current_app.logger.warn(msg)
         return {"message": "No contribution matching id"}, 404
 
     if contribution.status == ContributionStatus.CONFIRMED:
@@ -578,8 +581,6 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
                 'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
                 'contributor_url': make_url(f'/profile/{contribution.user.id}') if contribution.user else '',
             })
-
-    # TODO: Once we have a task queuer in place, queue emails to everyone
 
     # on funding target reached.
     contribution.proposal.set_funded_when_ready()

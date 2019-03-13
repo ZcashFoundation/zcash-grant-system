@@ -240,7 +240,6 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       return;
     }
 
-    // TODO: Get values from proposal
     const { target, funded } = this.props.proposal;
     const remainingTarget = target.sub(funded);
     const amount = parseFloat(value);

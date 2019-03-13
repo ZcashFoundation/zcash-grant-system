@@ -2,7 +2,7 @@ from functools import wraps
 from datetime import datetime, timedelta
 
 import sentry_sdk
-from flask import request, g, jsonify, session
+from flask import request, g, jsonify, session, current_app
 from flask_security.core import current_user
 from flask_security.utils import logout_user
 from grant.proposal.models import Proposal
@@ -156,10 +156,10 @@ def internal_webhook(f):
     def decorated(*args, **kwargs):
         secret = request.headers.get('authorization')
         if not secret:
-            print('Internal webhook missing "Authorization" header')
+            current_app.logger.warn('Internal webhook missing "Authorization" header')
             return jsonify(message="Invalid 'Authorization' header"), 403
         if BLOCKCHAIN_API_SECRET not in secret:
-            print(f'Internal webhook provided invalid "Authorization" header: {secret}')
+            current_app.logger.warn(f'Internal webhook provided invalid "Authorization" header: {secret}')
             return jsonify(message="Invalid 'Authorization' header"), 403
         return f(*args, **kwargs)
 

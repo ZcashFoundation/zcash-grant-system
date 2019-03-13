@@ -106,7 +106,6 @@ class Profile extends React.Component<Props, State> {
 
     return (
       <div className="Profile">
-        {/* TODO: customize details for funders/creators */}
         <HeaderDetails
           title={`${user.displayName} is funding projects on ZF Grants`}
           description={`Join ${user.displayName} in funding the future!`}

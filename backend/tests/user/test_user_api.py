@@ -144,7 +144,7 @@ class TestUserAPI(BaseUserConfig):
         self.login_default_user()
         updated_user = animalify(copy.deepcopy(user_schema.dump(self.user)))
         updated_user["displayName"] = 'new display name'
-        updated_user["avatar"] = '' # TODO confirm avatar is no longer a dict
+        updated_user["avatar"] = ''
         updated_user["socialMedias"] = []
 
         user_update_resp = self.app.put(
