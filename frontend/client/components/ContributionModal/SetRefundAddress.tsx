@@ -38,9 +38,10 @@ export default class SetRefundAddress extends React.Component<Props, State> {
           type="info"
           message="Please set a refund address"
           description={`
-            In case this proposal fails to reach its funding goal, or the
-            project is canceled, we need an address to refund your
-            contribution to.
+            If the proposal fails to reach its funding goal or gets
+            canceled, we need an address to refund your contribution to.
+            You’ll only need to set this once, and can change it later from
+            the Settings page.
           `}
         />
 
