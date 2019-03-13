@@ -4,6 +4,7 @@ from decimal import Decimal
 from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
 from sqlalchemy import or_
+from sentry_sdk import capture_message
 
 from grant.extensions import limiter
 from grant.comment.models import Comment, comment_schema, comments_schema
@@ -136,7 +137,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     db.session.commit()
     dumped_comment = comment_schema.dump(comment)
 
-    # TODO: Email proposal team if top-level comment
+    # Email proposal team if top-level comment
     if not parent:
         for member in proposal.team:
             send_email(member.email_address, 'proposal_comment', {
@@ -407,7 +408,6 @@ def post_proposal_team_invite(proposal_id, address):
     db.session.commit()
 
     # Send email
-    # TODO: Move this to some background task / after request action
     email = address
     user = User.get_by_email(email_address=address)
     if user:
@@ -531,8 +531,9 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
         id=contribution_id).first()
 
     if not contribution:
-        # TODO: Log in sentry
-        current_app.logger.warn(f'Unknown contribution {contribution_id} confirmed with txid {txid}')
+        msg = f'Unknown contribution {contribution_id} confirmed with txid {txid}, amount {amount}'
+        capture_message(msg)
+        current_app.logger.warn(msg)
         return {"message": "No contribution matching id"}, 404
 
     if contribution.status == ContributionStatus.CONFIRMED:
@@ -577,8 +578,6 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
                 'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
                 'contributor_url': make_url(f'/profile/{contribution.user.id}') if contribution.user else '',
             })
-
-    # TODO: Once we have a task queuer in place, queue emails to everyone
 
     # on funding target reached.
     contribution.proposal.set_funded_when_ready()

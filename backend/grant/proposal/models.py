@@ -376,14 +376,14 @@ class Proposal(db.Model):
 
     def get_staking_contribution(self, user_id: int):
         contribution = None
-        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.contributed)
+        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.amount_staked)
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
-            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
+                staking=True,
             ).first()
             if not contribution:
                 contribution = self.create_contribution(
@@ -536,6 +536,14 @@ class Proposal(db.Model):
             .all()
         funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
+
+    @hybrid_property
+    def amount_staked(self):
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=True) \
+            .all()
+        amount = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        return str(amount)
 
     @hybrid_property
     def funded(self):
@@ -716,9 +724,6 @@ proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
 
 
-# TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
-
-
 class InviteWithProposalSchema(ma.Schema):
     class Meta:
         model = ProposalTeamInvite
@@ -768,7 +773,7 @@ class ProposalContributionSchema(ma.Schema):
 
     def get_addresses(self, obj):
         # Omit 'memo' and 'sprout' for now
-        # TODO: Add back in 'sapling' when ready
+        # NOTE: Add back in 'sapling' when ready
         addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
         return {
             'transparent': addresses['transparent'],
