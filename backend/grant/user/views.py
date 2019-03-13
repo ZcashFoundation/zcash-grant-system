@@ -1,6 +1,6 @@
 import validators
 from animal_case import keys_to_snake_case
-from flask import Blueprint, g
+from flask import Blueprint, g, current_app
 from marshmallow import fields
 from validate_email import validate_email
 
@@ -151,7 +151,9 @@ def update_user_password(current_password, password):
 def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
-    # TODO - add log
+    current_app.logger.info(
+        f"Updating userId: {g.current_user.id} with current email: {g.current_user.email_address} to new email: {email}"
+    )
     g.current_user.set_email(email)
     return {"message": "ok"}, 200
 
@@ -343,6 +345,7 @@ def get_user_settings(user_id):
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @auth.requires_same_user_auth
 @body({
+    # TODO -
     "emailSubscriptions": fields.Dict(required=False, missing=None),
     "refundAddress": fields.Str(required=False, missing=None,
                                 validate=lambda r: blockchain_get('/validate/address', {'address': r}))

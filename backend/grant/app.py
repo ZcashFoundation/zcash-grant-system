@@ -4,7 +4,7 @@ import sentry_sdk
 import logging
 import traceback
 from animal_case import animalify
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, current_app
 from flask_cors import CORS
 from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
@@ -48,8 +48,9 @@ def create_app(config_objects=["grant.settings"]):
             if 'json' in messages:
                 error_message = messages['json'][0]
             else:
-                # TODO - add sentry log. Unexpected Error
-                print(f'Unexpected error occurred: {messages}')
+                current_app.logger.warn(
+                    f"Unexpected error occurred: {messages}"
+                )
         if headers:
             return jsonify({"message": error_message}), err.code, headers
         else:
