@@ -114,7 +114,7 @@ export function formatRFPFromGet(rfp: RFP): RFP {
   return rfp;
 }
 
-// TODO: i18n on case-by-case basis
+// NOTE: i18n on case-by-case basis
 export function generateSlugUrl(id: number, title: string) {
   const slug = title
     .toLowerCase()

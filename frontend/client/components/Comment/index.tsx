@@ -41,7 +41,6 @@ class Comment extends React.Component<Props> {
   };
 
   componentDidUpdate(prevProps: Props) {
-    // TODO: Come up with better check on if our comment post was a success
     const { isPostCommentPending, postCommentError } = this.props;
     if (!isPostCommentPending && !postCommentError && prevProps.isPostCommentPending) {
       this.setState({ reply: '', isReplying: false });

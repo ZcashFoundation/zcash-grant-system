@@ -401,7 +401,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 <Markdown source={p.content} />
               </Collapse.Panel>
 
-              {/* TODO - comments, milestones, updates &etc. */}
               <Collapse.Panel key="json" header="json">
                 <pre>{JSON.stringify(p, null, 4)}</pre>
               </Collapse.Panel>
@@ -469,8 +468,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 </div>
               ))}
             </Card>
-
-            {/* TODO: contributors here? */}
           </Col>
         </Row>
       </div>

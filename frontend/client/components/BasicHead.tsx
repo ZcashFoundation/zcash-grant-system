@@ -25,7 +25,6 @@ class BasicHead extends React.Component<Props> {
             name="keywords"
             content="Zcash, Zcash Foundation, Zcash Foundation Grants, Zcash Grants, Zcash Grant, ZF Grants, ZFGrants"
           />
-          <meta name={`${title} page`} content={`${title} page stuff`} />
           <link
             rel="stylesheet"
             href="https://use.fontawesome.com/releases/v5.2.0/css/all.css"
@@ -41,7 +40,6 @@ class BasicHead extends React.Component<Props> {
           <meta property="og:url" content={defaultOgpUrl} />
           <meta property="og:image" content={defaultOgpImage} />
           <meta property="og:locale" content="en_US" />
-          {/* TODO: i18n */}
           {/* <meta property="og:locale:alternate" content="en_US" /> */}
           {/* <meta property="og:locale:alternate" content="de_DE" /> */}
 
