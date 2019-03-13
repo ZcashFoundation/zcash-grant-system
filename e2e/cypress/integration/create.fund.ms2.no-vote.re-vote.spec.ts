@@ -79,7 +79,6 @@ describe("create.fund.ms2.no-vote.re-vote", () => {
       "Request milestone payout",
       { timeout: 20000 }
     ).click();
-    // TODO: fix this bug (the following fails)
     cy.contains(".MilestoneAction-progress-text", "voted against payout", {
       timeout: 20000
     });
