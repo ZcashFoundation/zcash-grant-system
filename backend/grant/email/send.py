@@ -1,6 +1,6 @@
 import sendgrid
 from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
 from grant.utils.misc import make_url
 from python_http_client import HTTPError
 from sendgrid.helpers.mail import Email, Mail, Content
@@ -33,8 +33,8 @@ def team_invite_info(email_args):
 
 def recover_info(email_args):
     return {
-        'subject': '{} account recovery'.format(UI['NAME']),
-        'title': '{} account recovery'.format(UI['NAME']),
+        'subject': 'Recover your account',
+        'title': 'Recover your account',
         'preview': 'Use the link to recover your account.'
     }
 
@@ -367,7 +367,7 @@ def send_email(to, type, email_args):
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
 
         mail = Mail(
-            from_email=Email(SENDGRID_DEFAULT_FROM),
+            from_email=Email(SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME),
             to_email=Email(to),
             subject=email['info']['subject'],
         )

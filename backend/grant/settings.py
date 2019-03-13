@@ -29,7 +29,8 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 SESSION_COOKIE_DOMAIN = env.str('SESSION_COOKIE_DOMAIN', default=None)
 
 SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
-SENDGRID_DEFAULT_FROM = "noreply@zfnd.org"
+SENDGRID_DEFAULT_FROM = "noreply@grants.zfnd.org"
+SENDGRID_DEFAULT_FROMNAME = "ZF Grants"
 
 SENTRY_DSN = env.str("SENTRY_DSN", default=None)
 SENTRY_RELEASE = env.str("SENTRY_RELEASE", default=None)
