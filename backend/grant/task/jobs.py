@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from grant.extensions import db
 from grant.email.send import send_email
-from grant.utils.enums import ProposalStage
+from grant.utils.enums import ProposalStage, ContributionStatus
 from grant.utils.misc import make_url
 
 
@@ -86,8 +86,48 @@ class ProposalDeadline:
                     'account_settings_url': make_url('/profile/settings?tab=account')
                 })
 
+class ContributionExpired:
+    JOB_TYPE = 3
+
+    def __init__(self, contribution):
+        self.contribution = contribution
+    
+    def blobify(self):
+        return {
+            "contribution_id": self.contribution.id,
+        }
+    
+    def make_task(self):
+        from .models import Task
+        task = Task(
+            job_type=self.JOB_TYPE,
+            blob=self.blobify(),
+            execute_after=self.contribution.date_created + timedelta(hours=24),
+        )
+        db.session.add(task)
+        db.session.commit()
+
+    @staticmethod
+    def process_task(task):
+        from grant.proposal.models import ProposalContribution
+        contribution = ProposalContribution.query.filter_by(id=task.blob["contribution_id"]).first()
+
+        # If it's missing or not pending, noop out
+        if not contribution or contribution.status != ContributionStatus.PENDING:
+            return
+        
+        # Otherwise, inform the user (if not anonymous)
+        if contribution.user:
+            send_email(contribution.user.email_address, 'contribution_expired', {
+                'contribution': contribution,
+                'proposal': contribution.proposal,
+                'contact_url': make_url('/contact'),
+                'profile_url': make_url(f'/profile/{contribution.user.id}'),
+                'proposal_url': make_url(f'/proposals/{contribution.proposal.id}'),
+            })
 
 JOBS = {
     1: ProposalReminder.process_task,
     2: ProposalDeadline.process_task,
+    3: ContributionExpired.process_task,
 }

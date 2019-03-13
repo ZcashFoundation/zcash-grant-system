@@ -66,11 +66,13 @@ export default class ContributionModal extends React.Component<Props, State> {
     if (contribution !== this.props.contribution) {
       this.setState({ contribution: contribution || null });
     }
-    // When the modal is closed, clear out the contribution and anonymous check
+    // When the modal is closed, clear out the contribution, error, and anonymous check
     if (this.props.isVisible && !isVisible) {
       this.setState({
         contribution: null,
         hasConfirmedAnonymous: false,
+        hasSent: false,
+        error: null,
       });
     }
   }
@@ -89,19 +91,23 @@ export default class ContributionModal extends React.Component<Props, State> {
         <Alert
           className="PaymentInfo-anonymous"
           type="warning"
-          message="This contribution is anonymous"
+          message="This contribution will not be attributed"
           description={
             <>
-              You are about to contribute anonymously. Your contribution will show up
-              without attribution, and even if you're logged in, will not appear anywhere
-              on your account after you close this modal.
+              Your contribution will show up without attribution. Even if you're logged
+              in, the contribution will not appear anywhere on your account after you
+              close this modal.
               <br /> <br />
-              In the case of a refund, your contribution will be treated as a donation to
-              the Zcash Foundation instead.
+              ZF Grants is unable to offer refunds for non-attributed contributions. If
+              refunds for this campaign are issued, your contribution will be treated as a
+              donation to the Zcash Foundation.
               <br /> <br />
-              If you would like to have your contribution attached to an account, you can
-              close this modal, make sure you're logged in, and don't check the
-              "Contribute anonymously" checkbox.
+              If you would like to have your contribution attached to an account and
+              remain eligible for refunds, you can close this modal, make sure you're
+              logged in, and don't check the "Contribute without attribution" checkbox.
+              <br /> <br />
+              NOTE: The Zcash Foundation is unable to accept donations of more than $5,000
+              USD worth of ZEC from anonymous users.
             </>
           }
         />
@@ -133,7 +139,24 @@ export default class ContributionModal extends React.Component<Props, State> {
       if (error) {
         okText = 'Done';
         onOk = handleClose;
-        content = error;
+        // This should probably key on non-display text, but oh well.
+        let title;
+        let description;
+        if (error.includes('too many times')) {
+          title = 'Take it easy!';
+          description = `
+            We appreciate your enthusiasm, but you've made too many
+            contributions too fast. Please wait for your other contributions,
+            and try again later.
+          `;
+        } else {
+          title = 'Something went wrong';
+          description = `
+            We were unable to get your contribution started. Please check back
+            soon, we're working to fix the problem as soon as possible.
+          `;
+        }
+        content = <Result type="error" title={title} description={description} />;
       } else {
         okText = 'I’ve sent it';
         onOk = this.confirmSend;

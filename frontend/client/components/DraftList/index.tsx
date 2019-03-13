@@ -67,10 +67,10 @@ class DraftList extends React.Component<Props, State> {
       this.setState({ deletingId: null });
     }
     if (deleteDraftError && prevProps.deleteDraftError !== deleteDraftError) {
-      message.error('Failed to delete draft', 3);
+      message.error(deleteDraftError, 3);
     }
     if (createDraftError && prevProps.createDraftError !== createDraftError) {
-      message.error('Failed to create draft', 3);
+      message.error(createDraftError, 3);
     }
   }
 

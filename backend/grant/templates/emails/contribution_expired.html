@@ -1,0 +1,22 @@
+<p style="margin: 0 0 20px;">
+  Your <strong>{{ args.contribution.amount }} ZEC</strong> contribution to
+  <strong>{{ args.proposal.title}}</strong> could not be confirmed on-chain,
+  and has expired.
+</p>
+
+<p style="margin: 0 0 20px;">
+  <strong>If you did not send the contribution</strong>:
+  You have nothing to worry about, you can simply delete the contribution from
+  <a href="{{ args.profile_url }}">your profile</a>. Just make that sure you do
+  not send any money to the contribution address. If you'd still like to make a
+  contribution, you can start a new one on the
+  <a href="{{ args.proposal_url }}">proposal page</a>.
+</p>
+
+<p style="margin: 0;">
+  <strong>If you're sure you sent the contribution</strong>:
+  Please contact our team using a method from the
+  <a href="{{ args.contact_url }}">contact page</a> with details about the
+  contribution, such as a transaction ID or payment
+  disclosure from the transaction.
+</p>

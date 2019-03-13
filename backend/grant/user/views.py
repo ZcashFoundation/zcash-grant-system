@@ -3,6 +3,7 @@ from flask import Blueprint, g
 from marshmallow import fields
 
 import grant.utils.auth as auth
+from grant.extensions import limiter
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.models import EmailRecovery
 from grant.parser import query, body
@@ -87,6 +88,7 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
 
 
 @blueprint.route("/", methods=["POST"])
+@limiter.limit("30/day;5/minute")
 @body({
     # TODO isValid
     "emailAddress": fields.Str(required=True),
@@ -208,6 +210,7 @@ def verify_user_social(service, code):
 
 
 @blueprint.route("/recover", methods=["POST"])
+@limiter.limit("10/day;2/minute")
 @body({
     "email": fields.Str(required=True)
 })
@@ -239,6 +242,7 @@ def recover_email(code, password):
 
 
 @blueprint.route("/avatar", methods=["POST"])
+@limiter.limit("20/day;3/minute")
 @auth.requires_auth
 @body({
     "mimetype": fields.Str(required=True)
@@ -345,7 +349,7 @@ def get_user_settings(user_id):
 @auth.requires_same_user_auth
 @body({
     # TODO shape, validity
-    "emailSubscriptions": fields.Dict(required=True),
+    "emailSubscriptions": fields.Dict(required=False, missing=None),
     # TODO validity - use proposal.model.validate
     "refundAddress": fields.Str(required=False, missing=None)
 })

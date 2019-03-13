@@ -41,6 +41,16 @@ module.exports = {
                 '@babel/plugin-proposal-object-rest-spread',
                 '@babel/plugin-proposal-class-properties',
                 ['import', { libraryName: 'antd', style: true }],
+                [
+                  'import',
+                  {
+                    libraryName: 'ant-design-pro',
+                    libraryDirectory: 'lib',
+                    style: true,
+                    camel2DashComponentName: false,
+                  },
+                  'antdproimport',
+                ],
               ],
               presets: ['@babel/react', ['@babel/env', { useBuiltIns: 'entry' }]],
             },

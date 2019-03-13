@@ -93,6 +93,11 @@ export default [
     description: 'Sent to contributors when an admin cancels the proposal after funding',
   },
   {
+    id: 'contribution_expired',
+    title: 'Contribution expired',
+    description: 'Sent 24 hours after a contribution is made with no confirmation',
+  },
+  {
     id: 'comment_reply',
     title: 'Comment reply',
     description: 'Sent if someone makes a direct reply to your comment',
