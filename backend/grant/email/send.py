@@ -1,13 +1,14 @@
+from .subscription_settings import EmailSubscription, is_subscribed
+from sendgrid.helpers.mail import Email, Mail, Content
+from python_http_client import HTTPError
+from grant.utils.misc import make_url
+from sentry_sdk import capture_exception
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
 import sendgrid
 from threading import Thread
 from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
-from sentry_sdk import capture_exception
-from grant.utils.misc import make_url
-from python_http_client import HTTPError
-from sendgrid.helpers.mail import Email, Mail, Content
 
-from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
     'home_url': make_url('/'),
@@ -385,10 +386,18 @@ def make_envelope(to, type, email_args):
 
 
 def sendgrid_send(mail):
+    to = mail.___to
+    type = mail.___type
     try:
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
-        res = sg.client.mail.send.post(request_body=mail.get())
-        current_app.logger.info('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+        if E2E_TESTING:
+            from grant.e2e import views
+            views.last_email = mail.get()
+            current_app.logger.info(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
+        else:
+            res = sg.client.mail.send.post(request_body=mail.get())
+            current_app.logger.info('Just sent an email to %s of type %s, response code: %s' %
+                                    (to, type, res.status_code))
     except HTTPError as e:
         current_app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
                                 (to, e.__class__.__name__, e))

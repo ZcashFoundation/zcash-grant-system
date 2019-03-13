@@ -479,9 +479,10 @@ def get_proposal_contribution(proposal_id, contribution_id):
 @limiter.limit("30/day;10/hour;2/minute")
 @body({
     "amount": fields.Str(required=True, validate=lambda p: 0.0000001 <= float(p) <= 1000000),
-    "anonymous": fields.Bool(required=False, missing=None)
+    "anonymous": fields.Bool(required=False, missing=None),
+    "noRefund": fields.Bool(required=False, missing=False),
 })
-def post_proposal_contribution(proposal_id, amount, anonymous):
+def post_proposal_contribution(proposal_id, amount, anonymous, no_refund):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if not proposal:
         return {"message": "No proposal matching id"}, 404
@@ -494,12 +495,14 @@ def post_proposal_contribution(proposal_id, amount, anonymous):
         user = get_authed_user()
 
     if user:
-        contribution = ProposalContribution.get_existing_contribution(user.id, proposal_id, amount)
+        contribution = ProposalContribution \
+            .get_existing_contribution(user.id, proposal_id, amount, no_refund)
 
     if not contribution:
         code = 201
         contribution = proposal.create_contribution(
             amount=amount,
+            no_refund=no_refund,
             user_id=user.id if user else None,
         )
 

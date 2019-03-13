@@ -358,6 +358,8 @@ def set_user_settings(user_id, email_subscriptions, refund_address):
         except ValidationException as e:
             return {"message": str(e)}, 400
 
+    if refund_address == '' and g.current_user.settings.refund_address:
+        return {"message": "Refund address cannot be unset, only changed"}, 400
     if refund_address:
         g.current_user.settings.refund_address = refund_address
 

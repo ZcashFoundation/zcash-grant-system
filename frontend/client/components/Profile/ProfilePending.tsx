@@ -141,7 +141,7 @@ class ProfilePending extends React.Component<Props, State> {
             handleClose={this.closeStakingModal}
             text={
               <p>
-                Please send the staking contribution of{' '}
+                For your proposal to be considered, please send a staking contribution of{' '}
                 <b>{stakeContribution && stakeContribution.amount} ZEC</b> using the
                 instructions below. Once your payment has been sent and received 6
                 confirmations, you will receive an email.
