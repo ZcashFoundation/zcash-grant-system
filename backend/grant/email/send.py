@@ -6,6 +6,7 @@ from sentry_sdk import capture_exception
 from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
 from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
 import sendgrid
+from threading import Thread
 from flask import render_template, Markup, current_app
 
 
@@ -350,8 +351,14 @@ def generate_email(type, email_args, user=None):
 
 
 def send_email(to, type, email_args):
+    mail = make_envelope(to, type, email_args)
+    if mail:
+        sendgrid_send(mail)
+
+
+def make_envelope(to, type, email_args):
     if current_app and current_app.config.get("TESTING"):
-        return
+        return None
 
     from grant.user.models import User
     user = User.get_by_email(to)
@@ -361,29 +368,34 @@ def send_email(to, type, email_args):
         sub = info['subscription']
         if user and not is_subscribed(user.settings.email_subscriptions, sub):
             app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
-            return
+            return None
 
+    email = generate_email(type, email_args, user)
+    mail = Mail(
+        from_email=Email(SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME),
+        to_email=Email(to),
+        subject=email['info']['subject'],
+    )
+    mail.add_content(Content('text/plain', email['text']))
+    mail.add_content(Content('text/html', email['html']))
+
+    mail.___type = type
+    mail.___to = to
+
+    return mail
+
+
+def sendgrid_send(mail):
     try:
-        email = generate_email(type, email_args, user)
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
-
-        mail = Mail(
-            from_email=Email(SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME),
-            to_email=Email(to),
-            subject=email['info']['subject'],
-        )
-        mail.add_content(Content('text/plain', email['text']))
-        mail.add_content(Content('text/html', email['html']))
-
         if E2E_TESTING:
             from grant.e2e import views
             views.last_email = mail.get()
-            print(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
+            current_app.logger.info(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
         else:
             res = sg.client.mail.send.post(request_body=mail.get())
             current_app.logger.info('Just sent an email to %s of type %s, response code: %s' %
                                     (to, type, res.status_code))
-
     except HTTPError as e:
         current_app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
                                 (to, e.__class__.__name__, e))
@@ -394,3 +406,18 @@ def send_email(to, type, email_args):
                                 (to, e.__class__.__name__, e))
         current_app.logger.debug(e)
         capture_exception(e)
+
+
+class EmailSender(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.envelopes = []
+
+    def add(self, to, type, email_args):
+        env = make_envelope(to, type, email_args)
+        if env:
+            self.envelopes.append(env)
+
+    def run(self):
+        for envelope in self.envelopes:
+            sendgrid_send(envelope)
