@@ -56,7 +56,7 @@ describe("proposal.fund", () => {
 
     cy.get("input[name='amountToRaise']").type("23.456");
     cy.contains("button", "Fund this").click();
-    cy.contains("anonymous");
+    cy.contains("Make your contribution");
     cy.contains("button", "I’ve sent it").click();
     cy.contains("a", "funded tab").click();
     cy.contains(".ant-tabs-tab-active", "Funded");

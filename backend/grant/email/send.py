@@ -7,9 +7,6 @@ from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEF
 from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
 import sendgrid
 from flask import render_template, Markup, current_app
-<< << << < HEAD
-== == == =
->>>>>> > develop
 
 
 default_template_args = {

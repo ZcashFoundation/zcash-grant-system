@@ -16,6 +16,7 @@ describe("browse", () => {
     cy.contains("a", "Proposals").click();
 
     cy.contains(".ant-select", "Newest").click();
+    cy.wait(100);
     cy.contains(".ant-select-dropdown", "Oldest").click();
 
     cy.contains(
@@ -54,7 +55,7 @@ describe("browse", () => {
     cy.contains("a", "Privacy").click({ force: true });
     cy.contains("h1", "Privacy");
     cy.contains("a", "Code of").click({ force: true });
-    cy.contains("h1", "Code");
+    cy.contains("h1", "Community");
 
     cy.contains("a", "Sign in").click();
     cy.contains("a", "Recover your").click();
