@@ -106,7 +106,8 @@ export default class ContributionModal extends React.Component<Props, State> {
               remain eligible for refunds, you can close this modal, make sure you're
               logged in, and don't check the "Contribute without attribution" checkbox.
               <br /> <br />
-              NOTE: The Zcash Foundation is unable to accept donations of more than $5,000 USD worth of ZEC from anonymous users.
+              NOTE: The Zcash Foundation is unable to accept donations of more than $5,000
+              USD worth of ZEC from anonymous users.
             </>
           }
         />
@@ -138,16 +139,24 @@ export default class ContributionModal extends React.Component<Props, State> {
       if (error) {
         okText = 'Done';
         onOk = handleClose;
-        content = (
-          <Result
-            type="error"
-            title="Something went wrong"
-            description={`
-              We were unable to get your contribution started. Please check back
-              soon, we're working to fix the problem as soon as possible.
-            `}
-          />
-        );
+        // This should probably key on non-display text, but oh well.
+        let title;
+        let description;
+        if (error.includes('too many times')) {
+          title = 'Take it easy!';
+          description = `
+            We appreciate your enthusiasm, but you've made too many
+            contributions too fast. Please wait for your other contributions,
+            and try again later.
+          `;
+        } else {
+          title = 'Something went wrong';
+          description = `
+            We were unable to get your contribution started. Please check back
+            soon, we're working to fix the problem as soon as possible.
+          `;
+        }
+        content = <Result type="error" title={title} description={description} />;
       } else {
         okText = 'I’ve sent it';
         onOk = this.confirmSend;
