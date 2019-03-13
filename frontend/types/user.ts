@@ -1,4 +1,5 @@
-import { SocialMedia } from 'types';
+import { SocialMedia } from './social';
+import { EmailSubscriptions } from './email';
 
 export interface User {
   userid: number;
@@ -11,6 +12,6 @@ export interface User {
 }
 
 export interface UserSettings {
-  emailSubscriptions: object;
+  emailSubscriptions: EmailSubscriptions;
   refundAddress?: string | null;
 }
