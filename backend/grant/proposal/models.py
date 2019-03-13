@@ -376,7 +376,7 @@ class Proposal(db.Model):
 
     def get_staking_contribution(self, user_id: int):
         contribution = None
-        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.contributed)
+        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.amount_staked)
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
@@ -533,6 +533,14 @@ class Proposal(db.Model):
             .all()
         funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
         return str(funded)
+
+    @hybrid_property
+    def amount_staked(self):
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=True) \
+            .all()
+        amount = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        return str(amount)
 
     @hybrid_property
     def funded(self):
