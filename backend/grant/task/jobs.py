@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from grant.extensions import db
-from grant.email.send import send_email
+from grant.email.send import send_email, EmailSender
 from grant.utils.enums import ProposalStage, ContributionStatus
 from grant.utils.misc import make_url
 
@@ -71,18 +71,21 @@ class ProposalDeadline:
         db.session.add(proposal)
         db.session.commit()
 
+        # Send emails to team & contributors
+        email_sender = EmailSender()
         for u in proposal.team:
-            send_email(u.email_address, 'proposal_failed', {
+            email_sender.add(u.email_address, 'proposal_failed', {
                 'proposal': proposal,
             })
         for c in proposal.contributions:
             if c.user:
-                send_email(c.user.email_address, 'contribution_proposal_failed', {
+                email_sender.add(c.user.email_address, 'contribution_proposal_failed', {
                     'contribution': c,
                     'proposal': proposal,
                     'refund_address': c.user.settings.refund_address,
                     'account_settings_url': make_url('/profile/settings?tab=account')
                 })
+        email_sender.start()
 
 
 class ContributionExpired:

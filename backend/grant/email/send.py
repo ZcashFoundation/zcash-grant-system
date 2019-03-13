@@ -1,6 +1,8 @@
 import sendgrid
+from threading import Thread
 from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
+from sentry_sdk import capture_exception
 from grant.utils.misc import make_url
 from python_http_client import HTTPError
 from sendgrid.helpers.mail import Email, Mail, Content
@@ -33,8 +35,8 @@ def team_invite_info(email_args):
 
 def recover_info(email_args):
     return {
-        'subject': '{} account recovery'.format(UI['NAME']),
-        'title': '{} account recovery'.format(UI['NAME']),
+        'subject': 'Recover your account',
+        'title': 'Recover your account',
         'preview': 'Use the link to recover your account.'
     }
 
@@ -317,10 +319,9 @@ def generate_email(type, email_args, user=None):
         UI=UI,
     )
 
-    template_args = { **default_template_args }
+    template_args = {**default_template_args}
     if user:
         template_args['unsubscribe_url'] = make_url('/email/unsubscribe?code={}'.format(user.email_verification.code))
-
 
     html = render_template(
         'emails/template.html',
@@ -349,8 +350,14 @@ def generate_email(type, email_args, user=None):
 
 
 def send_email(to, type, email_args):
+    mail = make_envelope(to, type, email_args)
+    if mail:
+        sendgrid_send(mail)
+
+
+def make_envelope(to, type, email_args):
     if current_app and current_app.config.get("TESTING"):
-        return
+        return None
 
     from grant.user.models import User
     user = User.get_by_email(to)
@@ -359,25 +366,51 @@ def send_email(to, type, email_args):
     if user and 'subscription' in info:
         sub = info['subscription']
         if user and not is_subscribed(user.settings.email_subscriptions, sub):
-            print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
-            return
+            app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
+            return None
 
+    email = generate_email(type, email_args, user)
+    mail = Mail(
+        from_email=Email(SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME),
+        to_email=Email(to),
+        subject=email['info']['subject'],
+    )
+    mail.add_content(Content('text/plain', email['text']))
+    mail.add_content(Content('text/html', email['html']))
+
+    mail.___type = type
+    mail.___to = to
+
+    return mail
+
+
+def sendgrid_send(mail):
     try:
-        email = generate_email(type, email_args, user)
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
-
-        mail = Mail(
-            from_email=Email(SENDGRID_DEFAULT_FROM),
-            to_email=Email(to),
-            subject=email['info']['subject'],
-        )
-        mail.add_content(Content('text/plain', email['text']))
-        mail.add_content(Content('text/html', email['html']))
-
         res = sg.client.mail.send.post(request_body=mail.get())
-        print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+        current_app.logger.info('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
     except HTTPError as e:
-        print('An HTTP error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
-        print(e.body)
+        current_app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
+                                (to, e.__class__.__name__, e))
+        current_app.logger.debug(e.body)
+        capture_exception(e)
     except Exception as e:
-        print('An unknown error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        current_app.logger.info('An unknown error occured while sending an email to %s - %s: %s' %
+                                (to, e.__class__.__name__, e))
+        current_app.logger.debug(e)
+        capture_exception(e)
+
+
+class EmailSender(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.envelopes = []
+
+    def add(self, to, type, email_args):
+        env = make_envelope(to, type, email_args)
+        if env:
+            self.envelopes.append(env)
+
+    def run(self):
+        for envelope in self.envelopes:
+            sendgrid_send(envelope)

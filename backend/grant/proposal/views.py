@@ -1,13 +1,14 @@
 from datetime import datetime
 from decimal import Decimal
 
-from flask import Blueprint, g, request
+from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
 from sqlalchemy import or_
 from sentry_sdk import capture_message
 
+from grant.extensions import limiter
 from grant.comment.models import Comment, comment_schema, comments_schema
-from grant.email.send import send_email
+from grant.email.send import send_email, EmailSender
 from grant.milestone.models import Milestone
 from grant.parser import body, query, paginated_fields
 from grant.rfp.models import RFP
@@ -95,6 +96,7 @@ def report_proposal_comment(proposal_id, comment_id):
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["POST"])
+@limiter.limit("30/hour;2/minute")
 @requires_email_verified_auth
 @body({
     "comment": fields.Str(required=True),
@@ -175,6 +177,7 @@ def get_proposals(page, filters, search, sort):
 
 
 @blueprint.route("/drafts", methods=["POST"])
+@limiter.limit("10/hour;3/minute")
 @requires_email_verified_auth
 @body({
     "rfpId": fields.Int(required=False, missing=None)
@@ -352,6 +355,7 @@ def get_proposal_update(proposal_id, update_id):
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
+@limiter.limit("5/day;1/minute")
 @requires_team_member_auth
 @body({
     "title": fields.Str(required=True),
@@ -367,25 +371,35 @@ def post_proposal_update(proposal_id, title, content):
     db.session.commit()
 
     # Send email to all contributors (even if contribution failed)
+    email_sender = EmailSender()
     contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
     for c in contributions:
         if c.user:
-            send_email(c.user.email_address, 'contribution_update', {
+            email_sender.add(c.user.email_address, 'contribution_update', {
                 'proposal': g.current_proposal,
                 'proposal_update': update,
                 'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
             })
+    email_sender.start()
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
 
 
 @blueprint.route("/<proposal_id>/invite", methods=["POST"])
+@limiter.limit("30/day;10/minute")
 @requires_team_member_auth
 @body({
     "address": fields.Str(required=True),
 })
 def post_proposal_team_invite(proposal_id, address):
+    existing_invite = ProposalTeamInvite.query.filter_by(
+        proposal_id=proposal_id,
+        address=address
+    ).first()
+    if existing_invite:
+        return {"message": f"You've already invited {address}"}, 400
+
     invite = ProposalTeamInvite(
         proposal_id=proposal_id,
         address=address
@@ -472,6 +486,7 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
+@limiter.limit("30/day;10/hour;2/minute")
 # TODO add gaurd (minimum, maximum)
 @body({
     "amount": fields.Str(required=True),
@@ -518,7 +533,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
     if not contribution:
         msg = f'Unknown contribution {contribution_id} confirmed with txid {txid}, amount {amount}'
         capture_message(msg)
-        print(msg)
+        current_app.logger.warn(msg)
         return {"message": "No contribution matching id"}, 404
 
     if contribution.status == ContributionStatus.CONFIRMED:
