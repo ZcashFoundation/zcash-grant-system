@@ -52,7 +52,7 @@ class ProfileContribution extends React.Component<Props> {
           <Popconfirm title="Are you sure?" onConfirm={this.deleteContribution}>
             <a>Delete</a>
           </Popconfirm>
-          <Link to="/support">Contact support</Link>
+          <Link to="/contact">Contact support</Link>
         </>
       );
     } else {
