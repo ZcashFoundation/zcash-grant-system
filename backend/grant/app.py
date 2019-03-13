@@ -2,14 +2,14 @@
 """The app module, containing the app factory function."""
 import sentry_sdk
 from animal_case import animalify
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp
-from grant.extensions import bcrypt, migrate, db, ma, security
+from grant.extensions import bcrypt, migrate, db, ma, security, limiter
 from grant.settings import SENTRY_RELEASE, ENV
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
 from grant.utils.exceptions import ValidationException
@@ -48,7 +48,12 @@ def create_app(config_objects=["grant.settings"]):
             return jsonify({"message": error_message}), err.code, headers
         else:
             return jsonify({"message": error_message}), err.code
-    
+
+    @app.errorhandler(429)
+    def handle_limit_error(err):
+        print(f'Rate limited request to {request.method} {request.path} from ip {request.remote_addr}')
+        return jsonify({"message": "You’ve done that too many times, please wait and try again later"}), 429
+
     @app.errorhandler(Exception)
     def handle_exception(err):
         return jsonify({"message": "Something went wrong"}), 500
@@ -86,6 +91,7 @@ def register_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
     ma.init_app(app)
+    limiter.init_app(app)
     user_datastore = SQLAlchemyUserDatastore(db, user.models.User, user.models.Role)
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
 
