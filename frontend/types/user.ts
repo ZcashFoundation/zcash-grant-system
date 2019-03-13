@@ -9,3 +9,8 @@ export interface User {
   socialMedias: SocialMedia[];
   avatar: { imageUrl: string } | null;
 }
+
+export interface UserSettings {
+  emailSubscriptions: object;
+  refundAddress?: string | null;
+}

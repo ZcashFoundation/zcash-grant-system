@@ -85,6 +85,7 @@ class ProposalContribution(db.Model):
     tx_id = db.Column(db.String(255), nullable=True)
     refund_tx_id = db.Column(db.String(255), nullable=True)
     staking = db.Column(db.Boolean, nullable=False)
+    no_refund = db.Column(db.Boolean, nullable=False)
 
     user = db.relationship("User")
 
@@ -94,11 +95,13 @@ class ProposalContribution(db.Model):
             amount: str,
             user_id: int = None,
             staking: bool = False,
+            no_refund: bool = False,
     ):
         self.proposal_id = proposal_id
         self.amount = amount
         self.user_id = user_id
         self.staking = staking
+        self.no_refund = no_refund
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
 
@@ -358,12 +361,19 @@ class Proposal(db.Model):
             self.set_contribution_matching(0)
             self.set_contribution_bounty('0')
 
-    def create_contribution(self, amount, user_id: int = None, staking: bool = False):
+    def create_contribution(
+        self,
+        amount,
+        user_id: int = None,
+        staking: bool = False,
+        no_refund: bool = False,
+    ):
         contribution = ProposalContribution(
             proposal_id=self.id,
             amount=amount,
             user_id=user_id,
             staking=staking,
+            no_refund=no_refund,
         )
         db.session.add(contribution)
         db.session.flush()
@@ -803,7 +813,8 @@ class AdminProposalContributionSchema(ma.Schema):
             "addresses",
             "refund_address",
             "refund_tx_id",
-            "staking"
+            "staking",
+            "no_refund",
         )
 
     proposal = ma.Nested("ProposalSchema")
