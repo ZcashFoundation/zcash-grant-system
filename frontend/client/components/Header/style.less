@@ -45,6 +45,7 @@
     flex-grow: 1;
     text-align: center;
     opacity: 0.7;
+    z-index: 222;
 
     &:hover,
     &:focus {
@@ -119,6 +120,36 @@
         height: 1.8rem;
         opacity: 0.8;
       }
+    }
+  }
+
+  &-testnet {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    height: 1.4rem;
+    line-height: 1.4rem;
+    padding: 0 0.5rem;
+    transform: translate(-50%, 50%);
+    text-align: center;
+    border-radius: 1rem;
+    box-shadow: 0 0 0 1px rgba(#000, 0.1);
+    color: rgba(#000, 0.6);
+    background: #FFF;
+    text-transform: uppercase;
+    letter-spacing: 0.9rem;
+    font-size: 0.65rem;
+    font-weight: bold;
+    transition: opacity @header-transition ease;
+    z-index: 111;
+
+    > span {
+      display: inline-block;
+      transform: translateX(0.42rem);
+    }
+
+    .is-transparent & {
+      opacity: 0;
     }
   }
 }
