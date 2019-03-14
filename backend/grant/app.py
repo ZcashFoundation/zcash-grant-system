@@ -10,10 +10,9 @@ from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-
-from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp
+from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp, e2e
 from grant.extensions import bcrypt, migrate, db, ma, security, limiter
-from grant.settings import SENTRY_RELEASE, ENV
+from grant.settings import SENTRY_RELEASE, ENV, E2E_TESTING, DEBUG
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
 from grant.utils.exceptions import ValidationException
 
@@ -52,18 +51,15 @@ def create_app(config_objects=["grant.settings"]):
         else:
             return jsonify({"message": error_message}), err.code
 
-
     @app.errorhandler(404)
     def handle_notfound_error(err):
         error_message = "Unknown route '{} {}'".format(request.method, request.path)
         return jsonify({"message": error_message}), 404
 
-
     @app.errorhandler(429)
     def handle_limit_error(err):
         app.logger.warn(f'Rate limited request to {request.method} {request.path} from ip {request.remote_addr}')
         return jsonify({"message": "You’ve done that too many times, please wait and try again later"}), 429
-
 
     @app.errorhandler(Exception)
     def handle_exception(err):
@@ -80,7 +76,7 @@ def create_app(config_objects=["grant.settings"]):
     register_shellcontext(app)
     register_commands(app)
 
-    if not app.config.get("TESTING"):
+    if not (app.config.get("TESTING") or E2E_TESTING):
         sentry_logging = LoggingIntegration(
             level=logging.INFO,
             event_level=logging.ERROR
@@ -130,6 +126,9 @@ def register_blueprints(app):
     app.register_blueprint(blockchain.views.blueprint)
     app.register_blueprint(task.views.blueprint)
     app.register_blueprint(rfp.views.blueprint)
+    if E2E_TESTING and DEBUG:
+        print('Warning: e2e end-points are open, this should only be the case for development or testing')
+        app.register_blueprint(e2e.views.blueprint)
 
 
 def register_shellcontext(app):

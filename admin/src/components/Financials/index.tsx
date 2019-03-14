@@ -20,7 +20,7 @@ class Financials extends React.Component {
     return (
       <div className="Financials">
         <Row gutter={16}>
-          <Col span={12}>
+          <Col lg={8} md={12} sm={24}>
             <Card size="small" title="Contributions">
               <Charts.Pie
                 hasLegend
@@ -38,13 +38,16 @@ class Financials extends React.Component {
                   { x: 'funding', y: parseFloat(contributions.funding) },
                   { x: 'refunding', y: parseFloat(contributions.refunding) },
                   { x: 'refunded', y: parseFloat(contributions.refunded) },
+                  { x: 'donation', y: parseFloat(contributions.donations) },
                   { x: 'staking', y: parseFloat(contributions.staking) },
                 ]}
                 valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
                 height={180}
               />
             </Card>
+          </Col>
 
+          <Col lg={8} md={12} sm={24}>
             <Card
               size="small"
               title={
@@ -85,7 +88,9 @@ class Financials extends React.Component {
                 height={180}
               />
             </Card>
+          </Col>
 
+          <Col lg={8} md={12} sm={24}>
             <Card
               size="small"
               title={
