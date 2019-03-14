@@ -302,7 +302,7 @@ class Proposal(db.Model):
             payout_total += float(milestone.payout_percent)
 
             try:
-                present = datetime.datetime.now()
+                present = datetime.datetime.today().replace(day=1)
                 if present > milestone.date_estimated:
                     raise ValidationException("Milestone date_estimated must be in the future ")
 
