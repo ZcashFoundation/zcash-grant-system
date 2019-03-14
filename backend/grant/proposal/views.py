@@ -370,16 +370,14 @@ def post_proposal_update(proposal_id, title, content):
     db.session.add(update)
     db.session.commit()
 
-    # Send email to all contributors (even if contribution failed)
-    email_sender = EmailSender()
-    contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
-    for c in contributions:
-        if c.user:
-            email_sender.add(c.user.email_address, 'contribution_update', {
-                'proposal': g.current_proposal,
-                'proposal_update': update,
-                'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
-            })
+    # Send email to all contributors
+    email_sender = EmailSender(current_app._get_current_object())
+    for u in g.current_proposal.contributors:
+        email_sender.add(u.email_address, 'contribution_update', {
+            'proposal': g.current_proposal,
+            'proposal_update': update,
+            'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
+        })
     email_sender.start()
 
     dumped_update = proposal_update_schema.dump(update)
