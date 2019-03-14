@@ -16,7 +16,7 @@ export default class RFPItem extends React.Component<Props> {
   render() {
     const { rfp, isSmall } = this.props;
     const {
-      id,
+      urlId,
       title,
       brief,
       acceptedProposals,
@@ -49,7 +49,7 @@ export default class RFPItem extends React.Component<Props> {
     return (
       <Link
         className={classnames('RFPItem', isSmall && 'is-small')}
-        to={`/requests/${id}`}
+        to={`/requests/${urlId}`}
       >
         <h3 className="RFPItem-title">
           {title}
