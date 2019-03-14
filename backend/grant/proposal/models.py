@@ -1,18 +1,18 @@
 import datetime
+from decimal import Decimal
 from functools import reduce
+
+from flask import current_app
+from marshmallow import post_dump
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from decimal import Decimal
-from marshmallow import post_dump
 
 from flask import current_app
 from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
-from grant.utils.exceptions import ValidationException
-from grant.utils.misc import dt_to_unix, make_url, gen_random_id
-from grant.utils.requests import blockchain_get
 from grant.settings import PROPOSAL_STAKING_AMOUNT
+from grant.task.jobs import ContributionExpired
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -21,8 +21,10 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage
 )
+from grant.utils.exceptions import ValidationException
+from grant.utils.misc import dt_to_unix, make_url, gen_random_id
+from grant.utils.requests import blockchain_get
 from grant.utils.stubs import anonymous_user
-from grant.task.jobs import ContributionExpired
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -272,10 +274,11 @@ class Proposal(db.Model):
         self.stage = stage
 
     @staticmethod
-    def validate(proposal):
+    def simple_validate(proposal):
         title = proposal.get('title')
         stage = proposal.get('stage')
         category = proposal.get('category')
+
         if title and len(title) > 60:
             raise ValidationException("Proposal title cannot be longer than 60 characters")
         if stage and not ProposalStage.includes(stage):
@@ -283,8 +286,40 @@ class Proposal(db.Model):
         if category and not Category.includes(category):
             raise ValidationException("Category {} not a valid category".format(category))
 
+    def validate_publishable_milestones(self):
+        payout_total = 0.0
+        for i, milestone in enumerate(self.milestones):
+
+            if milestone.immediate_payout and i != 0:
+                raise ValidationException("Only the first milestone can have an immediate payout")
+
+            if len(milestone.title) > 60:
+                raise ValidationException("Milestone title must be no more than 60 chars")
+
+            if len(milestone.content) > 200:
+                raise ValidationException("Milestone content must be no more than 200 chars")
+
+            payout_total += float(milestone.payout_percent)
+
+            try:
+                present = datetime.datetime.today().replace(day=1)
+                if present > milestone.date_estimated:
+                    raise ValidationException("Milestone date_estimated must be in the future ")
+
+            except Exception as e:
+                current_app.logger.warn(
+                    f"Unexpected validation error - client prohibits {e}"
+                )
+                raise ValidationException("date_estimated does not convert to a datetime")
+
+        if payout_total != 100.0:
+            raise ValidationException("payoutPercent across milestones must sum to exactly 100")
+
     def validate_publishable(self):
+        self.validate_publishable_milestones()
+
         # Require certain fields
+
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
         for field in required_fields:
             if not hasattr(self, field):
@@ -300,11 +335,11 @@ class Proposal(db.Model):
             raise ValidationException("Payout address is not a valid Zcash address")
 
         # Then run through regular validation
-        Proposal.validate(vars(self))
+        Proposal.simple_validate(vars(self))
 
     @staticmethod
     def create(**kwargs):
-        Proposal.validate(kwargs)
+        Proposal.simple_validate(kwargs)
         proposal = Proposal(
             **kwargs
         )
@@ -352,7 +387,7 @@ class Proposal(db.Model):
         self.target = target
         self.payout_address = payout_address
         self.deadline_duration = deadline_duration
-        Proposal.validate(vars(self))
+        Proposal.simple_validate(vars(self))
 
     def update_rfp_opt_in(self, opt_in: bool):
         self.rfp_opt_in = opt_in

@@ -38,7 +38,6 @@ milestones = [
 
 test_proposal = {
     "team": test_team,
-    "crowdFundContractAddress": "0x20000",
     "content": "## My Proposal",
     "title": "Give Me Money",
     "brief": "$$$",

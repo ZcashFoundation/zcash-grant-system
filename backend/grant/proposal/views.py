@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal
 
 from flask import Blueprint, g, request, current_app
@@ -218,11 +217,10 @@ def get_proposal_drafts():
 
 @blueprint.route("/<proposal_id>", methods=["PUT"])
 @requires_team_member_auth
-# TODO add gaurd (minimum, maximum, shape)
 @body({
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
-    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list() + [''])),
     "content": fields.Str(required=True),
     "target": fields.Str(required=True),
     "payoutAddress": fields.Str(required=True),
@@ -233,6 +231,11 @@ def get_proposal_drafts():
 def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields
     try:
+        if g.current_proposal.status not in [ProposalStatus.DRAFT,
+                                             ProposalStatus.REJECTED]:
+            raise ValidationException(
+               f"Proposal with status: {g.current_proposal.status} are not authorized for updates"
+            )
         g.current_proposal.update(**kwargs)
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
@@ -242,20 +245,7 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     if rfp_opt_in is not None:
         g.current_proposal.update_rfp_opt_in(rfp_opt_in)
 
-    # Delete & re-add milestones
-    [db.session.delete(x) for x in g.current_proposal.milestones]
-    if milestones:
-        for i, mdata in enumerate(milestones):
-            m = Milestone(
-                title=mdata["title"],
-                content=mdata["content"],
-                date_estimated=datetime.fromtimestamp(mdata["date_estimated"]),
-                payout_percent=str(mdata["payout_percent"]),
-                immediate_payout=mdata["immediate_payout"],
-                proposal_id=g.current_proposal.id,
-                index=i
-            )
-            db.session.add(m)
+    Milestone.make(milestones, g.current_proposal)
 
     # Commit
     db.session.commit()
@@ -358,8 +348,8 @@ def get_proposal_update(proposal_id, update_id):
 @limiter.limit("5/day;1/minute")
 @requires_team_member_auth
 @body({
-    "title": fields.Str(required=True),
-    "content": fields.Str(required=True)
+    "title": fields.Str(required=True, validate=lambda p: 3 <= len(p) <= 30),
+    "content": fields.Str(required=True, validate=lambda p: 5 <= len(p) <= 10000),
 })
 def post_proposal_update(proposal_id, title, content):
     update = ProposalUpdate(
@@ -443,24 +433,24 @@ def get_proposal_contributions(proposal_id):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    top_contributions = ProposalContribution.query \
-        .filter_by(
+    top_contributions = ProposalContribution.query.filter_by(
         proposal_id=proposal_id,
         status=ContributionStatus.CONFIRMED,
         staking=False,
-    ) \
-        .order_by(ProposalContribution.amount.desc()) \
-        .limit(5) \
-        .all()
-    latest_contributions = ProposalContribution.query \
-        .filter_by(
+    ).order_by(
+        ProposalContribution.amount.desc()
+    ).limit(
+        5
+    ).all()
+    latest_contributions = ProposalContribution.query.filter_by(
         proposal_id=proposal_id,
         status=ContributionStatus.CONFIRMED,
         staking=False,
-    ) \
-        .order_by(ProposalContribution.date_created.desc()) \
-        .limit(5) \
-        .all()
+    ).order_by(
+        ProposalContribution.date_created.desc()
+    ).limit(
+        5
+    ).all()
 
     return {
         'top': proposal_proposal_contributions_schema.dump(top_contributions),
@@ -483,9 +473,8 @@ def get_proposal_contribution(proposal_id, contribution_id):
 
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
 @limiter.limit("30/day;10/hour;2/minute")
-# TODO add gaurd (minimum, maximum)
 @body({
-    "amount": fields.Str(required=True),
+    "amount": fields.Str(required=True, validate=lambda p: 0.0001 <= float(p) <= 1000000),
     "anonymous": fields.Bool(required=False, missing=None),
     "noRefund": fields.Bool(required=False, missing=False),
 })
@@ -654,7 +643,7 @@ def accept_milestone_payout_request(proposal_id, milestone_id):
 @blueprint.route("/<proposal_id>/milestone/<milestone_id>/reject", methods=["PUT"])
 @requires_arbiter_auth
 @body({
-    "reason": fields.Str(required=True)
+    "reason": fields.Str(required=True, validate=lambda p: 2 <= len(p) <= 200),
 })
 def reject_milestone_payout_request(proposal_id, milestone_id, reason):
     if not g.current_proposal.is_funded:
