@@ -7,7 +7,7 @@ from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEF
 from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
 import sendgrid
 from threading import Thread
-from flask import render_template, Markup, current_app
+from flask import render_template, Markup, current_app, g
 
 
 default_template_args = {
@@ -351,9 +351,9 @@ def generate_email(type, email_args, user=None):
 
 
 def send_email(to, type, email_args):
-    mail = make_envelope(to, type, email_args)
-    if mail:
-        sendgrid_send(mail)
+    if 'email_sender' not in g:
+        g.email_sender = EmailSender(current_app._get_current_object())
+    g.email_sender.add(to, type, email_args)
 
 
 def make_envelope(to, type, email_args):
@@ -385,7 +385,7 @@ def make_envelope(to, type, email_args):
     return mail
 
 
-def sendgrid_send(mail):
+def sendgrid_send(mail, app=current_app):
     to = mail.___to
     type = mail.___type
     try:
@@ -393,27 +393,28 @@ def sendgrid_send(mail):
         if E2E_TESTING:
             from grant.e2e import views
             views.last_email = mail.get()
-            current_app.logger.info(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
+            app.logger.info(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
         else:
             res = sg.client.mail.send.post(request_body=mail.get())
-            current_app.logger.info('Just sent an email to %s of type %s, response code: %s' %
-                                    (to, type, res.status_code))
+            app.logger.info('Just sent an email to %s of type %s, response code: %s' %
+                            (to, type, res.status_code))
     except HTTPError as e:
-        current_app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
-                                (to, e.__class__.__name__, e))
-        current_app.logger.debug(e.body)
+        app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
+                        (to, e.__class__.__name__, e))
+        app.logger.debug(e.body)
         capture_exception(e)
     except Exception as e:
-        current_app.logger.info('An unknown error occured while sending an email to %s - %s: %s' %
-                                (to, e.__class__.__name__, e))
-        current_app.logger.debug(e)
+        app.logger.info('An unknown error occured while sending an email to %s - %s: %s' %
+                        (to, e.__class__.__name__, e))
+        app.logger.debug(e)
         capture_exception(e)
 
 
 class EmailSender(Thread):
-    def __init__(self):
+    def __init__(self, app):
         Thread.__init__(self)
         self.envelopes = []
+        self.app = app
 
     def add(self, to, type, email_args):
         env = make_envelope(to, type, email_args)
@@ -422,4 +423,4 @@ class EmailSender(Thread):
 
     def run(self):
         for envelope in self.envelopes:
-            sendgrid_send(envelope)
+            sendgrid_send(envelope, self.app)

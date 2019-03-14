@@ -12,6 +12,7 @@ import { STATUS } from 'types';
 import { Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
 import { AlertProps } from 'antd/lib/alert';
 import ExceptionPage from 'components/ExceptionPage';
+import HeaderDetails from 'components/HeaderDetails';
 import CampaignBlock from './CampaignBlock';
 import TeamBlock from './TeamBlock';
 import RFPBlock from './RFPBlock';
@@ -164,6 +165,7 @@ export class ProposalDetail extends React.Component<Props, State> {
 
     return (
       <div className="Proposal">
+        <HeaderDetails title={proposal.title} description={proposal.brief} />
         {banner && (
           <div className="Proposal-banner">
             <Alert type={banner.type} message={banner.blurb} showIcon={false} banner />
