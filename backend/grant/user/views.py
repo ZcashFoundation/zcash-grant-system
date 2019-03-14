@@ -270,9 +270,8 @@ def delete_avatar(url):
 @auth.requires_auth
 @auth.requires_same_user_auth
 @body({
-    "displayName": fields.Str(required=True, validate=lambda d: 2 <= len(d) <= 200),
-    "title": fields.Str(required=True, validate=lambda t: 2 <= len(t) <= 200),
-    # TODO min, max, shape
+    "displayName": fields.Str(required=True, validate=lambda d: 2 <= len(d) <= 60),
+    "title": fields.Str(required=True, validate=lambda t: 2 <= len(t) <= 60),
     "socialMedias": fields.List(fields.Dict(), required=True),
     "avatar": fields.Str(required=True, validate=lambda d: validators.url(d))
 })
@@ -345,7 +344,6 @@ def get_user_settings(user_id):
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @auth.requires_same_user_auth
 @body({
-    # TODO -
     "emailSubscriptions": fields.Dict(required=False, missing=None),
     "refundAddress": fields.Str(required=False, missing=None,
                                 validate=lambda r: blockchain_get('/validate/address', {'address': r}))

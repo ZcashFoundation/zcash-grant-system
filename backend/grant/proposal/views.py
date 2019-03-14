@@ -220,7 +220,7 @@ def get_proposal_drafts():
 @body({
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
-    "category": fields.Str(required=True, validate=validate.OneOf(choices=[e for e in Category.list()] + [''])),
+    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list() + [''])),
     "content": fields.Str(required=True),
     "target": fields.Str(required=True),
     "payoutAddress": fields.Str(required=True),
@@ -349,7 +349,7 @@ def get_proposal_update(proposal_id, update_id):
 @requires_team_member_auth
 @body({
     "title": fields.Str(required=True, validate=lambda p: 3 <= len(p) <= 30),
-    "content": fields.Str(required=True, validate=lambda p: 5 <= len(p) <= 3000),
+    "content": fields.Str(required=True, validate=lambda p: 5 <= len(p) <= 10000),
 })
 def post_proposal_update(proposal_id, title, content):
     update = ProposalUpdate(
@@ -478,7 +478,7 @@ def get_proposal_contribution(proposal_id, contribution_id):
 @blueprint.route("/<proposal_id>/contributions", methods=["POST"])
 @limiter.limit("30/day;10/hour;2/minute")
 @body({
-    "amount": fields.Str(required=True, validate=lambda p: 0.0000001 <= float(p) <= 1000000),
+    "amount": fields.Str(required=True, validate=lambda p: 0.0001 <= float(p) <= 1000000),
     "anonymous": fields.Bool(required=False, missing=None),
     "noRefund": fields.Bool(required=False, missing=False),
 })
