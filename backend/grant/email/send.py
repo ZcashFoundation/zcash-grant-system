@@ -7,7 +7,7 @@ from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEF
 from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
 import sendgrid
 from threading import Thread
-from flask import render_template, Markup, current_app
+from flask import render_template, Markup, current_app, g
 
 
 default_template_args = {
@@ -351,9 +351,9 @@ def generate_email(type, email_args, user=None):
 
 
 def send_email(to, type, email_args):
-    mail = make_envelope(to, type, email_args)
-    if mail:
-        sendgrid_send(mail)
+    if 'email_sender' not in g:
+        g.email_sender = EmailSender(current_app._get_current_object())
+    g.email_sender.add(to, type, email_args)
 
 
 def make_envelope(to, type, email_args):

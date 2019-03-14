@@ -7,7 +7,7 @@ from marshmallow import post_dump
 
 from flask import current_app
 from grant.comment.models import Comment
-from grant.email.send import send_email, EmailSender
+from grant.email.send import send_email
 from grant.extensions import ma, db
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url, gen_random_id
@@ -525,19 +525,17 @@ class Proposal(db.Model):
         db.session.flush()
 
         # Send emails to team & contributors
-        email_sender = EmailSender(current_app._get_current_object())
         for u in self.team:
-            email_sender.add(u.email_address, 'proposal_canceled', {
+            send_email(u.email_address, 'proposal_canceled', {
                 'proposal': self,
                 'support_url': make_url('/contact'),
             })
         for u in self.contributors:
-            email_sender.add(u.email_address, 'contribution_proposal_canceled', {
+            send_email(u.email_address, 'contribution_proposal_canceled', {
                 'proposal': self,
                 'refund_address': u.settings.refund_address,
                 'account_settings_url': make_url('/profile/settings?tab=account')
             })
-        email_sender.start()
 
     @hybrid_property
     def contributed(self):

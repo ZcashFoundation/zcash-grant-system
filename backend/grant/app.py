@@ -4,7 +4,7 @@ import sentry_sdk
 import logging
 import traceback
 from animal_case import animalify
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, g
 from flask_cors import CORS
 from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
@@ -31,6 +31,13 @@ class JSONResponse(Response):
 def create_app(config_objects=["grant.settings"]):
     app = Flask(__name__.split(".")[0])
     app.response_class = JSONResponse
+
+    @app.after_request
+    def send_emails(response):
+        if 'email_sender' in g:
+            # starting email sender
+            g.email_sender.start()
+        return response
 
     # Return validation errors
     @app.errorhandler(ValidationException)
