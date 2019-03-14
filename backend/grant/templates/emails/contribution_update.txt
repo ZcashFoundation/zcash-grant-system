@@ -1,4 +1,4 @@
-A proposal you follow, "{{ args.proposal.title }}", has posted an update
+A proposal you contributed to, "{{ args.proposal.title }}", has posted an update
 entitled "{{ args.proposal_update.title }}".
 
 Go here to read it: {{ args.update_url }}
