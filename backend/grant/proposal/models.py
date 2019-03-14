@@ -7,8 +7,9 @@ from marshmallow import post_dump
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
+from flask import current_app
 from grant.comment.models import Comment
-from grant.email.send import send_email, EmailSender
+from grant.email.send import send_email
 from grant.extensions import ma, db
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.task.jobs import ContributionExpired
@@ -559,21 +560,17 @@ class Proposal(db.Model):
         db.session.flush()
 
         # Send emails to team & contributors
-        email_sender = EmailSender()
         for u in self.team:
-            email_sender.add(u.email_address, 'proposal_canceled', {
+            send_email(u.email_address, 'proposal_canceled', {
                 'proposal': self,
                 'support_url': make_url('/contact'),
             })
-        for c in self.contributions:
-            if c.user:
-                email_sender.add(c.user.email_address, 'contribution_proposal_canceled', {
-                    'contribution': c,
-                    'proposal': self,
-                    'refund_address': c.user.settings.refund_address,
-                    'account_settings_url': make_url('/profile/settings?tab=account')
-                })
-        email_sender.start()
+        for u in self.contributors:
+            send_email(u.email_address, 'contribution_proposal_canceled', {
+                'proposal': self,
+                'refund_address': u.settings.refund_address,
+                'account_settings_url': make_url('/profile/settings?tab=account')
+            })
 
     @hybrid_property
     def contributed(self):
@@ -636,6 +633,11 @@ class Proposal(db.Model):
                     return ms
             return self.milestones[-1]  # return last one if all PAID
         return None
+
+    @hybrid_property
+    def contributors(self):
+        d = {c.user.id: c.user for c in self.contributions if c.user and c.status == ContributionStatus.CONFIRMED}
+        return d.values()
 
 
 class ProposalSchema(ma.Schema):

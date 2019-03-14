@@ -422,7 +422,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             <Card title="Details" size="small">
               {renderDeetItem('id', p.proposalId)}
               {renderDeetItem('created', formatDateSeconds(p.dateCreated))}
-              {renderDeetItem('published', formatDateSeconds(p.datePublished))}
+              {renderDeetItem(
+                'published',
+                p.datePublished ? formatDateSeconds(p.datePublished) : 'n/a',
+              )}
               {renderDeetItem(
                 'deadlineDuration',
                 formatDurationSeconds(p.deadlineDuration),

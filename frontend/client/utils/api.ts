@@ -105,6 +105,7 @@ export function formatProposalFromGet(p: any): Proposal {
 }
 
 export function formatRFPFromGet(rfp: RFP): RFP {
+  rfp.urlId = generateSlugUrl(rfp.id, rfp.title);
   if (rfp.bounty) {
     rfp.bounty = toZat(rfp.bounty as any);
   }

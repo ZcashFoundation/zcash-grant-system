@@ -7,7 +7,7 @@ from sentry_sdk import capture_message
 
 from grant.extensions import limiter
 from grant.comment.models import Comment, comment_schema, comments_schema
-from grant.email.send import send_email, EmailSender
+from grant.email.send import send_email
 from grant.milestone.models import Milestone
 from grant.parser import body, query, paginated_fields
 from grant.rfp.models import RFP
@@ -360,17 +360,13 @@ def post_proposal_update(proposal_id, title, content):
     db.session.add(update)
     db.session.commit()
 
-    # Send email to all contributors (even if contribution failed)
-    email_sender = EmailSender()
-    contributions = ProposalContribution.query.filter_by(proposal_id=proposal_id).all()
-    for c in contributions:
-        if c.user:
-            email_sender.add(c.user.email_address, 'contribution_update', {
-                'proposal': g.current_proposal,
-                'proposal_update': update,
-                'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
-            })
-    email_sender.start()
+    # Send email to all contributors
+    for u in g.current_proposal.contributors:
+        send_email(u.email_address, 'contribution_update', {
+            'proposal': g.current_proposal,
+            'proposal_update': update,
+            'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
+        })
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
