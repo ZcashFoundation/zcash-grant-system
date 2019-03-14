@@ -59,6 +59,12 @@ export default class Header extends React.Component<Props, State> {
           </div>
 
           <HeaderDrawer isOpen={isDrawerOpen} onClose={this.closeDrawer} />
+
+          {!process.env.TESTNET && (
+            <div className="Header-testnet">
+              <span>Testnet</span>
+            </div>
+          )}
         </div>
       </div>
     );
