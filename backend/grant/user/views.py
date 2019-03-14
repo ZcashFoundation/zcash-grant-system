@@ -20,7 +20,7 @@ from grant.proposal.models import (
 )
 from grant.utils.enums import ProposalStatus, ContributionStatus
 from grant.utils.exceptions import ValidationException
-from grant.utils.requests import blockchain_get
+from grant.utils.requests import validate_blockchain_get
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from .models import (
@@ -346,7 +346,7 @@ def get_user_settings(user_id):
 @body({
     "emailSubscriptions": fields.Dict(required=False, missing=None),
     "refundAddress": fields.Str(required=False, missing=None,
-                                validate=lambda r: blockchain_get('/validate/address', {'address': r}))
+                                validate=lambda r: validate_blockchain_get('/validate/address', {'address': r}))
 })
 def set_user_settings(user_id, email_subscriptions, refund_address):
     if email_subscriptions:

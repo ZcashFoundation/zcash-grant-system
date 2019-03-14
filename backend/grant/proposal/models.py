@@ -296,8 +296,8 @@ class Proposal(db.Model):
             if len(milestone.title) > 60:
                 raise ValidationException("Milestone title must be no more than 60 chars")
 
-            if len(milestone.content) > 6000:
-                raise ValidationException("Milestone title must be no more than 6000 chars")
+            if len(milestone.content) > 50000:
+                raise ValidationException("Milestone content must be no more than 50000 chars")
 
             payout_total += float(milestone.payout_percent)
 

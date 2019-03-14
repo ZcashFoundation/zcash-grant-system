@@ -1,17 +1,18 @@
 import json
+from datetime import datetime
+from datetime import timedelta
 
 from flask_testing import TestCase
 from mock import patch
 
 from grant.app import create_app
+from grant.extensions import limiter
 from grant.milestone.models import Milestone
 from grant.proposal.models import Proposal
 from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
 from grant.utils.enums import ProposalStatus
-from grant.extensions import limiter
-
 from .test_data import test_user, test_other_user, test_proposal, mock_blockchain_api_requests
 
 
@@ -137,14 +138,14 @@ class BaseProposalCreatorConfig(BaseUserConfig):
             {
                 "title": "Milestone 1",
                 "content": "Content 1",
-                "date_estimated": 1591660203,  # random unix time in the future
+                "date_estimated": (datetime.now() + timedelta(days=364)).timestamp(),  # random unix time in the future
                 "payout_percent": 50,
                 "immediate_payout": True
             },
             {
                 "title": "Milestone 2",
                 "content": "Content 2",
-                "date_estimated": 1611660203,  # random unix time in the future
+                "date_estimated": (datetime.now() + timedelta(days=365)).timestamp(),  # random unix time in the future
                 "payout_percent": 50,
                 "immediate_payout": False
             }

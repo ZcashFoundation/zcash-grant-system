@@ -1,4 +1,5 @@
 import requests
+
 from grant.settings import BLOCKCHAIN_REST_API_URL, BLOCKCHAIN_API_SECRET, E2E_TESTING
 
 
@@ -20,6 +21,11 @@ def blockchain_get(path, params=None):
         params=params,
     )
     return handle_res(res)
+
+
+def validate_blockchain_get(path, params=None):
+    res = blockchain_get(path, params)
+    return res.get('valid')
 
 
 def blockchain_post(path, data=None):
