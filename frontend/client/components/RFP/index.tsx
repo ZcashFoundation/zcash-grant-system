@@ -12,6 +12,7 @@ import Loader from 'components/Loader';
 import Markdown from 'components/Markdown';
 import ProposalCard from 'components/Proposals/ProposalCard';
 import UnitDisplay from 'components/UnitDisplay';
+import HeaderDetails from 'components/HeaderDetails';
 import './index.less';
 
 interface OwnProps {
@@ -67,6 +68,7 @@ class RFPDetail extends React.Component<Props> {
 
     return (
       <div className="RFPDetail">
+        <HeaderDetails title={rfp.title} description={rfp.brief} />
         <div className="RFPDetail-top">
           <Link className="RFPDetail-top-back" to="/requests">
             <Icon type="arrow-left" /> Back to Requests
