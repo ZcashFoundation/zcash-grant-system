@@ -269,7 +269,7 @@ def milestone_accept(email_args):
 def milestone_paid(email_args):
     p = email_args['proposal']
     a = email_args['amount']
-    ms = p.current_milestone
+    ms = email_args['milestone']
     return {
         'subject': f'{p.title} - {ms.title} has been paid!',
         'title': f'Milestone paid',
