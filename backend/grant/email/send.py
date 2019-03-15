@@ -367,7 +367,7 @@ def make_envelope(to, type, email_args):
     if user and 'subscription' in info:
         sub = info['subscription']
         if user and not is_subscribed(user.settings.email_subscriptions, sub):
-            app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
+            current_app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
             return None
 
     email = generate_email(type, email_args, user)
