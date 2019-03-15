@@ -81,7 +81,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             description={
               <>
                 This proposal is for the open request{' '}
-                <Link to={`/requests/${rfp.urlId}`} target="_blank">
+                <Link to={`/requests/${rfp.id}`} target="_blank">
                   {rfp.title}
                 </Link>
                 . If you didn’t mean to do this, or want to unlink it,{' '}
