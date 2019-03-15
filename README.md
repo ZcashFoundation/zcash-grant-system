@@ -10,4 +10,10 @@ Instructions for each respective component can be found in:
 
 - `/frontend/README.md`
 
+- `/admin/README.md`
+
+- `/e2e/README.md`
+
+- `/blockchain/README.md`
+
 We currently only offer instructions for unix based systems. Windows may or may not be compatible.
