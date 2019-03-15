@@ -37,6 +37,7 @@ class FakeUpdate(object):
 
 user = FakeUser()
 proposal = FakeProposal()
+milestone = FakeMilestone()
 contribution = FakeContribution()
 update = FakeUpdate()
 
@@ -160,6 +161,7 @@ example_email_args = {
     },
     'milestone_paid': {
         'proposal': proposal,
+        'milestone': milestone,
         'amount': '33',
         'tx_explorer_url': 'http://someblockexplorer.com/tx/271857129857192579125',
         'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',

@@ -432,6 +432,7 @@ def paid_milestone_payout_request(id, mid, tx_id):
             for member in proposal.team:
                 send_email(member.email_address, 'milestone_paid', {
                     'proposal': proposal,
+                    'milestone': ms,
                     'amount': amount,
                     'tx_explorer_url': f'{EXPLORER_URL}transactions/{tx_id}',
                     'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
