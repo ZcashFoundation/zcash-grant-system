@@ -273,7 +273,7 @@ def delete_avatar(url):
     "displayName": fields.Str(required=True, validate=lambda d: 2 <= len(d) <= 60),
     "title": fields.Str(required=True, validate=lambda t: 2 <= len(t) <= 60),
     "socialMedias": fields.List(fields.Dict(), required=True),
-    "avatar": fields.Str(required=True, validate=lambda d: validators.url(d))
+    "avatar": fields.Str(required=True, allow_none=True, validate=lambda d: validators.url(d))
 })
 def update_user(user_id, display_name, title, social_medias, avatar):
     user = g.current_user
