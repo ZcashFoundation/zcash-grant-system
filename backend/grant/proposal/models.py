@@ -299,7 +299,7 @@ class Proposal(db.Model):
             if len(milestone.content) > 200:
                 raise ValidationException("Milestone content must be no more than 200 chars")
 
-            payout_total += float(milestone.payout_percent)
+            payout_total += abs(float(milestone.payout_percent))
 
             try:
                 present = datetime.datetime.today().replace(day=1)
