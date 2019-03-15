@@ -208,7 +208,9 @@ class ProposalMilestones extends React.Component<Props, State> {
 
     const stepSize = milestoneCount > 5 ? 'small' : 'default';
     const activeMilestone = proposal.milestones[this.state.step];
-    const activeIsCurrent = activeMilestone.id === proposal.currentMilestone!.id;
+    const activeIsCurrent = proposal.currentMilestone
+      ? activeMilestone.id === proposal.currentMilestone!.id
+      : false;
 
     return (
       <div

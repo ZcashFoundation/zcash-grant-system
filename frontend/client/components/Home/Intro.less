@@ -8,6 +8,7 @@
   max-width: 1440px;
   padding: 0 4rem;
   margin: 0 auto 6rem;
+  overflow: hidden;
 
   @media @thin-query {
     padding: 0 2rem;
@@ -95,11 +96,15 @@
   }
 
   &-illustration {
+    position: relative;
+    width: 100%;
     max-width: 640px;
+    background-size: contain;
 
-    img {
-      width: 100%;
-      height: auto;
+    &:after {
+      content: '';
+      display: block;
+      padding-top: 86.3%; // Aspect ratio of img
     }
 
     @media @thin-query {

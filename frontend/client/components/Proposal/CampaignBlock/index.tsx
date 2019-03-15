@@ -66,10 +66,10 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
       // Get bounty from RFP. If it exceeds proposal target, show bounty as full amount
       let bounty;
-      if (proposal.rfp && proposal.rfp.bounty) {
-        bounty = proposal.rfp.bounty.gt(proposal.target)
+      if (proposal.contributionBounty && proposal.contributionBounty.gtn(0)) {
+        bounty = proposal.contributionBounty.gt(proposal.target)
           ? proposal.target
-          : proposal.rfp.bounty;
+          : proposal.contributionBounty;
       }
 
       content = (
@@ -191,8 +191,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 {amountToRaise &&
                   !!authUser && (
                     <Checkbox checked={isAnonymous} onChange={this.handleChangeAnonymity}>
-                      Contribute anonymously
-                      <Tooltip title="Contribute with no attribution to your account. This will make you ineligible for refunds.">
+                      Contribute without attribution
+                      <Tooltip title="Your contribution will not be linked to your account. ZF Grants cannot refund non-attributed contributions.">
                         <Icon type="question-circle" />
                       </Tooltip>
                     </Checkbox>
@@ -240,7 +240,6 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       return;
     }
 
-    // TODO: Get values from proposal
     const { target, funded } = this.props.proposal;
     const remainingTarget = target.sub(funded);
     const amount = parseFloat(value);

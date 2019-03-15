@@ -55,7 +55,6 @@ class ProposalComments extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    // TODO: Come up with better check on if our comment post was a success
     const { isPostCommentPending, postCommentError } = this.props;
     if (!isPostCommentPending && !postCommentError && prevProps.isPostCommentPending) {
       this.setState({ comment: '' });
@@ -120,6 +119,7 @@ class ProposalComments extends React.Component<Props, State> {
                 ref={el => (this.editor = el)}
                 onChange={this.handleCommentChange}
                 type={MARKDOWN_TYPE.REDUCED}
+                minHeight={100}
               />
               <Button
                 onClick={this.postComment}
@@ -140,6 +140,7 @@ class ProposalComments extends React.Component<Props, State> {
                   onChange={this.handleCommentChange}
                   type={MARKDOWN_TYPE.REDUCED}
                   readOnly={true}
+                  minHeight={100}
                 />
               </>
             )}

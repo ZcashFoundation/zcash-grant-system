@@ -1,9 +1,10 @@
 import datetime
 
 from grant.extensions import ma, db
+from grant.utils.enums import MilestoneStage
 from grant.utils.exceptions import ValidationException
 from grant.utils.ma_fields import UnixDate
-from grant.utils.enums import MilestoneStage
+from grant.utils.misc import gen_random_id
 
 
 class MilestoneException(Exception):
@@ -21,7 +22,6 @@ class Milestone(db.Model):
     content = db.Column(db.Text, nullable=False)
     payout_percent = db.Column(db.String(255), nullable=False)
     immediate_payout = db.Column(db.Boolean)
-    # TODO: change to estimated_duration (sec or ms) -- FE can calc from dates on draft
     date_estimated = db.Column(db.DateTime, nullable=False)
 
     stage = db.Column(db.String(255), nullable=False)
@@ -52,6 +52,7 @@ class Milestone(db.Model):
             stage: str = MilestoneStage.IDLE,
             proposal_id=int,
     ):
+        self.id = gen_random_id(Milestone)
         self.title = title
         self.content = content
         self.stage = stage
@@ -61,6 +62,23 @@ class Milestone(db.Model):
         self.proposal_id = proposal_id
         self.date_created = datetime.datetime.now()
         self.index = index
+
+    @staticmethod
+    def make(milestones_data, proposal):
+        if milestones_data:
+            # Delete & re-add milestones
+            [db.session.delete(x) for x in proposal.milestones]
+            for i, milestone_data in enumerate(milestones_data):
+                m = Milestone(
+                    title=milestone_data["title"],
+                    content=milestone_data["content"],
+                    date_estimated=datetime.datetime.fromtimestamp(milestone_data["date_estimated"]),
+                    payout_percent=str(milestone_data["payout_percent"]),
+                    immediate_payout=milestone_data["immediate_payout"],
+                    proposal_id=proposal.id,
+                    index=i
+                )
+                db.session.add(m)
 
     @staticmethod
     def validate(milestone):

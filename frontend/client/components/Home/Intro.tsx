@@ -32,12 +32,13 @@ const HomeIntro: React.SFC<Props> = ({ t, authUser }) => (
         </a>
       </div>
     </div>
-    <div className="HomeIntro-illustration">
-      <img src={HomeIllustration} />
-    </div>
+    <div
+      className="HomeIntro-illustration"
+      style={{ backgroundImage: `url(${HomeIllustration})` }}
+    />
   </div>
 );
 
-export default connect<StateProps, {}, {}, AppState>(
-  state => ({ authUser: state.auth.user }),
-)(withNamespaces()(HomeIntro));
+export default connect<StateProps, {}, {}, AppState>(state => ({
+  authUser: state.auth.user,
+}))(withNamespaces()(HomeIntro));

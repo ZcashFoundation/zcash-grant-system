@@ -53,13 +53,14 @@ process.env.NODE_PATH = (process.env.NODE_PATH || '')
 module.exports = () => {
   const raw = {
     BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:5000',
-    EXPLORER_URL: process.env.EXPLORER_URL || 'https://chain.so/zcash/',
+    EXPLORER_URL: process.env.EXPLORER_URL || 'https://chain.so/tx/ZECTEST/<txid>',
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: process.env.PORT || 3000,
     PROPOSAL_STAKING_AMOUNT: process.env.PROPOSAL_STAKING_AMOUNT,
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,
     SENTRY_DSN: process.env.SENTRY_DSN || null,
     SENTRY_RELEASE: process.env.SENTRY_RELEASE || undefined,
+    TESTNET: process.env.TESTNET || false,
   };
 
   // Stringify all values so we can feed into Webpack DefinePlugin

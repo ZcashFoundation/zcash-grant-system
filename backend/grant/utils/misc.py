@@ -4,7 +4,7 @@ import re
 import string
 import time
 
-from grant.settings import SITE_URL
+from grant.settings import SITE_URL, EXPLORER_URL
 
 epoch = datetime.datetime.utcfromtimestamp(0)
 RANDOM_CHARS = string.ascii_letters + string.digits
@@ -37,6 +37,10 @@ def make_url(path: str):
     return f'{SITE_URL}{path}'
 
 
+def make_explore_url(txid: str):
+    return EXPLORER_URL.replace('<txid>', txid)
+
+
 def is_email(email: str):
     return bool(re.match(r"[^@]+@[^@]+\.[^@]+", email))
 
@@ -64,3 +68,16 @@ def make_preview(content: str, max_length: int):
         truncated = True
 
     return content + '...' if truncated else content
+
+
+def gen_random_id(model):
+    min_id = 100000
+    max_id = pow(2, 31) - 1
+    random_id = random.randint(min_id, max_id)
+
+    # If it already exists, generate a new one (recursively)
+    existing = model.query.filter_by(id=random_id).first()
+    if existing:
+        random_id = gen_random_id(model)
+
+    return random_id

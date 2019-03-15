@@ -27,7 +27,6 @@ const converters: { [key in MARKDOWN_TYPE]: Showdown.Converter } = {
     ...sharedOptions,
     noHeaderId: true,
     headerLevelStart: 4,
-    // TODO: Find a way to disable images
   }),
 };
 

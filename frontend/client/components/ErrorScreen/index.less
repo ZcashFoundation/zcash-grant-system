@@ -1,0 +1,52 @@
+@import '~styles/variables.less';
+
+.ErrorScreen {
+  padding: 2rem 0;
+
+  &-desc {
+    font-size: 1.25rem;
+    line-height: 1.6;
+
+    &-error {
+      display: block;
+      font-size: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: rgba(#000, 0.03);
+      border: 1px solid rgba(#000, 0.1);
+      border-radius: 4px;
+    }
+  }
+
+  &-buttons {
+    .ant-btn {
+      margin-right: 1rem;
+    }
+  }
+
+  // Antd overrides
+  .antd-pro-exception-exception {
+    min-height: 0;
+
+    .antd-pro-exception-imgBlock {
+      flex: 0 0 45%;
+      width: 45%;
+
+      @media @tablet-query {
+        display: none;
+      }
+    }
+
+    .antd-pro-exception-content {
+      padding-right: 2rem;
+
+      @media @tablet-query {
+        padding-right: 0;
+      }
+
+      h1 {
+        font-size: 4.2rem;
+      }
+    }
+  }
+}

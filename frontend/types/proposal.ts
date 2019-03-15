@@ -46,6 +46,7 @@ export interface ProposalDraft {
   status: STATUS;
   isStaked: boolean;
   rfp?: RFP;
+  rfpOptIn?: boolean;
 }
 
 export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
@@ -55,6 +56,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   funded: Zat;
   percentFunded: number;
   contributionMatching: number;
+  contributionBounty: Zat;
   milestones: ProposalMilestone[];
   currentMilestone?: ProposalMilestone;
   datePublished: number | null;

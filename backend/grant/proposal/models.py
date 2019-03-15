@@ -1,17 +1,18 @@
 import datetime
+from decimal import Decimal
 from functools import reduce
+
+from flask import current_app
+from marshmallow import post_dump
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from decimal import Decimal
-from marshmallow import post_dump
 
+from flask import current_app
 from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
-from grant.utils.exceptions import ValidationException
-from grant.utils.misc import dt_to_unix, make_url
-from grant.utils.requests import blockchain_get
 from grant.settings import PROPOSAL_STAKING_AMOUNT
+from grant.task.jobs import ContributionExpired
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -20,6 +21,9 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage
 )
+from grant.utils.exceptions import ValidationException
+from grant.utils.misc import dt_to_unix, make_url, gen_random_id
+from grant.utils.requests import blockchain_get
 from grant.utils.stubs import anonymous_user
 
 proposal_team = db.Table(
@@ -64,6 +68,7 @@ class ProposalUpdate(db.Model):
     content = db.Column(db.Text, nullable=False)
 
     def __init__(self, proposal_id: int, title: str, content: str):
+        self.id = gen_random_id(ProposalUpdate)
         self.proposal_id = proposal_id
         self.title = title
         self.content = content
@@ -83,6 +88,7 @@ class ProposalContribution(db.Model):
     tx_id = db.Column(db.String(255), nullable=True)
     refund_tx_id = db.Column(db.String(255), nullable=True)
     staking = db.Column(db.Boolean, nullable=False)
+    no_refund = db.Column(db.Boolean, nullable=False)
 
     user = db.relationship("User")
 
@@ -92,20 +98,23 @@ class ProposalContribution(db.Model):
             amount: str,
             user_id: int = None,
             staking: bool = False,
+            no_refund: bool = False,
     ):
         self.proposal_id = proposal_id
         self.amount = amount
         self.user_id = user_id
         self.staking = staking
+        self.no_refund = no_refund
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
 
     @staticmethod
-    def get_existing_contribution(user_id: int, proposal_id: int, amount: str):
+    def get_existing_contribution(user_id: int, proposal_id: int, amount: str, no_refund: bool = False):
         return ProposalContribution.query.filter_by(
             user_id=user_id,
             proposal_id=proposal_id,
             amount=amount,
+            no_refund=no_refund,
             status=ContributionStatus.PENDING,
         ).first()
 
@@ -180,6 +189,7 @@ class ProposalArbiter(db.Model):
     user = db.relationship("User", uselist=False, lazy=True, back_populates="arbiter_proposals")
 
     def __init__(self, proposal_id: int, user_id: int = None, status: str = ProposalArbiterStatus.MISSING):
+        self.id = gen_random_id(ProposalArbiter)
         self.proposal_id = proposal_id
         self.user_id = user_id
         self.status = status
@@ -225,6 +235,8 @@ class Proposal(db.Model):
     payout_address = db.Column(db.String(255), nullable=False)
     deadline_duration = db.Column(db.Integer(), nullable=False)
     contribution_matching = db.Column(db.Float(), nullable=False, default=0, server_default=db.text("0"))
+    contribution_bounty = db.Column(db.String(255), nullable=False, default='0', server_default=db.text("'0'"))
+    rfp_opt_in = db.Column(db.Boolean(), nullable=True)
     contributed = db.column_property()
 
     # Relations
@@ -249,6 +261,7 @@ class Proposal(db.Model):
             deadline_duration: int = 5184000,  # 60 days
             category: str = ''
     ):
+        self.id = gen_random_id(Proposal)
         self.date_created = datetime.datetime.now()
         self.status = status
         self.title = title
@@ -261,10 +274,11 @@ class Proposal(db.Model):
         self.stage = stage
 
     @staticmethod
-    def validate(proposal):
+    def simple_validate(proposal):
         title = proposal.get('title')
         stage = proposal.get('stage')
         category = proposal.get('category')
+
         if title and len(title) > 60:
             raise ValidationException("Proposal title cannot be longer than 60 characters")
         if stage and not ProposalStage.includes(stage):
@@ -272,24 +286,60 @@ class Proposal(db.Model):
         if category and not Category.includes(category):
             raise ValidationException("Category {} not a valid category".format(category))
 
+    def validate_publishable_milestones(self):
+        payout_total = 0.0
+        for i, milestone in enumerate(self.milestones):
+
+            if milestone.immediate_payout and i != 0:
+                raise ValidationException("Only the first milestone can have an immediate payout")
+
+            if len(milestone.title) > 60:
+                raise ValidationException("Milestone title must be no more than 60 chars")
+
+            if len(milestone.content) > 200:
+                raise ValidationException("Milestone content must be no more than 200 chars")
+
+            payout_total += float(milestone.payout_percent)
+
+            try:
+                present = datetime.datetime.today().replace(day=1)
+                if present > milestone.date_estimated:
+                    raise ValidationException("Milestone date_estimated must be in the future ")
+
+            except Exception as e:
+                current_app.logger.warn(
+                    f"Unexpected validation error - client prohibits {e}"
+                )
+                raise ValidationException("date_estimated does not convert to a datetime")
+
+        if payout_total != 100.0:
+            raise ValidationException("payoutPercent across milestones must sum to exactly 100")
+
     def validate_publishable(self):
+        self.validate_publishable_milestones()
+
         # Require certain fields
+
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
         for field in required_fields:
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
 
         # Check with node that the address is kosher
-        res = blockchain_get('/validate/address', {'address': self.payout_address})
+        try:
+            res = blockchain_get('/validate/address', {'address': self.payout_address})
+        except:
+            raise ValidationException(
+                "Could not validate your payout address due to an internal server error, please try again later")
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 
         # Then run through regular validation
-        Proposal.validate(vars(self))
+        Proposal.simple_validate(vars(self))
 
     @staticmethod
     def create(**kwargs):
-        Proposal.validate(kwargs)
+        Proposal.simple_validate(kwargs)
         proposal = Proposal(
             **kwargs
         )
@@ -334,32 +384,53 @@ class Proposal(db.Model):
         self.brief = brief
         self.category = category
         self.content = content
-        self.target = target
+        self.target = target if target != '' else None
         self.payout_address = payout_address
         self.deadline_duration = deadline_duration
-        Proposal.validate(vars(self))
+        Proposal.simple_validate(vars(self))
 
-    def create_contribution(self, amount, user_id: int = None, staking: bool = False):
+    def update_rfp_opt_in(self, opt_in: bool):
+        self.rfp_opt_in = opt_in
+        # add/remove matching and/or bounty values from RFP
+        if opt_in and self.rfp:
+            self.set_contribution_matching(1 if self.rfp.matching else 0)
+            self.set_contribution_bounty(self.rfp.bounty or '0')
+        else:
+            self.set_contribution_matching(0)
+            self.set_contribution_bounty('0')
+
+    def create_contribution(
+        self,
+        amount,
+        user_id: int = None,
+        staking: bool = False,
+        no_refund: bool = False,
+    ):
         contribution = ProposalContribution(
             proposal_id=self.id,
             amount=amount,
             user_id=user_id,
             staking=staking,
+            no_refund=no_refund,
         )
         db.session.add(contribution)
+        db.session.flush()
+        if user_id:
+            task = ContributionExpired(contribution)
+            task.make_task()
         db.session.commit()
         return contribution
 
     def get_staking_contribution(self, user_id: int):
         contribution = None
-        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.contributed)
+        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.amount_staked)
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
-            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
+                staking=True,
             ).first()
             if not contribution:
                 contribution = self.create_contribution(
@@ -457,6 +528,16 @@ class Proposal(db.Model):
         # check the first step, if immediate payout bump it to accepted
         self.current_milestone.accept_immediate()
 
+    def set_contribution_bounty(self, bounty: str):
+        # do not allow changes on funded/WIP proposals
+        if self.is_funded:
+            raise ValidationException("Cannot change contribution bounty on fully-funded proposal")
+        # wrap in Decimal so it throws for non-decimal strings
+        self.contribution_bounty = str(Decimal(bounty))
+        db.session.add(self)
+        db.session.flush()
+        self.set_funded_when_ready()
+
     def set_contribution_matching(self, matching: float):
         # do not allow on funded/WIP proposals
         if self.is_funded:
@@ -471,24 +552,23 @@ class Proposal(db.Model):
             raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
 
     def cancel(self):
-        print(self.status)
         if self.status != ProposalStatus.LIVE:
             raise ValidationException("Cannot cancel a proposal until it's live")
 
         self.stage = ProposalStage.CANCELED
         db.session.add(self)
         db.session.flush()
+
         # Send emails to team & contributors
         for u in self.team:
             send_email(u.email_address, 'proposal_canceled', {
                 'proposal': self,
                 'support_url': make_url('/contact'),
             })
-        for c in self.contributions:
-            send_email(c.user.email_address, 'contribution_proposal_canceled', {
-                'contribution': c,
+        for u in self.contributors:
+            send_email(u.email_address, 'contribution_proposal_canceled', {
                 'proposal': self,
-                'refund_address': c.user.settings.refund_address,
+                'refund_address': u.settings.refund_address,
                 'account_settings_url': make_url('/profile/settings?tab=account')
             })
 
@@ -501,13 +581,22 @@ class Proposal(db.Model):
         return str(funded)
 
     @hybrid_property
+    def amount_staked(self):
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=True) \
+            .all()
+        amount = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        return str(amount)
+
+    @hybrid_property
     def funded(self):
+
         target = Decimal(self.target)
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
-        # apply bounty, if available
-        if self.rfp:
-            funded = funded + Decimal(self.rfp.bounty)
+        # apply bounty
+        if self.contribution_bounty:
+            funded = funded + Decimal(self.contribution_bounty)
         # if funded > target, just set as target
         if funded > target:
             return str(target)
@@ -546,6 +635,11 @@ class Proposal(db.Model):
             return self.milestones[-1]  # return last one if all PAID
         return None
 
+    @hybrid_property
+    def contributors(self):
+        d = {c.user.id: c.user for c in self.contributions if c.user and c.status == ContributionStatus.CONFIRMED}
+        return d.values()
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -575,8 +669,10 @@ class ProposalSchema(ma.Schema):
             "payout_address",
             "deadline_duration",
             "contribution_matching",
+            "contribution_bounty",
             "invites",
             "rfp",
+            "rfp_opt_in",
             "arbiter"
         )
 
@@ -677,9 +773,6 @@ proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
 
 
-# TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
-
-
 class InviteWithProposalSchema(ma.Schema):
     class Meta:
         model = ProposalTeamInvite
@@ -729,12 +822,12 @@ class ProposalContributionSchema(ma.Schema):
 
     def get_addresses(self, obj):
         # Omit 'memo' and 'sprout' for now
-        # TODO: Add back in 'sapling' when ready
+        # NOTE: Add back in 'sapling' when ready
         addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
         return {
             'transparent': addresses['transparent'],
         }
-    
+
     def get_is_anonymous(self, obj):
         return not obj.user_id
 
@@ -768,7 +861,8 @@ class AdminProposalContributionSchema(ma.Schema):
             "addresses",
             "refund_address",
             "refund_tx_id",
-            "staking"
+            "staking",
+            "no_refund",
         )
 
     proposal = ma.Nested("ProposalSchema")

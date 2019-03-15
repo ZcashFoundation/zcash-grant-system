@@ -121,7 +121,7 @@ class ProposalPagination(Pagination):
 class ContributionPagination(Pagination):
     def __init__(self):
         self.FILTERS = [f'STATUS_{s}' for s in ContributionStatus.list()]
-        self.FILTERS.extend(['REFUNDABLE'])
+        self.FILTERS.extend(['REFUNDABLE', 'DONATION'])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': ProposalContribution.date_created.desc(),
@@ -153,6 +153,7 @@ class ContributionPagination(Pagination):
             if 'REFUNDABLE' in filters:
                 query = query.filter(ProposalContribution.refund_tx_id == None) \
                     .filter(ProposalContribution.staking == False) \
+                    .filter(ProposalContribution.no_refund == False) \
                     .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
                     .join(Proposal) \
                     .filter(or_(
@@ -161,7 +162,20 @@ class ContributionPagination(Pagination):
                     )) \
                     .join(ProposalContribution.user) \
                     .join(UserSettings) \
-                    .filter(UserSettings.refund_address != None) \
+                    .filter(UserSettings.refund_address != None)
+
+            if 'DONATION' in filters:
+                query = query.filter(ProposalContribution.refund_tx_id == None) \
+                    .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
+                    .filter(or_(
+                        ProposalContribution.no_refund == True,
+                        ProposalContribution.user_id == None,
+                    )) \
+                    .join(Proposal) \
+                    .filter(or_(
+                        Proposal.stage == ProposalStage.FAILED,
+                        Proposal.stage == ProposalStage.CANCELED,
+                    ))
 
 
         # SORT (see self.SORT_MAP)

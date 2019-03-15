@@ -14,7 +14,7 @@ const createExampleProposal = (): Partial<ProposalDraft> => {
     target: '5',
     // Testnet address, assumes you wouldn't use this in production
     payoutAddress:
-      'ztfFV7AqJqBm1EcWvP3oktZUMnp91ygfduE6ZQqGWENM1CpRKJLMZp2kgChnJVc6CbKSZ4mS37iNaiDwcatxjZcfoi2g7E8',
+      'ztestsapling12uyydevkh2gsnnrzuhzz4taw3v544jrpa3v6t7zv4ae45dquau7cfw26u3uzt520m08cs3jxqqs',
     milestones: [
       {
         title: 'Initial Funding',

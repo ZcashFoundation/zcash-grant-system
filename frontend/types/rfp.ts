@@ -4,6 +4,7 @@ import { Zat } from 'utils/units';
 
 export interface RFP {
   id: number;
+  urlId: string;
   title: string;
   brief: string;
   content: string;

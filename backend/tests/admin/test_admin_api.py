@@ -72,9 +72,9 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
     def assert_autherror(self, resp, contains):
         # this should be 403
-        self.assert500(resp)
-        print(f'...check that [{resp.json["data"]}] contains [{contains}]')
-        self.assertTrue(contains in resp.json['data'])
+        self.assert403(resp)
+        print(f'...check that [{resp.json["message"]}] contains [{contains}]')
+        self.assertTrue(contains in resp.json['message'])
 
     # happy path (mostly)
     def test_admin_2fa_setup_flow(self):
@@ -245,22 +245,24 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_update_proposal(self):
         self.login_admin()
         # set to 1 (on)
-        resp_on = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 1})
+        resp_on = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}",
+                               data=json.dumps({"contributionMatching": 1}))
         self.assert200(resp_on)
         self.assertEqual(resp_on.json['contributionMatching'], 1)
-        resp_off = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 0})
+        resp_off = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}",
+                                data=json.dumps({"contributionMatching": 0}))
         self.assert200(resp_off)
         self.assertEqual(resp_off.json['contributionMatching'], 0)
 
     def test_update_proposal_no_auth(self):
-        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 1})
+        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data=json.dumps({"contributionMatching": 1}))
         self.assert401(resp)
 
     def test_update_proposal_bad_matching(self):
         self.login_admin()
-        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data={"contributionMatching": 2})
-        self.assert500(resp)
-        self.assertIn('Bad value', resp.json['data'])
+        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data=json.dumps({"contributionMatching": 2}))
+        self.assert400(resp)
+        self.assertTrue(resp.json['message'])
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_approve_proposal(self, mock_get):
@@ -272,7 +274,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # approve
         resp = self.app.put(
             "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
-            data={"isApprove": True}
+            data=json.dumps({"isApprove": True})
         )
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.APPROVED)
@@ -287,7 +289,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # reject
         resp = self.app.put(
             "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
-            data={"isApprove": False, "rejectReason": "Funnzies."}
+            data=json.dumps({"isApprove": False, "rejectReason": "Funnzies."})
         )
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
@@ -301,10 +303,41 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # nominate arbiter
         resp = self.app.put(
             "/api/v1/admin/arbiters",
-            data={
+            data=json.dumps({
                 'proposalId': self.proposal.id,
                 'userId': self.other_user.id
-            }
+            })
         )
         self.assert200(resp)
-        # TODO - more tests
+
+    def test_create_rfp_succeeds(self):
+        self.login_admin()
+
+        resp = self.app.post(
+            "/api/v1/admin/rfps",
+            data=json.dumps({
+                "brief": "Some brief",
+                "category": "CORE_DEV",
+                "content": "CONTENT",
+                "dateCloses": 1553980004,
+                "status": "DRAFT",
+                "title": "TITLE"
+            })
+        )
+        self.assert200(resp)
+
+    def test_create_rfp_fails_with_bad_category(self):
+        self.login_admin()
+
+        resp = self.app.post(
+            "/api/v1/admin/rfps",
+            data=json.dumps({
+                "brief": "Some brief",
+                "category": "NOT_CORE_DEV",
+                "content": "CONTENT",
+                "dateCloses": 1553980004,
+                "status": "DRAFT",
+                "title": "TITLE"
+            })
+        )
+        self.assert400(resp)

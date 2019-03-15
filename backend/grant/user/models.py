@@ -1,6 +1,7 @@
 from flask_security import UserMixin, RoleMixin
 from flask_security.core import current_user
 from flask_security.utils import hash_password, verify_and_update_password, login_user
+from sqlalchemy.ext.hybrid import hybrid_property
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification, EmailRecovery
 from grant.email.send import send_email
@@ -10,11 +11,11 @@ from grant.email.subscription_settings import (
     email_subscriptions_to_dict
 )
 from grant.extensions import ma, db, security
-from grant.utils.misc import make_url
+from grant.utils.misc import make_url, gen_random_id, is_email
 from grant.utils.social import generate_social_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils import totp_2fa
-from sqlalchemy.ext.hybrid import hybrid_property
+from grant.utils.exceptions import ValidationException
 
 
 def is_current_authed_user_id(user_id):
@@ -96,6 +97,7 @@ class Avatar(db.Model):
         self._image_url = extract_avatar_filename(image_url)
 
     def __init__(self, image_url, user_id):
+        self.id = gen_random_id(Avatar)
         self.image_url = image_url
         self.user_id = user_id
 
@@ -132,8 +134,6 @@ class User(db.Model, UserMixin):
                             backref=db.backref('users', lazy='dynamic'))
     arbiter_proposals = db.relationship("ProposalArbiter", lazy=True, back_populates="user")
 
-    # TODO - add create and validate methods
-
     def __init__(
             self,
             email_address,
@@ -143,10 +143,27 @@ class User(db.Model, UserMixin):
             display_name=None,
             title=None,
     ):
+        self.id = gen_random_id(User)
         self.email_address = email_address
         self.display_name = display_name
         self.title = title
         self.password = password
+
+    @staticmethod
+    def validate(user):
+        em = user.get('email_address')
+        if not em:
+            raise ValidationException('Must have email address')
+        if not is_email(em):
+            raise ValidationException('Email address looks invalid')
+
+        t = user.get('title')
+        if t and len(t) > 255:
+            raise ValidationException('Title is too long')
+
+        dn = user.get('display_name')
+        if dn and len(dn) > 255:
+            raise ValidationException('Display name is too long')
 
     @staticmethod
     def create(email_address=None, password=None, display_name=None, title=None, _send_email=True):
@@ -156,6 +173,7 @@ class User(db.Model, UserMixin):
             display_name=display_name,
             title=title
         )
+        User.validate(vars(user))
         security.datastore.commit()
 
         # user settings
@@ -247,7 +265,6 @@ class User(db.Model, UserMixin):
         db.session.flush()
 
     def set_admin(self, is_admin: bool):
-        # TODO: audit entry & possibly email user
         self.is_admin = is_admin
         db.session.add(self)
         db.session.flush()

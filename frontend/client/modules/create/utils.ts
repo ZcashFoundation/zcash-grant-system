@@ -1,14 +1,12 @@
-import {
-  ProposalDraft,
-  CreateMilestone,
-  STATUS,
-  MILESTONE_STAGE,
-  PROPOSAL_ARBITER_STATUS,
-} from 'types';
+import { ProposalDraft, STATUS, MILESTONE_STAGE, PROPOSAL_ARBITER_STATUS } from 'types';
 import { User } from 'types';
-import { getAmountError, isValidAddress } from 'utils/validators';
+import {
+  getAmountError,
+  isValidSaplingAddress,
+  isValidTAddress,
+  isValidSproutAddress,
+} from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
-import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import {
   ProposalDetail,
@@ -18,6 +16,7 @@ import {
 export const TARGET_ZEC_LIMIT = 1000;
 
 interface CreateFormErrors {
+  rfpOptIn?: string;
   title?: string;
   brief?: string;
   category?: string;
@@ -31,6 +30,7 @@ interface CreateFormErrors {
 
 export type KeyOfForm = keyof CreateFormErrors;
 export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
+  rfpOptIn: 'RFP KYC',
   title: 'Title',
   brief: 'Brief',
   category: 'Category',
@@ -57,7 +57,7 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, target, payoutAddress } = form;
+  const { title, team, milestones, target, payoutAddress, rfp, rfpOptIn, brief } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -75,9 +75,19 @@ export function getCreateErrors(
     }
   }
 
+  // RFP opt-in
+  if (rfp && (rfp.bounty || rfp.matching) && rfpOptIn === null) {
+    errors.rfpOptIn = 'Please accept or decline KYC';
+  }
+
   // Title
   if (title && title.length > 60) {
     errors.title = 'Title can only be 60 characters maximum';
+  }
+
+  // Brief
+  if (brief && brief.length > 140) {
+    errors.brief = 'Brief can only be 140 characters maximum';
   }
 
   // Amount to raise
@@ -90,8 +100,14 @@ export function getCreateErrors(
   }
 
   // Payout address
-  if (payoutAddress && !isValidAddress(payoutAddress)) {
-    errors.payoutAddress = 'That doesn’t look like a valid zcash address';
+  if (payoutAddress && !isValidSaplingAddress(payoutAddress)) {
+    if (isValidSproutAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling address, not a Sprout address';
+    } else if (isValidTAddress(payoutAddress)) {
+      errors.payoutAddress = 'Must be a Sapling Z address, not a T address';
+    } else {
+      errors.payoutAddress = 'That doesn’t look like a valid Sapling address';
+    }
   }
 
   // Milestones
@@ -158,33 +174,11 @@ export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
     warnings.push(`
       You still have pending team invitations. If you publish before they
       are accepted, your team will be locked in and they won’t be able to
-      accept join.
+      join.
     `);
   }
 
   return warnings;
-}
-
-function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Zat) {
-  return raiseGoal.divn(100).mul(Zat(milestone.payoutPercent));
-}
-
-export function proposalToContractData(form: ProposalDraft): any {
-  const targetInZat = toZat(form.target);
-  const milestoneAmounts = form.milestones.map(m =>
-    milestoneToMilestoneAmount(m, targetInZat),
-  );
-  const immediateFirstMilestonePayout = form.milestones[0]!.immediatePayout;
-
-  return {
-    ethAmount: targetInZat,
-    payoutAddress: form.payoutAddress,
-    trusteesAddresses: [],
-    milestoneAmounts,
-    durationInMinutes: form.deadlineDuration || ONE_DAY * 60,
-    milestoneVotingPeriodInMinutes: ONE_DAY * 7,
-    immediateFirstMilestonePayout,
-  };
 }
 
 // This is kind of a disgusting function, sorry.
@@ -206,6 +200,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     target: toZat(draft.target),
     funded: Zat('0'),
     contributionMatching: 0,
+    contributionBounty: Zat('0'),
     percentFunded: 0,
     stage: PROPOSAL_STAGE.PREVIEW,
     category: draft.category || PROPOSAL_CATEGORY.CORE_DEV,

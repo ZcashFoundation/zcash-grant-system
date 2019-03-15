@@ -74,6 +74,11 @@ async function fetchStats() {
   return data;
 }
 
+async function fetchFinancials() {
+  const { data } = await api.get('/admin/financials');
+  return data;
+}
+
 async function fetchUsers(params: Partial<PageQuery>) {
   const { data } = await api.get('/admin/users', { params });
   return data;
@@ -219,6 +224,32 @@ const app = store({
     contributionRefundableCount: 0,
   },
 
+  financialsFetched: false,
+  financialsFetching: false,
+  financials: {
+    grants: {
+      total: '0',
+      matching: '0',
+      bounty: '0',
+    },
+    contributions: {
+      total: '0',
+      gross: '0',
+      staking: '0',
+      funding: '0',
+      funded: '0',
+      refunding: '0',
+      refunded: '0',
+      donations: '0',
+    },
+    payouts: {
+      total: '0',
+      due: '0',
+      paid: '0',
+      future: '0',
+    },
+  },
+
   users: {
     page: createDefaultPageData<User>('EMAIL:DESC'),
   },
@@ -249,6 +280,8 @@ const app = store({
   proposalDetailApproving: false,
   proposalDetailMarkingMilestonePaid: false,
   proposalDetailCanceling: false,
+  proposalDetailUpdating: false,
+  proposalDetailUpdated: false,
 
   comments: {
     page: createDefaultPageData<Comment>('CREATED:DESC'),
@@ -342,6 +375,17 @@ const app = store({
       handleApiError(e);
     }
     app.statsFetching = false;
+  },
+
+  async fetchFinancials() {
+    app.financialsFetching = true;
+    try {
+      app.financials = await fetchFinancials();
+      app.financialsFetched = true;
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.financialsFetching = false;
   },
 
   // Users
@@ -466,15 +510,19 @@ const app = store({
     if (!app.proposalDetail) {
       return;
     }
+    app.proposalDetailUpdating = true;
+    app.proposalDetailUpdated = false;
     try {
       const res = await updateProposal({
         ...updates,
         proposalId: app.proposalDetail.proposalId,
       });
       app.updateProposalInStore(res);
+      app.proposalDetailUpdated = true;
     } catch (e) {
       handleApiError(e);
     }
+    app.proposalDetailUpdating = false;
   },
 
   async deleteProposal(id: number) {

@@ -9,7 +9,7 @@ import {
   LoadableProposalPage,
   Moreable,
 } from 'types';
-import { PROPOSAL_SORT } from 'api/constants';
+import { PROPOSAL_SORT, PROPOSAL_STAGE } from 'api/constants';
 
 export interface ProposalDetail extends Proposal {
   isRequestingPayout: boolean;
@@ -62,7 +62,7 @@ export const INITIAL_STATE: ProposalState = {
     sort: PROPOSAL_SORT.NEWEST,
     filters: {
       category: [],
-      stage: [],
+      stage: [PROPOSAL_STAGE.FUNDING_REQUIRED],
     },
     items: [],
     hasFetched: false,
@@ -386,8 +386,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.PROPOSAL_UPDATES_REJECTED:
       return {
         ...state,
-        // TODO: Get action to send real error
-        updatesError: 'Failed to fetch updates',
+        updatesError: (payload && payload.message) || payload.toString(),
         isFetchingUpdates: false,
       };
 
@@ -402,8 +401,7 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.PROPOSAL_CONTRIBUTIONS_REJECTED:
       return {
         ...state,
-        // TODO: Get action to send real error
-        fetchContributionsError: 'Failed to fetch updates',
+        fetchContributionsError: (payload && payload.message) || payload.toString(),
         isFetchingContributions: false,
       };
 
