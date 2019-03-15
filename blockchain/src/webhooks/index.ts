@@ -19,7 +19,7 @@ export async function start() {
   initNotifiers();
 
   let { startingBlockHeight } = store.getState();
-  while (!startingBlockHeight) {
+  while (startingBlockHeight === undefined || startingBlockHeight === null) {
     await requestBootstrap();
     await sleep(10000);
     startingBlockHeight = store.getState().startingBlockHeight;
