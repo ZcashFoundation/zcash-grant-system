@@ -24,7 +24,6 @@ from grant.proposal.models import (
     admin_proposal_contributions_schema,
 )
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
-from grant.settings import EXPLORER_URL
 from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.utils import pagination
 from grant.utils.enums import Category
@@ -36,7 +35,7 @@ from grant.utils.enums import (
     MilestoneStage,
     RFPStatus,
 )
-from grant.utils.misc import make_url
+from grant.utils.misc import make_url, make_explore_url
 from .example_emails import example_email_args
 
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
@@ -434,7 +433,7 @@ def paid_milestone_payout_request(id, mid, tx_id):
                     'proposal': proposal,
                     'milestone': ms,
                     'amount': amount,
-                    'tx_explorer_url': f'{EXPLORER_URL}transactions/{tx_id}',
+                    'tx_explorer_url': make_explore_url(tx_id),
                     'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
                 })
             return proposal_schema.dump(proposal), 200

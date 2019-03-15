@@ -87,5 +87,8 @@ export function formatZcashCLI(address: string, amount?: string | number, memo?:
 }
 
 export function formatTxExplorerUrl(txid: string) {
-  return `${process.env.EXPLORER_URL}transactions/${txid}`;
+  if (process.env.EXPLORER_URL) {
+    return process.env.EXPLORER_URL.replace('<txid>', txid);
+  }
+  throw new Error('EXPLORER_URL env variable needs to be set!');
 }
