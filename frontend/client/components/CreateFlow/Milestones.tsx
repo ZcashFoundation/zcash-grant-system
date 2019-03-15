@@ -78,6 +78,11 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
             milestone={milestone}
             index={idx}
             error={errors.milestones && errors.milestones[idx]}
+            previousMilestoneDateEstimate={
+              milestones[idx - 1] && milestones[idx - 1].dateEstimated
+                ? moment(milestones[idx - 1].dateEstimated * 1000)
+                : undefined
+            }
             onChange={this.handleMilestoneChange}
             onRemove={this.removeMilestone}
           />
@@ -96,6 +101,7 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
 interface MilestoneFieldsProps {
   index: number;
   milestone: CreateMilestone;
+  previousMilestoneDateEstimate: moment.Moment | undefined;
   error: Falsy | string;
   onChange(index: number, milestone: CreateMilestone): void;
   onRemove(index: number): void;
@@ -107,6 +113,7 @@ const MilestoneFields = ({
   error,
   onChange,
   onRemove,
+  previousMilestoneDateEstimate,
 }: MilestoneFieldsProps) => (
   <Card style={{ marginBottom: '2rem' }}>
     <div style={{ display: 'flex', marginBottom: '0.5rem', alignItems: 'center' }}>
@@ -154,14 +161,23 @@ const MilestoneFields = ({
         allowClear={false}
         onChange={time => onChange(index, { ...milestone, dateEstimated: time.unix() })}
         disabled={milestone.immediatePayout}
-        disabledDate={current =>
-          current
-            ? current <
-              moment()
-                .subtract(1, 'month')
-                .endOf('month')
-            : false
-        }
+        disabledDate={current => {
+          if (!previousMilestoneDateEstimate) {
+            return current
+              ? current <
+                  moment()
+                    .subtract(1, 'month')
+                    .endOf('month')
+              : false;
+          } else {
+            return current
+              ? current <
+                  moment()
+                    .subtract(1, 'month')
+                    .endOf('month') || current < previousMilestoneDateEstimate
+              : false;
+          }
+        }}
       />
       <Input
         value={milestone.payoutPercent}

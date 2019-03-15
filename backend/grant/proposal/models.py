@@ -384,7 +384,7 @@ class Proposal(db.Model):
         self.brief = brief
         self.category = category
         self.content = content
-        self.target = target
+        self.target = target if target != '' else None
         self.payout_address = payout_address
         self.deadline_duration = deadline_duration
         Proposal.simple_validate(vars(self))
@@ -590,6 +590,7 @@ class Proposal(db.Model):
 
     @hybrid_property
     def funded(self):
+
         target = Decimal(self.target)
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
