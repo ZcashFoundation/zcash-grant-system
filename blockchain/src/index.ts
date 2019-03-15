@@ -16,7 +16,7 @@ async function start() {
   log.info("============== Starting services ==============");
   await initNode();
   await RestServer.start();
-  await Webhooks.start();
+  Webhooks.start();
   log.info("===============================================");
 }
 
