@@ -64,7 +64,7 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, target, payoutAddress, rfp, rfpOptIn } = form;
+  const { title, team, milestones, target, payoutAddress, rfp, rfpOptIn, brief } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -90,6 +90,11 @@ export function getCreateErrors(
   // Title
   if (title && title.length > 60) {
     errors.title = 'Title can only be 60 characters maximum';
+  }
+
+  // Brief
+  if (brief && brief.length > 140) {
+    errors.brief = 'Brief can only be 140 characters maximum';
   }
 
   // Amount to raise
