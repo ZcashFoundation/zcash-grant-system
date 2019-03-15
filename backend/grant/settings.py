@@ -58,7 +58,7 @@ LINKEDIN_CLIENT_SECRET = env.str("LINKEDIN_CLIENT_SECRET")
 BLOCKCHAIN_REST_API_URL = env.str("BLOCKCHAIN_REST_API_URL")
 BLOCKCHAIN_API_SECRET = env.str("BLOCKCHAIN_API_SECRET")
 
-EXPLORER_URL = env.str("EXPLORER_URL", default="https://explorer.zcha.in/")
+EXPLORER_URL = env.str("EXPLORER_URL", default="https://chain.so/tx/ZECTEST/<txid>")
 
 PROPOSAL_STAKING_AMOUNT = Decimal(env.str("PROPOSAL_STAKING_AMOUNT"))
 
