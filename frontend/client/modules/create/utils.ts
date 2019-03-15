@@ -134,6 +134,8 @@ export function getCreateErrors(
         return 'Payout percent is required';
       } else if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
         return 'Payout percent must be a valid number';
+      } else if (parseInt(ms.payoutPercent, 10) <= 0) {
+        return 'Payout percent must be greater than zero';
       }
 
       // Last one shows percentage errors
