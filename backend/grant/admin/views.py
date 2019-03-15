@@ -432,6 +432,7 @@ def paid_milestone_payout_request(id, mid, tx_id):
             for member in proposal.team:
                 send_email(member.email_address, 'milestone_paid', {
                     'proposal': proposal,
+                    'milestone': ms,
                     'amount': amount,
                     'tx_explorer_url': f'{EXPLORER_URL}transactions/{tx_id}',
                     'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
@@ -568,7 +569,7 @@ def get_contributions(page, filters, search, sort):
 @body({
     "proposalId": fields.Int(required=True),
     "userId": fields.Int(required=True),
-    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=ContributionStatus.list())),
     "amount": fields.Str(required=True),
     "txId": fields.Str(required=False, missing=None)
 })
@@ -607,7 +608,7 @@ def get_contribution(contribution_id):
 @body({
     "proposalId": fields.Int(required=False, missing=None),
     "userId": fields.Int(required=False, missing=None),
-    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=ContributionStatus.list())),
     "amount": fields.Str(required=False, missing=None),
     "txId": fields.Str(required=False, missing=None),
     "refundTxId": fields.Str(required=False, allow_none=True, missing=None),

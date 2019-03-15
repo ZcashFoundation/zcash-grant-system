@@ -17,7 +17,13 @@ const MIN_BLOCK_CONF = parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
 export async function start() {
   initScan();
   initNotifiers();
-  await requestBootstrap();
+
+  let { startingBlockHeight } = store.getState();
+  while (startingBlockHeight === undefined || startingBlockHeight === null) {
+    await requestBootstrap();
+    await sleep(10000);
+    startingBlockHeight = store.getState().startingBlockHeight;
+  }
 }
 
 export function exit() {
