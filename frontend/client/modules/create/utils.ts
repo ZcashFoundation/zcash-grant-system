@@ -1,10 +1,4 @@
-import {
-  ProposalDraft,
-  CreateMilestone,
-  STATUS,
-  MILESTONE_STAGE,
-  PROPOSAL_ARBITER_STATUS,
-} from 'types';
+import { ProposalDraft, STATUS, MILESTONE_STAGE, PROPOSAL_ARBITER_STATUS } from 'types';
 import { User } from 'types';
 import {
   getAmountError,
@@ -13,7 +7,6 @@ import {
   isValidSproutAddress,
 } from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
-import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import {
   ProposalDetail,
@@ -181,28 +174,6 @@ export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
   }
 
   return warnings;
-}
-
-function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Zat) {
-  return raiseGoal.divn(100).mul(Zat(milestone.payoutPercent));
-}
-
-export function proposalToContractData(form: ProposalDraft): any {
-  const targetInZat = toZat(form.target);
-  const milestoneAmounts = form.milestones.map(m =>
-    milestoneToMilestoneAmount(m, targetInZat),
-  );
-  const immediateFirstMilestonePayout = form.milestones[0]!.immediatePayout;
-
-  return {
-    ethAmount: targetInZat,
-    payoutAddress: form.payoutAddress,
-    trusteesAddresses: [],
-    milestoneAmounts,
-    durationInMinutes: form.deadlineDuration || ONE_DAY * 60,
-    milestoneVotingPeriodInMinutes: ONE_DAY * 7,
-    immediateFirstMilestonePayout,
-  };
 }
 
 // This is kind of a disgusting function, sorry.
