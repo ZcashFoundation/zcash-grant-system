@@ -11,7 +11,7 @@ from grant.email.send import send_email
 from grant.milestone.models import Milestone
 from grant.parser import body, query, paginated_fields
 from grant.rfp.models import RFP
-from grant.settings import EXPLORER_URL, PROPOSAL_STAKING_AMOUNT
+from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.task.jobs import ProposalDeadline
 from grant.user.models import User
 from grant.utils import pagination
@@ -26,7 +26,7 @@ from grant.utils.auth import (
 from grant.utils.enums import Category
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import is_email, make_url, from_zat
+from grant.utils.misc import is_email, make_url, from_zat, make_explore_url
 from .models import (
     Proposal,
     proposals_schema,
@@ -542,7 +542,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
         send_email(contribution.user.email_address, 'staking_contribution_confirmed', {
             'contribution': contribution,
             'proposal': contribution.proposal,
-            'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+            'tx_explorer_url': make_explore_url(txid),
             'fully_staked': contribution.proposal.is_staked,
             'stake_target': str(PROPOSAL_STAKING_AMOUNT.normalize()),
         })
@@ -553,7 +553,7 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
             send_email(contribution.user.email_address, 'contribution_confirmed', {
                 'contribution': contribution,
                 'proposal': contribution.proposal,
-                'tx_explorer_url': f'{EXPLORER_URL}transactions/{txid}',
+                'tx_explorer_url': make_explore_url(txid),
             })
 
         # Send to the full proposal gang
