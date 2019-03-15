@@ -136,6 +136,8 @@ export function getCreateErrors(
         return 'Payout percent must be a valid number';
       } else if (parseInt(ms.payoutPercent, 10) <= 0) {
         return 'Payout percent must be greater than zero';
+      } else if (parseInt(ms.payoutPercent, 10) > 100) {
+        return 'Payout percent must be less than or equal to 100';
       }
 
       // Last one shows percentage errors
