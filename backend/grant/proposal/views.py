@@ -142,7 +142,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
             send_email(member.email_address, 'proposal_comment', {
                 'author': g.current_user,
                 'proposal': proposal,
-                'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
+                'comment_url': make_url(f'/proposals/{proposal.id}?tab=discussions&comment={comment.id}'),
                 'author_url': make_url(f'/profile/{comment.author.id}'),
             })
     # Email parent comment creator, if it's not themselves
@@ -150,7 +150,7 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
         send_email(parent.author.email_address, 'comment_reply', {
             'author': g.current_user,
             'proposal': proposal,
-            'comment_url': make_url(f'/proposal/{proposal.id}?tab=discussions&comment={comment.id}'),
+            'comment_url': make_url(f'/proposals/{proposal.id}?tab=discussions&comment={comment.id}'),
             'author_url': make_url(f'/profile/{comment.author.id}'),
         })
 
