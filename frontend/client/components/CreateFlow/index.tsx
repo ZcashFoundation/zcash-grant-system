@@ -291,6 +291,7 @@ class CreateFlow extends React.Component<Props, State> {
 
   private handlePop: History.LocationListener = (location, action) => {
     if (action === 'POP') {
+      this.setState({ isPreviewing: false });
       const searchValues = qs.parse(location.search);
       const urlStep = searchValues.step && searchValues.step.toUpperCase();
       if (urlStep && CREATE_STEP[urlStep]) {
