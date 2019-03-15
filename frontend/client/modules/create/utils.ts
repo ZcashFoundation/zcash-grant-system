@@ -176,7 +176,7 @@ export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
     warnings.push(`
       You still have pending team invitations. If you publish before they
       are accepted, your team will be locked in and they won’t be able to
-      accept join.
+      join.
     `);
   }
 
