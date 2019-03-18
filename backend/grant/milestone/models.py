@@ -53,11 +53,11 @@ class Milestone(db.Model):
             proposal_id=int,
     ):
         self.id = gen_random_id(Milestone)
-        self.title = title
-        self.content = content
+        self.title = title[:255]
+        self.content = content[:255]
         self.stage = stage
         self.date_estimated = date_estimated
-        self.payout_percent = payout_percent
+        self.payout_percent = payout_percent[:255]
         self.immediate_payout = immediate_payout
         self.proposal_id = proposal_id
         self.date_created = datetime.datetime.now()
