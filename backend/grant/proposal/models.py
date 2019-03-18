@@ -300,9 +300,10 @@ class Proposal(db.Model):
 
             try:
                 p = float(milestone.payout_percent)
-                if p <= 0:
+                if not p.is_integer():
+                    raise ValidationException("Milestone payout percents must be whole numbers, no decimals")
+                if p <= 0 or p > 100:
                     raise ValidationException("Milestone payout percent must be greater than zero")
-
             except ValueError:
                 raise ValidationException("Milestone payout percent must be a number")
 

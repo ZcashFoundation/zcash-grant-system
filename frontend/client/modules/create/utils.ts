@@ -148,10 +148,12 @@ export function getCreateErrors(
         return 'Payout percent is required';
       } else if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
         return 'Payout percent must be a valid number';
+      } else if (parseInt(ms.payoutPercent, 10) !== parseFloat(ms.payoutPercent)) {
+        return 'Payout percent must be a whole number, no decimals';
       } else if (parseInt(ms.payoutPercent, 10) <= 0) {
-        return 'Payout percent must be greater than zero';
+        return 'Payout percent must be greater than 0%';
       } else if (parseInt(ms.payoutPercent, 10) > 100) {
-        return 'Payout percent must be less than or equal to 100';
+        return 'Payout percent must be less than or equal to 100%';
       }
 
       // Last one shows percentage errors
