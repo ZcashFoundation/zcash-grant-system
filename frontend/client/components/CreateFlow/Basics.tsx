@@ -198,7 +198,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             value={target}
             onChange={this.handleInputChange}
             addonAfter="ZEC"
-            maxLength={20}
+            maxLength={16}
           />
         </Form.Item>
       </Form>
