@@ -218,6 +218,7 @@ def get_proposal_drafts():
 @blueprint.route("/<proposal_id>", methods=["PUT"])
 @requires_team_member_auth
 @body({
+    # Length checks are to prevent database errors, not actual user limits imposed
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list() + [''])),
@@ -226,7 +227,7 @@ def get_proposal_drafts():
     "payoutAddress": fields.Str(required=True),
     "deadlineDuration": fields.Int(required=True),
     "milestones": fields.List(fields.Dict(), required=True),
-    "rfpOptIn": fields.Bool(required=False, missing=None)
+    "rfpOptIn": fields.Bool(required=False, missing=None),
 })
 def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Form } from 'antd';
+import { Form, Alert } from 'antd';
 import MarkdownEditor from 'components/MarkdownEditor';
 import { ProposalDraft } from 'types';
+import { getCreateErrors } from 'modules/create/utils';
 
 interface State {
   content: string;
@@ -22,6 +23,8 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
   }
 
   render() {
+    const errors = getCreateErrors(this.state, true);
+
     return (
       <Form layout="vertical" style={{ maxWidth: 980, margin: '0 auto' }}>
         <MarkdownEditor
@@ -29,6 +32,7 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
           initialMarkdown={this.state.content}
           minHeight={200}
         />
+        {errors.content && <Alert type="error" message={errors.content} showIcon />}
       </Form>
     );
   }

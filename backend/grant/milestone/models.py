@@ -70,20 +70,15 @@ class Milestone(db.Model):
             [db.session.delete(x) for x in proposal.milestones]
             for i, milestone_data in enumerate(milestones_data):
                 m = Milestone(
-                    title=milestone_data["title"],
-                    content=milestone_data["content"],
+                    title=milestone_data["title"][:255],
+                    content=milestone_data["content"][:255],
                     date_estimated=datetime.datetime.fromtimestamp(milestone_data["date_estimated"]),
-                    payout_percent=str(milestone_data["payout_percent"]),
+                    payout_percent=str(milestone_data["payout_percent"])[:255],
                     immediate_payout=milestone_data["immediate_payout"],
                     proposal_id=proposal.id,
                     index=i
                 )
                 db.session.add(m)
-
-    @staticmethod
-    def validate(milestone):
-        if len(milestone.title) > 60:
-            raise ValidationException("Milestone title must be no more than 60 chars")
 
     def request_payout(self, user_id: int):
         if self.stage not in [MilestoneStage.IDLE, MilestoneStage.REJECTED]:

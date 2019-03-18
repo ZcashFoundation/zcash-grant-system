@@ -147,6 +147,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             type="text"
             value={title}
             onChange={this.handleInputChange}
+            maxLength={200}
           />
         </Form.Item>
 
@@ -161,6 +162,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             value={brief}
             onChange={this.handleInputChange}
             rows={3}
+            maxLength={200}
           />
         </Form.Item>
 
@@ -196,6 +198,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             value={target}
             onChange={this.handleInputChange}
             addonAfter="ZEC"
+            maxLength={20}
           />
         </Form.Item>
       </Form>

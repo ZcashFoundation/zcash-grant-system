@@ -103,6 +103,7 @@ interface StateProps {
   form: AppState['create']['form'];
   isSavingDraft: AppState['create']['isSavingDraft'];
   hasSavedDraft: AppState['create']['hasSavedDraft'];
+  saveDraftError: AppState['create']['saveDraftError'];
 }
 
 interface DispatchProps {
@@ -149,7 +150,7 @@ class CreateFlow extends React.Component<Props, State> {
   }
 
   render() {
-    const { isSavingDraft } = this.props;
+    const { isSavingDraft, saveDraftError } = this.props;
     const { step, isPreviewing, isSubmitting, isShowingSubmitWarning } = this.state;
 
     const info = STEP_INFO[step];
@@ -238,8 +239,16 @@ class CreateFlow extends React.Component<Props, State> {
             )}
           </div>
         )}
-        {isSavingDraft && (
+        {isSavingDraft ? (
           <div className="CreateFlow-draftNotification">Saving draft...</div>
+        ) : (
+          saveDraftError && (
+            <div className="CreateFlow-draftNotification is-error">
+              Failed to save draft!
+              <br />
+              {saveDraftError}
+            </div>
+          )
         )}
         <SubmitWarningModal
           proposal={this.props.form}
@@ -326,13 +335,12 @@ class CreateFlow extends React.Component<Props, State> {
 }
 
 const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
-  (state: AppState) => {
-    return {
-      form: state.create.form,
-      isSavingDraft: state.create.isSavingDraft,
-      hasSavedDraft: state.create.hasSavedDraft,
-    };
-  },
+  (state: AppState) => ({
+    form: state.create.form,
+    isSavingDraft: state.create.isSavingDraft,
+    hasSavedDraft: state.create.hasSavedDraft,
+    saveDraftError: state.create.saveDraftError,
+  }),
   {
     updateForm: createActions.updateForm,
   },
