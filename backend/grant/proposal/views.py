@@ -379,6 +379,10 @@ def post_proposal_update(proposal_id, title, content):
     "address": fields.Str(required=True),
 })
 def post_proposal_team_invite(proposal_id, address):
+    for u in g.current_proposal.team:
+        if address == u.email_address:
+            return {"message": f"Cannot invite members already on the team"}, 400
+
     existing_invite = ProposalTeamInvite.query.filter_by(
         proposal_id=proposal_id,
         address=address
