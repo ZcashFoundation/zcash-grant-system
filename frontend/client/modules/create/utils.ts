@@ -175,10 +175,10 @@ export function getCreateErrors(
 }
 
 export function validateUserProfile(user: User) {
-  if (user.displayName.length > 30) {
-    return 'Display name can only be 30 characters maximum';
-  } else if (user.title.length > 30) {
-    return 'Title can only be 30 characters maximum';
+  if (user.displayName.length > 50) {
+    return 'Display name can only be 50 characters maximum';
+  } else if (user.title.length > 50) {
+    return 'Title can only be 50 characters maximum';
   }
 
   return '';

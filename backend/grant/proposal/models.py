@@ -45,7 +45,7 @@ class ProposalTeamInvite(db.Model):
 
     def __init__(self, proposal_id: int, address: str, accepted: bool = None):
         self.proposal_id = proposal_id
-        self.address = address
+        self.address = address[:255]
         self.accepted = accepted
         self.date_created = datetime.datetime.now()
 
@@ -70,7 +70,7 @@ class ProposalUpdate(db.Model):
     def __init__(self, proposal_id: int, title: str, content: str):
         self.id = gen_random_id(ProposalUpdate)
         self.proposal_id = proposal_id
-        self.title = title
+        self.title = title[:255]
         self.content = content
         self.date_created = datetime.datetime.now()
 

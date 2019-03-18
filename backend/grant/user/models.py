@@ -46,8 +46,8 @@ class SocialMedia(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     def __init__(self, service: str, username: str, user_id):
-        self.service = service.upper()
-        self.username = username.lower()
+        self.service = service.upper()[:255]
+        self.username = username.lower()[:255]
         self.user_id = user_id
 
 
@@ -145,8 +145,8 @@ class User(db.Model, UserMixin):
     ):
         self.id = gen_random_id(User)
         self.email_address = email_address
-        self.display_name = display_name
-        self.title = title
+        self.display_name = display_name[:255]
+        self.title = title[:255]
         self.password = password
 
     @staticmethod
