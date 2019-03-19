@@ -16,3 +16,20 @@
 div.antd-pro-ellipsis-ellipsis {
   word-break: break-word;
 }
+
+// List items with long content can push the actions aside
+.ant-list-item {
+  overflow: hidden;
+
+  .ant-list-item-content,
+  .ant-list-item-meta,
+  .ant-list-item-meta-content {
+    min-width: 0;
+  }
+
+  .ant-list-item-meta-title,
+  .ant-list-item-meta-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
