@@ -5,7 +5,7 @@ import { Notifier } from "./notifiers/notifier";
 import node from "../node";
 import env from "../env";
 import { store } from "../store";
-import { sleep } from "../util";
+import { sleep, extractErrMessage } from "../util";
 import log from "../log";
 
 let blockScanTimeout: any = null;
@@ -64,8 +64,7 @@ async function scanBlock(height: number) {
     notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
     consecutiveBlockFailures = 0;
   } catch(err) {
-    log.warn(err.response ? err.response.data : err);
-    log.warn(`Failed to fetch block ${height}, see above error`);
+    log.warn(`Failed to fetch block ${height}: ${extractErrMessage(err)}`);
     consecutiveBlockFailures++;
     // If we fail a certain number of times, it's reasonable to
     // assume that the blockchain is down, and we should just quit.
@@ -94,8 +93,7 @@ async function requestBootstrap() {
     log.debug('Requesting bootstrap from backend...');
     await send('/blockchain/bootstrap', 'GET');
   } catch(err) {
-    log.error(err.response ? err.response.data : err);
-    log.error('Request for bootstrap failed, see above for details');
+    log.error(`Request for bootstrap failed: ${extractErrMessage(err)}`);
   }
 }
 
@@ -126,7 +124,6 @@ const send: Send = (route, method, payload) => {
       return;
     }
     captureException(err);
-    const errMsg = err.response ? `Response: ${JSON.stringify(err.response.data, null, 2)}` : err.message;
-    log.error(`Webhook server request to ${method} ${route} failed: ${errMsg}`);
+    log.error(`Webhook server request to ${method} ${route} failed: ${extractErrMessage(err)}`);
   });
 };

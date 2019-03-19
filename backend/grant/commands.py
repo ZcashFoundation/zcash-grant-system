@@ -8,6 +8,7 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 from werkzeug.exceptions import MethodNotAllowed, NotFound
+from sqlalchemy import text
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.join(HERE, os.pardir)
@@ -167,6 +168,15 @@ def reset_db_chain_data():
 
     # Commit state
     db.session.commit()
+
+    # Attempt to reset contribution ID sequence, psql specific. Don't fail out
+    # if this messes up though, just warn them.
+    try:
+        db.engine.execute(text('ALTER SEQUENCE proposal_contribution_id_seq RESTART WITH 1'))
+    except e:
+        print(e)
+        print('Failed to reset contribution id sequence, see above error. Continuing anyway.')
+
     print('Successfully wiped chain-dependent db state!')
     print(f'* Deleted {p_count} proposals and their linked entities')
     print(f'* Deleted {t_count} tasks')

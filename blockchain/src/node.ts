@@ -3,6 +3,7 @@ import bitcore from "zcash-bitcore-lib";
 import { captureException } from "@sentry/node";
 import env from "./env";
 import log from "./log";
+import { extractErrMessage } from "./util";
 
 export interface BlockChainInfo {
   chain: string;
@@ -166,31 +167,29 @@ export async function initNode() {
     }
   } catch (err) {
     captureException(err);
-    log.error(err.response ? err.response.data : err);
-    log.error(
-      "Failed to connect to zcash node with the following credentials:\r\n",
-      rpcOptions
-    );
+    log.error(extractErrMessage(err));
+    log.error(`Failed to connect to zcash node with the following credentials: ${JSON.stringify(rpcOptions, null, 2)}`);
     process.exit(1);
   }
 
   // Check if sprout address is readable
-  try {
-    if (!env.SPROUT_ADDRESS) {
-      console.error("Missing SPROUT_ADDRESS environment variable, exiting");
-      process.exit(1);
-    }
-    await node.z_getbalance(env.SPROUT_ADDRESS as string);
-  } catch (err) {
-    if (!env.SPROUT_VIEWKEY) {
-      log.error(
-        "Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting"
-      );
-      process.exit(1);
-    }
-    await node.z_importviewingkey(env.SPROUT_VIEWKEY as string);
-    await node.z_getbalance(env.SPROUT_ADDRESS as string);
-  }
+  // NOTE: Replace with sapling when ready
+  // try {
+  //   if (!env.SPROUT_ADDRESS) {
+  //     console.error("Missing SPROUT_ADDRESS environment variable, exiting");
+  //     process.exit(1);
+  //   }
+  //   await node.z_getbalance(env.SPROUT_ADDRESS as string);
+  // } catch (err) {
+  //   if (!env.SPROUT_VIEWKEY) {
+  //     log.error(
+  //       "Unable to view SPROUT_ADDRESS and missing SPROUT_VIEWKEY environment variable, exiting"
+  //     );
+  //     process.exit(1);
+  //   }
+  //   await node.z_importviewingkey(env.SPROUT_VIEWKEY as string);
+  //   await node.z_getbalance(env.SPROUT_ADDRESS as string);
+  // }
 }
 
 export function getNetwork() {
@@ -210,23 +209,21 @@ export async function getBootstrapBlockHeight(txid: string | undefined) {
         block.height - parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
       return height.toString();
     } catch (err) {
-      console.warn(
-        `Attempted to get block height for tx ${txid} but failed with the following error:\n`,
-        err
-      );
-      console.warn("Falling back to hard-coded starter blocks");
+      log.warn(`Attempted to get block height for tx ${txid} but failed with the following error: ${extractErrMessage(err)}`);
     }
   }
 
   // If we can't find the latest tx block, fall back to when the grant
-  // system first launched, and scan from there.
+  // system first launched, and scan from there. Regtest or unknown networks
+  // start from the bottom.
   const net = getNetwork();
+  let height = "0";
   if (net === bitcore.Networks.mainnet) {
-    return env.MAINNET_START_BLOCK;
+    height = env.MAINNET_START_BLOCK;
   } else if (net === bitcore.Networks.testnet && !net.regtestEnabled) {
-    return env.TESTNET_START_BLOCK;
+    height = env.TESTNET_START_BLOCK;
   }
 
-  // Regtest or otherwise unknown networks should start at the bottom
-  return "0";
+  log.info(`Falling back to hard-coded starter block height ${height}`);
+  return height;
 }
