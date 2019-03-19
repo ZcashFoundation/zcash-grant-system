@@ -52,8 +52,9 @@ export function confirmPaymentDisclosure(contributionId: number, disclosure: str
   };
 }
 
+type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 export type ActionTypes =
   | ReturnType<typeof setStartingBlockHeight>
-  | ReturnType<typeof generateAddresses>
+  | UnwrapPromise<ReturnType<typeof generateAddresses>>
   | ReturnType<typeof addPaymentDisclosure>
   | ReturnType<typeof confirmPaymentDisclosure>;
