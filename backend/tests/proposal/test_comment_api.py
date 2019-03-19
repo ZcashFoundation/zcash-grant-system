@@ -128,7 +128,6 @@ class TestProposalCommentAPI(BaseUserConfig):
         )
 
         self.assertStatus(comment_res, 400)
-        self.assertIn('less than', comment_res.json['message'])
 
     def test_create_new_proposal_comment_fails_with_silenced_user(self):
         self.login_default_user()

@@ -333,23 +333,17 @@ class Proposal(db.Model):
                 raise ValidationException("Proposal must have a {}".format(field))
 
         # Stricter limits on certain fields
-        title = proposal.get('title')
-        brief = proposal.get('brief')
-        content = proposal.get('content')
-        target = proposal.get('target')
-        deadline_duration = proposal.get('deadline_duration')
-
-        if len(title) > 60:
+        if len(self.title) > 60:
             raise ValidationException("Proposal title cannot be longer than 60 characters")
-        if len(brief) > 140:
+        if len(self.brief) > 140:
             raise ValidationException("Brief cannot be longer than 140 characters")
-        if len(content) > 250000:
+        if len(self.content) > 250000:
             raise ValidationException("Content cannot be longer than 250,000 characters")
-        if Decimal(target) > PROPOSAL_TARGET_MAX:
+        if Decimal(self.target) > PROPOSAL_TARGET_MAX:
             raise ValidationException("Target cannot be more than {} ZEC".format(PROPOSAL_TARGET_MAX))
-        if Decimal(target) < 0.0001:
+        if Decimal(self.target) < 0.0001:
             raise ValidationException("Target cannot be less than 0.0001")
-        if deadline_duration > 7776000:
+        if self.deadline_duration > 7776000:
             raise ValidationException("Deadline duration cannot be more than 90 days")
 
         # Check with node that the address is kosher
