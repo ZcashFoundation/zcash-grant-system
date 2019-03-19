@@ -61,6 +61,7 @@ declare module 'bitgo' {
   interface BitGoOptions {
     env: 'test' | 'prod';
     accessToken: string;
+    proxy?: string;
   }
 
   export class BitGo {

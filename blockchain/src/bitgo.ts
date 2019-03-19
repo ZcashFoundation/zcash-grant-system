@@ -18,12 +18,17 @@ export async function initBitGo() {
     throw new Error(`BitGo cannot be used on anything but mainnet, connected node is ${network}`);
   }
 
+  const proxy = env.FIXIE_URL || undefined;
   const bitgo = new BitGo({
     env: 'prod', // Non-prod ZEC is not supported
     accessToken: env.BITGO_ACCESS_TOKEN,
+    proxy,
   });
   bitgoWallet = await bitgo.coin('zec').wallets().get({ id: env.BITGO_WALLET_ID });
   log.info(`Initialized BitGo wallet "${bitgoWallet.label()}"`);
+  if (proxy) {
+    log.info(`Proxying BitGo requests through ${proxy}`);
+  }
 }
 
 export async function getContributionAddress(id: number) {

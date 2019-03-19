@@ -30,12 +30,14 @@ const DEFAULTS = {
   TESTNET_START_BLOCK: "390000",
 
   SENTRY_DSN: "",
+  FIXIE_URL: "",
 };
 
 const OPTIONAL: { [key: string]: undefined | boolean } = {
   BITGO_WALLET_ID: true,
   BITGO_ACCESS_TOKEN: true,
   BIP32_XPUB: true,
+  FIXIE_URL: true,
   // NOTE: Remove these from optional when sapling is ready
   SPROUT_ADDRESS: true,
   SPROUT_VIEWKEY: true,
