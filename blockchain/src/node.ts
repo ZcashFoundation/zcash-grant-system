@@ -50,6 +50,27 @@ export interface Transaction {
   vjoinsplit: any[];
 }
 
+export interface RawTransaction {
+  txid: string;
+  hex: string;
+  overwintered: boolean;
+  version: number;
+  versiongroupid: number;
+  locktime: number;
+  expiryheight: string;
+  vin: VIn[];
+  vout: VOut[];
+  valueBalance: string;
+  blockhash: string;
+  blocktime: number;
+  confirmations: number;
+  time: number;
+  // unclear what these are
+  vjoinsplit: any[];
+  vShieldedSpend: any[];
+  vShieldedOutput: any[];
+}
+
 export interface Block {
   hash: string;
   confirmations: number;
@@ -120,6 +141,10 @@ interface ZCashNode {
     (numberOrHash: string | number, verbosity: 0): Promise<string>;
   };
   gettransaction: (txid: string) => Promise<Transaction>;
+  getrawtransaction: {
+    (numberOrHash: string | number, verbosity: 1): Promise<RawTransaction>;
+    (numberOrHash: string | number, verbosity?: 0): Promise<string>;
+  };
   validateaddress: (address: string) => Promise<ValidationResponse>;
   z_getbalance: (address: string, minConf?: number) => Promise<number>;
   z_getnewaddress: (type?: "sprout" | "sapling") => Promise<string>;
@@ -203,7 +228,7 @@ export function getNetwork() {
 export async function getBootstrapBlockHeight(txid: string | undefined) {
   if (txid) {
     try {
-      const tx = await node.gettransaction(txid);
+      const tx = await node.getrawtransaction(txid, 1);
       const block = await node.getblock(tx.blockhash);
       const height =
         block.height - parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
