@@ -124,6 +124,7 @@ const MilestoneFields = ({
         name="title"
         value={milestone.title}
         onChange={ev => onChange(index, { ...milestone, title: ev.currentTarget.value })}
+        maxLength={80}
       />
       <button
         onClick={() => onRemove(index)}
@@ -147,6 +148,7 @@ const MilestoneFields = ({
         onChange={ev =>
           onChange(index, { ...milestone, content: ev.currentTarget.value })
         }
+        maxLength={255}
       />
     </div>
 
@@ -190,6 +192,7 @@ const MilestoneFields = ({
         }
         addonAfter="%"
         style={{ maxWidth: '120px', width: '100%' }}
+        maxLength={6}
       />
       {index === 0 && (
         <div style={{ display: 'flex', alignItems: 'center', marginLeft: '0.5rem' }}>

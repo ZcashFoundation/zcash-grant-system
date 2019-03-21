@@ -30,7 +30,7 @@ class Comment(db.Model):
         self.proposal_id = proposal_id
         self.user_id = user_id
         self.parent_comment_id = parent_comment_id
-        self.content = content
+        self.content = content[:1000]
         self.date_created = datetime.datetime.now()
 
     @staticmethod

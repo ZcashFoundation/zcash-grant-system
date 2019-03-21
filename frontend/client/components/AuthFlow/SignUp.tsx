@@ -36,6 +36,7 @@ class SignUp extends React.Component<Props> {
                   name="name"
                   placeholder="Non-unique name that others will see you as"
                   autoComplete="name"
+                  maxLength={50}
                 />,
               )}
             </Form.Item>
@@ -47,6 +48,7 @@ class SignUp extends React.Component<Props> {
                 <Input
                   name="title"
                   placeholder="A short description about you, e.g. Core Ethereum Developer"
+                  maxLength={50}
                 />,
               )}
             </Form.Item>
@@ -62,6 +64,7 @@ class SignUp extends React.Component<Props> {
                   name="email"
                   placeholder="We promise not to spam you or share your email"
                   autoComplete="username"
+                  maxLength={255}
                 />,
               )}
             </Form.Item>
