@@ -1,6 +1,7 @@
 import type, { AddressCollection } from './types';
 import { deriveTransparentAddress } from '../util';
 import { getNetwork } from '../node';
+import { getContributionAddress } from '../bitgo';
 import env from '../env';
 
 export function setStartingBlockHeight(height: string | number) {
@@ -10,10 +11,16 @@ export function setStartingBlockHeight(height: string | number) {
   }
 }
 
-export function generateAddresses(contributionId: number) {
-  // 2^31 is the maximum number of BIP32 addresses
+export async function generateAddresses(contributionId: number) {
+  let transparent;
+  if (env.BITGO_WALLET_ID) {
+    transparent = await getContributionAddress(contributionId);
+  } else {
+    transparent = deriveTransparentAddress(contributionId, getNetwork());
+  }
+
   const addresses: AddressCollection = {
-    transparent: deriveTransparentAddress(contributionId, getNetwork()),
+    transparent,
     sprout: env.SPROUT_ADDRESS,
   };
   return {
@@ -45,8 +52,9 @@ export function confirmPaymentDisclosure(contributionId: number, disclosure: str
   };
 }
 
+type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 export type ActionTypes =
   | ReturnType<typeof setStartingBlockHeight>
-  | ReturnType<typeof generateAddresses>
+  | UnwrapPromise<ReturnType<typeof generateAddresses>>
   | ReturnType<typeof addPaymentDisclosure>
   | ReturnType<typeof confirmPaymentDisclosure>;
