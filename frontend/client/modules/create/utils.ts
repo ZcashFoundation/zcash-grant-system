@@ -13,8 +13,6 @@ import {
   PROPOSAL_DETAIL_INITIAL_STATE,
 } from 'modules/proposals/reducers';
 
-export const TARGET_ZEC_LIMIT = 1000;
-
 interface CreateFormErrors {
   rfpOptIn?: string;
   title?: string;
@@ -57,7 +55,17 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, target, payoutAddress, rfp, rfpOptIn, brief } = form;
+  const {
+    title,
+    content,
+    team,
+    milestones,
+    target,
+    payoutAddress,
+    rfp,
+    rfpOptIn,
+    brief,
+  } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -90,10 +98,16 @@ export function getCreateErrors(
     errors.brief = 'Brief can only be 140 characters maximum';
   }
 
+  // Content limit for our database's sake
+  if (content && content.length > 250000) {
+    errors.content = 'Details can only be 250,000 characters maximum';
+  }
+
   // Amount to raise
   const targetFloat = target ? parseFloat(target) : 0;
   if (target && !Number.isNaN(targetFloat)) {
-    const targetErr = getAmountError(targetFloat, TARGET_ZEC_LIMIT);
+    const limit = parseFloat(process.env.PROPOSAL_TARGET_MAX as string);
+    const targetErr = getAmountError(targetFloat, limit);
     if (targetErr) {
       errors.target = targetErr;
     }
@@ -134,6 +148,12 @@ export function getCreateErrors(
         return 'Payout percent is required';
       } else if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
         return 'Payout percent must be a valid number';
+      } else if (parseInt(ms.payoutPercent, 10) !== parseFloat(ms.payoutPercent)) {
+        return 'Payout percent must be a whole number, no decimals';
+      } else if (parseInt(ms.payoutPercent, 10) <= 0) {
+        return 'Payout percent must be greater than 0%';
+      } else if (parseInt(ms.payoutPercent, 10) > 100) {
+        return 'Payout percent must be less than or equal to 100%';
       }
 
       // Last one shows percentage errors
@@ -155,10 +175,10 @@ export function getCreateErrors(
 }
 
 export function validateUserProfile(user: User) {
-  if (user.displayName.length > 30) {
-    return 'Display name can only be 30 characters maximum';
-  } else if (user.title.length > 30) {
-    return 'Title can only be 30 characters maximum';
+  if (user.displayName.length > 50) {
+    return 'Display name can only be 50 characters maximum';
+  } else if (user.title.length > 50) {
+    return 'Title can only be 50 characters maximum';
   }
 
   return '';

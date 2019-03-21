@@ -3,6 +3,7 @@ from animal_case import keys_to_snake_case
 from flask import Blueprint, g, current_app
 from marshmallow import fields
 from validate_email import validate_email
+from webargs import validate
 
 import grant.utils.auth as auth
 from grant.comment.models import Comment, user_comments_schema
@@ -95,8 +96,8 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
 @body({
     "emailAddress": fields.Str(required=True, validate=lambda e: validate_email(e)),
     "password": fields.Str(required=True),
-    "displayName": fields.Str(required=True, validate=lambda p: 2 <= len(p) <= 200),
-    "title": fields.Str(required=True, validate=lambda p: 2 <= len(p) <= 200),
+    "displayName": fields.Str(required=True, validate=validate.Length(min=2, max=50)),
+    "title": fields.Str(required=True, validate=validate.Length(min=2, max=50)),
 })
 def create_user(
         email_address,
