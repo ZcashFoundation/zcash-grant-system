@@ -29,7 +29,7 @@ const app = express();
 
 // ssl
 if (!isDev && !process.env.DISABLE_SSL) {
-  log.warn('PRODUCTION mode, enforcing HTTPS redirect');
+  log.info('PRODUCTION mode, enforcing HTTPS redirect');
   app.use(enforce.HTTPS({ trustProtoHeader: true }));
 }
 
