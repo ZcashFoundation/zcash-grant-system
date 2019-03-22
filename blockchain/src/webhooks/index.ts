@@ -38,7 +38,7 @@ function initScan() {
   store.subscribe(() => {
     const { startingBlockHeight } = store.getState();
     if (startingBlockHeight !== null && prevHeight !== startingBlockHeight) {
-      console.info(`Starting block scan at block ${startingBlockHeight}`);
+      log.info(`Starting block scan at block ${startingBlockHeight}`);
       clearTimeout(blockScanTimeout);
       scanBlock(startingBlockHeight);
       prevHeight = startingBlockHeight;
@@ -47,23 +47,22 @@ function initScan() {
 }
 
 async function scanBlock(height: number) {
-  const highestBlock = await node.getblockcount();
-
-  // Try again in 5 seconds if the next block isn't ready
-  if (height > highestBlock - MIN_BLOCK_CONF) {
-    blockScanTimeout = setTimeout(() => {
-      scanBlock(height);
-    }, 5000);
-    return;
-  }
-
-  // Process the block
   try {
+    // Fetch the current block height, try again in 5 seconds if the next
+    // block doesn't meet our confirmation requirement
+    const highestBlock = await node.getblockcount();
+    if (height > highestBlock - MIN_BLOCK_CONF) {
+      blockScanTimeout = setTimeout(() => {
+        scanBlock(height);
+      }, 5000);
+      return;
+    }
+
+    // Process the block, then try the next one
     const block = await node.getblock(String(height), 2); // 2 == full blocks
     log.info(`Processing block #${block.height}...`);
     notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
     consecutiveBlockFailures = 0;
-    // Try next block
     scanBlock(height + 1);
   } catch(err) {
     log.warn(`Failed to fetch block ${height}: ${extractErrMessage(err)}`);
@@ -76,8 +75,8 @@ async function scanBlock(height: number) {
       process.exit(1);
     }
     else {
-      log.warn('Attempting to fetch again in 2 minutes...');
-      await sleep(120000);
+      log.warn('Attempting to fetch again in 60 seconds...');
+      await sleep(60000);
     }
     // Try same block again
     scanBlock(height);
