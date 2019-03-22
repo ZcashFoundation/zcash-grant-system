@@ -11,7 +11,7 @@ import log from "../log";
 let blockScanTimeout: any = null;
 let notifiers = [] as Notifier[];
 let consecutiveBlockFailures = 0;
-const MAXIMUM_BLOCK_FAILURES = 5;
+const MAXIMUM_BLOCK_FAILURES = 10;
 const MIN_BLOCK_CONF = parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
 
 export async function start() {
@@ -63,6 +63,8 @@ async function scanBlock(height: number) {
     log.info(`Processing block #${block.height}...`);
     notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
     consecutiveBlockFailures = 0;
+    // Try next block
+    scanBlock(height + 1);
   } catch(err) {
     log.warn(`Failed to fetch block ${height}: ${extractErrMessage(err)}`);
     consecutiveBlockFailures++;
@@ -74,13 +76,12 @@ async function scanBlock(height: number) {
       process.exit(1);
     }
     else {
-      log.warn('Attempting to fetch again shortly...');
-      await sleep(5000);
+      log.warn('Attempting to fetch again in 2 minutes...');
+      await sleep(120000);
     }
+    // Try same block again
+    scanBlock(height);
   }
-
-  // Try next block
-  scanBlock(height + 1);
 }
 
 function initNotifiers() {
