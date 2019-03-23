@@ -2,21 +2,36 @@ import React from 'react';
 import * as Sentry from '@sentry/browser';
 import { Button } from 'antd';
 import Exception from 'ant-design-pro/lib/Exception';
+import Loader from 'components/Loader';
 import './index.less';
 
 interface Props {
   error: Error;
 }
 
+const isChunkError = (err: Error) => {
+  return err.message.includes('Loading chunk');
+};
+
 export default class ErrorScreen extends React.PureComponent<Props> {
   componentDidMount() {
     const { error } = this.props;
-    Sentry.captureException(error);
-    console.error('Error screen showing due to the following error:', error);
+    if (isChunkError(error)) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      Sentry.captureException(error);
+      console.error('Error screen showing due to the following error:', error);
+    }
   }
 
   render() {
     const { error } = this.props;
+    if (isChunkError(error)) {
+      return <Loader size="large" />;
+    }
+
     return (
       <div className="ErrorScreen">
         <Exception
