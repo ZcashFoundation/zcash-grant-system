@@ -68,6 +68,7 @@
     "dotenv": "^6.0.0",
     "ethereum-blockies-base64": "1.0.2",
     "ethereumjs-util": "5.2.0",
+    "express-sslify": "1.2.0",
     "file-loader": "^2.0.0",
     "font-awesome": "^4.7.0",
     "fork-ts-checker-webpack-plugin": "^0.4.2",
