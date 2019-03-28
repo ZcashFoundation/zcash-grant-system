@@ -73,3 +73,15 @@ export function sleep(ms: number) {
     setTimeout(resolve, ms);
   });
 }
+
+// They come in all shapes and sizes, and nested data can get truncated as
+// [object Object], so try to extract the best parts available.
+export function extractErrMessage(err: any) {
+  if (err.response && err.response.data) {
+    if (err.response.data.error && err.response.data.error.message) {
+      return err.response.data.error.message;
+    }
+    return JSON.stringify(err.response.data, null, 2);
+  }
+  return err.message || err.toString();
+}

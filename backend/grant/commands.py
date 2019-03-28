@@ -8,6 +8,7 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 from werkzeug.exceptions import MethodNotAllowed, NotFound
+from sqlalchemy import text
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.join(HERE, os.pardir)
@@ -137,3 +138,46 @@ def urls(url, order):
 
     for row in rows:
         click.echo(str_template.format(*row[:column_length]))
+
+
+@click.command()
+@with_appcontext
+def reset_db_chain_data():
+    """Removes chain-state dependent entities from the database. Cannot be undone!"""
+    from grant.extensions import db
+    from grant.proposal.models import Proposal
+    from grant.user.models import UserSettings
+    from grant.task.models import Task
+
+    # Delete all proposals. Should cascade to contributions, comments etc.
+    p_count = 0
+    for proposal in Proposal.query.all():
+        db.session.delete(proposal)
+        p_count = p_count + 1
+
+    # Delete all outstanding tasks
+    t_count = Task.query.delete()
+
+    # Delete refund address from settings
+    s_count = 0
+    for settings in UserSettings.query.all():
+        if settings.refund_address:
+            settings.refund_address = None
+            db.session.add(settings)
+            s_count = s_count + 1
+
+    # Commit state
+    db.session.commit()
+
+    # Attempt to reset contribution ID sequence, psql specific. Don't fail out
+    # if this messes up though, just warn them.
+    try:
+        db.engine.execute(text('ALTER SEQUENCE proposal_contribution_id_seq RESTART WITH 1'))
+    except e:
+        print(e)
+        print('Failed to reset contribution id sequence, see above error. Continuing anyway.')
+
+    print('Successfully wiped chain-dependent db state!')
+    print(f'* Deleted {p_count} proposals and their linked entities')
+    print(f'* Deleted {t_count} tasks')
+    print(f'* Removed refund address from {s_count} user settings')

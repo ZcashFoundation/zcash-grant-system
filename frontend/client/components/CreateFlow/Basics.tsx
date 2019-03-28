@@ -68,6 +68,12 @@ class CreateFlowBasics extends React.Component<Props, State> {
     const { title, brief, category, target, rfp, rfpOptIn } = this.state;
     const errors = getCreateErrors(this.state, true);
 
+    // Don't show target error at zero since it defaults to that
+    // Error just shows up at the end to prevent submission
+    if (target === '0') {
+      errors.target = undefined;
+    }
+
     const rfpOptInRequired =
       rfp && (rfp.matching || (rfp.bounty && new BN(rfp.bounty).gtn(0)));
 
@@ -147,6 +153,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             type="text"
             value={title}
             onChange={this.handleInputChange}
+            maxLength={200}
           />
         </Form.Item>
 
@@ -161,6 +168,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             value={brief}
             onChange={this.handleInputChange}
             rows={3}
+            maxLength={200}
           />
         </Form.Item>
 
@@ -196,6 +204,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             value={target}
             onChange={this.handleInputChange}
             addonAfter="ZEC"
+            maxLength={16}
           />
         </Form.Item>
       </Form>

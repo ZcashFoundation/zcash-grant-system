@@ -10,7 +10,7 @@ import {
 } from "../../../store";
 import env from "../../../env";
 import log from "../../../log";
-import { getContributionIdFromMemo, decodeHexMemo, toBaseUnit } from "../../../util";
+import { getContributionIdFromMemo, decodeHexMemo, toBaseUnit, extractErrMessage } from "../../../util";
 
 interface ContributionConfirmationPayload {
   to: string;
@@ -26,8 +26,9 @@ export default class ContributionNotifier implements Notifier {
 
   onNewBlock = (block: BlockWithTransactions) => {
     this.checkBlockForTransparentPayments(block);
-    this.checkForMemoPayments();
-    this.checkDisclosuresForPayment(block);
+    // NOTE: Re-enable when sapling is ready
+    // this.checkForMemoPayments();
+    // this.checkDisclosuresForPayment(block);
   };
 
   registerSend = (sm: Send) => (this.send = sm);
@@ -41,6 +42,11 @@ export default class ContributionNotifier implements Notifier {
 
     block.tx.forEach(tx => {
       tx.vout.forEach(vout => {
+        // Some vouts are not transactions with addresses, ignore those
+        if (!vout.scriptPubKey.addresses) {
+          return;
+        }
+
         // Addresses is an array because of multisigs, but we'll never
         // generate one, so all of our addresses will only have addresses[0]
         const to = vout.scriptPubKey.addresses[0];
@@ -91,7 +97,7 @@ export default class ContributionNotifier implements Notifier {
       captureException(err);
       log.error(
         'Failed to check sprout address for memo payments:\n',
-        err.response ? err.response.data : err,
+        extractErrMessage(err),
       );
     }
   };
@@ -131,9 +137,9 @@ export default class ContributionNotifier implements Notifier {
       store.dispatch(confirmPaymentDisclosure(contributionId, disclosure));
     } catch(err) {
       captureException(err);
-      log.error(
+      log.warn(
         'Encountered an error while checking disclosure:\n',
-        err.response ? err.response.data : err,
+        extractErrMessage(err),
       );
     }
   };

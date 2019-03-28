@@ -48,6 +48,9 @@ const Footer: React.SFC<WithNamespaces> = ({ t }) => (
       </div>
     </div>
     <div className="Footer-social">
+      <a className="Footer-social-link" href="https://zfnd.org/" target="_blank">
+        Zcash Foundation <Icon type="home" />
+      </a>
       <a
         className="Footer-social-link"
         href="https://twitter.com/zcashfoundation"

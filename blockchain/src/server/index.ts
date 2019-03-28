@@ -14,7 +14,7 @@ import {
 } from '../store';
 import env from '../env';
 import node, { getBootstrapBlockHeight } from '../node';
-import { makeContributionMemo } from '../util';
+import { makeContributionMemo, extractErrMessage } from '../util';
 import log from '../log';
 
 // Configure server
@@ -29,8 +29,16 @@ app.use(authMiddleware);
 // Routes
 app.post('/bootstrap', async (req, res) => {
   const { pendingContributions, latestTxId } = req.body;
-  const info = await node.getblockchaininfo();
-  const startHeight = await getBootstrapBlockHeight(latestTxId);
+
+  let info;
+  let startHeight;
+  try {
+    info = await node.getblockchaininfo();
+    startHeight = await getBootstrapBlockHeight(latestTxId);
+  } catch(err) {
+    log.error(`Unknown node error during bootstrap: ${extractErrMessage(err)}`);
+    return res.status(500).json({ error: 'Unknown zcash node error' });
+  }
 
   console.info('Bootstrapping watcher!');
   console.info(' * Start height:', startHeight);
@@ -39,11 +47,18 @@ app.post('/bootstrap', async (req, res) => {
   console.info('Generating addresses to watch for each contribution...');
 
   // Running generate address on each will add each contribution to redux state
-  pendingContributions.forEach((c: any) => {
-    store.dispatch(generateAddresses(c.id));
-  });
-  console.info(`Done! Generated ${pendingContributions.length} addresses.`);
-  store.dispatch(setStartingBlockHeight(startHeight));
+  try {
+    const dispatchers = pendingContributions.map(async (c: any) => {
+      const action = await generateAddresses(c.id);
+      store.dispatch(action);
+    });
+    await Promise.all(dispatchers);
+    console.info(`Done! Generated ${pendingContributions.length} addresses.`);
+    store.dispatch(setStartingBlockHeight(startHeight));
+  } catch(err) {
+    log.error(`Unknown error during bootstrap address generation: ${extractErrMessage(err)}`);
+    return res.status(500).json({ error: 'Failed to generate addresses for contributions' });
+  }
 
   // Send back some basic info about where the chain is at
   res.json({
@@ -54,20 +69,29 @@ app.post('/bootstrap', async (req, res) => {
   });
 });
 
-app.get('/contribution/addresses', (req, res) => {
+app.get('/contribution/addresses', async (req, res) => {
   const { contributionId } = req.query;
   let addresses = getAddressesByContributionId(store.getState(), contributionId)
   if (!addresses) {
-    const action = generateAddresses(req.query.contributionId);
-    addresses = action.payload.addresses;
-    store.dispatch(action);
+    try {
+      const action = await generateAddresses(contributionId);
+      addresses = action.payload.addresses;
+      store.dispatch(action);
+    } catch(err) {
+      log.error(`Unknown error during address generation for contribution ${contributionId}: ${extractErrMessage(err)}`);
+    }
   }
-  res.json({
-    data: {
-      ...addresses,
-      memo: makeContributionMemo(contributionId),
-    },
-  });
+
+  if (addresses) {
+    res.json({
+      data: {
+        ...addresses,
+        memo: makeContributionMemo(contributionId),
+      },
+    });
+  } else {
+    res.status(500).json({ error: 'Failed to generate addresses' });
+  }
 });
 
 
@@ -96,7 +120,7 @@ app.post('/contribution/disclosure', async (req, res) => {
       return res.status(400).json({ error: err.response.data.error.message });
     }
     else {
-      log.error('Unknown node error:', err.response ? err.response.data : err);
+      log.error(`Unknown node error during disclosure: ${extractErrMessage(err)}`);
       return res.status(500).json({ error: 'Unknown zcash node error' });
     }
   }

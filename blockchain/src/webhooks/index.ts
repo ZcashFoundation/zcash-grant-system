@@ -5,13 +5,13 @@ import { Notifier } from "./notifiers/notifier";
 import node from "../node";
 import env from "../env";
 import { store } from "../store";
-import { sleep } from "../util";
+import { sleep, extractErrMessage } from "../util";
 import log from "../log";
 
 let blockScanTimeout: any = null;
 let notifiers = [] as Notifier[];
 let consecutiveBlockFailures = 0;
-const MAXIMUM_BLOCK_FAILURES = 5;
+const MAXIMUM_BLOCK_FAILURES = 10;
 const MIN_BLOCK_CONF = parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
 
 export async function start() {
@@ -38,7 +38,7 @@ function initScan() {
   store.subscribe(() => {
     const { startingBlockHeight } = store.getState();
     if (startingBlockHeight !== null && prevHeight !== startingBlockHeight) {
-      console.info(`Starting block scan at block ${startingBlockHeight}`);
+      log.info(`Starting block scan at block ${startingBlockHeight}`);
       clearTimeout(blockScanTimeout);
       scanBlock(startingBlockHeight);
       prevHeight = startingBlockHeight;
@@ -47,25 +47,25 @@ function initScan() {
 }
 
 async function scanBlock(height: number) {
-  const highestBlock = await node.getblockcount();
-
-  // Try again in 5 seconds if the next block isn't ready
-  if (height > highestBlock - MIN_BLOCK_CONF) {
-    blockScanTimeout = setTimeout(() => {
-      scanBlock(height);
-    }, 5000);
-    return;
-  }
-
-  // Process the block
   try {
+    // Fetch the current block height, try again in 5 seconds if the next
+    // block doesn't meet our confirmation requirement
+    const highestBlock = await node.getblockcount();
+    if (height > highestBlock - MIN_BLOCK_CONF) {
+      blockScanTimeout = setTimeout(() => {
+        scanBlock(height);
+      }, 5000);
+      return;
+    }
+
+    // Process the block, then try the next one
     const block = await node.getblock(String(height), 2); // 2 == full blocks
     log.info(`Processing block #${block.height}...`);
     notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
     consecutiveBlockFailures = 0;
+    scanBlock(height + 1);
   } catch(err) {
-    log.warn(err.response ? err.response.data : err);
-    log.warn(`Failed to fetch block ${height}, see above error`);
+    log.warn(`Failed to fetch block ${height}: ${extractErrMessage(err)}`);
     consecutiveBlockFailures++;
     // If we fail a certain number of times, it's reasonable to
     // assume that the blockchain is down, and we should just quit.
@@ -75,13 +75,12 @@ async function scanBlock(height: number) {
       process.exit(1);
     }
     else {
-      log.warn('Attempting to fetch again shortly...');
-      await sleep(5000);
+      log.warn('Attempting to fetch again in 60 seconds...');
+      await sleep(60000);
     }
+    // Try same block again
+    scanBlock(height);
   }
-
-  // Try next block
-  scanBlock(height + 1);
 }
 
 function initNotifiers() {
@@ -94,8 +93,7 @@ async function requestBootstrap() {
     log.debug('Requesting bootstrap from backend...');
     await send('/blockchain/bootstrap', 'GET');
   } catch(err) {
-    log.error(err.response ? err.response.data : err);
-    log.error('Request for bootstrap failed, see above for details');
+    log.error(`Request for bootstrap failed: ${extractErrMessage(err)}`);
   }
 }
 
@@ -126,7 +124,6 @@ const send: Send = (route, method, payload) => {
       return;
     }
     captureException(err);
-    const errMsg = err.response ? `Response: ${JSON.stringify(err.response.data, null, 2)}` : err.message;
-    log.error(`Webhook server request to ${method} ${route} failed: ${errMsg}`);
+    log.error(`Webhook server request to ${method} ${route} failed: ${extractErrMessage(err)}`);
   });
 };

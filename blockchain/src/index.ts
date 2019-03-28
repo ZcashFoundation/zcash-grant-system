@@ -2,6 +2,8 @@ import * as Sentry from "@sentry/node";
 import * as Webhooks from "./webhooks";
 import * as RestServer from "./server";
 import { initNode } from "./node";
+import { initBitGo } from "./bitgo";
+import { extractErrMessage } from "./util";
 import env from "./env";
 import log from "./log";
 
@@ -15,6 +17,7 @@ async function start() {
 
   log.info("============== Starting services ==============");
   await initNode();
+  await initBitGo();
   await RestServer.start();
   Webhooks.start();
   log.info("===============================================");
@@ -28,4 +31,8 @@ process.on("SIGINT", () => {
   process.exit();
 });
 
-start();
+start().catch(err => {
+  Sentry.captureException(err);
+  log.error(`Unexpected error while starting blockchain watcher: ${extractErrMessage(err)}`);
+  process.exit(1);
+});

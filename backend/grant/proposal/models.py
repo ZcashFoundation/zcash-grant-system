@@ -11,7 +11,7 @@ from flask import current_app
 from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
-from grant.settings import PROPOSAL_STAKING_AMOUNT
+from grant.settings import PROPOSAL_STAKING_AMOUNT, PROPOSAL_TARGET_MAX
 from grant.task.jobs import ContributionExpired
 from grant.utils.enums import (
     ProposalStatus,
@@ -45,7 +45,7 @@ class ProposalTeamInvite(db.Model):
 
     def __init__(self, proposal_id: int, address: str, accepted: bool = None):
         self.proposal_id = proposal_id
-        self.address = address
+        self.address = address[:255]
         self.accepted = accepted
         self.date_created = datetime.datetime.now()
 
@@ -70,7 +70,7 @@ class ProposalUpdate(db.Model):
     def __init__(self, proposal_id: int, title: str, content: str):
         self.id = gen_random_id(ProposalUpdate)
         self.proposal_id = proposal_id
-        self.title = title
+        self.title = title[:255]
         self.content = content
         self.date_created = datetime.datetime.now()
 
@@ -275,12 +275,11 @@ class Proposal(db.Model):
 
     @staticmethod
     def simple_validate(proposal):
-        title = proposal.get('title')
+        # Validate fields to be database save-able.
+        # Stricter validation is done in validate_publishable.
         stage = proposal.get('stage')
         category = proposal.get('category')
 
-        if title and len(title) > 60:
-            raise ValidationException("Proposal title cannot be longer than 60 characters")
         if stage and not ProposalStage.includes(stage):
             raise ValidationException("Proposal stage {} is not a valid stage".format(stage))
         if category and not Category.includes(category):
@@ -294,36 +293,58 @@ class Proposal(db.Model):
                 raise ValidationException("Only the first milestone can have an immediate payout")
 
             if len(milestone.title) > 60:
-                raise ValidationException("Milestone title must be no more than 60 chars")
+                raise ValidationException("Milestone title cannot be longer than 60 chars")
 
             if len(milestone.content) > 200:
-                raise ValidationException("Milestone content must be no more than 200 chars")
+                raise ValidationException("Milestone content cannot be longer than 200 chars")
 
-            payout_total += float(milestone.payout_percent)
+            try:
+                p = float(milestone.payout_percent)
+                if not p.is_integer():
+                    raise ValidationException("Milestone payout percents must be whole numbers, no decimals")
+                if p <= 0 or p > 100:
+                    raise ValidationException("Milestone payout percent must be greater than zero")
+            except ValueError:
+                raise ValidationException("Milestone payout percent must be a number")
+
+            payout_total += p
 
             try:
                 present = datetime.datetime.today().replace(day=1)
                 if present > milestone.date_estimated:
-                    raise ValidationException("Milestone date_estimated must be in the future ")
+                    raise ValidationException("Milestone date estimate must be in the future ")
 
             except Exception as e:
                 current_app.logger.warn(
                     f"Unexpected validation error - client prohibits {e}"
                 )
-                raise ValidationException("date_estimated does not convert to a datetime")
+                raise ValidationException("Date estimate is not a valid datetime")
 
         if payout_total != 100.0:
-            raise ValidationException("payoutPercent across milestones must sum to exactly 100")
+            raise ValidationException("Payout percentages of milestones must add up to exactly 100%")
 
     def validate_publishable(self):
         self.validate_publishable_milestones()
 
         # Require certain fields
-
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
         for field in required_fields:
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
+
+        # Stricter limits on certain fields
+        if len(self.title) > 60:
+            raise ValidationException("Proposal title cannot be longer than 60 characters")
+        if len(self.brief) > 140:
+            raise ValidationException("Brief cannot be longer than 140 characters")
+        if len(self.content) > 250000:
+            raise ValidationException("Content cannot be longer than 250,000 characters")
+        if Decimal(self.target) > PROPOSAL_TARGET_MAX:
+            raise ValidationException("Target cannot be more than {} ZEC".format(PROPOSAL_TARGET_MAX))
+        if Decimal(self.target) < 0.0001:
+            raise ValidationException("Target cannot be less than 0.0001")
+        if self.deadline_duration > 7776000:
+            raise ValidationException("Deadline duration cannot be more than 90 days")
 
         # Check with node that the address is kosher
         try:
@@ -380,12 +401,12 @@ class Proposal(db.Model):
             payout_address: str = '',
             deadline_duration: int = 5184000  # 60 days
     ):
-        self.title = title
-        self.brief = brief
+        self.title = title[:255]
+        self.brief = brief[:255]
         self.category = category
-        self.content = content
-        self.target = target if target != '' else None
-        self.payout_address = payout_address
+        self.content = content[:300000]
+        self.target = target[:255] if target != '' else '0'
+        self.payout_address = payout_address[:255]
         self.deadline_duration = deadline_duration
         Proposal.simple_validate(vars(self))
 

@@ -472,7 +472,7 @@ def get_rfps():
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=False, missing=0),
     "matching": fields.Bool(required=False, missing=False),
-    "dateCloses": fields.Int(required=True)
+    "dateCloses": fields.Int(required=False, missing=None)
 })
 @admin.admin_auth_required
 def create_rfp(date_closes, **kwargs):

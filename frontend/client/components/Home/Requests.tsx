@@ -72,7 +72,7 @@ class HomeRequests extends React.Component<Props> {
             {t('home.requests.description')
               .split('\n')
               .map((s: string, idx: number) => (
-                <p key={idx}>{s}</p>
+                <p key={idx} dangerouslySetInnerHTML={{ __html: s }} />
               ))}
           </div>
         </div>

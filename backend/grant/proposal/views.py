@@ -4,6 +4,7 @@ from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
 from sqlalchemy import or_
 from sentry_sdk import capture_message
+from webargs import validate
 
 from grant.extensions import limiter
 from grant.comment.models import Comment, comment_schema, comments_schema
@@ -98,7 +99,7 @@ def report_proposal_comment(proposal_id, comment_id):
 @limiter.limit("30/hour;2/minute")
 @requires_email_verified_auth
 @body({
-    "comment": fields.Str(required=True),
+    "comment": fields.Str(required=True, validate=validate.Length(max=1000)),
     "parentCommentId": fields.Int(required=False, missing=None),
 })
 def post_proposal_comments(proposal_id, comment, parent_comment_id):
@@ -121,9 +122,6 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     # Make sure user is not silenced
     if g.current_user.silenced:
         return {"message": "Your account has been silenced, commenting is disabled."}, 403
-
-    if len(comment) > 1000:
-        return {"message": "Please make sure your comment is less than 1000 characters long"}, 400
 
     # Make the comment
     comment = Comment(
@@ -218,6 +216,7 @@ def get_proposal_drafts():
 @blueprint.route("/<proposal_id>", methods=["PUT"])
 @requires_team_member_auth
 @body({
+    # Length checks are to prevent database errors, not actual user limits imposed
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list() + [''])),
@@ -226,7 +225,7 @@ def get_proposal_drafts():
     "payoutAddress": fields.Str(required=True),
     "deadlineDuration": fields.Int(required=True),
     "milestones": fields.List(fields.Dict(), required=True),
-    "rfpOptIn": fields.Bool(required=False, missing=None)
+    "rfpOptIn": fields.Bool(required=False, missing=None),
 })
 def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields
@@ -348,8 +347,8 @@ def get_proposal_update(proposal_id, update_id):
 @limiter.limit("5/day;1/minute")
 @requires_team_member_auth
 @body({
-    "title": fields.Str(required=True, validate=lambda p: 3 <= len(p) <= 30),
-    "content": fields.Str(required=True, validate=lambda p: 5 <= len(p) <= 10000),
+    "title": fields.Str(required=True, validate=validate.Length(min=3, max=60)),
+    "content": fields.Str(required=True, validate=validate.Length(min=5, max=10000)),
 })
 def post_proposal_update(proposal_id, title, content):
     update = ProposalUpdate(
@@ -376,9 +375,13 @@ def post_proposal_update(proposal_id, title, content):
 @limiter.limit("30/day;10/minute")
 @requires_team_member_auth
 @body({
-    "address": fields.Str(required=True),
+    "address": fields.Str(required=True, validate=validate.Length(max=255)),
 })
 def post_proposal_team_invite(proposal_id, address):
+    for u in g.current_proposal.team:
+        if address == u.email_address:
+            return {"message": f"Cannot invite members already on the team"}, 400
+
     existing_invite = ProposalTeamInvite.query.filter_by(
         proposal_id=proposal_id,
         address=address
@@ -643,7 +646,7 @@ def accept_milestone_payout_request(proposal_id, milestone_id):
 @blueprint.route("/<proposal_id>/milestone/<milestone_id>/reject", methods=["PUT"])
 @requires_arbiter_auth
 @body({
-    "reason": fields.Str(required=True, validate=lambda p: 2 <= len(p) <= 200),
+    "reason": fields.Str(required=True, validate=validate.Length(min=2, max=200)),
 })
 def reject_milestone_payout_request(proposal_id, milestone_id, reason):
     if not g.current_proposal.is_funded:

@@ -57,6 +57,7 @@ module.exports = () => {
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: process.env.PORT || 3000,
     PROPOSAL_STAKING_AMOUNT: process.env.PROPOSAL_STAKING_AMOUNT,
+    PROPOSAL_TARGET_MAX: process.env.PROPOSAL_TARGET_MAX || '10000',
     PUBLIC_HOST_URL: process.env.PUBLIC_HOST_URL,
     SENTRY_DSN: process.env.SENTRY_DSN || null,
     SENTRY_RELEASE: process.env.SENTRY_RELEASE || undefined,

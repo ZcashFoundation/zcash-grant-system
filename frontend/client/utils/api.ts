@@ -149,6 +149,10 @@ export function massageSerializedState(state: AppState) {
     );
     state.proposal.detail.contributionBounty = new BN((state.proposal.detail
       .contributionBounty as any) as string);
+    state.proposal.detail.milestones = state.proposal.detail.milestones.map(m => ({
+      ...m,
+      amount: new BN((m.amount as any) as string, 16),
+    }));
     if (state.proposal.detail.rfp && state.proposal.detail.rfp.bounty) {
       state.proposal.detail.rfp.bounty = new BN(
         (state.proposal.detail.rfp.bounty as any) as string,

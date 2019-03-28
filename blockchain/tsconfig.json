@@ -50,7 +50,8 @@
     // https://www.npmjs.com/package/ts-node#help-my-types-are-missing
     "paths": {
       "stdrpc": ["types/stdrpc"],
-      "zcash-bitcore-lib": ["types/zcash-bitcore-lib"]
+      "zcash-bitcore-lib": ["types/zcash-bitcore-lib"],
+      "bitgo": ["types/bitgo"]
     },
 
     /* Source Map Options */
