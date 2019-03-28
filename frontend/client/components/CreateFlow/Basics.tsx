@@ -68,6 +68,12 @@ class CreateFlowBasics extends React.Component<Props, State> {
     const { title, brief, category, target, rfp, rfpOptIn } = this.state;
     const errors = getCreateErrors(this.state, true);
 
+    // Don't show target error at zero since it defaults to that
+    // Error just shows up at the end to prevent submission
+    if (target === '0') {
+      errors.target = undefined;
+    }
+
     const rfpOptInRequired =
       rfp && (rfp.matching || (rfp.bounty && new BN(rfp.bounty).gtn(0)));
 

@@ -1,4 +1,4 @@
-export function getAmountError(amount: number, max: number = Infinity) {
+export function getAmountError(amount: number, max: number = Infinity, min?: number) {
   if (amount < 0) {
     return 'Amount must be a positive number';
   } else if (
@@ -8,6 +8,8 @@ export function getAmountError(amount: number, max: number = Infinity) {
     return 'Must be in increments of 0.001';
   } else if (amount > max) {
     return `Cannot exceed maximum (${max} ZEC)`;
+  } else if (min && amount < min) {
+    return `Must be at least ${min} ZEC`;
   }
 
   return null;
