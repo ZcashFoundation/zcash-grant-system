@@ -60,12 +60,12 @@ class RFP(db.Model):
         matching: bool = False,
         status: str = RFPStatus.DRAFT,
     ):
-        # TODO add status assert
+        assert RFPStatus.includes(status)
         assert Category.includes(category)
         self.id = gen_random_id(RFP)
         self.date_created = datetime.now()
-        self.title = title
-        self.brief = brief
+        self.title = title[:255]
+        self.brief = brief[:255]
         self.content = content
         self.category = category
         self.bounty = bounty

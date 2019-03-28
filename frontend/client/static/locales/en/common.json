@@ -1,4 +1,7 @@
 {
+  "site": {
+    "description": "ZF Grants is an open-source, community driven platform that helps creators get funding to build a better Zcash. ZF Grants is owned and operated by the Zcash Foundation."
+  },
   "home": {
     "title": "Home",
     "description": "ZF Grants organizes creators and community members to incentivize ecosystem improvements",

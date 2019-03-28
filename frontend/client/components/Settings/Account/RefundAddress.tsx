@@ -92,7 +92,7 @@ class RefundAddress extends React.Component<Props, State> {
     try {
       const res = await updateUserSettings(userid, { refundAddress });
       message.success('Settings saved');
-      this.setState({ refundAddress: res.data.refundAddress });
+      this.setState({ refundAddress: res.data.refundAddress || '' });
     } catch (err) {
       console.error(err);
       message.error(err.message || err.toString(), 5);

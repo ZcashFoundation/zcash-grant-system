@@ -1,5 +1,8 @@
 import requests
-from grant.settings import BLOCKCHAIN_REST_API_URL, BLOCKCHAIN_API_SECRET
+from flask import current_app
+
+from grant.settings import BLOCKCHAIN_REST_API_URL, BLOCKCHAIN_API_SECRET, E2E_TESTING
+from grant.utils.exceptions import ValidationException
 
 
 ### REST API ###
@@ -12,18 +15,55 @@ def handle_res(res):
 
 
 def blockchain_get(path, params=None):
-    res = requests.get(
-        f'{BLOCKCHAIN_REST_API_URL}{path}',
-        headers={'authorization': BLOCKCHAIN_API_SECRET},
-        params=params,
-    )
-    return handle_res(res)
+    if E2E_TESTING:
+        return blockchain_rest_e2e(path, params)
+    try:
+        res = requests.get(
+            f'{BLOCKCHAIN_REST_API_URL}{path}',
+            headers={'authorization': BLOCKCHAIN_API_SECRET},
+            params=params,
+        )
+        return handle_res(res)
+    except Exception as e:
+        current_app.logger.error(f"Unable to contact node: {e}")
+        raise e
+
+
+def validate_blockchain_get(path, params=None):
+    try:
+        res = blockchain_get(path, params)
+    except Exception:
+        raise ValidationException('Unable to validate zcash address right now, try again later')
+    if not res.get('valid'):
+        raise ValidationException('Invalid Zcash address')
+
+    return True
 
 
 def blockchain_post(path, data=None):
-    res = requests.post(
-        f'{BLOCKCHAIN_REST_API_URL}{path}',
-        headers={'authorization': BLOCKCHAIN_API_SECRET},
-        json=data,
-    )
-    return handle_res(res)
+    if E2E_TESTING:
+        return blockchain_rest_e2e(path, data)
+    try:
+        res = requests.post(
+            f'{BLOCKCHAIN_REST_API_URL}{path}',
+            headers={'authorization': BLOCKCHAIN_API_SECRET},
+            json=data,
+        )
+        return handle_res(res)
+    except Exception as e:
+        current_app.logger.error(f"Unable to contact node: {e}")
+        raise e
+
+
+def blockchain_rest_e2e(path, data):
+    if '/bootstrap' in path:
+        return {
+            'startHeight': 123,
+            'currentHeight': 456,
+        }
+    if '/contribution/addresses' in path:
+        return {
+            'transparent': 't123',
+        }
+
+    raise Exception(f'blockchain_post_e2e does not recognize path: {path}')

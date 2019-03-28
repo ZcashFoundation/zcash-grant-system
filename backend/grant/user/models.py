@@ -1,6 +1,7 @@
 from flask_security import UserMixin, RoleMixin
 from flask_security.core import current_user
 from flask_security.utils import hash_password, verify_and_update_password, login_user
+from sqlalchemy.ext.hybrid import hybrid_property
 from grant.comment.models import Comment
 from grant.email.models import EmailVerification, EmailRecovery
 from grant.email.send import send_email
@@ -10,11 +11,11 @@ from grant.email.subscription_settings import (
     email_subscriptions_to_dict
 )
 from grant.extensions import ma, db, security
-from grant.utils.misc import make_url, gen_random_id
+from grant.utils.misc import make_url, gen_random_id, is_email
 from grant.utils.social import generate_social_url
 from grant.utils.upload import extract_avatar_filename, construct_avatar_url
 from grant.utils import totp_2fa
-from sqlalchemy.ext.hybrid import hybrid_property
+from grant.utils.exceptions import ValidationException
 
 
 def is_current_authed_user_id(user_id):
@@ -45,8 +46,8 @@ class SocialMedia(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     def __init__(self, service: str, username: str, user_id):
-        self.service = service.upper()
-        self.username = username.lower()
+        self.service = service.upper()[:255]
+        self.username = username.lower()[:255]
         self.user_id = user_id
 
 
@@ -133,8 +134,6 @@ class User(db.Model, UserMixin):
                             backref=db.backref('users', lazy='dynamic'))
     arbiter_proposals = db.relationship("ProposalArbiter", lazy=True, back_populates="user")
 
-    # TODO - add create and validate methods
-
     def __init__(
             self,
             email_address,
@@ -146,9 +145,25 @@ class User(db.Model, UserMixin):
     ):
         self.id = gen_random_id(User)
         self.email_address = email_address
-        self.display_name = display_name
-        self.title = title
+        self.display_name = display_name[:255]
+        self.title = title[:255]
         self.password = password
+
+    @staticmethod
+    def validate(user):
+        em = user.get('email_address')
+        if not em:
+            raise ValidationException('Must have email address')
+        if not is_email(em):
+            raise ValidationException('Email address looks invalid')
+
+        t = user.get('title')
+        if t and len(t) > 255:
+            raise ValidationException('Title is too long')
+
+        dn = user.get('display_name')
+        if dn and len(dn) > 255:
+            raise ValidationException('Display name is too long')
 
     @staticmethod
     def create(email_address=None, password=None, display_name=None, title=None, _send_email=True):
@@ -158,6 +173,7 @@ class User(db.Model, UserMixin):
             display_name=display_name,
             title=title
         )
+        User.validate(vars(user))
         security.datastore.commit()
 
         # user settings
@@ -249,7 +265,6 @@ class User(db.Model, UserMixin):
         db.session.flush()
 
     def set_admin(self, is_admin: bool):
-        # TODO: audit entry & possibly email user
         self.is_admin = is_admin
         db.session.add(self)
         db.session.flush()

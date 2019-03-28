@@ -10,7 +10,7 @@ interface Props {
 }
 
 const Placeholder: React.SFC<Props> = ({ style = {}, title, subtitle, loading }) => (
-  <div className={`Placeholder ${!!loading && 'is-loading'}`} style={style}>
+  <div className={`Placeholder${(!!loading && ' is-loading') || ''}`} style={style}>
     {(loading && <Loader inline={true} size="small" />) || (
       <>
         {title && <h3 className="Placeholder-title">{title}</h3>}

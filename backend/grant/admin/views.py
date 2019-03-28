@@ -4,7 +4,7 @@ from functools import reduce
 
 from flask import Blueprint, request
 from marshmallow import fields, validate
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 
 import grant.utils.admin as admin
 import grant.utils.auth as auth
@@ -24,7 +24,6 @@ from grant.proposal.models import (
     admin_proposal_contributions_schema,
 )
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
-from grant.settings import EXPLORER_URL
 from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.utils import pagination
 from grant.utils.enums import Category
@@ -36,7 +35,7 @@ from grant.utils.enums import (
     MilestoneStage,
     RFPStatus,
 )
-from grant.utils.misc import make_url
+from grant.utils.misc import make_url, make_explore_url
 from .example_emails import example_email_args
 
 blueprint = Blueprint('admin', __name__, url_prefix='/api/v1/admin')
@@ -155,6 +154,7 @@ def stats():
     contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
         .filter(ProposalContribution.refund_tx_id == None) \
         .filter(ProposalContribution.staking == False) \
+        .filter(ProposalContribution.no_refund == False) \
         .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
         .filter(or_(
@@ -431,8 +431,9 @@ def paid_milestone_payout_request(id, mid, tx_id):
             for member in proposal.team:
                 send_email(member.email_address, 'milestone_paid', {
                     'proposal': proposal,
+                    'milestone': ms,
                     'amount': amount,
-                    'tx_explorer_url': f'{EXPLORER_URL}transactions/{tx_id}',
+                    'tx_explorer_url': make_explore_url(tx_id),
                     'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
                 })
             return proposal_schema.dump(proposal), 200
@@ -498,13 +499,12 @@ def get_rfp(rfp_id):
 @body({
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
     "content": fields.Str(required=True),
-    "status": fields.Str(required=True),
     "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=False, allow_none=True, missing=None),
     "matching": fields.Bool(required=False, default=False, missing=False),
     "dateCloses": fields.Int(required=False, missing=None),
-    "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
 })
 @admin.admin_auth_required
 def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_closes, status):
@@ -568,8 +568,7 @@ def get_contributions(page, filters, search, sort):
 @body({
     "proposalId": fields.Int(required=True),
     "userId": fields.Int(required=True),
-    # TODO guard status
-    "status": fields.Str(required=True),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=ContributionStatus.list())),
     "amount": fields.Str(required=True),
     "txId": fields.Str(required=False, missing=None)
 })
@@ -581,7 +580,6 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
         user_id=user_id,
         amount=amount,
     )
-    # TODO guard status
     contribution.status = status
     contribution.tx_id = tx_id
 
@@ -609,8 +607,7 @@ def get_contribution(contribution_id):
 @body({
     "proposalId": fields.Int(required=False, missing=None),
     "userId": fields.Int(required=False, missing=None),
-    # TODO guard status
-    "status": fields.Str(required=False, missing=None),
+    "status": fields.Str(required=True, validate=validate.OneOf(choices=ContributionStatus.list())),
     "amount": fields.Str(required=False, missing=None),
     "txId": fields.Str(required=False, missing=None),
     "refundTxId": fields.Str(required=False, allow_none=True, missing=None),
@@ -673,12 +670,7 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
 
 
 @blueprint.route('/comments', methods=['GET'])
-@body({
-    "page": fields.Int(required=False, missing=None),
-    "filters": fields.List(fields.Str(), required=False, missing=None),
-    "search": fields.Str(required=False, missing=None),
-    "sort": fields.Str(required=False, missing=None),
-})
+@body(paginated_fields)
 @admin.admin_auth_required
 def get_comments(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
@@ -696,7 +688,6 @@ def get_comments(page, filters, search, sort):
 @body({
     "hidden": fields.Bool(required=False, missing=None),
     "reported": fields.Bool(required=False, missing=None),
-
 })
 @admin.admin_auth_required
 def edit_comment(comment_id, hidden, reported):
@@ -712,3 +703,102 @@ def edit_comment(comment_id, hidden, reported):
 
     db.session.commit()
     return admin_comment_schema.dump(comment)
+
+
+# Financials
+
+@blueprint.route("/financials", methods=["GET"])
+@admin.admin_auth_required
+def financials():
+
+    nfmt = '999999.99999999'  # smallest unit of ZEC
+
+    def sql_pc(where: str):
+        return f"SELECT SUM(TO_NUMBER(amount, '{nfmt}')) FROM proposal_contribution WHERE {where}"
+
+    def sql_pc_p(where: str):
+        return f'''
+            SELECT SUM(TO_NUMBER(amount, '{nfmt}'))
+                FROM proposal_contribution as pc
+                INNER JOIN proposal as p ON pc.proposal_id = p.id
+                WHERE {where}
+        '''
+
+    def sql_ms(where: str):
+        return f'''
+            SELECT SUM(TO_NUMBER(ms.payout_percent, '999')/100 * TO_NUMBER(p.target, '999999.99999999'))
+                FROM milestone as ms
+                INNER JOIN proposal as p ON ms.proposal_id = p.id
+                WHERE {where}
+        '''
+
+    def ex(sql: str):
+        res = db.engine.execute(text(sql))
+        return [row[0] if row[0] else Decimal(0) for row in res][0].normalize()
+
+    contributions = {
+        'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
+        'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
+        'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
+        'funded': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
+        'refunding': str(ex(sql_pc_p(
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = FALSE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'refunded': str(ex(sql_pc_p(
+            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = FALSE AND pc.refund_tx_id IS NOT NULL AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'donations': str(ex(sql_pc_p(
+            "(pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NULL) AND (pc.no_refund = TRUE OR pc.user_id IS NULL) AND p.stage IN ('CANCELED', 'FAILED')"
+        ))),
+        'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
+    }
+
+    po_due = ex(sql_ms("ms.stage = 'ACCEPTED'"))  # payments accepted but not yet marked as paid
+    po_paid = ex(sql_ms("ms.stage = 'PAID'"))  # will catch paid ms from all proposals regardless of status/stage
+    # expected payments
+    po_future = ex(sql_ms("ms.stage IN ('IDLE', 'REJECTED', 'REQUESTED') AND p.stage IN ('WIP', 'COMPLETED')"))
+    po_total = po_due + po_paid + po_future
+
+    payouts = {
+        'total': str(po_total),
+        'due': str(po_due),
+        'paid': str(po_paid),
+        'future': str(po_future),
+    }
+
+    grants = {
+        'total': '0',
+        'matching': '0',
+        'bounty': '0',
+    }
+
+    def add_str_dec(a: str, b: str):
+        return str(Decimal(a) + Decimal(b))
+
+    proposals = Proposal.query.all()
+
+    for p in proposals:
+        # CANCELED proposals excluded, though they could have had milestones paid out with grant funds
+        if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
+            # matching
+            matching = Decimal(p.contributed) * Decimal(p.contribution_matching)
+            remaining = Decimal(p.target) - Decimal(p.contributed)
+            if matching > remaining:
+                matching = remaining
+
+            # bounty
+            bounty = Decimal(p.contribution_bounty)
+            remaining = Decimal(p.target) - (matching + Decimal(p.contributed))
+            if bounty > remaining:
+                bounty = remaining
+
+            grants['matching'] = add_str_dec(grants['matching'], matching)
+            grants['bounty'] = add_str_dec(grants['bounty'], bounty)
+            grants['total'] = add_str_dec(grants['total'], matching + bounty)
+
+    return {
+        'grants': grants,
+        'contributions': contributions,
+        'payouts': payouts,
+        'net': str(Decimal(contributions['gross']) - Decimal(payouts['paid']))
+    }

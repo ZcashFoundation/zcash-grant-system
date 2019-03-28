@@ -1,17 +1,18 @@
 import datetime
+from decimal import Decimal
 from functools import reduce
+
+from flask import current_app
+from marshmallow import post_dump
 from sqlalchemy import func, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from decimal import Decimal
-from marshmallow import post_dump
 
+from flask import current_app
 from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
-from grant.utils.exceptions import ValidationException
-from grant.utils.misc import dt_to_unix, make_url, gen_random_id
-from grant.utils.requests import blockchain_get
-from grant.settings import PROPOSAL_STAKING_AMOUNT
+from grant.settings import PROPOSAL_STAKING_AMOUNT, PROPOSAL_TARGET_MAX
+from grant.task.jobs import ContributionExpired
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -20,8 +21,10 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage
 )
+from grant.utils.exceptions import ValidationException
+from grant.utils.misc import dt_to_unix, make_url, gen_random_id
+from grant.utils.requests import blockchain_get
 from grant.utils.stubs import anonymous_user
-from grant.task.jobs import ContributionExpired
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -42,7 +45,7 @@ class ProposalTeamInvite(db.Model):
 
     def __init__(self, proposal_id: int, address: str, accepted: bool = None):
         self.proposal_id = proposal_id
-        self.address = address
+        self.address = address[:255]
         self.accepted = accepted
         self.date_created = datetime.datetime.now()
 
@@ -67,7 +70,7 @@ class ProposalUpdate(db.Model):
     def __init__(self, proposal_id: int, title: str, content: str):
         self.id = gen_random_id(ProposalUpdate)
         self.proposal_id = proposal_id
-        self.title = title
+        self.title = title[:255]
         self.content = content
         self.date_created = datetime.datetime.now()
 
@@ -85,6 +88,7 @@ class ProposalContribution(db.Model):
     tx_id = db.Column(db.String(255), nullable=True)
     refund_tx_id = db.Column(db.String(255), nullable=True)
     staking = db.Column(db.Boolean, nullable=False)
+    no_refund = db.Column(db.Boolean, nullable=False)
 
     user = db.relationship("User")
 
@@ -94,20 +98,23 @@ class ProposalContribution(db.Model):
             amount: str,
             user_id: int = None,
             staking: bool = False,
+            no_refund: bool = False,
     ):
         self.proposal_id = proposal_id
         self.amount = amount
         self.user_id = user_id
         self.staking = staking
+        self.no_refund = no_refund
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
 
     @staticmethod
-    def get_existing_contribution(user_id: int, proposal_id: int, amount: str):
+    def get_existing_contribution(user_id: int, proposal_id: int, amount: str, no_refund: bool = False):
         return ProposalContribution.query.filter_by(
             user_id=user_id,
             proposal_id=proposal_id,
             amount=amount,
+            no_refund=no_refund,
             status=ContributionStatus.PENDING,
         ).first()
 
@@ -267,35 +274,93 @@ class Proposal(db.Model):
         self.stage = stage
 
     @staticmethod
-    def validate(proposal):
-        title = proposal.get('title')
+    def simple_validate(proposal):
+        # Validate fields to be database save-able.
+        # Stricter validation is done in validate_publishable.
         stage = proposal.get('stage')
         category = proposal.get('category')
-        if title and len(title) > 60:
-            raise ValidationException("Proposal title cannot be longer than 60 characters")
+
         if stage and not ProposalStage.includes(stage):
             raise ValidationException("Proposal stage {} is not a valid stage".format(stage))
         if category and not Category.includes(category):
             raise ValidationException("Category {} not a valid category".format(category))
 
+    def validate_publishable_milestones(self):
+        payout_total = 0.0
+        for i, milestone in enumerate(self.milestones):
+
+            if milestone.immediate_payout and i != 0:
+                raise ValidationException("Only the first milestone can have an immediate payout")
+
+            if len(milestone.title) > 60:
+                raise ValidationException("Milestone title cannot be longer than 60 chars")
+
+            if len(milestone.content) > 200:
+                raise ValidationException("Milestone content cannot be longer than 200 chars")
+
+            try:
+                p = float(milestone.payout_percent)
+                if not p.is_integer():
+                    raise ValidationException("Milestone payout percents must be whole numbers, no decimals")
+                if p <= 0 or p > 100:
+                    raise ValidationException("Milestone payout percent must be greater than zero")
+            except ValueError:
+                raise ValidationException("Milestone payout percent must be a number")
+
+            payout_total += p
+
+            try:
+                present = datetime.datetime.today().replace(day=1)
+                if present > milestone.date_estimated:
+                    raise ValidationException("Milestone date estimate must be in the future ")
+
+            except Exception as e:
+                current_app.logger.warn(
+                    f"Unexpected validation error - client prohibits {e}"
+                )
+                raise ValidationException("Date estimate is not a valid datetime")
+
+        if payout_total != 100.0:
+            raise ValidationException("Payout percentages of milestones must add up to exactly 100%")
+
     def validate_publishable(self):
+        self.validate_publishable_milestones()
+
         # Require certain fields
         required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
         for field in required_fields:
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
 
+        # Stricter limits on certain fields
+        if len(self.title) > 60:
+            raise ValidationException("Proposal title cannot be longer than 60 characters")
+        if len(self.brief) > 140:
+            raise ValidationException("Brief cannot be longer than 140 characters")
+        if len(self.content) > 250000:
+            raise ValidationException("Content cannot be longer than 250,000 characters")
+        if Decimal(self.target) > PROPOSAL_TARGET_MAX:
+            raise ValidationException("Target cannot be more than {} ZEC".format(PROPOSAL_TARGET_MAX))
+        if Decimal(self.target) < 0.0001:
+            raise ValidationException("Target cannot be less than 0.0001")
+        if self.deadline_duration > 7776000:
+            raise ValidationException("Deadline duration cannot be more than 90 days")
+
         # Check with node that the address is kosher
-        res = blockchain_get('/validate/address', {'address': self.payout_address})
+        try:
+            res = blockchain_get('/validate/address', {'address': self.payout_address})
+        except:
+            raise ValidationException(
+                "Could not validate your payout address due to an internal server error, please try again later")
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 
         # Then run through regular validation
-        Proposal.validate(vars(self))
+        Proposal.simple_validate(vars(self))
 
     @staticmethod
     def create(**kwargs):
-        Proposal.validate(kwargs)
+        Proposal.simple_validate(kwargs)
         proposal = Proposal(
             **kwargs
         )
@@ -336,14 +401,14 @@ class Proposal(db.Model):
             payout_address: str = '',
             deadline_duration: int = 5184000  # 60 days
     ):
-        self.title = title
-        self.brief = brief
+        self.title = title[:255]
+        self.brief = brief[:255]
         self.category = category
-        self.content = content
-        self.target = target
-        self.payout_address = payout_address
+        self.content = content[:300000]
+        self.target = target[:255] if target != '' else None
+        self.payout_address = payout_address[:255]
         self.deadline_duration = deadline_duration
-        Proposal.validate(vars(self))
+        Proposal.simple_validate(vars(self))
 
     def update_rfp_opt_in(self, opt_in: bool):
         self.rfp_opt_in = opt_in
@@ -355,12 +420,19 @@ class Proposal(db.Model):
             self.set_contribution_matching(0)
             self.set_contribution_bounty('0')
 
-    def create_contribution(self, amount, user_id: int = None, staking: bool = False):
+    def create_contribution(
+        self,
+        amount,
+        user_id: int = None,
+        staking: bool = False,
+        no_refund: bool = False,
+    ):
         contribution = ProposalContribution(
             proposal_id=self.id,
             amount=amount,
             user_id=user_id,
             staking=staking,
+            no_refund=no_refund,
         )
         db.session.add(contribution)
         db.session.flush()
@@ -372,14 +444,14 @@ class Proposal(db.Model):
 
     def get_staking_contribution(self, user_id: int):
         contribution = None
-        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.contributed)
+        remaining = PROPOSAL_STAKING_AMOUNT - Decimal(self.amount_staked)
         # check funding
         if remaining > 0:
             # find pending contribution for any user of remaining amount
-            # TODO: Filter by staking=True?
             contribution = ProposalContribution.query.filter_by(
                 proposal_id=self.id,
                 status=ProposalStatus.PENDING,
+                staking=True,
             ).first()
             if not contribution:
                 contribution = self.create_contribution(
@@ -507,17 +579,17 @@ class Proposal(db.Model):
         self.stage = ProposalStage.CANCELED
         db.session.add(self)
         db.session.flush()
+
         # Send emails to team & contributors
         for u in self.team:
             send_email(u.email_address, 'proposal_canceled', {
                 'proposal': self,
                 'support_url': make_url('/contact'),
             })
-        for c in self.contributions:
-            send_email(c.user.email_address, 'contribution_proposal_canceled', {
-                'contribution': c,
+        for u in self.contributors:
+            send_email(u.email_address, 'contribution_proposal_canceled', {
                 'proposal': self,
-                'refund_address': c.user.settings.refund_address,
+                'refund_address': u.settings.refund_address,
                 'account_settings_url': make_url('/profile/settings?tab=account')
             })
 
@@ -530,7 +602,16 @@ class Proposal(db.Model):
         return str(funded)
 
     @hybrid_property
+    def amount_staked(self):
+        contributions = ProposalContribution.query \
+            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED, staking=True) \
+            .all()
+        amount = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
+        return str(amount)
+
+    @hybrid_property
     def funded(self):
+
         target = Decimal(self.target)
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
@@ -574,6 +655,11 @@ class Proposal(db.Model):
                     return ms
             return self.milestones[-1]  # return last one if all PAID
         return None
+
+    @hybrid_property
+    def contributors(self):
+        d = {c.user.id: c.user for c in self.contributions if c.user and c.status == ContributionStatus.CONFIRMED}
+        return d.values()
 
 
 class ProposalSchema(ma.Schema):
@@ -708,9 +794,6 @@ proposal_team_invite_schema = ProposalTeamInviteSchema()
 proposal_team_invites_schema = ProposalTeamInviteSchema(many=True)
 
 
-# TODO: Find a way to extend ProposalTeamInviteSchema instead of redefining
-
-
 class InviteWithProposalSchema(ma.Schema):
     class Meta:
         model = ProposalTeamInvite
@@ -760,7 +843,7 @@ class ProposalContributionSchema(ma.Schema):
 
     def get_addresses(self, obj):
         # Omit 'memo' and 'sprout' for now
-        # TODO: Add back in 'sapling' when ready
+        # NOTE: Add back in 'sapling' when ready
         addresses = blockchain_get('/contribution/addresses', {'contributionId': obj.id})
         return {
             'transparent': addresses['transparent'],
@@ -799,7 +882,8 @@ class AdminProposalContributionSchema(ma.Schema):
             "addresses",
             "refund_address",
             "refund_tx_id",
-            "staking"
+            "staking",
+            "no_refund",
         )
 
     proposal = ma.Nested("ProposalSchema")

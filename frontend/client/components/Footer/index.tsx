@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from 'antd';
+import { withNamespaces, WithNamespaces } from 'react-i18next';
 import ZFGrantsLogo from 'static/images/logo-name-light.svg';
 import GrantIoLogo from 'static/images/grantio-logo-name.svg';
 import './style.less';
 
-export default () => (
+const Footer: React.SFC<WithNamespaces> = ({ t }) => (
   <footer className="Footer">
     <div className="Footer-attribution">
       <div className="Footer-attribution-copyright">
@@ -23,13 +24,13 @@ export default () => (
       <Link className="Footer-main-title" to="/">
         <ZFGrantsLogo className="Footer-main-title-logo" />
       </Link>
-      <p className="Footer-main-about">
-        ZF Grants is an open-source, community driven platform that helps
-        creators get funding to build a better Zcash. ZF Grants is owned
-        and operated by the Zcash Foundation.
-      </p>
+      <p className="Footer-main-about">{t('site.description')}</p>
       <div className="Footer-main-links">
-        <a href="https://www.zfnd.org/about/" className="Footer-main-links-link" target="_blank">
+        <a
+          href="https://www.zfnd.org/about/"
+          className="Footer-main-links-link"
+          target="_blank"
+        >
           About
         </a>
         <Link to="/contact" className="Footer-main-links-link">
@@ -47,12 +48,24 @@ export default () => (
       </div>
     </div>
     <div className="Footer-social">
-      <a className="Footer-social-link" href="https://twitter.com/zcashfoundation" target="_blank" rel="noopener nofollow">
+      <a
+        className="Footer-social-link"
+        href="https://twitter.com/zcashfoundation"
+        target="_blank"
+        rel="noopener nofollow"
+      >
         @zcashfoundation <Icon type="twitter" />
       </a>
-      <a className="Footer-social-link" href="https://github.com/zcashfoundation" target="_blank" rel="noopener nofollow">
+      <a
+        className="Footer-social-link"
+        href="https://github.com/zcashfoundation"
+        target="_blank"
+        rel="noopener nofollow"
+      >
         zcashfoundation <Icon type="github" />
       </a>
     </div>
   </footer>
 );
+
+export default withNamespaces()(Footer);

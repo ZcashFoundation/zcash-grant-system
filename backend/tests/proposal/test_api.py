@@ -1,10 +1,10 @@
 import json
+
 from mock import patch
 
+from grant.proposal.models import Proposal, db
 from grant.settings import PROPOSAL_STAKING_AMOUNT
-from grant.proposal.models import Proposal
 from grant.utils.enums import ProposalStatus
-
 from ..config import BaseProposalCreatorConfig
 from ..test_data import test_proposal, mock_blockchain_api_requests, mock_invalid_address
 
@@ -61,6 +61,51 @@ class TestProposalAPI(BaseProposalCreatorConfig):
             content_type='application/json'
         )
         self.assert401(resp)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_update_live_proposal_fails(self, mock_get):
+        self.login_default_user()
+        self.proposal.status = ProposalStatus.APPROVED
+        resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], "LIVE")
+
+        resp = self.app.put(
+            "/api/v1/proposals/{}".format(self.proposal.id),
+            data=json.dumps(test_proposal),
+            content_type='application/json'
+        )
+        self.assert400(resp)
+
+    def test_update_pending_proposal_fails(self):
+        self.login_default_user()
+        self.proposal.status = ProposalStatus.PENDING
+        db.session.add(self.proposal)
+        db.session.commit()
+        resp = self.app.get("/api/v1/proposals/{}".format(self.proposal.id))
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], "PENDING")
+        resp = self.app.put(
+            "/api/v1/proposals/{}".format(self.proposal.id),
+            data=json.dumps(test_proposal),
+            content_type='application/json'
+        )
+        self.assert400(resp)
+
+    def test_update_rejected_proposal_succeeds(self):
+        self.login_default_user()
+        self.proposal.status = ProposalStatus.REJECTED
+        db.session.add(self.proposal)
+        db.session.commit()
+        resp = self.app.get("/api/v1/proposals/{}".format(self.proposal.id))
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], "REJECTED")
+        resp = self.app.put(
+            "/api/v1/proposals/{}".format(self.proposal.id),
+            data=json.dumps(test_proposal),
+            content_type='application/json'
+        )
+        self.assert200(resp)
 
     def test_invalid_proposal_update_proposal_draft(self):
         new_title = "Updated!"

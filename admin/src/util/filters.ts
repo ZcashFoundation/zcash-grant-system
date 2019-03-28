@@ -92,6 +92,11 @@ const CONTRIBUTION_FILTERS = CONTRIBUTION_STATUSES.map(s => ({
   display: 'Refundable',
   color: '#afd500',
   group: 'Refundable',
+}, {
+  id: 'DONATION',
+  display: 'Donations',
+  color: '#afd500',
+  group: 'Donations',
 }]);
 
 export const contributionFilters: Filters = {

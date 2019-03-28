@@ -47,7 +47,10 @@ class TestUserInviteAPI(BaseProposalCreatorConfig):
         self.assertStatus(invites_res, 200)
 
         # Make sure we made the team, coach
-        self.assertTrue(len(self.other_proposal.team) == 2)  # TODO: More thorough check than length
+        print(self.other_proposal.team)
+        self.assertTrue(len(self.other_proposal.team) == 2)
+        team_ids = [t.id for t in self.other_proposal.team]
+        self.assertIn(self.user.id, team_ids, 'user should be in team')
 
     def test_put_user_invite_response_reject(self):
         invite = ProposalTeamInvite(
@@ -67,7 +70,9 @@ class TestUserInviteAPI(BaseProposalCreatorConfig):
         self.assertStatus(invites_res, 200)
 
         # Make sure we made the team, coach
-        self.assertTrue(len(self.other_proposal.team) == 1)  # TODO: More thorough check than length
+        self.assertTrue(len(self.other_proposal.team) == 1)
+        team_ids = [t.id for t in self.other_proposal.team]
+        self.assertNotIn(self.user.id, team_ids, 'user should NOT be in team')
 
     def test_no_auth_put_user_invite_response(self):
         invite = ProposalTeamInvite(

@@ -1,14 +1,17 @@
+import validators
 from animal_case import keys_to_snake_case
-from flask import Blueprint, g
+from flask import Blueprint, g, current_app
 from marshmallow import fields
+from validate_email import validate_email
+from webargs import validate
 
 import grant.utils.auth as auth
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.models import EmailRecovery
+from grant.extensions import limiter
 from grant.parser import query, body
 from grant.proposal.models import (
     Proposal,
-    proposal_team,
     ProposalTeamInvite,
     invites_with_proposal_schema,
     ProposalContribution,
@@ -18,6 +21,7 @@ from grant.proposal.models import (
 )
 from grant.utils.enums import ProposalStatus, ContributionStatus
 from grant.utils.exceptions import ValidationException
+from grant.utils.requests import validate_blockchain_get
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from .models import (
@@ -26,7 +30,6 @@ from .models import (
     Avatar,
     self_user_schema,
     user_schema,
-    users_schema,
     user_settings_schema,
     db
 )
@@ -89,12 +92,12 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
 
 
 @blueprint.route("/", methods=["POST"])
+@limiter.limit("30/day;5/minute")
 @body({
-    # TODO guard all (valid, minimum, maximum)
-    "emailAddress": fields.Str(required=True),
+    "emailAddress": fields.Str(required=True, validate=lambda e: validate_email(e)),
     "password": fields.Str(required=True),
-    "displayName": fields.Str(required=True),
-    "title": fields.Str(required=True),
+    "displayName": fields.Str(required=True, validate=validate.Length(min=2, max=50)),
+    "title": fields.Str(required=True, validate=validate.Length(min=2, max=50)),
 })
 def create_user(
         email_address,
@@ -129,7 +132,6 @@ def auth_user(email, password):
 
 @blueprint.route("/me/password", methods=["PUT"])
 @auth.requires_auth
-# TODO gaurd password (minimum)
 @body({
     "currentPassword": fields.Str(required=True),
     "password": fields.Str(required=True)
@@ -143,14 +145,16 @@ def update_user_password(current_password, password):
 
 @blueprint.route("/me/email", methods=["PUT"])
 @auth.requires_auth
-# TODO gaurd all (valid, minimum)
 @body({
-    "email": fields.Str(required=True),
+    "email": fields.Str(required=True, validate=lambda e: validate_email(e)),
     "password": fields.Str(required=True)
 })
 def update_user_email(email, password):
     if not g.current_user.check_password(password):
         return {"message": "Password is incorrect"}, 403
+    current_app.logger.info(
+        f"Updating userId: {g.current_user.id} with current email: {g.current_user.email_address} to new email: {email}"
+    )
     g.current_user.set_email(email)
     return {"message": "ok"}, 200
 
@@ -207,6 +211,7 @@ def verify_user_social(service, code):
 
 
 @blueprint.route("/recover", methods=["POST"])
+@limiter.limit("10/day;2/minute")
 @body({
     "email": fields.Str(required=True)
 })
@@ -220,7 +225,6 @@ def recover_user(email):
 
 
 @blueprint.route("/recover/<code>", methods=["POST"])
-# TODO gaurd length
 @body({
     "password": fields.Str(required=True)
 })
@@ -239,6 +243,7 @@ def recover_email(code, password):
 
 
 @blueprint.route("/avatar", methods=["POST"])
+@limiter.limit("20/day;3/minute")
 @auth.requires_auth
 @body({
     "mimetype": fields.Str(required=True)
@@ -265,12 +270,11 @@ def delete_avatar(url):
 @blueprint.route("/<user_id>", methods=["PUT"])
 @auth.requires_auth
 @auth.requires_same_user_auth
-# TODO gaurd all (minimum, minimum, shape, uri)
 @body({
-    "displayName": fields.Str(required=True),
-    "title": fields.Str(required=True),
+    "displayName": fields.Str(required=True, validate=lambda d: 2 <= len(d) <= 60),
+    "title": fields.Str(required=True, validate=lambda t: 2 <= len(t) <= 60),
     "socialMedias": fields.List(fields.Dict(), required=True),
-    "avatar": fields.Str(required=True)
+    "avatar": fields.Str(required=True, allow_none=True, validate=lambda d: validators.url(d))
 })
 def update_user(user_id, display_name, title, social_medias, avatar):
     user = g.current_user
@@ -340,10 +344,10 @@ def get_user_settings(user_id):
 
 @blueprint.route("/<user_id>/settings", methods=["PUT"])
 @auth.requires_same_user_auth
-# TODO guard all (shape, validity)
 @body({
-    "emailSubscriptions": fields.Dict(required=True),
-    "refundAddress": fields.Str(required=False, missing=None)
+    "emailSubscriptions": fields.Dict(required=False, missing=None),
+    "refundAddress": fields.Str(required=False, missing=None,
+                                validate=lambda r: validate_blockchain_get('/validate/address', {'address': r}))
 })
 def set_user_settings(user_id, email_subscriptions, refund_address):
     if email_subscriptions:
@@ -353,6 +357,8 @@ def set_user_settings(user_id, email_subscriptions, refund_address):
         except ValidationException as e:
             return {"message": str(e)}, 400
 
+    if refund_address == '' and g.current_user.settings.refund_address:
+        return {"message": "Refund address cannot be unset, only changed"}, 400
     if refund_address:
         g.current_user.settings.refund_address = refund_address
 

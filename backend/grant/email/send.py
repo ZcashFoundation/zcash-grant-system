@@ -1,11 +1,14 @@
-import sendgrid
-from flask import render_template, Markup, current_app
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI
-from grant.utils.misc import make_url
-from python_http_client import HTTPError
-from sendgrid.helpers.mail import Email, Mail, Content
-
 from .subscription_settings import EmailSubscription, is_subscribed
+from sendgrid.helpers.mail import Email, Mail, Content
+from python_http_client import HTTPError
+from grant.utils.misc import make_url
+from sentry_sdk import capture_exception
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
+import sendgrid
+from threading import Thread
+from flask import render_template, Markup, current_app, g
+
 
 default_template_args = {
     'home_url': make_url('/'),
@@ -33,8 +36,8 @@ def team_invite_info(email_args):
 
 def recover_info(email_args):
     return {
-        'subject': '{} account recovery'.format(UI['NAME']),
-        'title': '{} account recovery'.format(UI['NAME']),
+        'subject': 'Recover your account',
+        'title': 'Recover your account',
         'preview': 'Use the link to recover your account.'
     }
 
@@ -266,7 +269,7 @@ def milestone_accept(email_args):
 def milestone_paid(email_args):
     p = email_args['proposal']
     a = email_args['amount']
-    ms = p.current_milestone
+    ms = email_args['milestone']
     return {
         'subject': f'{p.title} - {ms.title} has been paid!',
         'title': f'Milestone paid',
@@ -317,10 +320,9 @@ def generate_email(type, email_args, user=None):
         UI=UI,
     )
 
-    template_args = { **default_template_args }
+    template_args = {**default_template_args}
     if user:
         template_args['unsubscribe_url'] = make_url('/email/unsubscribe?code={}'.format(user.email_verification.code))
-
 
     html = render_template(
         'emails/template.html',
@@ -349,8 +351,14 @@ def generate_email(type, email_args, user=None):
 
 
 def send_email(to, type, email_args):
+    if 'email_sender' not in g:
+        g.email_sender = EmailSender(current_app._get_current_object())
+    g.email_sender.add(to, type, email_args)
+
+
+def make_envelope(to, type, email_args):
     if current_app and current_app.config.get("TESTING"):
-        return
+        return None
 
     from grant.user.models import User
     user = User.get_by_email(to)
@@ -359,25 +367,60 @@ def send_email(to, type, email_args):
     if user and 'subscription' in info:
         sub = info['subscription']
         if user and not is_subscribed(user.settings.email_subscriptions, sub):
-            print(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
-            return
+            current_app.logger.debug(f'Ignoring send_email to {to} of type {type} because user is unsubscribed.')
+            return None
 
+    email = generate_email(type, email_args, user)
+    mail = Mail(
+        from_email=Email(SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME),
+        to_email=Email(to),
+        subject=email['info']['subject'],
+    )
+    mail.add_content(Content('text/plain', email['text']))
+    mail.add_content(Content('text/html', email['html']))
+
+    mail.___type = type
+    mail.___to = to
+
+    return mail
+
+
+def sendgrid_send(mail, app=current_app):
+    to = mail.___to
+    type = mail.___type
     try:
-        email = generate_email(type, email_args, user)
         sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
-
-        mail = Mail(
-            from_email=Email(SENDGRID_DEFAULT_FROM),
-            to_email=Email(to),
-            subject=email['info']['subject'],
-        )
-        mail.add_content(Content('text/plain', email['text']))
-        mail.add_content(Content('text/html', email['html']))
-
-        res = sg.client.mail.send.post(request_body=mail.get())
-        print('Just sent an email to %s of type %s, response code: %s' % (to, type, res.status_code))
+        if E2E_TESTING:
+            from grant.e2e import views
+            views.last_email = mail.get()
+            app.logger.info(f'Just set last_email for e2e to pickup, to: {to}, type: {type}')
+        else:
+            res = sg.client.mail.send.post(request_body=mail.get())
+            app.logger.info('Just sent an email to %s of type %s, response code: %s' %
+                            (to, type, res.status_code))
     except HTTPError as e:
-        print('An HTTP error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
-        print(e.body)
+        app.logger.info('An HTTP error occured while sending an email to %s - %s: %s' %
+                        (to, e.__class__.__name__, e))
+        app.logger.debug(e.body)
+        capture_exception(e)
     except Exception as e:
-        print('An unknown error occured while sending an email to %s - %s: %s' % (to, e.__class__.__name__, e))
+        app.logger.info('An unknown error occured while sending an email to %s - %s: %s' %
+                        (to, e.__class__.__name__, e))
+        app.logger.debug(e)
+        capture_exception(e)
+
+
+class EmailSender(Thread):
+    def __init__(self, app):
+        Thread.__init__(self)
+        self.envelopes = []
+        self.app = app
+
+    def add(self, to, type, email_args):
+        env = make_envelope(to, type, email_args)
+        if env:
+            self.envelopes.append(env)
+
+    def run(self):
+        for envelope in self.envelopes:
+            sendgrid_send(envelope, self.app)

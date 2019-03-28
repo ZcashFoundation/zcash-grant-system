@@ -137,6 +137,7 @@ class ContributionDetail extends React.Component<Props, State> {
                 : <em>N/A</em>
               )}
               {renderDeetItem('staking tx', JSON.stringify(c.staking))}
+              {renderDeetItem('no refund', JSON.stringify(c.noRefund))}
             </Card>
           </Col>
         </Row>

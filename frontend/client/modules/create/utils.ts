@@ -1,10 +1,4 @@
-import {
-  ProposalDraft,
-  CreateMilestone,
-  STATUS,
-  MILESTONE_STAGE,
-  PROPOSAL_ARBITER_STATUS,
-} from 'types';
+import { ProposalDraft, STATUS, MILESTONE_STAGE, PROPOSAL_ARBITER_STATUS } from 'types';
 import { User } from 'types';
 import {
   getAmountError,
@@ -13,14 +7,11 @@ import {
   isValidSproutAddress,
 } from 'utils/validators';
 import { Zat, toZat } from 'utils/units';
-import { ONE_DAY } from 'utils/time';
 import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
 import {
   ProposalDetail,
   PROPOSAL_DETAIL_INITIAL_STATE,
 } from 'modules/proposals/reducers';
-
-export const TARGET_ZEC_LIMIT = 1000;
 
 interface CreateFormErrors {
   rfpOptIn?: string;
@@ -64,7 +55,17 @@ export function getCreateErrors(
   skipRequired?: boolean,
 ): CreateFormErrors {
   const errors: CreateFormErrors = {};
-  const { title, team, milestones, target, payoutAddress, rfp, rfpOptIn } = form;
+  const {
+    title,
+    content,
+    team,
+    milestones,
+    target,
+    payoutAddress,
+    rfp,
+    rfpOptIn,
+    brief,
+  } = form;
 
   // Required fields with no extra validation
   if (!skipRequired) {
@@ -92,10 +93,21 @@ export function getCreateErrors(
     errors.title = 'Title can only be 60 characters maximum';
   }
 
+  // Brief
+  if (brief && brief.length > 140) {
+    errors.brief = 'Brief can only be 140 characters maximum';
+  }
+
+  // Content limit for our database's sake
+  if (content && content.length > 250000) {
+    errors.content = 'Details can only be 250,000 characters maximum';
+  }
+
   // Amount to raise
   const targetFloat = target ? parseFloat(target) : 0;
   if (target && !Number.isNaN(targetFloat)) {
-    const targetErr = getAmountError(targetFloat, TARGET_ZEC_LIMIT);
+    const limit = parseFloat(process.env.PROPOSAL_TARGET_MAX as string);
+    const targetErr = getAmountError(targetFloat, limit);
     if (targetErr) {
       errors.target = targetErr;
     }
@@ -136,6 +148,12 @@ export function getCreateErrors(
         return 'Payout percent is required';
       } else if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
         return 'Payout percent must be a valid number';
+      } else if (parseInt(ms.payoutPercent, 10) !== parseFloat(ms.payoutPercent)) {
+        return 'Payout percent must be a whole number, no decimals';
+      } else if (parseInt(ms.payoutPercent, 10) <= 0) {
+        return 'Payout percent must be greater than 0%';
+      } else if (parseInt(ms.payoutPercent, 10) > 100) {
+        return 'Payout percent must be less than or equal to 100%';
       }
 
       // Last one shows percentage errors
@@ -157,10 +175,10 @@ export function getCreateErrors(
 }
 
 export function validateUserProfile(user: User) {
-  if (user.displayName.length > 30) {
-    return 'Display name can only be 30 characters maximum';
-  } else if (user.title.length > 30) {
-    return 'Title can only be 30 characters maximum';
+  if (user.displayName.length > 50) {
+    return 'Display name can only be 50 characters maximum';
+  } else if (user.title.length > 50) {
+    return 'Title can only be 50 characters maximum';
   }
 
   return '';
@@ -176,33 +194,11 @@ export function getCreateWarnings(form: Partial<ProposalDraft>): string[] {
     warnings.push(`
       You still have pending team invitations. If you publish before they
       are accepted, your team will be locked in and they won’t be able to
-      accept join.
+      join.
     `);
   }
 
   return warnings;
-}
-
-function milestoneToMilestoneAmount(milestone: CreateMilestone, raiseGoal: Zat) {
-  return raiseGoal.divn(100).mul(Zat(milestone.payoutPercent));
-}
-
-export function proposalToContractData(form: ProposalDraft): any {
-  const targetInZat = toZat(form.target);
-  const milestoneAmounts = form.milestones.map(m =>
-    milestoneToMilestoneAmount(m, targetInZat),
-  );
-  const immediateFirstMilestonePayout = form.milestones[0]!.immediatePayout;
-
-  return {
-    ethAmount: targetInZat,
-    payoutAddress: form.payoutAddress,
-    trusteesAddresses: [],
-    milestoneAmounts,
-    durationInMinutes: form.deadlineDuration || ONE_DAY * 60,
-    milestoneVotingPeriodInMinutes: ONE_DAY * 7,
-    immediateFirstMilestonePayout,
-  };
 }
 
 // This is kind of a disgusting function, sorry.

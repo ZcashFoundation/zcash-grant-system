@@ -21,8 +21,7 @@ export function authenticate(secret: string) {
   return hash === sha256(secret);
 }
 
-// TODO: Not fully confident in compatibility with most bip32 wallets,
-// do more work to ensure this is reliable.
+// NOTE: this is just one way to derive t-addrs
 export function deriveTransparentAddress(index: number, network: any) {
   const root = new HDPublicKey(env.BIP32_XPUB);
   const child = root.derive(`m/0/${index}`);
@@ -39,14 +38,16 @@ export function removeItem<T>(arr: T[], remove: T) {
 }
 
 export function encodeHexMemo(memo: string) {
-  return new Buffer(memo, 'utf8').toString('hex');
+  return new Buffer(memo, "utf8").toString("hex");
 }
 
 export function decodeHexMemo(memoHex: string) {
-  return new Buffer(memoHex, 'hex')
-    .toString()
-    // Remove null bytes from zero padding
-    .replace(/\0.*$/g, '');
+  return (
+    new Buffer(memoHex, "hex")
+      .toString()
+      // Remove null bytes from zero padding
+      .replace(/\0.*$/g, "")
+  );
 }
 
 export function makeContributionMemo(contributionId: number) {
@@ -54,14 +55,15 @@ export function makeContributionMemo(contributionId: number) {
 }
 
 export function getContributionIdFromMemo(memoHex: string) {
-  const matches = decodeHexMemo(memoHex).match(/Contribution ([0-9]+) on Grant\.io/);
+  const matches = decodeHexMemo(memoHex).match(
+    /Contribution ([0-9]+) on Grant\.io/
+  );
   if (matches && matches[1]) {
     return parseInt(matches[1], 10);
   }
   return false;
 }
 
-// TODO: Make this more robust
 export function toBaseUnit(unit: number) {
   return Math.floor(100000000 * unit);
 }
@@ -70,4 +72,16 @@ export function sleep(ms: number) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
+}
+
+// They come in all shapes and sizes, and nested data can get truncated as
+// [object Object], so try to extract the best parts available.
+export function extractErrMessage(err: any) {
+  if (err.response && err.response.data) {
+    if (err.response.data.error && err.response.data.error.message) {
+      return err.response.data.error.message;
+    }
+    return JSON.stringify(err.response.data, null, 2);
+  }
+  return err.message || err.toString();
 }

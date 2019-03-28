@@ -401,7 +401,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 <Markdown source={p.content} />
               </Collapse.Panel>
 
-              {/* TODO - comments, milestones, updates &etc. */}
               <Collapse.Panel key="json" header="json">
                 <pre>{JSON.stringify(p, null, 4)}</pre>
               </Collapse.Panel>
@@ -423,7 +422,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             <Card title="Details" size="small">
               {renderDeetItem('id', p.proposalId)}
               {renderDeetItem('created', formatDateSeconds(p.dateCreated))}
-              {renderDeetItem('published', formatDateSeconds(p.datePublished))}
+              {renderDeetItem(
+                'published',
+                p.datePublished ? formatDateSeconds(p.datePublished) : 'n/a',
+              )}
               {renderDeetItem(
                 'deadlineDuration',
                 formatDurationSeconds(p.deadlineDuration),
@@ -469,8 +471,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 </div>
               ))}
             </Card>
-
-            {/* TODO: contributors here? */}
           </Col>
         </Row>
       </div>

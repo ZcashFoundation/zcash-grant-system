@@ -105,6 +105,7 @@ export function formatProposalFromGet(p: any): Proposal {
 }
 
 export function formatRFPFromGet(rfp: RFP): RFP {
+  rfp.urlId = generateSlugUrl(rfp.id, rfp.title);
   if (rfp.bounty) {
     rfp.bounty = toZat(rfp.bounty as any);
   }
@@ -114,7 +115,7 @@ export function formatRFPFromGet(rfp: RFP): RFP {
   return rfp;
 }
 
-// TODO: i18n on case-by-case basis
+// NOTE: i18n on case-by-case basis
 export function generateSlugUrl(id: number, title: string) {
   const slug = title
     .toLowerCase()
@@ -148,6 +149,10 @@ export function massageSerializedState(state: AppState) {
     );
     state.proposal.detail.contributionBounty = new BN((state.proposal.detail
       .contributionBounty as any) as string);
+    state.proposal.detail.milestones = state.proposal.detail.milestones.map(m => ({
+      ...m,
+      amount: new BN((m.amount as any) as string, 16),
+    }));
     if (state.proposal.detail.rfp && state.proposal.detail.rfp.bounty) {
       state.proposal.detail.rfp.bounty = new BN(
         (state.proposal.detail.rfp.bounty as any) as string,

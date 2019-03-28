@@ -147,7 +147,7 @@ To set a user to admin
 
 These instructions are for `development`, for `production` simply replace all hostnames/ips/ports with the proper production hostname.
 
-1. Create Github oauth app https://github.com/settings/developers
+1. Create GitHub oauth app https://github.com/settings/developers
 
    1. select tab **OAuth Apps** > click **New OAuth App** button
    1. set **Homepage URL** to `http://localhost:3000`
@@ -163,12 +163,3 @@ These instructions are for `development`, for `production` simply replace all ho
    1. fill out other required fields
    1. after create, select **Keys and tokens** tab
    1. save **Consumer API key** and **Consumer API secret key** to `.env` `TWITTER_CLIENT_ID` & `TWITTER_CLIENT_SECRET` respectively.
-
-1. Create Linkedin oauth app https://www.linkedin.com/developer/apps/new
-   1. set **Website URL** to `http://localhost:3000`
-   1. fill out other necessary fields & submit
-   1. select the **Authentication** tab in app details
-   1. check the **r_basicprofile** box under **Default Application Permissions**
-   1. Under **OAuth 2.0** > **Authorized Redirect URLs** add `http://localhost:3000/callback/linkedin`
-   1. click **update** button
-   1. save **Client ID** and **Client Secret** to `.env` `LINKEDIN_CLIENT_ID` & `LINKEDIN_CLIENT_SECRET` respectively.

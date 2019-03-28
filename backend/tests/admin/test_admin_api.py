@@ -245,10 +245,12 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_update_proposal(self):
         self.login_admin()
         # set to 1 (on)
-        resp_on = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data=json.dumps({"contributionMatching": 1}))
+        resp_on = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}",
+                               data=json.dumps({"contributionMatching": 1}))
         self.assert200(resp_on)
         self.assertEqual(resp_on.json['contributionMatching'], 1)
-        resp_off = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data=json.dumps({"contributionMatching": 0}))
+        resp_off = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}",
+                                data=json.dumps({"contributionMatching": 0}))
         self.assert200(resp_off)
         self.assertEqual(resp_off.json['contributionMatching'], 0)
 
@@ -307,7 +309,6 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             })
         )
         self.assert200(resp)
-        # TODO - more tests
 
     def test_create_rfp_succeeds(self):
         self.login_admin()
@@ -315,12 +316,12 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         resp = self.app.post(
             "/api/v1/admin/rfps",
             data=json.dumps({
-              "brief": "Some brief",
-              "category": "CORE_DEV",
-              "content": "CONTENT",
-              "dateCloses": 1553980004,
-              "status": "DRAFT",
-              "title": "TITLE"
+                "brief": "Some brief",
+                "category": "CORE_DEV",
+                "content": "CONTENT",
+                "dateCloses": 1553980004,
+                "status": "DRAFT",
+                "title": "TITLE"
             })
         )
         self.assert200(resp)
@@ -331,13 +332,12 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         resp = self.app.post(
             "/api/v1/admin/rfps",
             data=json.dumps({
-              "brief": "Some brief",
-              "category": "NOT_CORE_DEV",
-              "content": "CONTENT",
-              "dateCloses": 1553980004,
-              "status": "DRAFT",
-              "title": "TITLE"
+                "brief": "Some brief",
+                "category": "NOT_CORE_DEV",
+                "content": "CONTENT",
+                "dateCloses": 1553980004,
+                "status": "DRAFT",
+                "title": "TITLE"
             })
         )
         self.assert400(resp)
-
