@@ -405,7 +405,7 @@ class Proposal(db.Model):
         self.brief = brief[:255]
         self.category = category
         self.content = content[:300000]
-        self.target = target[:255] if target != '' else None
+        self.target = target[:255] if target != '' else '0'
         self.payout_address = payout_address[:255]
         self.deadline_duration = deadline_duration
         Proposal.simple_validate(vars(self))
