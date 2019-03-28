@@ -17,9 +17,9 @@ export interface BlockChainInfo {
 export interface ScriptPubKey {
   asm: string;
   hex: string;
-  reqSigs: number;
   type: string;
-  addresses: string[];
+  reqSigs?: number;
+  addresses?: string[];
 }
 
 export interface VIn {

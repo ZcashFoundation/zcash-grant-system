@@ -77,7 +77,7 @@ class RFPs extends React.Component<Props> {
               The Zcash Foundation periodically makes requests for proposals that solve
               high-priority needs in the Zcash ecosystem. These proposals will typically
               receive large or matched contributions, should they be approved by the
-              foundation.
+              Foundation.
             </p>
           </div>
         </div>
