@@ -11,7 +11,7 @@ import log from "../log";
 let blockScanTimeout: any = null;
 let notifiers = [] as Notifier[];
 let consecutiveBlockFailures = 0;
-const MAXIMUM_BLOCK_FAILURES = 5;
+const MAXIMUM_BLOCK_FAILURES = 10;
 const MIN_BLOCK_CONF = parseInt(env.MINIMUM_BLOCK_CONFIRMATIONS, 10);
 
 export async function start() {
@@ -38,7 +38,7 @@ function initScan() {
   store.subscribe(() => {
     const { startingBlockHeight } = store.getState();
     if (startingBlockHeight !== null && prevHeight !== startingBlockHeight) {
-      console.info(`Starting block scan at block ${startingBlockHeight}`);
+      log.info(`Starting block scan at block ${startingBlockHeight}`);
       clearTimeout(blockScanTimeout);
       scanBlock(startingBlockHeight);
       prevHeight = startingBlockHeight;
@@ -47,22 +47,23 @@ function initScan() {
 }
 
 async function scanBlock(height: number) {
-  const highestBlock = await node.getblockcount();
-
-  // Try again in 5 seconds if the next block isn't ready
-  if (height > highestBlock - MIN_BLOCK_CONF) {
-    blockScanTimeout = setTimeout(() => {
-      scanBlock(height);
-    }, 5000);
-    return;
-  }
-
-  // Process the block
   try {
+    // Fetch the current block height, try again in 5 seconds if the next
+    // block doesn't meet our confirmation requirement
+    const highestBlock = await node.getblockcount();
+    if (height > highestBlock - MIN_BLOCK_CONF) {
+      blockScanTimeout = setTimeout(() => {
+        scanBlock(height);
+      }, 5000);
+      return;
+    }
+
+    // Process the block, then try the next one
     const block = await node.getblock(String(height), 2); // 2 == full blocks
     log.info(`Processing block #${block.height}...`);
     notifiers.forEach(n => n.onNewBlock && n.onNewBlock(block));
     consecutiveBlockFailures = 0;
+    scanBlock(height + 1);
   } catch(err) {
     log.warn(`Failed to fetch block ${height}: ${extractErrMessage(err)}`);
     consecutiveBlockFailures++;
@@ -74,13 +75,12 @@ async function scanBlock(height: number) {
       process.exit(1);
     }
     else {
-      log.warn('Attempting to fetch again shortly...');
-      await sleep(5000);
+      log.warn('Attempting to fetch again in 60 seconds...');
+      await sleep(60000);
     }
+    // Try same block again
+    scanBlock(height);
   }
-
-  // Try next block
-  scanBlock(height + 1);
 }
 
 function initNotifiers() {
