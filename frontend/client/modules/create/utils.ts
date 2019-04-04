@@ -107,7 +107,7 @@ export function getCreateErrors(
   const targetFloat = target ? parseFloat(target) : 0;
   if (target && !Number.isNaN(targetFloat)) {
     const limit = parseFloat(process.env.PROPOSAL_TARGET_MAX as string);
-    const targetErr = getAmountError(targetFloat, limit, 1);
+    const targetErr = getAmountError(targetFloat, limit, 0.001);
     if (targetErr) {
       errors.target = targetErr;
     }
