@@ -75,7 +75,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
     }
 
     const rfpOptInRequired =
-      rfp && (rfp.matching || (rfp.bounty && new BN(rfp.bounty).gtn(0)));
+      rfp && (rfp.matching || (rfp.bounty && parseFloat(rfp.bounty.toString()) > 0));
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
