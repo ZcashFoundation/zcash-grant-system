@@ -121,7 +121,7 @@ def register_extensions(app):
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
 
     # supports_credentials for session cookies, on cookie domains (if set)
-    origins = [SESSION_COOKIE_DOMAIN] if SESSION_COOKIE_DOMAIN else 'google.com'
+    origins = [SESSION_COOKIE_DOMAIN] if SESSION_COOKIE_DOMAIN else '*'
     CORS(app, supports_credentials=True, expose_headers='X-Grantio-Authed', origins=origins)
     SSLify(app)
     return None
