@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import BN from 'bn.js';
 import { Input, Form, Icon, Select, Alert, Popconfirm, message, Radio } from 'antd';
 import { SelectValue } from 'antd/lib/select';
 import { RadioChangeEvent } from 'antd/lib/radio';
