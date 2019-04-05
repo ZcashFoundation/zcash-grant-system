@@ -12,7 +12,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp, e2e
 from grant.extensions import bcrypt, migrate, db, ma, security, limiter
-from grant.settings import SENTRY_RELEASE, ENV, E2E_TESTING, DEBUG, SESSION_COOKIE_DOMAIN
+from grant.settings import SENTRY_RELEASE, ENV, E2E_TESTING, DEBUG, CORS_DOMAINS
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
 from grant.utils.exceptions import ValidationException
 
@@ -121,7 +121,7 @@ def register_extensions(app):
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
 
     # supports_credentials for session cookies, on cookie domains (if set)
-    origins = [SESSION_COOKIE_DOMAIN] if SESSION_COOKIE_DOMAIN else '*'
+    origins = CORS_DOMAINS.split(',')
     CORS(app, supports_credentials=True, expose_headers='X-Grantio-Authed', origins=origins)
     SSLify(app)
     return None

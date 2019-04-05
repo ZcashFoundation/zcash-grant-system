@@ -29,6 +29,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # so backend session cookies are first-party
 SESSION_COOKIE_DOMAIN = env.str('SESSION_COOKIE_DOMAIN', default=None)
+CORS_DOMAINS = env.str('CORS_DOMAINS', default='*')
 
 SENDGRID_API_KEY = env.str("SENDGRID_API_KEY", default="")
 SENDGRID_DEFAULT_FROM = "noreply@grants.zfnd.org"
