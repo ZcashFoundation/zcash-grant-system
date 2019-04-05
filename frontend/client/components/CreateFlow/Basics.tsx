@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import BN from 'bn.js';
 import { Input, Form, Icon, Select, Alert, Popconfirm, message, Radio } from 'antd';
 import { SelectValue } from 'antd/lib/select';
 import { RadioChangeEvent } from 'antd/lib/radio';
@@ -75,7 +74,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
     }
 
     const rfpOptInRequired =
-      rfp && (rfp.matching || (rfp.bounty && new BN(rfp.bounty).gtn(0)));
+      rfp && (rfp.matching || (rfp.bounty && parseFloat(rfp.bounty.toString()) > 0));
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
