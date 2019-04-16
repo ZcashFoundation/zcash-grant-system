@@ -1,0 +1,3 @@
+{{ args.proposal.title }} needs an arbiter. As an admin you can help out by nominating one.
+
+Visit the proposal and nominate an arbiter: {{ args.proposal_url }}

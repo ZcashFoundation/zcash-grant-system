@@ -12,12 +12,16 @@ export interface EmailSubscriptions {
   myProposalFunded: boolean;
   myProposalRefund: boolean;
   arbiter: boolean;
+  adminApproval: boolean;
+  adminArbiter: boolean;
+  adminPayout: boolean;
 }
 
 export enum EMAIL_SUBSCRIPTION_CATEGORY {
   GENERAL = 'GENERAL',
   PROPOSAL = 'PROPOSAL',
   FUNDED = 'FUNDED',
+  ADMIN = 'ADMIN',
 }
 
 export interface EmailSubscriptionInfo {

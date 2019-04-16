@@ -9,6 +9,7 @@ export interface User {
   title: string;
   socialMedias: SocialMedia[];
   avatar: { imageUrl: string } | null;
+  isAdmin?: boolean;
 }
 
 export interface UserSettings {

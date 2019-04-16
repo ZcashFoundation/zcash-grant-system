@@ -1,0 +1,4 @@
+{{ args.proposal.title }} has an approved payout. As an admin you can help out by 
+paying the milestone and marking it paid.
+
+Pay the milestone: {{ args.proposal_url }}
