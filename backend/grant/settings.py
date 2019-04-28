@@ -15,6 +15,7 @@ env.read_env()
 ENV = env.str("FLASK_ENV", default="production")
 DEBUG = ENV == "development"
 SITE_URL = env.str('SITE_URL', default='https://zfnd.org')
+ADMIN_SITE_URL = env.str('ADMIN_SITE_URL', default='https://grants-admin.zfnd.org')
 E2E_TESTING = env.str("E2E_TESTING", default=None)
 E2E_DATABASE_URL = env.str("E2E_DATABASE_URL", default=None)
 SQLALCHEMY_DATABASE_URI = E2E_DATABASE_URL if E2E_TESTING else env.str("DATABASE_URL")

@@ -1,0 +1,3 @@
+{{ args.proposal.title }} is awaiting approval. As an admin you can help out by reviewing it.
+
+Visit the proposal and review: {{ args.proposal_url }}

@@ -1,5 +1,5 @@
 import datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from functools import reduce
 
 from flask import current_app
@@ -22,7 +22,7 @@ from grant.utils.enums import (
     MilestoneStage
 )
 from grant.utils.exceptions import ValidationException
-from grant.utils.misc import dt_to_unix, make_url, gen_random_id
+from grant.utils.misc import dt_to_unix, make_url, make_admin_url, gen_random_id
 from grant.utils.requests import blockchain_get
 from grant.utils.stubs import anonymous_user
 
@@ -462,6 +462,16 @@ class Proposal(db.Model):
 
         return contribution
 
+    def send_admin_email(self, type: str):
+        from grant.user.models import User
+        admins = User.get_admins()
+        for a in admins:
+            send_email(a.email_address, type, {
+                'user': a,
+                'proposal': self,
+                'proposal_url': make_admin_url(f'/proposals/{self.id}'),
+            })
+
     # state: status (DRAFT || REJECTED) -> (PENDING || STAKING)
     def submit_for_approval(self):
         self.validate_publishable()
@@ -485,6 +495,7 @@ class Proposal(db.Model):
             raise ValidationException(f"Proposal status must be staking in order to be set to pending")
         if not self.is_staked:
             raise ValidationException(f"Proposal is not fully staked, cannot set to pending")
+        self.send_admin_email('admin_approval')
         self.status = ProposalStatus.PENDING
         db.session.add(self)
         db.session.flush()
@@ -543,6 +554,7 @@ class Proposal(db.Model):
             raise ValidationException(f"Proposal stage must be funding_required in order transition to funded state")
         if not self.is_funded:
             raise ValidationException(f"Proposal is not fully funded, cannot set to funded state")
+        self.send_admin_email('admin_arbiter')
         self.stage = ProposalStage.WIP
         db.session.add(self)
         db.session.flush()
@@ -611,7 +623,6 @@ class Proposal(db.Model):
 
     @hybrid_property
     def funded(self):
-
         target = Decimal(self.target)
         # apply matching multiplier
         funded = Decimal(self.contributed) * Decimal(1 + self.contribution_matching)
@@ -620,9 +631,9 @@ class Proposal(db.Model):
             funded = funded + Decimal(self.contribution_bounty)
         # if funded > target, just set as target
         if funded > target:
-            return str(target)
+            return str(target.quantize(Decimal('.001'), rounding=ROUND_DOWN))
 
-        return str(funded)
+        return str(funded.quantize(Decimal('.001'), rounding=ROUND_DOWN))
 
     @hybrid_property
     def is_staked(self):

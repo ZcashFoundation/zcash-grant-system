@@ -4,7 +4,7 @@ import re
 import string
 import time
 
-from grant.settings import SITE_URL, EXPLORER_URL
+from grant.settings import SITE_URL, ADMIN_SITE_URL, EXPLORER_URL
 
 epoch = datetime.datetime.utcfromtimestamp(0)
 RANDOM_CHARS = string.ascii_letters + string.digits
@@ -35,6 +35,10 @@ def clean_random_code(code: str):
 
 def make_url(path: str):
     return f'{SITE_URL}{path}'
+
+
+def make_admin_url(path: str):
+    return f'{ADMIN_SITE_URL}{path}'
 
 
 def make_explore_url(txid: str):

@@ -97,6 +97,7 @@ class Milestone(db.Model):
 
     def accept_immediate(self):
         if self.immediate_payout and self.index == 0:
+            self.proposal.send_admin_email('admin_payout')
             self.date_requested = datetime.datetime.now()
             self.stage = MilestoneStage.ACCEPTED
             self.date_accepted = datetime.datetime.now()
@@ -106,6 +107,7 @@ class Milestone(db.Model):
     def accept_request(self, arbiter_id: int):
         if self.stage != MilestoneStage.REQUESTED:
             raise MilestoneException(f'Cannot accept payout request for milestone at {self.stage} stage')
+        self.proposal.send_admin_email('admin_payout')
         self.stage = MilestoneStage.ACCEPTED
         self.date_accepted = datetime.datetime.now()
         self.accept_arbiter_id = arbiter_id

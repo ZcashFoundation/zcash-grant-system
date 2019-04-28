@@ -1,5 +1,5 @@
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_DOWN
 from functools import reduce
 
 from flask import Blueprint, request
@@ -773,7 +773,7 @@ def financials():
     }
 
     def add_str_dec(a: str, b: str):
-        return str(Decimal(a) + Decimal(b))
+        return str((Decimal(a) + Decimal(b)).quantize(Decimal('0.001'), rounding=ROUND_HALF_DOWN))
 
     proposals = Proposal.query.all()
 
@@ -782,13 +782,13 @@ def financials():
         if p.stage in [ProposalStage.WIP, ProposalStage.COMPLETED]:
             # matching
             matching = Decimal(p.contributed) * Decimal(p.contribution_matching)
-            remaining = Decimal(p.target) - Decimal(p.contributed)
+            remaining = max(Decimal(p.target) - Decimal(p.contributed), Decimal('0.0'))
             if matching > remaining:
                 matching = remaining
 
             # bounty
             bounty = Decimal(p.contribution_bounty)
-            remaining = Decimal(p.target) - (matching + Decimal(p.contributed))
+            remaining = max(Decimal(p.target) - (matching + Decimal(p.contributed)), Decimal('0.0'))
             if bounty > remaining:
                 bounty = remaining
 

@@ -198,6 +198,10 @@ class User(db.Model, UserMixin):
     def get_by_email(email_address: str):
         return security.datastore.get_user(email_address)
 
+    @staticmethod
+    def get_admins():
+        return User.query.filter(User.is_admin == True).all()
+
     def check_password(self, password: str):
         return verify_and_update_password(password, self)
 

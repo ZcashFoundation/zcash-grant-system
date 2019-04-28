@@ -72,6 +72,23 @@ export const EMAIL_SUBSCRIPTIONS: { [key in ESKey]: EmailSubscriptionInfo } = {
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },
+
+  // ADMIN
+  adminApproval: {
+    description: 'proposal needs review',
+    category: EMAIL_SUBSCRIPTION_CATEGORY.ADMIN,
+    value: false,
+  },
+  adminArbiter: {
+    description: 'proposal needs arbiter',
+    category: EMAIL_SUBSCRIPTION_CATEGORY.ADMIN,
+    value: false,
+  },
+  adminPayout: {
+    description: 'milestone needs payout',
+    category: EMAIL_SUBSCRIPTION_CATEGORY.ADMIN,
+    value: false,
+  },
 };
 
 export const EMAIL_SUBSCRIPTION_CATEGORIES: {
@@ -82,10 +99,18 @@ export const EMAIL_SUBSCRIPTION_CATEGORIES: {
   [EMAIL_SUBSCRIPTION_CATEGORY.FUNDED]: {
     description: 'Proposals you have contributed to',
   },
+  [EMAIL_SUBSCRIPTION_CATEGORY.ADMIN]: { description: 'Admin' },
 };
 
-export const groupEmailSubscriptionsByCategory = (es: EmailSubscriptions) => {
-  return Object.entries(EMAIL_SUBSCRIPTION_CATEGORIES).map(([k, v]) => {
+export const groupEmailSubscriptionsByCategory = (
+  es: EmailSubscriptions,
+  withAdmin: boolean,
+) => {
+  const catsForUser = { ...EMAIL_SUBSCRIPTION_CATEGORIES };
+  if (!withAdmin) {
+    delete catsForUser.ADMIN;
+  }
+  return Object.entries(catsForUser).map(([k, v]) => {
     const subscriptionSettings = Object.entries(EMAIL_SUBSCRIPTIONS)
       .filter(([_, sv]) => sv.category === k)
       .map(([sk, sv]) => {

@@ -60,12 +60,14 @@ export default [
   {
     id: 'proposal_failed',
     title: 'Proposal failed',
-    description: 'Sent to the proposal team when the deadline is reached and it didn’t get fully funded',
+    description:
+      'Sent to the proposal team when the deadline is reached and it didn’t get fully funded',
   },
   {
     id: 'proposal_canceled',
     title: 'Proposal canceled',
-    description: 'Sent to the proposal team when an admin cancels the proposal after funding',
+    description:
+      'Sent to the proposal team when an admin cancels the proposal after funding',
   },
   {
     id: 'contribution_confirmed',
@@ -85,7 +87,8 @@ export default [
   {
     id: 'contribution_proposal_failed',
     title: 'Contribution proposal failed',
-    description: 'Sent to contributors when the deadline is reached and the proposal didn’t get fully funded',
+    description:
+      'Sent to contributors when the deadline is reached and the proposal didn’t get fully funded',
   },
   {
     id: 'contribution_proposal_canceled',
@@ -126,5 +129,20 @@ export default [
     id: 'milestone_paid',
     title: 'Milestone paid',
     description: 'Sent when milestone is paid',
+  },
+  {
+    id: 'admin_approval',
+    title: 'Admin Approval',
+    description: 'Sent when proposal is ready for review',
+  },
+  {
+    id: 'admin_arbiter',
+    title: 'Admin Arbiter',
+    description: 'Sent when proposal is ready to have an arbiter nominated',
+  },
+  {
+    id: 'admin_payout',
+    title: 'Admin Payout',
+    description: 'Sent when milestone payout has been approved',
   },
 ] as Email[];
