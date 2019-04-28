@@ -45,6 +45,7 @@ class EmailSubscriptions extends React.Component<Props, State> {
           emailSubscriptions={emailSubscriptions}
           loading={loading}
           onSubmit={this.setSubscriptions}
+          isAdmin={!!authUser.isAdmin}
         />
       </div>
     );
@@ -62,6 +63,15 @@ class EmailSubscriptions extends React.Component<Props, State> {
   private setSubscriptions = (emailSubscriptions: IEmailSubscriptions) => {
     const { authUser } = this.props;
     if (!authUser) return;
+    if (!authUser.isAdmin) {
+      // fill in api-required fields which are not populated for non-admin form
+      emailSubscriptions = {
+        adminApproval: true,
+        adminArbiter: true,
+        adminPayout: true,
+        ...emailSubscriptions,
+      };
+    }
     this.setState({ loading: true });
     updateUserSettings(authUser.userid, { emailSubscriptions })
       .then(res => {

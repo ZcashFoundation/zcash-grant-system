@@ -165,5 +165,17 @@ example_email_args = {
         'amount': '33',
         'tx_explorer_url': 'http://someblockexplorer.com/tx/271857129857192579125',
         'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
-    }
+    },
+    'admin_approval': {
+        'proposal': proposal,
+        'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
+    },
+    'admin_arbiter': {
+        'proposal': proposal,
+        'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
+    },
+    'admin_payout': {
+        'proposal': proposal,
+        'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
+    },
 }

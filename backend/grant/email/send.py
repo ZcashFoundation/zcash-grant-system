@@ -278,6 +278,33 @@ def milestone_paid(email_args):
     }
 
 
+def admin_approval(email_args):
+    return {
+        'subject': f'Review needed for {email_args["proposal"].title}',
+        'title': f'Proposal Review',
+        'preview': f'{email_args["proposal"].title} needs review, as an admin you can help.',
+        'subscription': EmailSubscription.ADMIN_APPROVAL,
+    }
+
+
+def admin_arbiter(email_args):
+    return {
+        'subject': f'Arbiter needed for {email_args["proposal"].title}',
+        'title': f'Arbiter Nomination',
+        'preview': f'{email_args["proposal"].title} needs an arbiter, as an admin you can help.',
+        'subscription': EmailSubscription.ADMIN_ARBITER,
+    }
+
+
+def admin_payout(email_args):
+    return {
+        'subject': f'Payout requested for {email_args["proposal"].title}',
+        'title': f'Milestone Payout Requested',
+        'preview': f'{email_args["proposal"].title} has requested a payout, as an admin you can help.',
+        'subscription': EmailSubscription.ADMIN_PAYOUT,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -303,7 +330,10 @@ get_info_lookup = {
     'milestone_request': milestone_request,
     'milestone_reject': milestone_reject,
     'milestone_accept': milestone_accept,
-    'milestone_paid': milestone_paid
+    'milestone_paid': milestone_paid,
+    'admin_approval': admin_approval,
+    'admin_arbiter': admin_arbiter,
+    'admin_payout': admin_payout
 }
 
 

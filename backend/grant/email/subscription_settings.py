@@ -53,6 +53,18 @@ class EmailSubscription(Enum):
         'bit': 11,
         'key': 'arbiter'
     }
+    ADMIN_APPROVAL = {
+        'bit': 12,
+        'key': 'admin_approval'
+    }
+    ADMIN_ARBITER = {
+        'bit': 13,
+        'key': 'admin_arbiter'
+    }
+    ADMIN_PAYOUT = {
+        'bit': 14,
+        'key': 'admin_payout'
+    }
 
 
 def is_email_sub_key(k: str):

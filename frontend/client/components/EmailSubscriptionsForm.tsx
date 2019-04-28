@@ -9,6 +9,7 @@ interface OwnProps {
   emailSubscriptions: EmailSubscriptions;
   loading: boolean;
   onSubmit: (settings: EmailSubscriptions) => void;
+  isAdmin: boolean;
 }
 
 type Props = OwnProps & FormComponentProps;
@@ -18,9 +19,9 @@ class EmailSubscriptionsForm extends React.Component<Props, {}> {
     this.props.form.setFieldsValue(this.props.emailSubscriptions);
   }
   render() {
-    const { emailSubscriptions, loading } = this.props;
+    const { emailSubscriptions, loading, isAdmin } = this.props;
     const { getFieldDecorator } = this.props.form;
-    const groupedSubs = groupEmailSubscriptionsByCategory(emailSubscriptions);
+    const groupedSubs = groupEmailSubscriptionsByCategory(emailSubscriptions, isAdmin);
 
     const fields = Object.entries(this.props.form.getFieldsValue());
     const numChecked = fields.map(([_, v]) => v).filter(v => v).length;
