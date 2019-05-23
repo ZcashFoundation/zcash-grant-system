@@ -1,4 +1,5 @@
 import express from 'express';
+import * as compression from 'compression';
 import * as cors from 'cors';
 import * as path from 'path';
 import chalk from 'chalk';
@@ -26,6 +27,9 @@ Sentry.init({
 });
 
 const app = express();
+
+// GZIP
+app.use(compression());
 
 // ssl
 if (!isDev && !process.env.DISABLE_SSL) {
