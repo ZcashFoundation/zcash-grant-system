@@ -32,7 +32,7 @@ class Home extends React.Component {
         <div>
           <Icon type="exclamation-circle" /> There are <b>{proposalNoArbiterCount}</b>{' '}
           live proposals <b>without an arbiter</b>.{' '}
-          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=ARBITER_MISSING">
+          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=ARBITER_MISSING&filters[]=STAGE_NOT_CANCELED">
             Click here
           </Link>{' '}
           to view them.
@@ -42,14 +42,16 @@ class Home extends React.Component {
         <div>
           <Icon type="exclamation-circle" /> There are{' '}
           <b>{proposalMilestonePayoutsCount}</b> proposals <b>with approved payouts</b>.{' '}
-          <Link to="/proposals?filters[]=MILESTONE_ACCEPTED">Click here</Link> to view
-          them.
+          <Link to="/proposals?filters[]=MILESTONE_ACCEPTED&filters[]=STAGE_NOT_CANCELED">
+            Click here
+          </Link>{' '}
+          to view them.
         </div>
       ),
       !!contributionRefundableCount && (
         <div>
-          <Icon type="exclamation-circle" /> There are <b>{contributionRefundableCount}</b>{' '}
-          contributions <b>ready to be refunded</b>.{' '}
+          <Icon type="exclamation-circle" /> There are{' '}
+          <b>{contributionRefundableCount}</b> contributions <b>ready to be refunded</b>.{' '}
           <Link to="/contributions?filters[]=REFUNDABLE">Click here</Link> to view them.
         </div>
       ),
