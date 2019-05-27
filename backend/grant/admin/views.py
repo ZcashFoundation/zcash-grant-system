@@ -144,6 +144,7 @@ def stats():
         .join(Proposal.arbiter) \
         .filter(Proposal.status == ProposalStatus.LIVE) \
         .filter(ProposalArbiter.status == ProposalArbiterStatus.MISSING) \
+        .filter(Proposal.stage != ProposalStage.CANCELED) \
         .scalar()
     proposal_milestone_payouts_count = db.session.query(func.count(Proposal.id)) \
         .join(Proposal.milestones) \
