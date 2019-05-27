@@ -64,18 +64,18 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
     }, 100);
 
-    const renderDeleteControl = () => (
-      <Popconfirm
-        onConfirm={this.handleDelete}
-        title="Delete proposal?"
-        okText="delete"
-        cancelText="cancel"
-      >
-        <Button icon="delete" className="ProposalDetail-controls-control" block>
-          Delete
-        </Button>
-      </Popconfirm>
-    );
+    // const renderDeleteControl = () => (
+    //   <Popconfirm
+    //     onConfirm={this.handleDelete}
+    //     title="Delete proposal?"
+    //     okText="delete"
+    //     cancelText="cancel"
+    //   >
+    //     <Button icon="delete" className="ProposalDetail-controls-control" block>
+    //       Delete
+    //     </Button>
+    //   </Popconfirm>
+    // );
 
     const renderCancelControl = () => {
       const disabled = this.getCancelAndRefundDisabled();
@@ -507,10 +507,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     store.fetchProposalDetail(this.getIdFromQuery());
   };
 
-  private handleDelete = () => {
-    if (!store.proposalDetail) return;
-    store.deleteProposal(store.proposalDetail.proposalId);
-  };
+  // private handleDelete = () => {
+  //   if (!store.proposalDetail) return;
+  //   store.deleteProposal(store.proposalDetail.proposalId);
+  // };
 
   private handleCancelCancel = () => {
     this.setState({ showCancelAndRefundPopover: false });
