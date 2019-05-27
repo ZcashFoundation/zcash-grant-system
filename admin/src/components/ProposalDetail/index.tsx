@@ -411,7 +411,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           <Col span={6}>
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
-              {renderDeleteControl()}
+              {/* {renderDeleteControl()} */}
               {renderCancelControl()}
               {renderArbiterControl()}
               {renderBountyControl()}
