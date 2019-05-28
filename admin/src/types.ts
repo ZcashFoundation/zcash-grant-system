@@ -87,6 +87,7 @@ export enum PROPOSAL_STAGE {
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   CANCELED = 'CANCELED',
+  NOT_CANCELED = 'NOT_CANCELED',
 }
 export interface Proposal {
   proposalId: number;

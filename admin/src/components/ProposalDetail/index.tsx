@@ -12,6 +12,7 @@ import {
   Popconfirm,
   Input,
   Switch,
+  Tag,
   message,
 } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
@@ -63,19 +64,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     const refundablePct = p.milestones.reduce((prev, m) => {
       return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
     }, 100);
-
-    const renderDeleteControl = () => (
-      <Popconfirm
-        onConfirm={this.handleDelete}
-        title="Delete proposal?"
-        okText="delete"
-        cancelText="cancel"
-      >
-        <Button icon="delete" className="ProposalDetail-controls-control" block>
-          Delete
-        </Button>
-      </Popconfirm>
-    );
 
     const renderCancelControl = () => {
       const disabled = this.getCancelAndRefundDisabled();
@@ -392,13 +380,35 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderNominatedArbiter()}
             {renderMilestoneAccepted()}
             {renderFailed()}
-            <Collapse defaultActiveKey={['brief', 'content']}>
+            <Collapse defaultActiveKey={['brief', 'content', 'milestones']}>
+
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
               </Collapse.Panel>
 
               <Collapse.Panel key="content" header="content">
                 <Markdown source={p.content} />
+              </Collapse.Panel>
+
+              <Collapse.Panel key="milestones" header="milestones">
+                  {
+                      p.milestones.map((milestone, i) =>
+
+                          <Card title={
+                                <>
+                                  {milestone.title + ' '}
+                                  {milestone.immediatePayout && <Tag color="magenta">Immediate Payout</Tag>}
+                                </>
+                                }
+                                extra={`${milestone.payoutPercent}% Payout`}
+                                key={i}
+                          >
+                              <p><b>Estimated Date:</b> {formatDateSeconds(milestone.dateEstimated )} </p>
+                              <p>{milestone.content}</p>
+                          </Card>
+
+                      )
+                  }
               </Collapse.Panel>
 
               <Collapse.Panel key="json" header="json">
@@ -411,7 +421,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           <Col span={6}>
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
-              {renderDeleteControl()}
               {renderCancelControl()}
               {renderArbiterControl()}
               {renderBountyControl()}
@@ -505,11 +514,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
   private loadDetail = () => {
     store.fetchProposalDetail(this.getIdFromQuery());
-  };
-
-  private handleDelete = () => {
-    if (!store.proposalDetail) return;
-    store.deleteProposal(store.proposalDetail.proposalId);
   };
 
   private handleCancelCancel = () => {

@@ -12,6 +12,7 @@ export interface StatusSoT<E> {
   tagDisplay: string;
   tagColor: string;
   hint: string;
+  not?: boolean;
 }
 
 export const MILESTONE_STAGES: Array<StatusSoT<MILESTONE_STAGE>> = [
@@ -130,6 +131,13 @@ export const PROPOSAL_STAGES: Array<StatusSoT<PROPOSAL_STAGE>> = [
     tagColor: '#eb4118',
     hint:
       'Proposal was canceled by an admin and is currently refunding all contributors.',
+  },
+  {
+    id: PROPOSAL_STAGE.NOT_CANCELED,
+    tagDisplay: 'NOT Canceled',
+    tagColor: '#eb4118',
+    hint: 'Proposal has NOT been canceled.',
+    not: true,
   },
 ];
 
