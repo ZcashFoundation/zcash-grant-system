@@ -392,14 +392,15 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
                           <Card title={
                                 <>
-                                  {milestone.title}
+                                  {milestone.title + ' '}
                                   {milestone.immediatePayout && <Tag color="magenta">Immediate Payout</Tag>}
                                 </>
                                 }
-                                extra={`Estimated: ${formatDateSeconds(milestone.dateEstimated )}`}
+                                extra={`${milestone.payoutPercent}% Payout`}
                                 key={i}
                           >
-                                <p>{milestone.content}</p>
+                              <p><b>Estimated Date:</b> {formatDateSeconds(milestone.dateEstimated )} </p>
+                              <p>{milestone.content}</p>
                           </Card>
 
                       )
