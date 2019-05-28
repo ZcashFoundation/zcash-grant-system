@@ -149,6 +149,7 @@ def stats():
     proposal_milestone_payouts_count = db.session.query(func.count(Proposal.id)) \
         .join(Proposal.milestones) \
         .filter(Proposal.status == ProposalStatus.LIVE) \
+        .filter(Proposal.stage != ProposalStage.CANCELED) \
         .filter(Milestone.stage == MilestoneStage.ACCEPTED) \
         .scalar()
     # Count contributions on proposals that didn't get funded for users who have specified a refund address
