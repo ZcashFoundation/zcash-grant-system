@@ -386,7 +386,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 {p.brief}
               </Collapse.Panel>
 
-               <Collapse.Panel key="milestones" header="milestones">
+              <Collapse.Panel key="content" header="content">
+                <Markdown source={p.content} />
+              </Collapse.Panel>
+
+              <Collapse.Panel key="milestones" header="milestones">
                   {
                       p.milestones.map((milestone, i) =>
 
@@ -406,12 +410,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                       )
                   }
               </Collapse.Panel>
-
-              <Collapse.Panel key="content" header="content">
-                <Markdown source={p.content} />
-              </Collapse.Panel>
-
-
 
               <Collapse.Panel key="json" header="json">
                 <pre>{JSON.stringify(p, null, 4)}</pre>
