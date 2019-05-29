@@ -10,7 +10,9 @@ from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, 
 
 
 def extract_filters(sw, strings):
-    return [f[len(sw):] for f in strings if f.startswith(sw)]
+    filters = [f[len(sw):] for f in strings if f.startswith(sw)]
+    filters = [f for f in filters if not f.startswith('NOT_')]
+    return filters
 
 
 class PaginationException(Exception):
@@ -52,6 +54,7 @@ class ProposalPagination(Pagination):
     def __init__(self):
         self.FILTERS = [f'STATUS_{s}' for s in ProposalStatus.list()]
         self.FILTERS.extend([f'STAGE_{s}' for s in ProposalStage.list()])
+        self.FILTERS.extend([f'STAGE_NOT_{s}' for s in ProposalStage.list()])
         self.FILTERS.extend([f'CAT_{c}' for c in Category.list()])
         self.FILTERS.extend([f'ARBITER_{c}' for c in ProposalArbiterStatus.list()])
         self.FILTERS.extend([f'MILESTONE_{c}' for c in MilestoneStage.list()])
@@ -80,6 +83,7 @@ class ProposalPagination(Pagination):
             self.validate_filters(filters)
             status_filters = extract_filters('STATUS_', filters)
             stage_filters = extract_filters('STAGE_', filters)
+            stage_not_filters = extract_filters('STAGE_NOT_', filters, )
             cat_filters = extract_filters('CAT_', filters)
             arbiter_filters = extract_filters('ARBITER_', filters)
             milestone_filters = extract_filters('MILESTONE_', filters)
@@ -88,6 +92,8 @@ class ProposalPagination(Pagination):
                 query = query.filter(Proposal.status.in_(status_filters))
             if stage_filters:
                 query = query.filter(Proposal.stage.in_(stage_filters))
+            if stage_not_filters:
+                query = query.filter(Proposal.stage.notin_(stage_not_filters))
             if cat_filters:
                 query = query.filter(Proposal.category.in_(cat_filters))
             if arbiter_filters:
@@ -176,7 +182,6 @@ class ContributionPagination(Pagination):
                         Proposal.stage == ProposalStage.FAILED,
                         Proposal.stage == ProposalStage.CANCELED,
                     ))
-
 
         # SORT (see self.SORT_MAP)
         if sort:

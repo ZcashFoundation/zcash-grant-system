@@ -18,7 +18,7 @@ module.exports = {
     publicPath: '/',
     chunkFilename: isDev ? '[name].chunk.js' : '[name].[chunkhash:8].chunk.js',
   },
-  devtool: 'inline-source-map',
+  devtool: isDev ? 'inline-source-map' : 'source-map',
   devServer: {
     port: 3500,
     contentBase: './build',
