@@ -1,5 +1,3 @@
-
-
 # Blockchain Watcher
 
 Creates a websocket server that reads and reports on the activity of the Zcash
