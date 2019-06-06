@@ -116,7 +116,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
           generateMarkdownPreview={this.generatePreview}
           commands={commands[type]}
           readOnly={!!readOnly}
-          textAreaProps={{ maxLength: 1000 }}
+          textAreaProps={{ maxLength: 5000 }}
           minEditorHeight={minHeight}
           minPreviewHeight={minHeight - 10}
           maxEditorHeight={99999}

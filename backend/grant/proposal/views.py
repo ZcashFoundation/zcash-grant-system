@@ -99,7 +99,7 @@ def report_proposal_comment(proposal_id, comment_id):
 @limiter.limit("30/hour;2/minute")
 @requires_email_verified_auth
 @body({
-    "comment": fields.Str(required=True, validate=validate.Length(max=1000)),
+    "comment": fields.Str(required=True, validate=validate.Length(max=5000)),
     "parentCommentId": fields.Int(required=False, missing=None),
 })
 def post_proposal_comments(proposal_id, comment, parent_comment_id):
