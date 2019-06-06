@@ -39,10 +39,7 @@ const commands: { [key in MARKDOWN_TYPE]: ReactMdeProps['commands'] } = {
       ],
     },
     {
-      commands: [
-        ReactMdeCommands.linkCommand,
-        ReactMdeCommands.quoteCommand,
-      ],
+      commands: [ReactMdeCommands.linkCommand, ReactMdeCommands.quoteCommand],
     },
     {
       commands: [
@@ -104,7 +101,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
     const { randomKey, value, tab } = this.state;
     return (
       <div
-        ref={(el) => this.el = el}
+        ref={el => (this.el = el)}
         className={classnames({
           MarkdownEditor: true,
           ['is-reduced']: type === MARKDOWN_TYPE.REDUCED,
@@ -119,6 +116,7 @@ export default class MarkdownEditor extends React.PureComponent<Props, State> {
           generateMarkdownPreview={this.generatePreview}
           commands={commands[type]}
           readOnly={!!readOnly}
+          textAreaProps={{ maxLength: 1000 }}
           minEditorHeight={minHeight}
           minPreviewHeight={minHeight - 10}
           maxEditorHeight={99999}
