@@ -88,7 +88,7 @@ class ProposalContribution(db.Model):
     tx_id = db.Column(db.String(255), nullable=True)
     refund_tx_id = db.Column(db.String(255), nullable=True)
     staking = db.Column(db.Boolean, nullable=False)
-    no_refund = db.Column(db.Boolean, nullable=False)
+    private = db.Column(db.Boolean, nullable=False, default=False, server_default='true')
 
     user = db.relationship("User")
 
@@ -98,23 +98,23 @@ class ProposalContribution(db.Model):
             amount: str,
             user_id: int = None,
             staking: bool = False,
-            no_refund: bool = False,
+            private: bool = True,
     ):
         self.proposal_id = proposal_id
         self.amount = amount
         self.user_id = user_id
         self.staking = staking
-        self.no_refund = no_refund
+        self.private = private
         self.date_created = datetime.datetime.now()
         self.status = ContributionStatus.PENDING
 
     @staticmethod
-    def get_existing_contribution(user_id: int, proposal_id: int, amount: str, no_refund: bool = False):
+    def get_existing_contribution(user_id: int, proposal_id: int, amount: str, private: bool = False):
         return ProposalContribution.query.filter_by(
             user_id=user_id,
             proposal_id=proposal_id,
             amount=amount,
-            no_refund=no_refund,
+            private=private,
             status=ContributionStatus.PENDING,
         ).first()
 
@@ -425,14 +425,14 @@ class Proposal(db.Model):
         amount,
         user_id: int = None,
         staking: bool = False,
-        no_refund: bool = False,
+        private: bool = True,
     ):
         contribution = ProposalContribution(
             proposal_id=self.id,
             amount=amount,
             user_id=user_id,
             staking=staking,
-            no_refund=no_refund,
+            private=private
         )
         db.session.add(contribution)
         db.session.flush()
@@ -841,6 +841,7 @@ class ProposalContributionSchema(ma.Schema):
             "date_created",
             "addresses",
             "is_anonymous",
+            "private"
         )
 
     proposal = ma.Nested("ProposalSchema")
@@ -861,11 +862,11 @@ class ProposalContributionSchema(ma.Schema):
         }
 
     def get_is_anonymous(self, obj):
-        return not obj.user_id
+        return not obj.user_id or obj.private
 
     @post_dump
     def stub_anonymous_user(self, data):
-        if 'user' in data and data['user'] is None:
+        if 'user' in data and data['user'] is None or data['private']:
             data['user'] = anonymous_user
         return data
 
@@ -894,7 +895,7 @@ class AdminProposalContributionSchema(ma.Schema):
             "refund_address",
             "refund_tx_id",
             "staking",
-            "no_refund",
+            "private",
         )
 
     proposal = ma.Nested("ProposalSchema")

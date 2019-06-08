@@ -1,7 +1,7 @@
 import React from 'react';
 import moment from 'moment';
-import { Form, Input, Checkbox, Button, Icon, Popover, Tooltip } from 'antd';
-import { CheckboxChangeEvent } from 'antd/lib/checkbox';
+import { Form, Input, Button, Icon, Popover, Tooltip, Radio } from 'antd';
+import { RadioChangeEvent } from 'antd/lib/radio';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { fromZat } from 'utils/units';
@@ -30,7 +30,7 @@ type Props = OwnProps & StateProps;
 interface State {
   amountToRaise: string;
   amountError: string | null;
-  isAnonymous: boolean;
+  isPrivate: boolean;
   isContributing: boolean;
 }
 
@@ -40,14 +40,14 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     this.state = {
       amountToRaise: '',
       amountError: null,
-      isAnonymous: false,
+      isPrivate: true,
       isContributing: false,
     };
   }
 
   render() {
     const { proposal, isPreview, authUser } = this.props;
-    const { amountToRaise, amountError, isAnonymous, isContributing } = this.state;
+    const { amountToRaise, amountError, isPrivate, isContributing } = this.state;
     const amountFloat = parseFloat(amountToRaise) || 0;
     let content;
     if (proposal) {
@@ -190,12 +190,23 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 </Form.Item>
                 {amountToRaise &&
                   !!authUser && (
-                    <Checkbox checked={isAnonymous} onChange={this.handleChangeAnonymity}>
-                      Contribute without attribution
-                      <Tooltip title="Your contribution will not be linked to your account. ZF Grants cannot refund non-attributed contributions.">
-                        <Icon type="question-circle" />
-                      </Tooltip>
-                    </Checkbox>
+                    <Radio.Group
+                      onChange={this.handleChangePrivate}
+                      value={isPrivate ? 'isPrivate' : 'isNotPrivate'}
+                    >
+                      <Radio value={'isPrivate'}>
+                        Contribute without attribution
+                        <Tooltip title="Other users will not see who made this contribution.">
+                          <Icon type="question-circle" />
+                        </Tooltip>
+                      </Radio>
+                      <Radio value={'isNotPrivate'}>
+                        Attribute contribution publicly
+                        <Tooltip title="Other users will be able to see that you made this contribution.">
+                          <Icon type="question-circle" />
+                        </Tooltip>
+                      </Radio>
+                    </Radio.Group>
                   )}
                 <Button
                   onClick={this.openContributionModal}
@@ -214,7 +225,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             isVisible={isContributing}
             proposalId={proposal.proposalId}
             amount={amountToRaise}
-            isAnonymous={isAnonymous || !authUser}
+            isAnonymous={!authUser}
+            isPublic={!isPrivate}
             handleClose={this.closeContributionModal}
           />
         </React.Fragment>
@@ -255,8 +267,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
     this.setState({ amountToRaise: value, amountError });
   };
 
-  private handleChangeAnonymity = (ev: CheckboxChangeEvent) => {
-    this.setState({ isAnonymous: ev.target.checked });
+  private handleChangePrivate = (ev: RadioChangeEvent) => {
+    const isPrivate = ev.target.value === 'isPrivate';
+    this.setState({ isPrivate });
   };
 
   private openContributionModal = () => this.setState({ isContributing: true });
