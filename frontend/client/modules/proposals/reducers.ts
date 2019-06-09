@@ -9,7 +9,7 @@ import {
   LoadableProposalPage,
   Moreable,
 } from 'types';
-import { PROPOSAL_SORT, PROPOSAL_STAGE } from 'api/constants';
+import { PROPOSAL_SORT } from 'api/constants';
 
 export interface ProposalDetail extends Proposal {
   isRequestingPayout: boolean;
