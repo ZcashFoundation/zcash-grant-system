@@ -62,7 +62,7 @@ export const INITIAL_STATE: ProposalState = {
     sort: PROPOSAL_SORT.NEWEST,
     filters: {
       category: [],
-      stage: [PROPOSAL_STAGE.FUNDING_REQUIRED],
+      stage: [],
     },
     items: [],
     hasFetched: false,
