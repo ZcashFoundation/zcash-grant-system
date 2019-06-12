@@ -159,7 +159,6 @@ class ContributionPagination(Pagination):
             if 'REFUNDABLE' in filters:
                 query = query.filter(ProposalContribution.refund_tx_id == None) \
                     .filter(ProposalContribution.staking == False) \
-                    .filter(ProposalContribution.no_refund == False) \
                     .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
                     .join(Proposal) \
                     .filter(or_(
@@ -173,15 +172,14 @@ class ContributionPagination(Pagination):
             if 'DONATION' in filters:
                 query = query.filter(ProposalContribution.refund_tx_id == None) \
                     .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
-                    .filter(or_(
-                        ProposalContribution.no_refund == True,
-                        ProposalContribution.user_id == None,
-                    )) \
                     .join(Proposal) \
                     .filter(or_(
                         Proposal.stage == ProposalStage.FAILED,
                         Proposal.stage == ProposalStage.CANCELED,
-                    ))
+                    )) \
+                    .join(ProposalContribution.user, isouter=True) \
+                    .join(UserSettings, isouter=True) \
+                    .filter(UserSettings.refund_address == None)
 
         # SORT (see self.SORT_MAP)
         if sort:

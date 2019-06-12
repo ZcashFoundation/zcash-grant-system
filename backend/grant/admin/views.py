@@ -156,7 +156,6 @@ def stats():
     contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
         .filter(ProposalContribution.refund_tx_id == None) \
         .filter(ProposalContribution.staking == False) \
-        .filter(ProposalContribution.no_refund == False) \
         .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
         .filter(or_(
@@ -609,7 +608,7 @@ def get_contribution(contribution_id):
 @body({
     "proposalId": fields.Int(required=False, missing=None),
     "userId": fields.Int(required=False, missing=None),
-    "status": fields.Str(required=True, validate=validate.OneOf(choices=ContributionStatus.list())),
+    "status": fields.Str(required=False, missing=None, validate=validate.OneOf(choices=ContributionStatus.list())),
     "amount": fields.Str(required=False, missing=None),
     "txId": fields.Str(required=False, missing=None),
     "refundTxId": fields.Str(required=False, allow_none=True, missing=None),
@@ -723,6 +722,8 @@ def financials():
             SELECT SUM(TO_NUMBER(amount, '{nfmt}'))
                 FROM proposal_contribution as pc
                 INNER JOIN proposal as p ON pc.proposal_id = p.id
+                LEFT OUTER JOIN "user" as u ON pc.user_id = u.id
+				LEFT OUTER JOIN user_settings as us ON u.id = us.user_id
                 WHERE {where}
         '''
 
@@ -743,14 +744,34 @@ def financials():
         'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
         'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
         'funded': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
+        # should have a refund_address
         'refunding': str(ex(sql_pc_p(
-            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = FALSE AND pc.refund_tx_id IS NULL AND p.stage IN ('CANCELED', 'FAILED')"
+            '''
+            pc.status = 'CONFIRMED' AND 
+            pc.staking = FALSE AND 
+            pc.refund_tx_id IS NULL AND 
+            p.stage IN ('CANCELED', 'FAILED') AND
+            us.refund_address IS NOT NULL
+            '''
         ))),
+        # here we don't care about current refund_address of user, just that there has been a refund_tx_id
         'refunded': str(ex(sql_pc_p(
-            "pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.no_refund = FALSE AND pc.refund_tx_id IS NOT NULL AND p.stage IN ('CANCELED', 'FAILED')"
+            '''
+            pc.status = 'CONFIRMED' AND 
+            pc.staking = FALSE AND 
+            pc.refund_tx_id IS NOT NULL AND 
+            p.stage IN ('CANCELED', 'FAILED')
+            '''
         ))),
+        # if there is no user, or the user hasn't any refund_address
         'donations': str(ex(sql_pc_p(
-            "(pc.status = 'CONFIRMED' AND pc.staking = FALSE AND pc.refund_tx_id IS NULL) AND (pc.no_refund = TRUE OR pc.user_id IS NULL) AND p.stage IN ('CANCELED', 'FAILED')"
+            '''
+            pc.status = 'CONFIRMED' AND 
+            pc.staking = FALSE AND 
+            pc.refund_tx_id IS NULL AND 
+            (pc.user_id IS NULL OR us.refund_address IS NULL) AND 
+            p.stage IN ('CANCELED', 'FAILED')
+            '''
         ))),
         'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
     }

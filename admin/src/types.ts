@@ -152,7 +152,7 @@ export interface Contribution {
     memo: string;
   };
   staking: boolean;
-  noRefund: boolean;
+  private: boolean;
   refundAddress?: string;
   refundTxId?: string;
 }

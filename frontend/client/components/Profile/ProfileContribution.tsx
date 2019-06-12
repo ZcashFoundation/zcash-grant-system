@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Tag, Popconfirm } from 'antd';
+import { Tag, Popconfirm, Tooltip } from 'antd';
 import UnitDisplay from 'components/UnitDisplay';
 import { ONE_DAY } from 'utils/time';
 import { formatTxExplorerUrl } from 'utils/formatters';
@@ -25,7 +25,7 @@ type Props = OwnProps & DispatchProps;
 class ProfileContribution extends React.Component<Props> {
   render() {
     const { contribution } = this.props;
-    const { proposal } = contribution;
+    const { proposal, private: isPrivate } = contribution;
     const isConfirmed = contribution.status === 'CONFIRMED';
     const isExpired =
       (!isConfirmed && contribution.dateCreated < Date.now() / 1000 - ONE_DAY) ||
@@ -63,6 +63,18 @@ class ProfileContribution extends React.Component<Props> {
       );
     }
 
+    const privateTag = isPrivate ? (
+      <Tooltip
+        title={
+          <>
+            Other users will <b>not</b> be able to see that you made this contribution.
+          </>
+        }
+      >
+        <Tag>Private</Tag>
+      </Tooltip>
+    ) : null;
+
     return (
       <div className="ProfileContribution">
         <div className="ProfileContribution-info">
@@ -70,7 +82,8 @@ class ProfileContribution extends React.Component<Props> {
             className="ProfileContribution-info-title"
             to={`/proposals/${proposal.proposalId}`}
           >
-            {proposal.title} {tag}
+            {proposal.title} {privateTag}
+            {tag}
           </Link>
           <div className="ProfileContribution-info-brief">{proposal.brief}</div>
         </div>
