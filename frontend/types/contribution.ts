@@ -30,4 +30,5 @@ export interface UserContribution extends Omit<Contribution, 'amount' | 'txId'> 
   amount: Zat;
   txId?: string;
   proposal: Proposal;
+  private: boolean;
 }

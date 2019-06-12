@@ -20,6 +20,7 @@ interface OwnProps {
   contributionId?: number;
   amount?: string;
   isAnonymous?: boolean;
+  isPublic?: boolean;
   hasNoButtons?: boolean;
   text?: React.ReactNode;
   handleClose(): void;
@@ -127,17 +128,13 @@ class ContributionModal extends React.Component<Props, State> {
           message="This contribution will not be attributed"
           description={
             <>
-              Your contribution will show up without attribution. Even if you're logged
-              in, the contribution will not appear anywhere on your account after you
-              close this modal.
+              ZF Grants is unable to offer refunds for contributions made without
+              accounts with a set refund address. If refunds for this campaign are issued, your contribution will be
+              treated as a donation to the Zcash Foundation.
               <br /> <br />
-              ZF Grants is unable to offer refunds for non-attributed contributions. If
-              refunds for this campaign are issued, your contribution will be treated as a
-              donation to the Zcash Foundation.
-              <br /> <br />
-              If you would like to have your contribution attached to an account and
-              remain eligible for refunds, you can close this modal, make sure you're
-              logged in, and don't check the "Contribute without attribution" checkbox.
+              If you would like your contribution to be eligible for refund, you can close
+              this modal, make sure you're logged in, set a refund address, and attempt to contribute again. You
+              can still choose to contribute without public attribution while logged in.
               <br /> <br />
               NOTE: The Zcash Foundation is unable to accept donations of more than $5,000
               USD worth of ZEC from anonymous users.
@@ -221,7 +218,7 @@ class ContributionModal extends React.Component<Props, State> {
   ) {
     this.setState({ isFetchingContribution: true });
     try {
-      const { amount, isAnonymous, authUser } = this.props;
+      const { amount, isAnonymous, authUser, isPublic } = this.props;
 
       // Ensure auth'd users have a refund address unless they've confirmed
       if (!isAnonymous && !noRefund) {
@@ -240,12 +237,7 @@ class ContributionModal extends React.Component<Props, State> {
       if (contributionId) {
         res = await getProposalContribution(proposalId, contributionId);
       } else {
-        res = await postProposalContribution(
-          proposalId,
-          amount || '0',
-          isAnonymous,
-          noRefund,
-        );
+        res = await postProposalContribution(proposalId, amount || '0', !isPublic);
       }
       this.setState({ contribution: res.data });
     } catch (err) {

@@ -316,13 +316,11 @@ export function putInviteResponse(
 export function postProposalContribution(
   proposalId: number,
   amount: string,
-  anonymous: boolean = false,
-  noRefund: boolean = false,
+  isPrivate: boolean = true,
 ): Promise<{ data: ContributionWithAddressesAndUser }> {
   return axios.post(`/api/v1/proposals/${proposalId}/contributions`, {
     amount,
-    anonymous,
-    noRefund,
+    private: isPrivate,
   });
 }
 
