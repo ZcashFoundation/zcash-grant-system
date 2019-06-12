@@ -128,14 +128,13 @@ class ContributionModal extends React.Component<Props, State> {
           message="This contribution will not be attributed"
           description={
             <>
-              Your contribution will show up without attribution.
+              ZF Grants is unable to offer refunds for contributions made without
+              accounts. If refunds for this campaign are issued, your contribution will be
+              treated as a donation to the Zcash Foundation.
               <br /> <br />
-              ZF Grants is unable to offer refunds for non-attributed contributions. If
-              refunds for this campaign are issued, your contribution will be treated as a
-              donation to the Zcash Foundation.
-              <br /> <br />
-              If you would like your contribution to be eligible for refund, you may close
-              this modal, make sure you're logged in, and attempt to contribute once more.
+              If you would like your contribution to be eligible for refund, you can close
+              this modal, make sure you're logged in, and attempt to contribute again. You
+              can still choose to contribute without public attribution while logged in.
               <br /> <br />
               NOTE: The Zcash Foundation is unable to accept donations of more than $5,000
               USD worth of ZEC from anonymous users.
