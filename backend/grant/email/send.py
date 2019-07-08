@@ -85,6 +85,8 @@ def proposal_rejected(email_args):
 
 
 def proposal_contribution(email_args):
+    if email_args['contribution'].private:
+        email_args['contributor'] = None
     return {
         'subject': 'You just got a contribution!',
         'title': 'You just got a contribution',
