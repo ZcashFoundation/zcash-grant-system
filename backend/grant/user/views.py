@@ -122,6 +122,7 @@ def create_user(
 
 
 @blueprint.route("/auth", methods=["POST"])
+@limiter.limit("30/hour;5/minute")
 @body({
     "email": fields.Str(required=True),
     "password": fields.Str(required=True)
