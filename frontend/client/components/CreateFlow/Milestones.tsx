@@ -161,7 +161,9 @@ const MilestoneFields = ({
         }
         format="MMMM YYYY"
         allowClear={false}
-        onChange={time => onChange(index, { ...milestone, dateEstimated: time.unix() })}
+        onChange={time =>
+          onChange(index, { ...milestone, dateEstimated: time.startOf('month').unix() })
+        }
         disabled={milestone.immediatePayout}
         disabledDate={current => {
           if (!previousMilestoneDateEstimate) {

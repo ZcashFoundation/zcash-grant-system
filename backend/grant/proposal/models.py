@@ -309,17 +309,6 @@ class Proposal(db.Model):
 
             payout_total += p
 
-            try:
-                present = datetime.datetime.today().replace(day=1)
-                if present > milestone.date_estimated:
-                    raise ValidationException("Milestone date estimate must be in the future ")
-
-            except Exception as e:
-                current_app.logger.warn(
-                    f"Unexpected validation error - client prohibits {e}"
-                )
-                raise ValidationException("Date estimate is not a valid datetime")
-
         if payout_total != 100.0:
             raise ValidationException("Payout percentages of milestones must add up to exactly 100%")
 
@@ -357,6 +346,14 @@ class Proposal(db.Model):
 
         # Then run through regular validation
         Proposal.simple_validate(vars(self))
+
+    # only do this when user submits for approval, there is a chance the dates will
+    # be passed by the time admin approval / user publishing occurs
+    def validate_milestone_dates(self):
+        present = datetime.datetime.today().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        for milestone in self.milestones:
+            if present > milestone.date_estimated:
+                raise ValidationException("Milestone date estimate must be in the future ")
 
     @staticmethod
     def create(**kwargs):
@@ -475,6 +472,7 @@ class Proposal(db.Model):
     # state: status (DRAFT || REJECTED) -> (PENDING || STAKING)
     def submit_for_approval(self):
         self.validate_publishable()
+        self.validate_milestone_dates()
         allowed_statuses = [ProposalStatus.DRAFT, ProposalStatus.REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
