@@ -1,4 +1,11 @@
-import { ProposalDraft, STATUS, MILESTONE_STAGE, PROPOSAL_ARBITER_STATUS } from 'types';
+import {
+  ProposalDraft,
+  STATUS,
+  MILESTONE_STAGE,
+  PROPOSAL_ARBITER_STATUS,
+  CreateMilestone,
+} from 'types';
+import moment from 'moment';
 import { User } from 'types';
 import {
   getAmountError,
@@ -127,23 +134,9 @@ export function getCreateErrors(
   // Milestones
   if (milestones) {
     let cumulativeMilestonePct = 0;
+    let lastMsEst: CreateMilestone['dateEstimated'] = 0;
     const milestoneErrors = milestones.map((ms, idx) => {
-      if (!ms.title) {
-        return 'Title is required';
-      } else if (ms.title.length > 40) {
-        return 'Title length can only be 40 characters maximum';
-      }
-
-      if (!ms.content) {
-        return 'Description is required';
-      } else if (ms.content.length > 200) {
-        return 'Description can only be 200 characters maximum';
-      }
-
-      if (!ms.dateEstimated) {
-        return 'Estimate date is required';
-      }
-
+      // check payout first so we collect the cumulativePayout even if other fields are invalid
       if (!ms.payoutPercent) {
         return 'Payout percent is required';
       } else if (Number.isNaN(parseInt(ms.payoutPercent, 10))) {
@@ -158,6 +151,37 @@ export function getCreateErrors(
 
       // Last one shows percentage errors
       cumulativeMilestonePct += parseInt(ms.payoutPercent, 10);
+
+      if (!ms.title) {
+        return 'Title is required';
+      } else if (ms.title.length > 40) {
+        return 'Title length can only be 40 characters maximum';
+      }
+
+      if (!ms.content) {
+        return 'Description is required';
+      } else if (ms.content.length > 200) {
+        return 'Description can only be 200 characters maximum';
+      }
+
+      if (!ms.dateEstimated) {
+        return 'Estimate date is required';
+      } else {
+        // FE validation on milestone estimation
+        if (
+          ms.dateEstimated <
+          moment(Date.now())
+            .startOf('month')
+            .unix()
+        ) {
+          return 'Estimate date should be in the future';
+        }
+        if (ms.dateEstimated <= lastMsEst) {
+          return 'Estimate date should be later than previous estimate date';
+        }
+        lastMsEst = ms.dateEstimated;
+      }
+
       if (
         idx === milestones.length - 1 &&
         cumulativeMilestonePct !== 100 &&
