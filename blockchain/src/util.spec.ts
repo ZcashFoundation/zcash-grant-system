@@ -37,63 +37,64 @@ describe('util', () => {
   });
 
   // Keys and values taken from https://iancoleman.io/bip39/
-  describe('deriveTransparentAddress', () => {
-    const xpub = 'xpub6DKCpzYonPtjhfL9Gc6cJRxqtX3pvw3ACLguiZByfS1vic1EqgHPRBu7inUvoNxBT1m6BNuU5uUSSo5X3Zzi5mbrByBBQwhvNmmi8HErHt6';
-    const addresses = {
-      mainnet: {
-        0: 't1MZtRMbCE6uJTbVot6XczUKNvG5iRgcf8d',
-        999: 't1aCsQns9UuRZzdXp71gFTpcMomyFfpWE1W',
-      },
-      testnet: {
-        0: 'tmDQdkC5bcmQobqhFYpqMr8z8XFAXragbZ6',
-        999: 'tmS3cjdMYsZw58sjFmjyzKVH7Qm458gbea7',
-      },
-    };
-    let oldXPub: any;
-
-    before(() => {
-      oldXPub = process.env.BIP32_XPUB;
-      process.env.BIP32_XPUB = xpub;
-    });
-
-
-    it('Should generate the correct address for mainnet m/0/0', () => {
-      const addr = util.deriveTransparentAddress(0, bitcore.Networks.mainnet);
-      assert.equal(addr, addresses.mainnet[0]);
-    });
-
-    it('Should generate the correct address for index m/0/999', () => {
-      const addr = util.deriveTransparentAddress(999, bitcore.Networks.mainnet);
-      assert.equal(addr, addresses.mainnet[999]);
-    });
-
-    it('Should generate the correct address for testnet m/0/0', () => {
-      const addr = util.deriveTransparentAddress(0, bitcore.Networks.testnet);
-      assert.equal(addr, addresses.testnet[0]);
-    });
-
-    it('Should generate the correct address for testnet index m/0/999', () => {
-      const addr = util.deriveTransparentAddress(999, bitcore.Networks.testnet);
-      assert.equal(addr, addresses.testnet[999]);
-    });
-
-    it('Should throw on numbers greater than or equal to 2^31', () => {
-      assert.ok(util.deriveTransparentAddress(Math.pow(2, 31) - 1, bitcore.Networks.mainnet));
-      assert.throws(() => {
-        util.deriveTransparentAddress(Math.pow(2, 31), bitcore.Networks.mainnet);
-      });
-    });
-
-    it('Should throw on numbers less than 0', () => {
-      assert.throws(() => {
-        util.deriveTransparentAddress(-1, bitcore.Networks.mainnet);
-      });
-    });
-
-    after(() => {
-      process.env.BIP32_XPUB = oldXPub;
-    });
-  });
+  // zcash-bitcore-lib requires a version of lodash that is insecure.
+  // describe('deriveTransparentAddress', () => {
+  //   const xpub = 'xpub6DKCpzYonPtjhfL9Gc6cJRxqtX3pvw3ACLguiZByfS1vic1EqgHPRBu7inUvoNxBT1m6BNuU5uUSSo5X3Zzi5mbrByBBQwhvNmmi8HErHt6';
+  //   const addresses = {
+  //     mainnet: {
+  //       0: 't1MZtRMbCE6uJTbVot6XczUKNvG5iRgcf8d',
+  //       999: 't1aCsQns9UuRZzdXp71gFTpcMomyFfpWE1W',
+  //     },
+  //     testnet: {
+  //       0: 'tmDQdkC5bcmQobqhFYpqMr8z8XFAXragbZ6',
+  //       999: 'tmS3cjdMYsZw58sjFmjyzKVH7Qm458gbea7',
+  //     },
+  //   };
+  //   let oldXPub: any;
+  //
+  //   before(() => {
+  //     oldXPub = process.env.BIP32_XPUB;
+  //     process.env.BIP32_XPUB = xpub;
+  //   });
+  //
+  //
+  //   it('Should generate the correct address for mainnet m/0/0', () => {
+  //     const addr = util.deriveTransparentAddress(0, bitcore.Networks.mainnet);
+  //     assert.equal(addr, addresses.mainnet[0]);
+  //   });
+  //
+  //   it('Should generate the correct address for index m/0/999', () => {
+  //     const addr = util.deriveTransparentAddress(999, bitcore.Networks.mainnet);
+  //     assert.equal(addr, addresses.mainnet[999]);
+  //   });
+  //
+  //   it('Should generate the correct address for testnet m/0/0', () => {
+  //     const addr = util.deriveTransparentAddress(0, bitcore.Networks.testnet);
+  //     assert.equal(addr, addresses.testnet[0]);
+  //   });
+  //
+  //   it('Should generate the correct address for testnet index m/0/999', () => {
+  //     const addr = util.deriveTransparentAddress(999, bitcore.Networks.testnet);
+  //     assert.equal(addr, addresses.testnet[999]);
+  //   });
+  //
+  //   it('Should throw on numbers greater than or equal to 2^31', () => {
+  //     assert.ok(util.deriveTransparentAddress(Math.pow(2, 31) - 1, bitcore.Networks.mainnet));
+  //     assert.throws(() => {
+  //       util.deriveTransparentAddress(Math.pow(2, 31), bitcore.Networks.mainnet);
+  //     });
+  //   });
+  //
+  //   it('Should throw on numbers less than 0', () => {
+  //     assert.throws(() => {
+  //       util.deriveTransparentAddress(-1, bitcore.Networks.mainnet);
+  //     });
+  //   });
+  //
+  //   after(() => {
+  //     process.env.BIP32_XPUB = oldXPub;
+  //   });
+  // });
 
   describe('dedupeArray', () => {
     it('Should remove duplicates', () => {
