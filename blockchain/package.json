@@ -16,10 +16,6 @@
     "heroku-postbuild": "yarn build",
     "start": "node ./dist/index.js"
   },
-  "resolutions": {
-    "axios": "0.18.1",
-    "lodash": "4.17.13"
-  },
   "devDependencies": {
     "@types/body-parser": "1.17.0",
     "@types/expect": "^1.20.3",
@@ -38,7 +34,7 @@
     "@types/cors": "2.8.4",
     "@types/dotenv": "^6.1.0",
     "@types/ws": "^6.0.1",
-    "axios": "0.18.1",
+    "axios": "0.18.0",
     "bitgo": "4.48.1",
     "body-parser": "1.18.3",
     "cors": "2.8.5",
