@@ -28,6 +28,10 @@
       "git add"
     ]
   },
+  "resolutions": {
+    "js-yaml": "3.13.1",
+    "marked": "0.6.1"
+  },
   "dependencies": {
     "@babel/core": "^7.0.1",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
@@ -74,7 +78,7 @@
     "@types/winston": "^2.4.4",
     "ant-design-pro": "2.2.1",
     "antd": "3.13.0",
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "babel-core": "^7.0.0-bridge.0",
     "babel-loader": "^8.0.2",
     "babel-plugin-import": "^1.8.0",
@@ -113,7 +117,10 @@
     "less": "3.9.0",
     "less-loader": "^4.1.0",
     "lint-staged": "^7.2.2",
-    "lodash": "4.17.11",
+    "lodash": "^4.17.15",
+    "lodash-es": "^4.17.15",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.mergewith": "^4.6.2",
     "markdown-loader": "^4.0.0",
     "mini-css-extract-plugin": "^0.4.2",
     "moment": "^2.22.2",
@@ -156,7 +163,7 @@
     "underscore": "^1.9.1",
     "url-loader": "^1.1.1",
     "webpack": "^4.19.0",
-    "webpack-bundle-analyzer": "^3.0.2",
+    "webpack-bundle-analyzer": "^3.3.2",
     "webpack-cli": "^3.1.0",
     "webpack-dev-server": "3.2.1",
     "webpack-hot-middleware": "^2.24.0",
