@@ -39,12 +39,12 @@ export interface ProposalDraft {
   stage: PROPOSAL_STAGE;
   target: string;
   payoutAddress: string;
-  deadlineDuration: number;
   milestones: CreateMilestone[];
   team: User[];
   invites: TeamInvite[];
   status: STATUS;
   isStaked: boolean;
+  deadlineDuration?: number;
   rfp?: RFP;
   rfpOptIn?: boolean;
 }

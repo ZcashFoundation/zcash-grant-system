@@ -234,7 +234,7 @@ class Proposal(db.Model):
     # Payment info
     target = db.Column(db.String(255), nullable=False)
     payout_address = db.Column(db.String(255), nullable=False)
-    deadline_duration = db.Column(db.Integer(), nullable=False)
+    deadline_duration = db.Column(db.Integer(), nullable=True)
     contribution_matching = db.Column(db.Float(), nullable=False, default=0, server_default=db.text("0"))
     contribution_bounty = db.Column(db.String(255), nullable=False, default='0', server_default=db.text("'0'"))
     rfp_opt_in = db.Column(db.Boolean(), nullable=True)

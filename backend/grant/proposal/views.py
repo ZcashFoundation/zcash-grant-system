@@ -228,7 +228,6 @@ def get_proposal_drafts():
     "content": fields.Str(required=True),
     "target": fields.Str(required=True),
     "payoutAddress": fields.Str(required=True),
-    "deadlineDuration": fields.Int(required=True),
     "milestones": fields.List(fields.Dict(), required=True),
     "rfpOptIn": fields.Bool(required=False, missing=None),
 })

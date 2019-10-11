@@ -118,13 +118,6 @@ class CreateReview extends React.Component<Props> {
             content: <code>{form.payoutAddress}</code>,
             error: errors.payoutAddress,
           },
-          {
-            key: 'deadlineDuration',
-            content: `${Math.floor(
-              moment.duration((form.deadlineDuration || 0) * 1000).asDays(),
-            )} days`,
-            error: errors.deadlineDuration,
-          },
         ],
       },
     ];
