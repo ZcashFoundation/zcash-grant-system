@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime
 
 from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
@@ -25,7 +26,7 @@ from grant.utils.auth import (
     internal_webhook
 )
 from grant.utils.enums import Category
-from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
+from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, RFPStatus
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_explore_url
 from .models import (
@@ -187,6 +188,10 @@ def make_proposal_draft(rfp_id):
         rfp = RFP.query.filter_by(id=rfp_id).first()
         if not rfp:
             return {"message": "The request this proposal was made for doesn’t exist"}, 400
+        if datetime.now() > rfp.date_closes:
+            return {"message": "The request this proposal was made for has expired"}, 400
+        if rfp.status == RFPStatus.CLOSED:
+            return {"message": "The request this proposal was made for has been closed"}, 400
         proposal.category = rfp.category
         rfp.proposals.append(proposal)
         db.session.add(rfp)
