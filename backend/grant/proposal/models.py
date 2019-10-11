@@ -218,6 +218,7 @@ class Proposal(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
     rfp_id = db.Column(db.Integer(), db.ForeignKey('rfp.id'), nullable=True)
+    version = db.Column(db.String(255), nullable=True)
 
     # Content info
     status = db.Column(db.String(255), nullable=False)
@@ -272,6 +273,7 @@ class Proposal(db.Model):
         self.payout_address = payout_address
         self.deadline_duration = deadline_duration
         self.stage = stage
+        self.version = '2'
 
     @staticmethod
     def simple_validate(proposal):
@@ -703,13 +705,15 @@ class ProposalSchema(ma.Schema):
             "invites",
             "rfp",
             "rfp_opt_in",
-            "arbiter"
+            "arbiter",
+            "is_version_two"
         )
 
     date_created = ma.Method("get_date_created")
     date_approved = ma.Method("get_date_approved")
     date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
+    is_version_two = ma.Method("get_is_version_two")
 
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
@@ -731,6 +735,8 @@ class ProposalSchema(ma.Schema):
     def get_date_published(self, obj):
         return dt_to_unix(obj.date_published) if obj.date_published else None
 
+    def get_is_version_two(self, obj):
+        return True if obj.version == '2' else False
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
@@ -748,6 +754,7 @@ user_fields = [
     "date_published",
     "reject_reason",
     "team",
+    "is_version_two"
 ]
 user_proposal_schema = ProposalSchema(only=user_fields)
 user_proposals_schema = ProposalSchema(many=True, only=user_fields)
