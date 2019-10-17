@@ -352,39 +352,17 @@ def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
 
-@blueprint.route('/proposals/<id>', methods=['PUT'])
+@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
 @body({
-    "contributionMatching": fields.Int(required=False, missing=None),
-    "contributionBounty": fields.Str(required=False, missing=None)
-})
-@admin.admin_auth_required
-def update_proposal(id, contribution_matching, contribution_bounty):
-    proposal = Proposal.query.filter(Proposal.id == id).first()
-    if not proposal:
-        return {"message": f"Could not find proposal with id {id}"}, 404
-
-    if contribution_matching is not None:
-        proposal.set_contribution_matching(contribution_matching)
-
-    if contribution_bounty is not None:
-        proposal.set_contribution_bounty(contribution_bounty)
-
-    db.session.add(proposal)
-    db.session.commit()
-
-    return proposal_schema.dump(proposal)
-
-
-@blueprint.route('/proposals/<id>/approve', methods=['PUT'])
-@body({
-    "isApprove": fields.Bool(required=True),
+    "isAccepted": fields.Bool(required=True),
+    "withFunding": fields.Bool(required=True),
     "rejectReason": fields.Str(required=False, missing=None)
 })
 @admin.admin_auth_required
-def approve_proposal(id, is_approve, reject_reason=None):
+def approve_proposal(id, is_accepted, with_funding, reject_reason=None):
     proposal = Proposal.query.filter_by(id=id).first()
     if proposal:
-        proposal.approve_pending(is_approve, reject_reason)
+        proposal.approve_pending(is_accepted, with_funding, reject_reason)
         db.session.commit()
         return proposal_schema.dump(proposal)
 
@@ -587,8 +565,8 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
     db.session.add(contribution)
     db.session.flush()
 
+    #TODO: should this stay? 
     contribution.proposal.set_pending_when_ready()
-    contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
     return admin_proposal_contribution_schema.dump(contribution), 200
@@ -660,8 +638,8 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     db.session.add(contribution)
     db.session.flush()
 
+    # TODO: should this stay?
     contribution.proposal.set_pending_when_ready()
-    contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
     return admin_proposal_contribution_schema.dump(contribution), 200

@@ -129,9 +129,15 @@ async function deleteProposal(id: number) {
   return data;
 }
 
-async function approveProposal(id: number, isApprove: boolean, rejectReason?: string) {
-  const { data } = await api.put(`/admin/proposals/${id}/approve`, {
-    isApprove,
+async function approveProposal(
+  id: number,
+  isAccepted: boolean,
+  withFunding: boolean,
+  rejectReason?: string,
+) {
+  const { data } = await api.put(`/admin/proposals/${id}/accept`, {
+    isAccepted,
+    withFunding,
     rejectReason,
   });
   return data;
@@ -536,7 +542,7 @@ const app = store({
     }
   },
 
-  async approveProposal(isApprove: boolean, rejectReason?: string) {
+  async approveProposal(isAccepted: boolean, withFunding: boolean, rejectReason?: string) {
     if (!app.proposalDetail) {
       const m = 'store.approveProposal(): Expected proposalDetail to be populated!';
       app.generalError.push(m);
@@ -546,7 +552,7 @@ const app = store({
     app.proposalDetailApproving = true;
     try {
       const { proposalId } = app.proposalDetail;
-      const res = await approveProposal(proposalId, isApprove, rejectReason);
+      const res = await approveProposal(proposalId, isAccepted, withFunding, rejectReason);
       app.updateProposalInStore(res);
     } catch (e) {
       handleApiError(e);

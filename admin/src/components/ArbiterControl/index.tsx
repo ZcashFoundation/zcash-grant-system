@@ -30,10 +30,11 @@ class ArbiterControlNaked extends React.Component<Props, State> {
   }, 1000);
 
   render() {
-    const { arbiter } = this.props;
+    const { arbiter, isVersionTwo, acceptedWithFunding } = this.props;
     const { showSearch, searching } = this.state;
     const { results, search, error } = store.arbitersSearch;
     const showEmpty = !results.length && !searching;
+    const buttonDisabled = isVersionTwo && acceptedWithFunding === false 
 
     const disp = {
       [PROPOSAL_ARBITER_STATUS.MISSING]: 'Nominate arbiter',
@@ -51,6 +52,7 @@ class ArbiterControlNaked extends React.Component<Props, State> {
           type="primary"
           onClick={this.handleShowSearch}
           {...this.props.buttonProps}
+          disabled={buttonDisabled}
         >
           {disp[arbiter.status]}
         </Button>

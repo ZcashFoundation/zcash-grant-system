@@ -72,7 +72,7 @@ class RFPDetail extends React.Component<Props> {
       tags.push(
         <Tag key="closed" color="#f5222d">
           Closed
-        </Tag>
+        </Tag>,
       );
     }
 

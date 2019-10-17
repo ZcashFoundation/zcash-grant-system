@@ -11,7 +11,6 @@ import {
   Button,
   message,
   Spin,
-  Checkbox,
   Row,
   Col,
   DatePicker,
@@ -207,17 +206,6 @@ class RFPForm extends React.Component<Props, State> {
                   addonAfter="ZEC"
                   size="large"
                 />,
-              )}
-              {getFieldDecorator('matching', {
-                initialValue: defaults.matching,
-              })(
-                <Checkbox
-                  className="RFPForm-bounty-matching"
-                  name="matching"
-                  defaultChecked={defaults.matching}
-                >
-                  Match community contributions for approved proposals
-                </Checkbox>,
               )}
             </Form.Item>
           </Col>

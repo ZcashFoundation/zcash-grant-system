@@ -11,7 +11,6 @@ import {
   Collapse,
   Popconfirm,
   Input,
-  Switch,
   Tag,
   message,
 } from 'antd';
@@ -26,7 +25,6 @@ import {
 } from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
-import Info from 'components/Info';
 import Markdown from 'components/Markdown';
 import ArbiterControl from 'components/ArbiterControl';
 import { toZat, fromZat } from 'src/util/units';
@@ -65,6 +63,12 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
     }, 100);
 
+    const { isVersionTwo } = p
+    const shouldShowArbiter =
+      !isVersionTwo ||
+      (isVersionTwo && p.acceptedWithFunding === true);
+    const cancelButtonText = isVersionTwo ? 'Cancel' : 'Cancel & refund'
+
     const renderCancelControl = () => {
       const disabled = this.getCancelAndRefundDisabled();
 
@@ -95,7 +99,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             disabled={disabled}
             block
           >
-            Cancel & refund
+            { cancelButtonText }
           </Button>
         </Popconfirm>
       );
@@ -116,68 +120,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       />
     );
 
-    const renderMatchingControl = () => (
-      <div className="ProposalDetail-controls-control">
-        <Popconfirm
-          overlayClassName="ProposalDetail-popover-overlay"
-          onConfirm={this.handleToggleMatching}
-          title={
-            <>
-              <div>
-                Turn {p.contributionMatching ? 'off' : 'on'} contribution matching?
-              </div>
-              {p.status === PROPOSAL_STATUS.LIVE && (
-                <div>
-                  This is a LIVE proposal, this will alter the funding state of the
-                  proposal!
-                </div>
-              )}
-            </>
-          }
-          okText="ok"
-          cancelText="cancel"
-        >
-          <Switch
-            checked={p.contributionMatching === 1}
-            loading={store.proposalDetailUpdating}
-            disabled={
-              p.isFailed ||
-              [PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)
-            }
-          />{' '}
-        </Popconfirm>
-        <span>
-          matching{' '}
-          <Info
-            placement="right"
-            content={
-              <span>
-                <b>Contribution matching</b>
-                <br /> Funded amount will be multiplied by 2.
-                <br /> <i>Disabled after proposal is fully-funded.</i>
-              </span>
-            }
-          />
-        </span>
-      </div>
-    );
-
-    const renderBountyControl = () => (
-      <div className="ProposalDetail-controls-control">
-        <Button
-          icon="dollar"
-          className="ProposalDetail-controls-control"
-          loading={store.proposalDetailUpdating}
-          onClick={this.handleSetBounty}
-          disabled={
-            p.isFailed || [PROPOSAL_STAGE.WIP, PROPOSAL_STAGE.COMPLETED].includes(p.stage)
-          }
-          block
-        >
-          Set bounty
-        </Button>
-      </div>
-    );
 
     const renderApproved = () =>
       p.status === PROPOSAL_STATUS.APPROVED && (
@@ -205,9 +147,17 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 loading={store.proposalDetailApproving}
                 icon="check"
                 type="primary"
-                onClick={this.handleApprove}
+                onClick={() => this.handleApprove(true)}
               >
-                Approve
+                Approve With Funding
+              </Button>
+              <Button
+                loading={store.proposalDetailApproving}
+                icon="check"
+                type="default"
+                onClick={() => this.handleApprove(false)}
+              >
+                Approve Without Funding
               </Button>
               <Button
                 loading={store.proposalDetailApproving}
@@ -250,7 +200,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderNominateArbiter = () =>
-      needsArbiter && (
+      needsArbiter && shouldShowArbiter && (
         <Alert
           showIcon
           type="warning"
@@ -381,7 +331,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderMilestoneAccepted()}
             {renderFailed()}
             <Collapse defaultActiveKey={['brief', 'content', 'milestones']}>
-
               <Collapse.Panel key="brief" header="brief">
                 {p.brief}
               </Collapse.Panel>
@@ -391,24 +340,25 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               </Collapse.Panel>
 
               <Collapse.Panel key="milestones" header="milestones">
-                  {
-                      p.milestones.map((milestone, i) =>
-
-                          <Card title={
-                                <>
-                                  {milestone.title + ' '}
-                                  {milestone.immediatePayout && <Tag color="magenta">Immediate Payout</Tag>}
-                                </>
-                                }
-                                extra={`${milestone.payoutPercent}% Payout`}
-                                key={i}
-                          >
-                              <p><b>Estimated Date:</b> {formatDateSeconds(milestone.dateEstimated )} </p>
-                              <p>{milestone.content}</p>
-                          </Card>
-
-                      )
-                  }
+                {p.milestones.map((milestone, i) => (
+                  <Card
+                    title={
+                      <>
+                        {milestone.title + ' '}
+                        {milestone.immediatePayout && (
+                          <Tag color="magenta">Immediate Payout</Tag>
+                        )}
+                      </>
+                    }
+                    extra={`${milestone.payoutPercent}% Payout`}
+                    key={i}
+                  >
+                    <p>
+                      <b>Estimated Date:</b> {formatDateSeconds(milestone.dateEstimated)}{' '}
+                    </p>
+                    <p>{milestone.content}</p>
+                  </Card>
+                ))}
               </Collapse.Panel>
 
               <Collapse.Panel key="json" header="json">
@@ -423,8 +373,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             <Card size="small" className="ProposalDetail-controls">
               {renderCancelControl()}
               {renderArbiterControl()}
-              {renderBountyControl()}
-              {renderMatchingControl()}
             </Card>
 
             {/* DETAILS */}
@@ -454,6 +402,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('matching', p.contributionMatching)}
               {renderDeetItem('bounty', p.contributionBounty)}
               {renderDeetItem('rfpOptIn', JSON.stringify(p.rfpOptIn))}
+              {renderDeetItem('acceptedWithFunding', JSON.stringify(p.acceptedWithFunding))}
               {renderDeetItem(
                 'arbiter',
                 <>
@@ -526,44 +475,13 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     this.setState({ showCancelAndRefundPopover: false });
   };
 
-  private handleApprove = () => {
-    store.approveProposal(true);
+  private handleApprove = (withFunding: boolean) => {
+    store.approveProposal(true, withFunding);
   };
 
   private handleReject = async (reason: string) => {
-    await store.approveProposal(false, reason);
+    await store.approveProposal(false, false, reason);
     message.info('Proposal rejected');
-  };
-
-  private handleToggleMatching = async () => {
-    if (store.proposalDetail) {
-      // we lock this to be 1 or 0 for now, we may support more values later on
-      const contributionMatching =
-        store.proposalDetail.contributionMatching === 0 ? 1 : 0;
-      await store.updateProposalDetail({ contributionMatching });
-      message.success('Updated matching');
-    }
-  };
-
-  private handleSetBounty = async () => {
-    if (store.proposalDetail) {
-      FeedbackModal.open({
-        title: 'Set bounty?',
-        content:
-          'Set the bounty for this proposal. The bounty will count towards the funding goal.',
-        type: 'input',
-        inputProps: {
-          addonBefore: 'Amount',
-          addonAfter: 'ZEC',
-          placeholder: '1.5',
-        },
-        okText: 'Set bounty',
-        onOk: async contributionBounty => {
-          await store.updateProposalDetail({ contributionBounty });
-          message.success('Updated bounty');
-        },
-      });
-    }
   };
 
   private handlePaidMilestone = async () => {

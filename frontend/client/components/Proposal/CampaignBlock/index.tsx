@@ -1,18 +1,14 @@
 import React from 'react';
 import moment from 'moment';
-import { Form, Input, Button, Icon, Popover, Tooltip, Radio } from 'antd';
-import { RadioChangeEvent } from 'antd/lib/radio';
+import { Icon, Popover } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
-import { fromZat } from 'utils/units';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
 import UnitDisplay from 'components/UnitDisplay';
-import ContributionModal from 'components/ContributionModal';
 import Loader from 'components/Loader';
-import { getAmountError } from 'utils/validators';
 import { CATEGORY_UI, PROPOSAL_STAGE } from 'api/constants';
 import './style.less';
 
@@ -46,12 +42,10 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposal, isPreview, authUser } = this.props;
-    const { amountToRaise, amountError, isPrivate, isContributing } = this.state;
-    const amountFloat = parseFloat(amountToRaise) || 0;
+    const { proposal } = this.props;
     let content;
     if (proposal) {
-      const { target, funded, percentFunded } = proposal;
+      const { target, funded, percentFunded, isVersionTwo } = proposal;
       const datePublished = proposal.datePublished || Date.now() / 1000;
       const isRaiseGoalReached = funded.gte(target);
       const deadline = proposal.deadlineDuration
@@ -62,9 +56,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
         proposal.stage === PROPOSAL_STAGE.CANCELED;
       const isLive = proposal.status === STATUS.LIVE;
 
-      const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;
-      const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
-      const remainingTargetNum = parseFloat(fromZat(target.sub(funded)));
+      const isFundingOver = deadline
+        ? isRaiseGoalReached || deadline < Date.now() || isFrozen
+        : null;
 
       // Get bounty from RFP. If it exceeds proposal target, show bounty as full amount
       let bounty;
@@ -73,6 +67,15 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
           ? proposal.target
           : proposal.contributionBounty;
       }
+
+      const isAcceptedWithFunding = proposal.acceptedWithFunding === true;
+      const isAcceptedWithoutFunding = proposal.acceptedWithFunding === false;
+      const isAccepted = isAcceptedWithFunding || isAcceptedWithoutFunding;
+      const isCancelled = proposal.stage === PROPOSAL_STAGE.CANCELED;
+      const isJudged = isAccepted || isCancelled;
+
+      const displayBountyFunding =
+        !isVersionTwo || (isVersionTwo && isAcceptedWithFunding);
 
       content = (
         <React.Fragment>
@@ -94,14 +97,15 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               {CATEGORY_UI[proposal.category].label}
             </div>
           </div>
-          {!isFundingOver && (
-            <div className="ProposalCampaignBlock-info">
-              <div className="ProposalCampaignBlock-info-label">Deadline</div>
-              <div className="ProposalCampaignBlock-info-value">
-                {moment(deadline).fromNow()}
+          {!isVersionTwo &&
+            !isFundingOver && (
+              <div className="ProposalCampaignBlock-info">
+                <div className="ProposalCampaignBlock-info-label">Deadline</div>
+                <div className="ProposalCampaignBlock-info-value">
+                  {moment(deadline).fromNow()}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           <div className="ProposalCampaignBlock-info">
             <div className="ProposalCampaignBlock-info-label">Funding</div>
             <div className="ProposalCampaignBlock-info-value">
@@ -109,40 +113,46 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             </div>
           </div>
 
-          {bounty && (
-            <div className="ProposalCampaignBlock-bounty">
-              Awarded with <UnitDisplay value={bounty} symbol="ZEC" /> bounty
-            </div>
+          {bounty &&
+            displayBountyFunding && (
+              <div className="ProposalCampaignBlock-bounty">
+                Awarded with <UnitDisplay value={bounty} symbol="ZEC" /> bounty
+              </div>
+            )}
+
+          {isAcceptedWithoutFunding && (
+            <div className="ProposalCampaignBlock-bounty">Accepted without funding</div>
           )}
 
-          {proposal.contributionMatching > 0 && (
-            <div className="ProposalCampaignBlock-matching">
-              <span>Funds are being matched x{proposal.contributionMatching + 1}</span>
-              <Popover
-                overlayClassName="ProposalCampaignBlock-popover-overlay"
-                placement="left"
-                content={
-                  <>
-                    <b>Matching</b>
-                    <br />
-                    Increase your impact! Contributions to this proposal are being matched
-                    by the Zcash Foundation, up to the target amount.
-                  </>
-                }
-              >
-                <Icon type="question-circle" theme="filled" />
-              </Popover>
-            </div>
-          )}
+          {!isVersionTwo &&
+            proposal.contributionMatching > 0 && (
+              <div className="ProposalCampaignBlock-matching">
+                <span>Funds are being matched x{proposal.contributionMatching + 1}</span>
+                <Popover
+                  overlayClassName="ProposalCampaignBlock-popover-overlay"
+                  placement="left"
+                  content={
+                    <>
+                      <b>Matching</b>
+                      <br />
+                      Increase your impact! Contributions to this proposal are being
+                      matched by the Zcash Foundation, up to the target amount.
+                    </>
+                  }
+                >
+                  <Icon type="question-circle" theme="filled" />
+                </Popover>
+              </div>
+            )}
 
-          {isFundingOver ? (
+          {!isVersionTwo && isFundingOver ? (
             <div
               className={classnames({
                 ['ProposalCampaignBlock-fundingOver']: true,
                 ['is-success']: isRaiseGoalReached,
               })}
             >
-              {proposal.stage === PROPOSAL_STAGE.CANCELED ? (
+              {isCancelled ? (
                 <>
                   <Icon type="close-circle-o" />
                   <span>Proposal was canceled</span>
@@ -170,7 +180,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 />
               </div>
 
-              <Form layout="vertical" className="ProposalCampaignBlock-contribute">
+              {/* TODO: use this as a base for tipjar? */}
+
+              {/* <Form layout="vertical" className="ProposalCampaignBlock-contribute">
                 <Form.Item
                   validateStatus={amountError ? 'error' : undefined}
                   help={amountError}
@@ -219,18 +231,41 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 >
                   Fund this project
                 </Button>
-              </Form>
+              </Form> */}
             </>
           )}
 
-          <ContributionModal
+          {isVersionTwo &&
+            isJudged && (
+              <div
+                className={classnames({
+                  ['ProposalCampaignBlock-fundingOver']: true,
+                  ['is-success']: isAccepted,
+                })}
+              >
+                {proposal.stage === PROPOSAL_STAGE.CANCELED ? (
+                  <>
+                    <Icon type="close-circle-o" />
+                    <span>Proposal was canceled</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon type="check-circle-o" />
+                    <span>Proposal has been accepted</span>
+                  </>
+                )}
+              </div>
+            )}
+
+          {/* TODO: adapt below for tipjar? */}
+          {/* <ContributionModal
             isVisible={isContributing}
             proposalId={proposal.proposalId}
             amount={amountToRaise}
             isAnonymous={!authUser}
             isPublic={!isPrivate}
             handleClose={this.closeContributionModal}
-          />
+          /> */}
         </React.Fragment>
       );
     } else {
@@ -244,38 +279,6 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       </div>
     );
   }
-
-  private handleAmountChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { value } = event.currentTarget;
-    if (!value) {
-      this.setState({ amountToRaise: '', amountError: null });
-      return;
-    }
-
-    const { target, funded } = this.props.proposal;
-    const remainingTarget = target.sub(funded);
-    const amount = parseFloat(value);
-    let amountError = null;
-
-    if (Number.isNaN(amount)) {
-      // They're entering some garbage, they’ll work it out
-    } else {
-      const remainingTargetNum = parseFloat(fromZat(remainingTarget));
-      amountError = getAmountError(amount, remainingTargetNum);
-    }
-
-    this.setState({ amountToRaise: value, amountError });
-  };
-
-  private handleChangePrivate = (ev: RadioChangeEvent) => {
-    const isPrivate = ev.target.value === 'isPrivate';
-    this.setState({ isPrivate });
-  };
-
-  private openContributionModal = () => this.setState({ isContributing: true });
-  private closeContributionModal = () => this.setState({ isContributing: false });
 }
 
 function mapStateToProps(state: AppState) {

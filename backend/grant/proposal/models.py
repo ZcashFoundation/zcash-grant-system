@@ -230,6 +230,7 @@ class Proposal(db.Model):
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
+    accepted_with_funding = db.Column(db.Boolean(), nullable=True)
 
     # Payment info
     target = db.Column(db.String(255), nullable=False)
@@ -411,13 +412,6 @@ class Proposal(db.Model):
 
     def update_rfp_opt_in(self, opt_in: bool):
         self.rfp_opt_in = opt_in
-        # add/remove matching and/or bounty values from RFP
-        if opt_in and self.rfp:
-            self.set_contribution_matching(1 if self.rfp.matching else 0)
-            self.set_contribution_bounty(self.rfp.bounty or '0')
-        else:
-            self.set_contribution_matching(0)
-            self.set_contribution_bounty('0')
 
     def create_contribution(
         self,
@@ -501,7 +495,7 @@ class Proposal(db.Model):
         db.session.flush()
 
     # state: status PENDING -> (APPROVED || REJECTED)
-    def approve_pending(self, is_approve, reject_reason=None):
+    def approve_pending(self, is_approve, with_funding, reject_reason=None):
         self.validate_publishable()
         # specific validation
         if not self.status == ProposalStatus.PENDING:
@@ -510,12 +504,17 @@ class Proposal(db.Model):
         if is_approve:
             self.status = ProposalStatus.APPROVED
             self.date_approved = datetime.datetime.now()
+            self.accepted_with_funding = with_funding
+            with_or_out = 'without'
+            if with_funding:
+                self.fully_fund_contibution_bounty()
+                with_or_out = 'with'
             for t in self.team:
                 send_email(t.email_address, 'proposal_approved', {
                     'user': t,
                     'proposal': self,
                     'proposal_url': make_url(f'/proposals/{self.id}'),
-                    'admin_note': 'Congratulations! Your proposal has been approved.'
+                    'admin_note': f'Congratulations! Your proposal has been accepted {with_or_out} funding.'
                 })
         else:
             if not reject_reason:
@@ -538,28 +537,7 @@ class Proposal(db.Model):
             raise ValidationException(f"Proposal status must be approved")
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
-        self.stage = ProposalStage.FUNDING_REQUIRED
-        # If we had a bounty that pushed us into funding, skip straight into WIP
-        self.set_funded_when_ready()
-
-    def set_funded_when_ready(self):
-        if self.status == ProposalStatus.LIVE and self.stage == ProposalStage.FUNDING_REQUIRED and self.is_funded:
-            self.set_funded()
-
-    # state: stage FUNDING_REQUIRED -> WIP
-    def set_funded(self):
-        if self.status != ProposalStatus.LIVE:
-            raise ValidationException(f"Proposal status must be live in order transition to funded state")
-        if self.stage != ProposalStage.FUNDING_REQUIRED:
-            raise ValidationException(f"Proposal stage must be funding_required in order transition to funded state")
-        if not self.is_funded:
-            raise ValidationException(f"Proposal is not fully funded, cannot set to funded state")
-        self.send_admin_email('admin_arbiter')
         self.stage = ProposalStage.WIP
-        db.session.add(self)
-        db.session.flush()
-        # check the first step, if immediate payout bump it to accepted
-        self.current_milestone.accept_immediate()
 
     def set_contribution_bounty(self, bounty: str):
         # do not allow changes on funded/WIP proposals
@@ -569,20 +547,9 @@ class Proposal(db.Model):
         self.contribution_bounty = str(Decimal(bounty))
         db.session.add(self)
         db.session.flush()
-        self.set_funded_when_ready()
 
-    def set_contribution_matching(self, matching: float):
-        # do not allow on funded/WIP proposals
-        if self.is_funded:
-            raise ValidationException("Cannot set contribution matching on fully-funded proposal")
-        # enforce 1 or 0 for now
-        if matching == 0.0 or matching == 1.0:
-            self.contribution_matching = matching
-            db.session.add(self)
-            db.session.flush()
-            self.set_funded_when_ready()
-        else:
-            raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
+    def fully_fund_contibution_bounty(self):
+        self.set_contribution_bounty(self.target)
 
     def cancel(self):
         if self.status != ProposalStatus.LIVE:
@@ -706,6 +673,7 @@ class ProposalSchema(ma.Schema):
             "rfp",
             "rfp_opt_in",
             "arbiter",
+            "accepted_with_funding",
             "is_version_two"
         )
 

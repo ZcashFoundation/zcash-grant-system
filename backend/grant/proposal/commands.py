@@ -35,7 +35,7 @@ def create_proposals(count):
     user = User.query.filter_by().first()
     for i in range(count):
         if i < 5:
-            stage = ProposalStageEnum.FUNDING_REQUIRED
+            stage = ProposalStageEnum.WIP
         else:
             stage = ProposalStageEnum.COMPLETED
         p = Proposal.create(

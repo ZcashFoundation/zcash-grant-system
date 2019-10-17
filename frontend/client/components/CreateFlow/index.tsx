@@ -84,8 +84,8 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   },
   [CREATE_STEP.PAYMENT]: {
     short: 'Payment',
-    title: 'Choose how you get paid',
-    subtitle: 'You’ll only be paid if your funding target is reached',
+    title: 'Set your payout address',
+    subtitle: '',
     help:
       'Double check your address, and make sure it’s secure. Once sent, payments are irreversible!',
     component: Payment,

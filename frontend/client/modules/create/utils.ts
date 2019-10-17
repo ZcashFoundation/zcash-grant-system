@@ -248,6 +248,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
     },
+    acceptedWithFunding: false,
     isVersionTwo: true,
     milestones: draft.milestones.map((m, idx) => ({
       id: idx,
