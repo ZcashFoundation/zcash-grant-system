@@ -256,7 +256,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         print(resp.json)
         self.assert200(resp)
-        self.assertEqual(resp.json["status"], ProposalStatus.APPROVED)
+        self.assertEqual(resp.json["status"], ProposalStatus.LIVE)
         self.assertEqual(resp.json["acceptedWithFunding"], True)
         self.assertEqual(resp.json["target"], resp.json["contributionBounty"])
 
@@ -274,7 +274,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         print(resp.json)
         self.assert200(resp)
-        self.assertEqual(resp.json["status"], ProposalStatus.APPROVED)
+        self.assertEqual(resp.json["status"], ProposalStatus.LIVE)
         self.assertEqual(resp.json["acceptedWithFunding"], False)
         self.assertEqual(resp.json["contributionBounty"], "0")
 

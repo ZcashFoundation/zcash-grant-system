@@ -494,7 +494,7 @@ class Proposal(db.Model):
         db.session.add(self)
         db.session.flush()
 
-    # state: status PENDING -> (APPROVED || REJECTED)
+    # state: status PENDING -> (LIVE || REJECTED)
     def approve_pending(self, is_approve, with_funding, reject_reason=None):
         self.validate_publishable()
         # specific validation
@@ -502,7 +502,7 @@ class Proposal(db.Model):
             raise ValidationException(f"Proposal must be pending to approve or reject")
 
         if is_approve:
-            self.status = ProposalStatus.APPROVED
+            self.status = ProposalStatus.LIVE
             self.date_approved = datetime.datetime.now()
             self.accepted_with_funding = with_funding
             with_or_out = 'without'
