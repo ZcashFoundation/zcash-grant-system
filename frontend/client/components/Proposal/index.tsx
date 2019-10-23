@@ -102,6 +102,10 @@ export class ProposalDetail extends React.Component<Props, State> {
 
     const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
     const isLive = proposal.status === STATUS.LIVE;
+    const milestonesDisabled = proposal.isVersionTwo
+      ? !proposal.acceptedWithFunding
+      : false;
+    const defaultTab = milestonesDisabled ? 'discussions' : 'milestones';
 
     const adminMenu = (
       <Menu>
@@ -234,7 +238,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         </div>
 
         <div className="Proposal-bottom">
-          <LinkableTabs scrollToTabs defaultActiveKey="milestones">
+          <LinkableTabs scrollToTabs defaultActiveKey={defaultTab}>
             <Tabs.TabPane tab="Milestones" key="milestones">
               <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
                 <Milestones proposal={proposal} />

@@ -156,8 +156,15 @@ class ProposalMilestones extends React.Component<Props, State> {
     if (!proposal) {
       return <Loader />;
     }
-    const { milestones, currentMilestone, isRejectingPayout } = proposal;
+    const {
+      milestones,
+      currentMilestone,
+      isRejectingPayout,
+      isVersionTwo,
+      acceptedWithFunding,
+    } = proposal;
     const milestoneCount = milestones.length;
+    const milestonesDisabled = isVersionTwo ? !acceptedWithFunding : false;
 
     // arbiter reject modal
     const rejectModal = (
@@ -220,7 +227,12 @@ class ProposalMilestones extends React.Component<Props, State> {
           ['do-titles-overflow']: this.state.doTitlesOverflow,
         })}
       >
-        {!!milestoneSteps.length ? (
+        {milestonesDisabled ? (
+          <Placeholder
+            title="Milestones unavailable"
+            subtitle="Milestones are not tracked for proposals that have been accepted without funding"
+          />
+        ) : !!milestoneSteps.length ? (
           <>
             <Steps current={this.state.step} size={stepSize}>
               {milestoneSteps.map(mss => (
