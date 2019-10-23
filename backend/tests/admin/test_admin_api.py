@@ -278,6 +278,55 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assertEqual(resp.json["acceptedWithFunding"], False)
         self.assertEqual(resp.json["contributionBounty"], "0")
 
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_change_proposal_to_accepted_with_funding(self, mock_get):
+        self.login_admin()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # accept without funding
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": True, "withFunding": False})
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["acceptedWithFunding"], False)
+
+        # change to accepted with funding
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["acceptedWithFunding"], True)
+
+        # should fail if proposal is already accepted with funding
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert404(resp)
+        self.assertEqual(resp.json['message'], "Proposal already accepted with funding.")
+        self.proposal.accepted_with_funding = False
+
+        # should fail if proposal is not version two
+        self.proposal.version = ''
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert404(resp)
+        self.assertEqual(resp.json['message'], "Only version two proposals can be accepted with funding")
+        self.proposal.version = '2'
+
+        # should failed if proposal is not LIVE or APPROVED
+        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.accepted_with_funding = False
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert404(resp)
+        self.assertEqual(resp.json["message"], 'Only live or approved proposals can be modified by this endpoint')
+
+
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_reject_proposal(self, mock_get):

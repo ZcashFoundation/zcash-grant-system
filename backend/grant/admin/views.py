@@ -369,6 +369,26 @@ def approve_proposal(id, is_accepted, with_funding, reject_reason=None):
     return {"message": "No proposal found."}, 404
 
 
+@blueprint.route('/proposals/<id>/accept/fund', methods=['PUT'])
+@admin.admin_auth_required
+def change_proposal_to_accepted_with_funding(id):
+    proposal = Proposal.query.filter_by(id=id).first()
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+    if proposal.accepted_with_funding:
+        return {"message": "Proposal already accepted with funding."}, 404
+    if proposal.version != '2':
+        return {"message": "Only version two proposals can be accepted with funding"}, 404
+    if proposal.status != ProposalStatus.LIVE and proposal.status != ProposalStatus.APPROVED:
+        return {"message": "Only live or approved proposals can be modified by this endpoint"}, 404
+
+    proposal.update_proposal_with_funding()
+    db.session.add(proposal)
+    db.session.commit()
+
+    return proposal_schema.dump(proposal)
+
+
 @blueprint.route('/proposals/<id>/cancel', methods=['PUT'])
 @admin.admin_auth_required
 def cancel_proposal(id):

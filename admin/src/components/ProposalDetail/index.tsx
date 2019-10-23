@@ -36,6 +36,7 @@ type Props = RouteComponentProps<any>;
 const STATE = {
   paidTxId: '',
   showCancelAndRefundPopover: false,
+  showChangeToAcceptedWithFundingPopover: false,
 };
 
 type State = typeof STATE;
@@ -63,11 +64,12 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       return m.datePaid ? prev - parseFloat(m.payoutPercent) : prev;
     }, 100);
 
-    const { isVersionTwo } = p
+    const { isVersionTwo } = p;
     const shouldShowArbiter =
-      !isVersionTwo ||
-      (isVersionTwo && p.acceptedWithFunding === true);
-    const cancelButtonText = isVersionTwo ? 'Cancel' : 'Cancel & refund'
+      !isVersionTwo || (isVersionTwo && p.acceptedWithFunding === true);
+    const cancelButtonText = isVersionTwo ? 'Cancel' : 'Cancel & refund';
+    const shouldShowChangeToAcceptedWithFunding =
+      isVersionTwo && p.acceptedWithFunding === false;
 
     const renderCancelControl = () => {
       const disabled = this.getCancelAndRefundDisabled();
@@ -99,7 +101,40 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             disabled={disabled}
             block
           >
-            { cancelButtonText }
+            {cancelButtonText}
+          </Button>
+        </Popconfirm>
+      );
+    };
+
+    const renderChangeToAcceptedWithFundingControl = () => {
+      return (
+        <Popconfirm
+          title={
+            <p>
+              Are you sure you want to accept the proposal
+              <br />
+              with funding? This cannot be undone.
+            </p>
+          }
+          placement="left"
+          cancelText="cancel"
+          okText="confirm"
+          visible={this.state.showChangeToAcceptedWithFundingPopover}
+          okButtonProps={{
+            loading: store.proposalDetailCanceling,
+          }}
+          onCancel={this.handleChangeToAcceptWithFundingCancel}
+          onConfirm={this.handleChangeToAcceptWithFundingConfirm}
+        >
+          <Button
+            icon="close-circle"
+            className="ProposalDetail-controls-control"
+            loading={store.proposalDetailChangingToAcceptedWithFunding}
+            onClick={this.handleChangeToAcceptedWithFunding}
+            block
+          >
+            Accept With Funding
           </Button>
         </Popconfirm>
       );
@@ -119,7 +154,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         }}
       />
     );
-
 
     const renderApproved = () =>
       p.status === PROPOSAL_STATUS.APPROVED && (
@@ -203,7 +237,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderNominateArbiter = () =>
-      needsArbiter && shouldShowArbiter && (
+      needsArbiter &&
+      shouldShowArbiter && (
         <Alert
           showIcon
           type="warning"
@@ -376,6 +411,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             <Card size="small" className="ProposalDetail-controls">
               {renderCancelControl()}
               {renderArbiterControl()}
+              {shouldShowChangeToAcceptedWithFunding &&
+                renderChangeToAcceptedWithFundingControl()}
             </Card>
 
             {/* DETAILS */}
@@ -405,7 +442,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('matching', p.contributionMatching)}
               {renderDeetItem('bounty', p.contributionBounty)}
               {renderDeetItem('rfpOptIn', JSON.stringify(p.rfpOptIn))}
-              {renderDeetItem('acceptedWithFunding', JSON.stringify(p.acceptedWithFunding))}
+              {renderDeetItem(
+                'acceptedWithFunding',
+                JSON.stringify(p.acceptedWithFunding),
+              )}
               {renderDeetItem(
                 'arbiter',
                 <>
@@ -458,6 +498,20 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         this.setState({ showCancelAndRefundPopover: true });
       }
     }
+  };
+
+  private handleChangeToAcceptedWithFunding = () => {
+    this.setState({ showChangeToAcceptedWithFundingPopover: true });
+  };
+
+  private handleChangeToAcceptWithFundingCancel = () => {
+    this.setState({ showChangeToAcceptedWithFundingPopover: false });
+  };
+
+  private handleChangeToAcceptWithFundingConfirm = () => {
+    if (!store.proposalDetail) return;
+    store.changeProposalToAcceptedWithFunding(store.proposalDetail.proposalId);
+    this.setState({ showChangeToAcceptedWithFundingPopover: false });
   };
 
   private getIdFromQuery = () => {

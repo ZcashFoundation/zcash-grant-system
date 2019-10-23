@@ -148,6 +148,11 @@ async function cancelProposal(id: number) {
   return data;
 }
 
+async function changeProposalToAcceptedWithFunding(id: number) {
+  const { data } = await api.put(`/admin/proposals/${id}/accept/fund`)
+  return data
+}
+
 async function fetchComments(params: Partial<PageQuery>) {
   const { data } = await api.get('/admin/comments', { params });
   return data;
@@ -288,6 +293,7 @@ const app = store({
   proposalDetailCanceling: false,
   proposalDetailUpdating: false,
   proposalDetailUpdated: false,
+  proposalDetailChangingToAcceptedWithFunding: false,
 
   comments: {
     page: createDefaultPageData<Comment>('CREATED:DESC'),
@@ -569,6 +575,19 @@ const app = store({
       handleApiError(e);
     }
     app.proposalDetailCanceling = false;
+  },
+
+  async changeProposalToAcceptedWithFunding(id: number) {
+    app.proposalDetailChangingToAcceptedWithFunding = true
+
+    try {
+      const res = await changeProposalToAcceptedWithFunding(id)
+      app.updateProposalInStore(res)
+    } catch (e) {
+      handleApiError(e)
+    }
+
+    app.proposalDetailChangingToAcceptedWithFunding = false
   },
 
   async markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {

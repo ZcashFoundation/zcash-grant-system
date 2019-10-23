@@ -542,6 +542,10 @@ class Proposal(db.Model):
                     'admin_note': reject_reason
                 })
 
+    def update_proposal_with_funding(self):
+        self.accepted_with_funding = True
+        self.fully_fund_contibution_bounty()
+
     # state: status APPROVE -> LIVE, stage PREVIEW -> FUNDING_REQUIRED
     def publish(self):
         self.validate_publishable()
