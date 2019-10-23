@@ -65,23 +65,43 @@
       }
 
       &-title {
-        font-size: 2rem;
-        line-height: 3rem;
-        margin-bottom: 0.75rem;
-        margin-left: 0.5rem;
-
-        @media (min-width: @collapse-width) {
-          overflow: hidden;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-        }
-
-        @media (max-width: @collapse-width) {
-          font-size: 1.8rem;
-        }
+        display: flex;
 
         @media (max-width: @single-col-width) {
-          font-size: 1.6rem;
+          flex-direction: column-reverse;
+          margin-top: -1rem;
+        }
+
+        h1 {
+          font-size: 2rem;
+          line-height: 3rem;
+          margin-bottom: 0.75rem;
+          margin-left: 0.5rem;
+          flex-grow: 1;
+
+          @media (min-width: @collapse-width) {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+
+          @media (max-width: @collapse-width) {
+            font-size: 1.8rem;
+          }
+
+          @media (max-width: @single-col-width) {
+            font-size: 1.6rem;
+          }
+        }
+
+        &-menu {
+          display: flex;
+          align-items: center;
+          height: 3rem;
+
+          & > * + * {
+            margin-left: 0.5rem;
+          }
         }
       }
 

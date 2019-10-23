@@ -145,4 +145,15 @@ export default [
     title: 'Admin Payout',
     description: 'Sent when milestone payout has been approved',
   },
+  {
+    id: 'followed_proposal_milestone',
+    title: 'Followed Proposal Milestone',
+    description:
+      'Sent to followers of a proposal when one of its milestones has been approved',
+  },
+  {
+    id: 'followed_proposal_update',
+    title: 'Followed Proposal Update',
+    description: 'Sent to followers of a proposal when it has a new update',
+  },
 ] as Email[];

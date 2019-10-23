@@ -371,6 +371,11 @@ def post_proposal_update(proposal_id, title, content):
             'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
         })
 
+    # Send email to all followers
+    g.current_proposal.send_follower_email(
+        "followed_proposal_update", url_suffix="?tab=updates"
+    )
+
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
 
@@ -663,3 +668,19 @@ def reject_milestone_payout_request(proposal_id, milestone_id, reason):
             return proposal_schema.dump(g.current_proposal), 200
 
     return {"message": "No milestone matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/follow", methods=["PUT"])
+@requires_auth
+@body({"isFollow": fields.Bool(required=True)})
+def follow_proposal(proposal_id, is_follow):
+    user = g.current_user
+    # Make sure proposal exists
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    proposal.follow(user, is_follow)
+    db.session.commit()
+    return {"message": "ok"}, 200
+

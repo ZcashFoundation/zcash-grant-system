@@ -234,3 +234,51 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         for each_proposal in resp.json['items']:
             for team_member in each_proposal["team"]:
                 self.assertIsNone(team_member.get('email_address'))
+
+
+    def test_follow_proposal(self):
+        # not logged in
+        resp = self.app.put(
+            f"/api/v1/proposals/{self.proposal.id}/follow",
+            data=json.dumps({"isFollow": True}),
+            content_type="application/json",
+        )
+        self.assert401(resp)
+
+        # logged in
+        self.login_default_user()
+        self.proposal.status = ProposalStatus.LIVE
+
+        resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}")
+        self.assert200(resp)
+        self.assertEqual(resp.json["authedFollows"], False)
+
+        # follow
+        resp = self.app.put(
+            f"/api/v1/proposals/{self.proposal.id}/follow",
+            data=json.dumps({"isFollow": True}),
+            content_type="application/json",
+        )
+        self.assert200(resp)
+
+        resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}")
+        self.assert200(resp)
+        self.assertEqual(resp.json["authedFollows"], True)
+
+        self.assertEqual(self.proposal.followers[0].id, self.user.id)
+        self.assertEqual(self.user.followed_proposals[0].id, self.proposal.id)
+
+        # un-follow
+        resp = self.app.put(
+            f"/api/v1/proposals/{self.proposal.id}/follow",
+            data=json.dumps({"isFollow": False}),
+            content_type="application/json",
+        )
+        self.assert200(resp)
+
+        resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}")
+        self.assert200(resp)
+        self.assertEqual(resp.json["authedFollows"], False)
+
+        self.assertEqual(len(self.proposal.followers), 0)
+        self.assertEqual(len(self.user.followed_proposals), 0)

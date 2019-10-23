@@ -65,6 +65,10 @@ class EmailSubscription(Enum):
         'bit': 14,
         'key': 'admin_payout'
     }
+    FOLLOWED_PROPOSAL = {
+        'bit': 15,
+        'key': 'followed_proposal'
+    }
 
 
 def is_email_sub_key(k: str):

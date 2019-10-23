@@ -2,12 +2,11 @@ import datetime
 from decimal import Decimal, ROUND_DOWN
 from functools import reduce
 
-from flask import current_app
 from marshmallow import post_dump
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import column_property
 
-from flask import current_app
 from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
@@ -32,6 +31,12 @@ proposal_team = db.Table(
     db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'))
 )
 
+proposal_follower = db.Table(
+    "proposal_follower",
+    db.Model.metadata,
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
+    db.Column("proposal_id", db.Integer, db.ForeignKey("proposal.id")),
+)
 
 class ProposalTeamInvite(db.Model):
     __tablename__ = "proposal_team_invite"
@@ -250,6 +255,14 @@ class Proposal(db.Model):
                                  order_by="asc(Milestone.index)", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
     arbiter = db.relationship(ProposalArbiter, uselist=False, back_populates="proposal", cascade="all, delete-orphan")
+    followers = db.relationship(
+        "User", secondary=proposal_follower, back_populates="followed_proposals"
+    )
+    followers_count = column_property(
+        select([func.count(proposal_follower.c.proposal_id)])
+        .where(proposal_follower.c.proposal_id == id)
+        .correlate_except(proposal_follower)
+    )
 
     def __init__(
             self,
@@ -572,6 +585,26 @@ class Proposal(db.Model):
                 'account_settings_url': make_url('/profile/settings?tab=account')
             })
 
+    def follow(self, user, is_follow):
+        if is_follow:
+            self.followers.append(user)
+        else:
+            self.followers.remove(user)
+        db.session.flush()
+
+    def send_follower_email(self, type: str, email_args={}, url_suffix=""):
+        for u in self.followers:
+            send_email(
+                u.email_address,
+                type,
+                {
+                    "user": u,
+                    "proposal": self,
+                    "proposal_url": make_url(f"/proposals/{self.id}{url_suffix}"),
+                    **email_args,
+                },
+            )
+
     @hybrid_property
     def contributed(self):
         contributions = ProposalContribution.query \
@@ -639,6 +672,22 @@ class Proposal(db.Model):
         d = {c.user.id: c.user for c in self.contributions if c.user and c.status == ContributionStatus.CONFIRMED}
         return d.values()
 
+    @hybrid_property
+    def authed_follows(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if not authed:
+            return False
+        res = (
+            db.session.query(proposal_follower)
+            .filter_by(user_id=authed.id, proposal_id=self.id)
+            .count()
+        )
+        if res:
+            return True
+        return False
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -674,7 +723,9 @@ class ProposalSchema(ma.Schema):
             "rfp_opt_in",
             "arbiter",
             "accepted_with_funding",
-            "is_version_two"
+            "is_version_two",
+            "authed_follows",
+            "followers_count"
         )
 
     date_created = ma.Method("get_date_created")
@@ -722,7 +773,8 @@ user_fields = [
     "date_published",
     "reject_reason",
     "team",
-    "is_version_two"
+    "is_version_two",
+    "authed_follows"
 ]
 user_proposal_schema = ProposalSchema(only=user_fields)
 user_proposals_schema = ProposalSchema(many=True, only=user_fields)

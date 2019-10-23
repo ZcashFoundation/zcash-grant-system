@@ -307,6 +307,27 @@ def admin_payout(email_args):
     }
 
 
+def followed_proposal_milestone(email_args):
+    p = email_args["proposal"]
+    ms = email_args["milestone"]
+    return {
+        "subject": f"Milestone accepted for {p.title}",
+        "title": f"Milestone Accepted",
+        "preview": f"Followed proposal {p.title} has passed a milestone",
+        "subscription": EmailSubscription.FOLLOWED_PROPOSAL,
+    }
+
+
+def followed_proposal_update(email_args):
+    p = email_args["proposal"]
+    return {
+        "subject": f"Proposal update for {p.title}",
+        "title": f"Proposal Update",
+        "preview": f"Followed proposal {p.title} has an update",
+        "subscription": EmailSubscription.FOLLOWED_PROPOSAL,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -335,7 +356,9 @@ get_info_lookup = {
     'milestone_paid': milestone_paid,
     'admin_approval': admin_approval,
     'admin_arbiter': admin_arbiter,
-    'admin_payout': admin_payout
+    'admin_payout': admin_payout,
+    'followed_proposal_milestone': followed_proposal_milestone,
+    'followed_proposal_update': followed_proposal_update
 }
 
 

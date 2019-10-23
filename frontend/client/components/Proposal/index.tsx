@@ -25,6 +25,7 @@ import CancelModal from './CancelModal';
 import classnames from 'classnames';
 import { withRouter } from 'react-router';
 import SocialShare from 'components/SocialShare';
+import Follow from 'components/Follow';
 import './index.less';
 
 interface OwnProps {
@@ -184,9 +185,27 @@ export class ProposalDetail extends React.Component<Props, State> {
             </div>
           )}
           <div className="Proposal-top-main">
-            <h1 className="Proposal-top-main-title">
-              {proposal ? proposal.title : <span>&nbsp;</span>}
-            </h1>
+            <div className="Proposal-top-main-title">
+              <h1>{proposal ? proposal.title : <span>&nbsp;</span>}</h1>
+              {isLive && (
+                <div className="Proposal-top-main-title-menu">
+                  {isTrustee && (
+                    <Dropdown
+                      overlay={adminMenu}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button>
+                        <span>Actions</span>
+                        <Icon type="down" style={{ marginRight: '-0.25rem' }} />
+                      </Button>
+                    </Dropdown>
+                  )}
+                  <Follow proposal={proposal} />
+                </div>
+              )}
+            </div>
+
             <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
               <div
                 ref={el => (this.bodyEl = el)}
@@ -206,21 +225,6 @@ export class ProposalDetail extends React.Component<Props, State> {
                 </button>
               )}
             </div>
-            {isLive &&
-              isTrustee && (
-                <div className="Proposal-top-main-menu">
-                  <Dropdown
-                    overlay={adminMenu}
-                    trigger={['click']}
-                    placement="bottomRight"
-                  >
-                    <Button>
-                      <span>Actions</span>
-                      <Icon type="down" style={{ marginRight: '-0.25rem' }} />
-                    </Button>
-                  </Dropdown>
-                </div>
-              )}
           </div>
           <div className="Proposal-top-side">
             <CampaignBlock proposal={proposal} isPreview={!isLive} />

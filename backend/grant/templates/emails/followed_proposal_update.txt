@@ -1,0 +1,3 @@
+Your followed proposal {{ args.proposal.title }} has an update!
+
+Check it out: {{ args.proposal_url }}

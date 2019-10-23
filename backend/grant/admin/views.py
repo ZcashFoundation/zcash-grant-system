@@ -415,6 +415,13 @@ def paid_milestone_payout_request(id, mid, tx_id):
                     'tx_explorer_url': make_explore_url(tx_id),
                     'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
                 })
+
+            # email FOLLOWERS that milestone was accepted
+            proposal.send_follower_email(
+                "followed_proposal_milestone",
+                email_args={"milestone": ms},
+                url_suffix="?tab=milestones",
+            )
             return proposal_schema.dump(proposal), 200
 
     return {"message": "No milestone matching id"}, 404

@@ -162,6 +162,8 @@ export function generateProposal({
     stage: PROPOSAL_STAGE.WIP,
     category: PROPOSAL_CATEGORY.COMMUNITY,
     isStaked: true,
+    authedFollows: false,
+    followersCount: 0,
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
       user: {

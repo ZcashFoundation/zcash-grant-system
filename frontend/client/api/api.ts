@@ -42,6 +42,10 @@ export function getProposal(proposalId: number | string): Promise<{ data: Propos
   });
 }
 
+export function followProposal(proposalId: number, isFollow: boolean) {
+  return axios.put(`/api/v1/proposals/${proposalId}/follow`, { isFollow });
+}
+
 export function getProposalComments(proposalId: number | string, params: PageParams) {
   return axios.get(`/api/v1/proposals/${proposalId}/comments`, { params });
 }

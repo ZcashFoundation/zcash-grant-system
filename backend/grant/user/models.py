@@ -133,6 +133,9 @@ class User(db.Model, UserMixin):
     roles = db.relationship('Role', secondary='roles_users',
                             backref=db.backref('users', lazy='dynamic'))
     arbiter_proposals = db.relationship("ProposalArbiter", lazy=True, back_populates="user")
+    followed_proposals = db.relationship(
+        "Proposal", secondary="proposal_follower", back_populates="followers"
+    )
 
     def __init__(
             self,

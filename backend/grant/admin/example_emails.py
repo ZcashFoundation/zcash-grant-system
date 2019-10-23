@@ -178,4 +178,13 @@ example_email_args = {
         'proposal': proposal,
         'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
     },
+    'followed_proposal_milestone': {
+        "proposal": proposal,
+        "milestone": milestone,
+        "proposal_url": "http://someproposal.com",
+    },
+    'followed_proposal_update': {
+        "proposal": proposal,
+        "proposal_url": "http://someproposal.com",
+    },
 }
