@@ -145,44 +145,45 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               </div>
             )}
 
-          {!isVersionTwo && isFundingOver ? (
-            <div
-              className={classnames({
-                ['ProposalCampaignBlock-fundingOver']: true,
-                ['is-success']: isRaiseGoalReached,
-              })}
-            >
-              {isCancelled ? (
-                <>
-                  <Icon type="close-circle-o" />
-                  <span>Proposal was canceled</span>
-                </>
-              ) : isRaiseGoalReached ? (
-                <>
-                  <Icon type="check-circle-o" />
-                  <span>Proposal has been funded</span>
-                </>
-              ) : (
-                <>
-                  <Icon type="close-circle-o" />
-                  <span>Proposal didn’t get funded</span>
-                </>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="ProposalCampaignBlock-bar">
-                <div
-                  className="ProposalCampaignBlock-bar-inner"
-                  style={{
-                    width: `${percentFunded}%`,
-                  }}
-                />
+          {!isVersionTwo &&
+            (isFundingOver ? (
+              <div
+                className={classnames({
+                  ['ProposalCampaignBlock-fundingOver']: true,
+                  ['is-success']: isRaiseGoalReached,
+                })}
+              >
+                {isCancelled ? (
+                  <>
+                    <Icon type="close-circle-o" />
+                    <span>Proposal was canceled</span>
+                  </>
+                ) : isRaiseGoalReached ? (
+                  <>
+                    <Icon type="check-circle-o" />
+                    <span>Proposal has been funded</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon type="close-circle-o" />
+                    <span>Proposal didn’t get funded</span>
+                  </>
+                )}
               </div>
+            ) : (
+              <>
+                <div className="ProposalCampaignBlock-bar">
+                  <div
+                    className="ProposalCampaignBlock-bar-inner"
+                    style={{
+                      width: `${percentFunded}%`,
+                    }}
+                  />
+                </div>
 
-              {/* TODO: use this as a base for tipjar? */}
+                {/* TODO: use this as a base for tipjar? */}
 
-              {/* <Form layout="vertical" className="ProposalCampaignBlock-contribute">
+                {/* <Form layout="vertical" className="ProposalCampaignBlock-contribute">
                 <Form.Item
                   validateStatus={amountError ? 'error' : undefined}
                   help={amountError}
@@ -232,8 +233,8 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                   Fund this project
                 </Button>
               </Form> */}
-            </>
-          )}
+              </>
+            ))}
 
           {isVersionTwo &&
             isJudged && (
