@@ -46,6 +46,20 @@ export function followProposal(proposalId: number, isFollow: boolean) {
   return axios.put(`/api/v1/proposals/${proposalId}/follow`, { isFollow });
 }
 
+export function likeProposal(proposalId: number, isLiked: boolean) {
+  return axios.put(`/api/v1/proposals/${proposalId}/like`, { isLiked });
+}
+
+export function likeRfp(rfpId: number, isLiked: boolean) {
+  return axios.put(`/api/v1/rfps/${rfpId}/like`, { isLiked });
+}
+
+export function likeComment(commentId: number, isLiked: boolean) {
+  return axios
+    .put(`/api/v1/comment/${commentId}/like`, { isLiked })
+    .then(({ data }) => data);
+}
+
 export function getProposalComments(proposalId: number | string, params: PageParams) {
   return axios.get(`/api/v1/proposals/${proposalId}/comments`, { params });
 }

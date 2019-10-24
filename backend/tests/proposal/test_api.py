@@ -282,3 +282,57 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
         self.assertEqual(len(self.proposal.followers), 0)
         self.assertEqual(len(self.user.followed_proposals), 0)
+
+    def test_like_proposal(self):
+        # not logged in
+        resp = self.app.put(
+            f"/api/v1/proposals/{self.proposal.id}/like",
+            data=json.dumps({"isLiked": True}),
+            content_type="application/json",
+        )
+        self.assert401(resp)
+
+        # logged in
+        self.login_default_user()
+
+        # proposal not yet live
+        resp = self.app.put(
+            f"/api/v1/proposals/{self.proposal.id}/like",
+            data=json.dumps({"isLiked": True}),
+            content_type="application/json",
+        )
+        self.assert404(resp)
+        self.assertEquals(resp.json["message"], "Cannot like a proposal that's not live")
+
+        # proposal is live
+        self.proposal.status = ProposalStatus.LIVE
+        resp = self.app.put(
+            f"/api/v1/proposals/{self.proposal.id}/like",
+            data=json.dumps({"isLiked": True}),
+            content_type="application/json",
+        )
+        self.assert200(resp)
+        self.assertTrue(self.user in self.proposal.likes)
+
+        resp = self.app.get(
+            f"/api/v1/proposals/{self.proposal.id}"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["authedLiked"], True)
+        self.assertEqual(resp.json["likesCount"], 1)
+
+        # test unliking a proposal
+        resp = self.app.put(
+            f"/api/v1/proposals/{self.proposal.id}/like",
+            data=json.dumps({"isLiked": False}),
+            content_type="application/json",
+        )
+        self.assert200(resp)
+        self.assertTrue(self.user not in self.proposal.likes)
+
+        resp = self.app.get(
+            f"/api/v1/proposals/{self.proposal.id}"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["authedLiked"], False)
+        self.assertEqual(resp.json["likesCount"], 0)

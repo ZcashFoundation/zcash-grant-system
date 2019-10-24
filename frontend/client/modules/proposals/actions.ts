@@ -230,3 +230,17 @@ export function reportProposalComment(
     }
   };
 }
+
+export function updateProposalComment(
+  commentId: Comment['id'],
+  commentUpdate: Partial<Comment>,
+) {
+  return (dispatch: Dispatch<any>) =>
+    dispatch({
+      type: types.UPDATE_PROPOSAL_COMMENT,
+      payload: {
+        commentId,
+        commentUpdate,
+      },
+    });
+}

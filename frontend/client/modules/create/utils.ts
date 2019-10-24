@@ -251,6 +251,8 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     acceptedWithFunding: false,
     authedFollows: false,
     followersCount: 0,
+    authedLiked: false,
+    likesCount: 0,
     isVersionTwo: true,
     milestones: draft.milestones.map((m, idx) => ({
       id: idx,

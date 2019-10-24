@@ -136,6 +136,16 @@ class User(db.Model, UserMixin):
     followed_proposals = db.relationship(
         "Proposal", secondary="proposal_follower", back_populates="followers"
     )
+    liked_proposals = db.relationship(
+        "Proposal", secondary="proposal_liker", back_populates="likes"
+    )
+    liked_comments = db.relationship(
+        "Comment", secondary="comment_liker", back_populates="likes"
+    )
+    liked_rfps = db.relationship(
+        "RFP", secondary="rfp_liker", back_populates="likes"
+    )
+
 
     def __init__(
             self,

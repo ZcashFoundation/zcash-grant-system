@@ -66,6 +66,8 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   isVersionTwo: boolean;
   authedFollows: boolean;
   followersCount: number;
+  authedLiked: boolean;
+  likesCount: number;
   isTeamMember?: boolean; // FE derived
   isArbiter?: boolean; // FE derived
 }

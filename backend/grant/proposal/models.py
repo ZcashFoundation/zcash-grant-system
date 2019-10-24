@@ -38,6 +38,14 @@ proposal_follower = db.Table(
     db.Column("proposal_id", db.Integer, db.ForeignKey("proposal.id")),
 )
 
+proposal_liker = db.Table(
+    "proposal_liker",
+    db.Model.metadata,
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
+    db.Column("proposal_id", db.Integer, db.ForeignKey("proposal.id")),
+)
+
+
 class ProposalTeamInvite(db.Model):
     __tablename__ = "proposal_team_invite"
 
@@ -150,6 +158,8 @@ class ProposalContribution(db.Model):
             raise ValidationException('Proposal ID is required')
         # User ID (must belong to an existing user)
         if user_id:
+            from grant.user.models import User
+
             user = User.query.filter(User.id == user_id).first()
             if not user:
                 raise ValidationException('No user matching that ID')
@@ -262,6 +272,14 @@ class Proposal(db.Model):
         select([func.count(proposal_follower.c.proposal_id)])
         .where(proposal_follower.c.proposal_id == id)
         .correlate_except(proposal_follower)
+    )
+    likes = db.relationship(
+        "User", secondary=proposal_liker, back_populates="liked_proposals"
+    )
+    likes_count = column_property(
+        select([func.count(proposal_liker.c.proposal_id)])
+        .where(proposal_liker.c.proposal_id == id)
+        .correlate_except(proposal_liker)
     )
 
     def __init__(
@@ -596,6 +614,13 @@ class Proposal(db.Model):
             self.followers.remove(user)
         db.session.flush()
 
+    def like(self, user, is_liked):
+        if is_liked:
+            self.likes.append(user)
+        else:
+            self.likes.remove(user)
+        db.session.flush()
+
     def send_follower_email(self, type: str, email_args={}, url_suffix=""):
         for u in self.followers:
             send_email(
@@ -692,6 +717,22 @@ class Proposal(db.Model):
             return True
         return False
 
+    @hybrid_property
+    def authed_liked(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if not authed:
+            return False
+        res = (
+            db.session.query(proposal_liker)
+            .filter_by(user_id=authed.id, proposal_id=self.id)
+            .count()
+        )
+        if res:
+            return True
+        return False
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -729,7 +770,9 @@ class ProposalSchema(ma.Schema):
             "accepted_with_funding",
             "is_version_two",
             "authed_follows",
-            "followers_count"
+            "followers_count",
+            "authed_liked",
+            "likes_count"
         )
 
     date_created = ma.Method("get_date_created")
@@ -778,7 +821,8 @@ user_fields = [
     "reject_reason",
     "team",
     "is_version_two",
-    "authed_follows"
+    "authed_follows",
+    "authed_liked"
 ]
 user_proposal_schema = ProposalSchema(only=user_fields)
 user_proposals_schema = ProposalSchema(many=True, only=user_fields)

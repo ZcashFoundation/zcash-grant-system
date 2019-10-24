@@ -1,6 +1,6 @@
 import json
 
-from grant.proposal.models import Proposal, db
+from grant.proposal.models import Proposal, Comment, db
 from grant.utils.enums import ProposalStatus
 from ..config import BaseUserConfig
 from ..test_data import test_comment, test_reply, test_comment_large
@@ -148,3 +148,59 @@ class TestProposalCommentAPI(BaseUserConfig):
 
         self.assertStatus(comment_res, 403)
         self.assertIn('silenced', comment_res.json['message'])
+
+    def test_like_comment(self):
+        proposal = Proposal(status=ProposalStatus.LIVE)
+        db.session.add(proposal)
+
+        comment = Comment(
+            proposal_id=proposal.id,
+            user_id=self.other_user.id,
+            parent_comment_id=None,
+            content=test_comment["comment"]
+        )
+        comment_id = comment.id
+        db.session.add(comment)
+        db.session.commit()
+
+        # comment not found
+        resp = self.app.put(
+            f"/api/v1/comment/123456789/like",
+            data=json.dumps({"isLiked": True}),
+            content_type="application/json",
+        )
+        self.assert401(resp)
+
+        # not logged in
+        resp = self.app.put(
+            f"/api/v1/comment/{comment_id}/like",
+            data=json.dumps({"isLiked": True}),
+            content_type="application/json",
+        )
+        self.assert401(resp)
+
+        # logged in
+        self.login_default_user()
+        resp = self.app.put(
+            f"/api/v1/comment/{comment_id}/like",
+            data=json.dumps({"isLiked": True}),
+            content_type="application/json",
+        )
+
+        self.assertStatus(resp, 201)
+        self.assertEqual(resp.json["authedLiked"], True)
+        self.assertEqual(resp.json["likesCount"], 1)
+        comment = Comment.query.get(comment_id)
+        self.assertTrue(self.user in comment.likes)
+
+        # test unliking a proposal
+        resp = self.app.put(
+            f"/api/v1/comment/{comment.id}/like",
+            data=json.dumps({"isLiked": False}),
+            content_type="application/json",
+        )
+        self.assertStatus(resp, 201)
+        self.assertEqual(resp.json["authedLiked"], False)
+        self.assertEqual(resp.json["likesCount"], 0)
+        comment = Comment.query.get(comment_id)
+        self.assertTrue(self.user not in comment.likes)

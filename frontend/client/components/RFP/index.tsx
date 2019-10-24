@@ -13,6 +13,7 @@ import Markdown from 'components/Markdown';
 import ProposalCard from 'components/Proposals/ProposalCard';
 import UnitDisplay from 'components/UnitDisplay';
 import HeaderDetails from 'components/HeaderDetails';
+import Like from 'components/Like';
 import { RFP_STATUS } from 'api/constants';
 import './index.less';
 
@@ -87,6 +88,7 @@ class RFPDetail extends React.Component<Props> {
           <div className="RFPDetail-top-date">
             Opened {moment(rfp.dateOpened * 1000).format('LL')}
           </div>
+          <Like rfp={rfp} />
         </div>
 
         <h1 className="RFPDetail-title">{rfp.title}</h1>

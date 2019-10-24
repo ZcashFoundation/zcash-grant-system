@@ -2,9 +2,18 @@ from datetime import datetime
 from decimal import Decimal
 from grant.extensions import ma, db
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import func, select
+from sqlalchemy.orm import column_property
 from grant.utils.enums import RFPStatus
 from grant.utils.misc import dt_to_unix, gen_random_id
 from grant.utils.enums import Category
+
+rfp_liker = db.Table(
+    "rfp_liker",
+    db.Model.metadata,
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
+    db.Column("rfp_id", db.Integer, db.ForeignKey("rfp.id")),
+)
 
 
 class RFP(db.Model):
@@ -38,6 +47,16 @@ class RFP(db.Model):
         cascade="all, delete-orphan",
     )
 
+    likes = db.relationship(
+        "User", secondary=rfp_liker, back_populates="liked_rfps"
+    )
+    likes_count = column_property(
+        select([func.count(rfp_liker.c.rfp_id)])
+        .where(rfp_liker.c.rfp_id == id)
+        .correlate_except(rfp_liker)
+    )
+
+
     @hybrid_property
     def bounty(self):
         return self._bounty
@@ -48,6 +67,29 @@ class RFP(db.Model):
             self._bounty = bounty
         else:
             self._bounty = None
+
+    @hybrid_property
+    def authed_liked(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if not authed:
+            return False
+        res = (
+            db.session.query(rfp_liker)
+            .filter_by(user_id=authed.id, rfp_id=self.id)
+            .count()
+        )
+        if res:
+            return True
+        return False
+
+    def like(self, user, is_liked):
+        if is_liked:
+            self.likes.append(user)
+        else:
+            self.likes.remove(user)
+        db.session.flush()
 
     def __init__(
         self,
@@ -92,6 +134,8 @@ class RFPSchema(ma.Schema):
             "date_opened",
             "date_closed",
             "accepted_proposals",
+            "authed_liked",
+            "likes_count"
         )
 
     status = ma.Method("get_status")

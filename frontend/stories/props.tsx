@@ -164,6 +164,8 @@ export function generateProposal({
     isStaked: true,
     authedFollows: false,
     followersCount: 0,
+    authedLiked: false,
+    likesCount: 0,
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
       user: {

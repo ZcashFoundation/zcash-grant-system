@@ -16,4 +16,6 @@ export interface RFP {
   dateOpened: number;
   dateClosed?: number;
   dateCloses?: number;
+  authedLiked: boolean;
+  likesCount: number;
 }
