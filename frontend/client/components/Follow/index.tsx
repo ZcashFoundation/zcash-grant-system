@@ -10,6 +10,7 @@ import './index.less';
 
 interface OwnProps {
   proposal: ProposalDetail;
+  style?: React.CSSProperties;
 }
 
 interface StateProps {
@@ -30,10 +31,11 @@ type State = typeof STATE;
 class Follow extends React.Component<Props, State> {
   state: State = { ...STATE };
   render() {
+    const { style } = this.props;
     const { authedFollows, followersCount } = this.props.proposal;
     const { loading } = this.state;
     return (
-      <Input.Group className="Follow" compact>
+      <Input.Group style={style} className="Follow" compact>
         <AuthButton onClick={this.handleFollow}>
           <Icon
             theme={authedFollows ? 'filled' : 'outlined'}

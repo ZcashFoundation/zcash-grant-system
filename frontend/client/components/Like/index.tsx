@@ -14,6 +14,7 @@ interface OwnProps {
   proposal?: ProposalDetail | null;
   comment?: Comment;
   rfp?: RFP;
+  style?: React.CSSProperties;
 }
 
 interface StateProps {
@@ -38,13 +39,13 @@ class Follow extends React.Component<Props, State> {
 
   render() {
     const { likesCount, authedLiked } = this.deriveInfo();
-    const { proposal, rfp, comment } = this.props;
+    const { proposal, rfp, comment, style } = this.props;
     const { loading } = this.state;
     const zoom = comment ? 0.8 : 1;
     const shouldShowLikeText = !!proposal || !!rfp;
 
     return (
-      <Input.Group className="Like" compact style={{ zoom }}>
+      <Input.Group className="Like" compact style={{ zoom, ...style }}>
         <AuthButton onClick={this.handleLike}>
           <Icon
             theme={authedLiked ? 'filled' : 'outlined'}

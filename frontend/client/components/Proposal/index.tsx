@@ -206,8 +206,8 @@ export class ProposalDetail extends React.Component<Props, State> {
                       </Button>
                     </Dropdown>
                   )}
-                  <Like proposal={proposal} />
-                  <Follow proposal={proposal} />
+                  <Like proposal={proposal} style={{ marginLeft: '0.5rem' }} />
+                  <Follow proposal={proposal} style={{ marginLeft: '0.5rem' }} />
                 </div>
               )}
             </div>
