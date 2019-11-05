@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from grant.extensions import db
 from grant.email.send import send_email
-from grant.utils.enums import ProposalStage, ContributionStatus
+from grant.utils.enums import ProposalStage, ContributionStatus, ProposalStatus
 from grant.utils.misc import make_url
 from flask import current_app
 
@@ -126,8 +126,53 @@ class ContributionExpired:
             })
 
 
+class PruneDraft:
+    JOB_TYPE = 4
+    PRUNE_TIME = 259200  # 72 hours in seconds
+
+    def __init__(self, proposal):
+        self.proposal = proposal
+
+    def blobify(self):
+        return {
+            "proposal_id": self.proposal.id,
+        }
+
+    def make_task(self):
+        from .models import Task
+
+        task = Task(
+            job_type=self.JOB_TYPE,
+            blob=self.blobify(),
+            execute_after=self.proposal.date_created + timedelta(seconds=self.PRUNE_TIME),
+        )
+        db.session.add(task)
+        db.session.commit()
+
+    @staticmethod
+    def process_task(task):
+        from grant.proposal.models import Proposal
+        proposal = Proposal.query.filter_by(id=task.blob["proposal_id"]).first()
+
+        # If it was deleted or moved out of a draft, noop out
+        if not proposal or proposal.status != ProposalStatus.DRAFT:
+            return
+
+        # If any of the proposal fields are filled, noop out
+        if proposal.title or proposal.brief or proposal.content or proposal.category or proposal.target != "0":
+            return
+
+        if proposal.payout_address or proposal.milestones:
+            return
+
+        # Otherwise, delete the empty proposal
+        db.session.delete(proposal)
+        db.session.commit()
+
+
 JOBS = {
     1: ProposalReminder.process_task,
     2: ProposalDeadline.process_task,
     3: ContributionExpired.process_task,
+    4: PruneDraft.process_task
 }

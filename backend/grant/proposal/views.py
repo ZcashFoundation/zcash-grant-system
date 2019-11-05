@@ -14,7 +14,7 @@ from grant.milestone.models import Milestone
 from grant.parser import body, query, paginated_fields
 from grant.rfp.models import RFP
 from grant.settings import PROPOSAL_STAKING_AMOUNT
-from grant.task.jobs import ProposalDeadline
+from grant.task.jobs import ProposalDeadline, PruneDraft
 from grant.user.models import User
 from grant.utils import pagination
 from grant.utils.auth import (
@@ -195,6 +195,9 @@ def make_proposal_draft(rfp_id):
         proposal.category = rfp.category
         rfp.proposals.append(proposal)
         db.session.add(rfp)
+
+    task = PruneDraft(proposal)
+    task.make_task()
 
     db.session.add(proposal)
     db.session.commit()
