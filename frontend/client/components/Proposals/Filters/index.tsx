@@ -72,6 +72,7 @@ export default class ProposalFilters extends React.Component<Props> {
                   PROPOSAL_STAGE.PREVIEW,
                   PROPOSAL_STAGE.FAILED,
                   PROPOSAL_STAGE.CANCELED,
+                  PROPOSAL_STAGE.FUNDING_REQUIRED
                 ].includes(s as PROPOSAL_STAGE),
             ) // skip a few
             .map(s => (
