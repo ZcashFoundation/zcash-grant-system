@@ -14,6 +14,13 @@
       "learn": "or learn more below"
     },
 
+    "latest": {
+      "proposalsTitle": "Latest proposals",
+      "proposalsPlaceholder": "No proposals found",
+      "requestsTitle": "Latest requests",
+      "requestsPlaceholder": "No requests found"
+    },
+
     "requests": {
       "title": "Open Requests from the ZF",
       "description": "The Zcash Foundation will periodically open up requests for proposals that have financial incentives attached to them in the form of fixed bounties, or pledges of contribution matching.\nProposals will be reviewed and chosen based on the ZF’s confidence in the team and their plan.\nTo be eligible for funding from the Zcash Foundation, teams must provide identifying information for legal reasons.\nIf none of the RFPs catch your eye, check out the <a href=\"https://www.zfnd.org/grants/#ideas\" target=\"_blank\">list of promising ideas<\/a>!",

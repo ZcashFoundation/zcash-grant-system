@@ -1,0 +1,75 @@
+@import '~styles/variables.less';
+
+.HomeLatest {
+  &-inner {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: @max-content-width;
+    margin: 0 auto 10rem;
+    padding: 0 2rem;
+
+    @media @thin-query {
+      flex-direction: column;
+    }
+  }
+
+  &-loader {
+    flex: 1;
+    position: relative;
+    height: 14rem;
+  }
+
+  &-column {
+    flex: 1;
+    margin: 0 2rem;
+    
+    @media @thin-query {
+      margin: 0 1.25rem 2rem;
+    }
+
+    @media @mobile-query {
+      margin: 0 0 2rem;
+    }
+
+    &-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+    }
+
+    &-item {
+      margin-bottom: 1.5rem;
+
+      &-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      &-brief {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical; 
+        font-size: 1rem;
+        line-height: 1.6;
+        height: 3.2rem;
+        color: @text-color;
+
+        @media @thin-query {
+          height: auto;
+          max-height: 3.2rem;
+        }
+      }
+    }
+
+    .Placeholder {
+      padding-left: 1rem;
+      padding-right: 1rem;
+
+      &-title {
+        font-size: 1.3rem;
+      }
+    }
+  }
+}

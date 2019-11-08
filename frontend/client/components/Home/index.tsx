@@ -5,6 +5,7 @@ import Intro from './Intro';
 import Requests from './Requests';
 import Guide from './Guide';
 import Actions from './Actions';
+import Latest from './Latest';
 import './style.less';
 
 class Home extends React.Component<WithNamespaces> {
@@ -14,6 +15,7 @@ class Home extends React.Component<WithNamespaces> {
       <div className="Home">
         <HeaderDetails title={t('home.title')} description={t('home.description')} />
         <Intro />
+        <Latest />
         <Requests />
         <Guide />
         <Actions />
