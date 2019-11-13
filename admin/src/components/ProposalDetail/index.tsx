@@ -445,7 +445,6 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('isFailed', JSON.stringify(p.isFailed))}
               {renderDeetItem('status', p.status)}
               {renderDeetItem('stage', p.stage)}
-              {renderDeetItem('category', p.category)}
               {renderDeetItem('target', p.target)}
               {renderDeetItem('contributed', p.contributed)}
               {renderDeetItem('funded (inc. matching)', p.funded)}

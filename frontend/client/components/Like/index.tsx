@@ -4,14 +4,15 @@ import { Icon, Button, Input, message } from 'antd';
 import { AppState } from 'store/reducers';
 import { proposalActions } from 'modules/proposals';
 import { rfpActions } from 'modules/rfps';
-import { ProposalDetail } from 'modules/proposals/reducers';
+import { Proposal } from 'types';
 import { Comment, RFP } from 'types';
 import { likeProposal, likeComment, likeRfp } from 'api/api';
 import AuthButton from 'components/AuthButton';
 import './index.less';
 
 interface OwnProps {
-  proposal?: ProposalDetail | null;
+  proposal?: Proposal;
+  proposal_card?: boolean;
   comment?: Comment;
   rfp?: RFP;
   style?: React.CSSProperties;
@@ -34,19 +35,27 @@ const STATE = {
 };
 type State = typeof STATE;
 
-class Follow extends React.Component<Props, State> {
+class Like extends React.Component<Props, State> {
   state: State = { ...STATE };
 
   render() {
     const { likesCount, authedLiked } = this.deriveInfo();
-    const { proposal, rfp, comment, style } = this.props;
+    const { proposal, rfp, comment, style, proposal_card } = this.props;
     const { loading } = this.state;
-    const zoom = comment ? 0.8 : 1;
-    const shouldShowLikeText = !!proposal || !!rfp;
+    const zoom = comment || proposal_card ? 0.8 : 1;
+    const shouldShowLikeText = (!!proposal && !proposal_card) || !!rfp;
+
+    // if like button is on a proposal card...
+    // 1) use regular button to prevent login redirect
+    const IconButton = proposal_card ? Button : AuthButton;
+    // 2) prevent mouseover effects
+    const pointerEvents = proposal_card ? 'none' : undefined;
+    // 3) make button click a noop
+    const handleIconButtonClick = proposal_card ? undefined : this.handleLike;
 
     return (
-      <Input.Group className="Like" compact style={{ zoom, ...style }}>
-        <AuthButton onClick={this.handleLike}>
+      <Input.Group className="Like" compact style={{ zoom, pointerEvents, ...style }}>
+        <IconButton onClick={handleIconButtonClick}>
           <Icon
             theme={authedLiked ? 'filled' : 'outlined'}
             type={loading ? 'loading' : 'like'}
@@ -54,7 +63,7 @@ class Follow extends React.Component<Props, State> {
           {shouldShowLikeText && (
             <span className="Like-label">{authedLiked ? ' Unlike' : ' Like'}</span>
           )}
-        </AuthButton>
+        </IconButton>
         <Button className="Like-count" disabled>
           <span>{likesCount}</span>
         </Button>
@@ -175,4 +184,4 @@ const withConnect = connect<StateProps, DispatchProps, OwnProps, AppState>(
   },
 );
 
-export default withConnect(Follow);
+export default withConnect(Like);

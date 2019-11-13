@@ -18,7 +18,6 @@ export class ProposalCard extends React.Component<Proposal> {
       title,
       proposalAddress,
       proposalUrlId,
-      category,
       datePublished,
       dateCreated,
       team,
@@ -74,7 +73,7 @@ export class ProposalCard extends React.Component<Proposal> {
           </div>
         </div>
         <div className="ProposalCard-address">{proposalAddress}</div>
-        <Card.Info category={category} time={(datePublished || dateCreated) * 1000} />
+        <Card.Info proposal={this.props} time={(datePublished || dateCreated) * 1000} />
       </Card>
     );
   }

@@ -386,19 +386,3 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             })
         )
         self.assert200(resp)
-
-    def test_create_rfp_fails_with_bad_category(self):
-        self.login_admin()
-
-        resp = self.app.post(
-            "/api/v1/admin/rfps",
-            data=json.dumps({
-                "brief": "Some brief",
-                "category": "NOT_CORE_DEV",
-                "content": "CONTENT",
-                "dateCloses": 1553980004,
-                "status": "DRAFT",
-                "title": "TITLE"
-            })
-        )
-        self.assert400(resp)

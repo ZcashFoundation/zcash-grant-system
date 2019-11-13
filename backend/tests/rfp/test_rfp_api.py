@@ -11,7 +11,6 @@ class TestRfpApi(BaseProposalCreatorConfig):
             title="title",
             brief="brief",
             content="content",
-            category=Category.DEV_TOOL,
             date_closes=datetime.datetime(2030, 1, 1),
             bounty="10",
             status=RFPStatus.DRAFT,

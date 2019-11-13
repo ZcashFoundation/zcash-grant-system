@@ -1,12 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Input, Form, Icon, Select, Alert, Popconfirm, message, Radio } from 'antd';
-import { SelectValue } from 'antd/lib/select';
+import { Input, Form, Alert, Popconfirm, message, Radio } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
-import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
 import { ProposalDraft, RFP } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
-import { typedKeys } from 'utils/ts';
 import { Link } from 'react-router-dom';
 import { unlinkProposalRFP } from 'modules/create/actions';
 import { AppState } from 'store/reducers';
@@ -31,7 +28,6 @@ type Props = OwnProps & StateProps & DispatchProps;
 interface State extends Partial<ProposalDraft> {
   title: string;
   brief: string;
-  category?: PROPOSAL_CATEGORY;
   target: string;
   rfp?: RFP;
 }
@@ -42,7 +38,6 @@ class CreateFlowBasics extends React.Component<Props, State> {
     this.state = {
       title: '',
       brief: '',
-      category: undefined,
       target: '',
       ...(props.initialState || {}),
     };
@@ -64,7 +59,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
 
   render() {
     const { isUnlinkingProposalRFP } = this.props;
-    const { title, brief, category, target, rfp, rfpOptIn } = this.state;
+    const { title, brief, target, rfp, rfpOptIn } = this.state;
     const errors = getCreateErrors(this.state, true);
 
     // Don't show target error at zero since it defaults to that
@@ -171,25 +166,6 @@ class CreateFlowBasics extends React.Component<Props, State> {
           />
         </Form.Item>
 
-        <Form.Item label="Category">
-          <Select
-            size="large"
-            placeholder="Select a category"
-            value={category || undefined}
-            onChange={this.handleCategoryChange}
-          >
-            {typedKeys(PROPOSAL_CATEGORY).map(c => (
-              <Select.Option value={c} key={c}>
-                <Icon
-                  type={CATEGORY_UI[c].icon}
-                  style={{ color: CATEGORY_UI[c].color }}
-                />{' '}
-                {CATEGORY_UI[c].label}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-
         <Form.Item
           label="Target amount"
           validateStatus={errors.target ? 'error' : undefined}
@@ -215,12 +191,6 @@ class CreateFlowBasics extends React.Component<Props, State> {
   ) => {
     const { value, name } = event.currentTarget;
     this.setState({ [name]: value } as any, () => {
-      this.props.updateForm(this.state);
-    });
-  };
-
-  private handleCategoryChange = (value: SelectValue) => {
-    this.setState({ category: value as PROPOSAL_CATEGORY }, () => {
       this.props.updateForm(this.state);
     });
   };

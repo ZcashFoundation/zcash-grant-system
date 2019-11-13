@@ -1,5 +1,5 @@
 import { Zat } from 'utils/units';
-import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
+import { PROPOSAL_STAGE } from 'api/constants';
 import { CreateMilestone, Update, User, Comment, ContributionWithUser } from 'types';
 import { ProposalMilestone } from './milestone';
 import { RFP } from './rfp';
@@ -34,7 +34,6 @@ export interface ProposalDraft {
   dateCreated: number;
   title: string;
   brief: string;
-  category: PROPOSAL_CATEGORY;
   content: string;
   stage: PROPOSAL_STAGE;
   target: string;

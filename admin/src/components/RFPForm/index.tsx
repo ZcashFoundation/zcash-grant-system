@@ -3,22 +3,10 @@ import moment from 'moment';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import {
-  Form,
-  Input,
-  Select,
-  Icon,
-  Button,
-  message,
-  Spin,
-  Row,
-  Col,
-  DatePicker,
-} from 'antd';
+import { Form, Input, Select, Button, message, Spin, Row, Col, DatePicker } from 'antd';
 import Exception from 'ant-design-pro/lib/Exception';
 import { FormComponentProps } from 'antd/lib/form';
-import { PROPOSAL_CATEGORY, RFP_STATUS, RFPArgs } from 'src/types';
-import { CATEGORY_UI } from 'util/ui';
+import { RFP_STATUS, RFPArgs } from 'src/types';
 import { typedKeys } from 'util/ts';
 import { RFP_STATUSES, getStatusById } from 'util/statuses';
 import Markdown from 'components/Markdown';
@@ -53,7 +41,6 @@ class RFPForm extends React.Component<Props, State> {
       title: '',
       brief: '',
       content: '',
-      category: '',
       status: '',
       matching: false,
       bounty: undefined,
@@ -71,7 +58,6 @@ class RFPForm extends React.Component<Props, State> {
           title: rfp.title,
           brief: rfp.brief,
           content: rfp.content,
-          category: rfp.category,
           status: rfp.status,
           matching: rfp.matching,
           bounty: rfp.bounty,
@@ -129,28 +115,6 @@ class RFPForm extends React.Component<Props, State> {
             )}
           </Form.Item>
         )}
-
-        <Form.Item label="Category">
-          {getFieldDecorator('category', {
-            initialValue: defaults.category,
-            rules: [
-              { required: true, message: 'Category is required' },
-              { max: 60, message: 'Max 60 chars' },
-            ],
-          })(
-            <Select size="large" placeholder="Select a category">
-              {typedKeys(PROPOSAL_CATEGORY).map(c => (
-                <Select.Option value={c} key={c}>
-                  <Icon
-                    type={CATEGORY_UI[c].icon}
-                    style={{ color: CATEGORY_UI[c].color }}
-                  />{' '}
-                  {CATEGORY_UI[c].label}
-                </Select.Option>
-              ))}
-            </Select>,
-          )}
-        </Form.Item>
 
         <Form.Item label="Brief description">
           {getFieldDecorator('brief', {

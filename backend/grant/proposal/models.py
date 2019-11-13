@@ -241,7 +241,7 @@ class Proposal(db.Model):
     brief = db.Column(db.String(255), nullable=False)
     stage = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(255), nullable=False)
+    category = db.Column(db.String(255), nullable=True)
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
@@ -312,12 +312,9 @@ class Proposal(db.Model):
         # Validate fields to be database save-able.
         # Stricter validation is done in validate_publishable.
         stage = proposal.get('stage')
-        category = proposal.get('category')
 
         if stage and not ProposalStage.includes(stage):
             raise ValidationException("Proposal stage {} is not a valid stage".format(stage))
-        if category and not Category.includes(category):
-            raise ValidationException("Category {} not a valid category".format(category))
 
     def validate_publishable_milestones(self):
         payout_total = 0.0
@@ -350,7 +347,7 @@ class Proposal(db.Model):
         self.validate_publishable_milestones()
 
         # Require certain fields
-        required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
+        required_fields = ['title', 'content', 'brief', 'target', 'payout_address']
         for field in required_fields:
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
@@ -773,7 +770,6 @@ class ProposalSchema(ma.Schema):
             "updates",
             "milestones",
             "current_milestone",
-            "category",
             "team",
             "payout_address",
             "deadline_duration",

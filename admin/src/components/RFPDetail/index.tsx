@@ -37,9 +37,11 @@ class RFPDetail extends React.Component<Props> {
       </div>
     );
 
-    const pendingProposals = rfp.proposals.filter(p => p.status === PROPOSAL_STATUS.PENDING);
-    const acceptedProposals = rfp.proposals.filter(p =>
-      p.status === PROPOSAL_STATUS.LIVE || p.status === PROPOSAL_STATUS.APPROVED
+    const pendingProposals = rfp.proposals.filter(
+      p => p.status === PROPOSAL_STATUS.PENDING,
+    );
+    const acceptedProposals = rfp.proposals.filter(
+      p => p.status === PROPOSAL_STATUS.LIVE || p.status === PROPOSAL_STATUS.APPROVED,
     );
 
     return (
@@ -90,10 +92,12 @@ class RFPDetail extends React.Component<Props> {
               {renderDeetItem('id', rfp.id)}
               {renderDeetItem('created', formatDateSeconds(rfp.dateCreated))}
               {renderDeetItem('status', rfp.status)}
-              {renderDeetItem('category', rfp.category)}
               {renderDeetItem('matching', String(rfp.matching))}
               {renderDeetItem('bounty', `${rfp.bounty} ZEC`)}
-              {renderDeetItem('dateCloses', rfp.dateCloses && formatDateSeconds(rfp.dateCloses))}
+              {renderDeetItem(
+                'dateCloses',
+                rfp.dateCloses && formatDateSeconds(rfp.dateCloses),
+              )}
             </Card>
 
             {/* PROPOSALS */}

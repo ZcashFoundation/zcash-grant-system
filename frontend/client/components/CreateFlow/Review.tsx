@@ -1,12 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Icon, Timeline } from 'antd';
+import { Timeline } from 'antd';
 import { getCreateErrors, KeyOfForm, FIELD_NAME_MAP } from 'modules/create/utils';
 import Markdown from 'components/Markdown';
 import UserAvatar from 'components/UserAvatar';
 import { AppState } from 'store/reducers';
 import { CREATE_STEP } from './index';
-import { CATEGORY_UI, PROPOSAL_CATEGORY } from 'api/constants';
 import { ProposalDraft } from 'types';
 import './Review.less';
 
@@ -37,7 +36,6 @@ class CreateReview extends React.Component<Props> {
   render() {
     const { form } = this.props;
     const errors = getCreateErrors(this.props.form);
-    const catUI = CATEGORY_UI[form.category as PROPOSAL_CATEGORY] || ({} as any);
     const sections: Section[] = [
       {
         step: CREATE_STEP.BASICS,
@@ -58,15 +56,6 @@ class CreateReview extends React.Component<Props> {
             key: 'brief',
             content: form.brief,
             error: errors.brief,
-          },
-          {
-            key: 'category',
-            content: (
-              <div style={{ color: catUI.color }}>
-                <Icon type={catUI.icon} /> {catUI.label}
-              </div>
-            ),
-            error: errors.category,
           },
           {
             key: 'target',

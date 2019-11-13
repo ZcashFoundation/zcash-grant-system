@@ -25,7 +25,7 @@ class RFP(db.Model):
     title = db.Column(db.String(255), nullable=False)
     brief = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(255), nullable=False)
+    category = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(255), nullable=False)
     matching = db.Column(db.Boolean, default=False, nullable=False)
     _bounty = db.Column("bounty", db.String(255), nullable=True)
@@ -96,20 +96,17 @@ class RFP(db.Model):
         title: str,
         brief: str,
         content: str,
-        category: str,
         bounty: str,
         date_closes: datetime,
         matching: bool = False,
         status: str = RFPStatus.DRAFT,
     ):
         assert RFPStatus.includes(status)
-        assert Category.includes(category)
         self.id = gen_random_id(RFP)
         self.date_created = datetime.now()
         self.title = title[:255]
         self.brief = brief[:255]
         self.content = content
-        self.category = category
         self.bounty = bounty
         self.date_closes = date_closes
         self.matching = matching
@@ -125,7 +122,6 @@ class RFPSchema(ma.Schema):
             "title",
             "brief",
             "content",
-            "category",
             "status",
             "matching",
             "bounty",
@@ -173,7 +169,6 @@ class AdminRFPSchema(ma.Schema):
             "title",
             "brief",
             "content",
-            "category",
             "status",
             "matching",
             "bounty",
