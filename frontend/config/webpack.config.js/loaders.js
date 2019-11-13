@@ -61,12 +61,16 @@ const cssLoaderClient = {
   test: /\.css$/,
   exclude: [/node_modules/],
   use: [
-    isDev && 'style-loader',
-    !isDev && MiniCssExtractPlugin.loader,
+    {
+      loader: MiniCssExtractPlugin.loader,
+      options: {
+        hmr: isDev,
+      },
+    },
     {
       loader: 'css-loader',
     },
-  ].filter(Boolean),
+  ]
 };
 
 const lessLoaderClient = {
@@ -188,21 +192,19 @@ const externalCssLoaderClient = {
   test: /\.css$/,
   include: [/node_modules/],
   use: [
-    isDev && 'style-loader',
-    !isDev && MiniCssExtractPlugin.loader,
+    MiniCssExtractPlugin.loader,
     'css-loader',
-  ].filter(Boolean),
+  ]
 };
 
 const externalLessLoaderClient = {
   test: /\.less$/,
   include: [/node_modules/],
   use: [
-    isDev && 'style-loader',
-    !isDev && MiniCssExtractPlugin.loader,
+    MiniCssExtractPlugin.loader,
     'css-loader',
     lessLoader,
-  ].filter(Boolean),
+  ]
 };
 
 // Server build needs a loader to handle external .css files
