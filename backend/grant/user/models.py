@@ -58,6 +58,8 @@ class UserSettings(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     _email_subscriptions = db.Column("email_subscriptions", db.Integer, default=0)  # bitmask
     refund_address = db.Column(db.String(255), unique=False, nullable=True)
+    tip_jar_address = db.Column(db.String(255), unique=False, nullable=True)
+    tip_jar_view_key = db.Column(db.String(255), unique=False, nullable=True)
 
     user = db.relationship("User", back_populates="settings")
 
@@ -356,19 +358,24 @@ class UserSchema(ma.Schema):
             "avatar",
             "display_name",
             "userid",
-            "email_verified"
+            "email_verified",
+            "tip_jar_address"
         )
 
     social_medias = ma.Nested("SocialMediaSchema", many=True)
     avatar = ma.Nested("AvatarSchema")
     userid = ma.Method("get_userid")
     email_verified = ma.Method("get_email_verified")
+    tip_jar_address = ma.Method("get_tip_jar_address")
 
     def get_userid(self, obj):
         return obj.id
 
     def get_email_verified(self, obj):
         return obj.email_verification.has_verified
+
+    def get_tip_jar_address(self, obj):
+        return obj.settings.tip_jar_address
 
 
 user_schema = UserSchema()
@@ -412,6 +419,8 @@ class UserSettingsSchema(ma.Schema):
         fields = (
             "email_subscriptions",
             "refund_address",
+            "tip_jar_address",
+            "tip_jar_view_key"
         )
 
 

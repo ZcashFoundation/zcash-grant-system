@@ -15,6 +15,18 @@ export function getAmountError(amount: number, max: number = Infinity, min?: num
   return null;
 }
 
+export function getAmountErrorFromString(amount: string, max?: number, min?: number) {
+  const parsedAmount = parseFloat(amount)
+  if (Number.isNaN(parsedAmount)) {
+    return 'Not a valid number'
+  }
+  // prevents "-0" from being valid...
+  if (amount[0] === '-') {
+    return 'Amount must be a positive number'
+  }
+  return getAmountError(parsedAmount, max, min)
+}
+
 export function isValidEmail(email: string): boolean {
   return /\S+@\S+\.\S+/.test(email);
 }

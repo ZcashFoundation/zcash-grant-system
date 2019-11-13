@@ -155,6 +155,8 @@ export function getUserSettings(
 interface SettingsArgs {
   emailSubscriptions?: EmailSubscriptions;
   refundAddress?: string;
+  tipJarAddress?: string;
+  tipJarViewKey?: string;
 }
 export function updateUserSettings(
   userId: string | number,

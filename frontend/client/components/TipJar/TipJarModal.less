@@ -1,0 +1,64 @@
+@import '~styles/variables.less';
+
+.TipJarModal {
+
+  &-uri {
+    display: flex;
+    padding-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(#000, 0.06);
+
+    &-qr {
+      position: relative;
+      padding: 0.5rem;
+      margin-right: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(#000, 0.1), 0 1px 4px rgba(#000, 0.2);
+
+      canvas {
+        display: flex;
+        flex-shrink: 1;
+      }
+      &.is-loading canvas {
+        opacity: 0;
+      }
+
+      .ant-spin {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    &-info {
+      flex: 1;
+    }
+  }
+
+  &-fields {
+    &-row {
+      display: flex;
+
+      > * {
+        flex: 1;
+        margin-right: 0.75rem;
+
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+
+      &-address {
+        min-width: 300px;
+      }
+    }
+  }
+
+  // Ant overrides
+  input[readonly],
+  textarea[readonly] {
+    background: rgba(#000, 0.05);
+  }
+}
+

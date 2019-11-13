@@ -1,33 +1,57 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import { Form, Input, Button, message } from 'antd';
-import { AppState } from 'store/reducers';
-import { updateUserSettings, getUserSettings } from 'api/api';
+import { updateUserSettings } from 'api/api';
 import { isValidAddress } from 'utils/validators';
+import { UserSettings } from 'types';
 
-interface StateProps {
+interface Props {
+  userSettings?: UserSettings;
+  isFetching: boolean;
+  errorFetching: boolean;
   userid: number;
+  onAddressSet: (refundAddress: UserSettings['refundAddress']) => void;
 }
 
-type Props = StateProps;
+interface State {
+  isSaving: boolean
+  refundAddress: string | null
+  refundAddressSet: string | null
+}
 
-const STATE = {
-  refundAddress: '',
-  isFetching: false,
-  isSaving: false,
-};
 
-type State = typeof STATE;
+export default class RefundAddress extends React.Component<Props, State> {
 
-class RefundAddress extends React.Component<Props, State> {
-  state: State = { ...STATE };
+  static getDerivedStateFromProps(nextProps: Props, prevState: State) {
+    const { userSettings } = nextProps;
+    const { refundAddress, refundAddressSet } = prevState;
 
-  componentDidMount() {
-    this.fetchRefundAddress();
+    const ret: Partial<State> = {};
+
+    if (!userSettings || !userSettings.refundAddress) {
+      return ret;
+    }
+
+    if (userSettings.refundAddress !== refundAddressSet) {
+      ret.refundAddressSet = userSettings.refundAddress;
+
+      if (refundAddress === null) {
+        ret.refundAddress = userSettings.refundAddress;
+      }
+    }
+
+    return ret;
   }
 
+  state: State = { 
+    isSaving: false,
+    refundAddress: null,
+    refundAddressSet: null
+   };
+
   render() {
-    const { refundAddress, isFetching, isSaving } = this.state;
+    const { isSaving, refundAddress, refundAddressSet } = this.state;
+    const { isFetching, errorFetching } = this.props;
+    const addressChanged = refundAddress !== refundAddressSet;
 
     let status: 'validating' | 'error' | undefined;
     let help;
@@ -42,10 +66,10 @@ class RefundAddress extends React.Component<Props, State> {
       <Form className="RefundAddress" layout="vertical" onSubmit={this.handleSubmit}>
         <Form.Item label="Refund address" validateStatus={status} help={help}>
           <Input
-            value={refundAddress}
+            value={refundAddress || ''}
             placeholder="Z or T address"
             onChange={this.handleChange}
-            disabled={isFetching || isSaving}
+            disabled={isFetching || isSaving || errorFetching}
           />
         </Form.Item>
 
@@ -53,7 +77,9 @@ class RefundAddress extends React.Component<Props, State> {
           type="primary"
           htmlType="submit"
           size="large"
-          disabled={!refundAddress || isSaving || !!status}
+          disabled={
+            !refundAddress || isSaving || !!status || errorFetching || !addressChanged
+          }
           loading={isSaving}
           block
         >
@@ -61,19 +87,6 @@ class RefundAddress extends React.Component<Props, State> {
         </Button>
       </Form>
     );
-  }
-
-  private async fetchRefundAddress() {
-    const { userid } = this.props;
-    this.setState({ isFetching: true });
-    try {
-      const res = await getUserSettings(userid);
-      this.setState({ refundAddress: res.data.refundAddress || '' });
-    } catch (err) {
-      console.error(err);
-      message.error('Failed to get refund address');
-    }
-    this.setState({ isFetching: false });
   }
 
   private handleChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +105,9 @@ class RefundAddress extends React.Component<Props, State> {
     try {
       const res = await updateUserSettings(userid, { refundAddress });
       message.success('Settings saved');
-      this.setState({ refundAddress: res.data.refundAddress || '' });
+      const refundAddressNew = res.data.refundAddress || '';
+      this.setState({ refundAddress: refundAddressNew });
+      this.props.onAddressSet(refundAddressNew);
     } catch (err) {
       console.error(err);
       message.error(err.message || err.toString(), 5);
@@ -100,9 +115,3 @@ class RefundAddress extends React.Component<Props, State> {
     this.setState({ isSaving: false });
   };
 }
-
-const withConnect = connect<StateProps, {}, {}, AppState>(state => ({
-  userid: state.auth.user ? state.auth.user.userid : 0,
-}));
-
-export default withConnect(RefundAddress);

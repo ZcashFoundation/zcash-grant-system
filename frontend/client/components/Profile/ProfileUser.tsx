@@ -5,6 +5,7 @@ import { Button } from 'antd';
 import { SocialMedia } from 'types';
 import { UserState } from 'modules/users/reducers';
 import UserAvatar from 'components/UserAvatar';
+import { TipJarBlock } from 'components/TipJar';
 import { SOCIAL_INFO } from 'utils/social';
 import { AppState } from 'store/reducers';
 import './ProfileUser.less';
@@ -19,7 +20,15 @@ interface StateProps {
 
 type Props = OwnProps & StateProps;
 
-class ProfileUser extends React.Component<Props> {
+const STATE = {
+  tipJarModalOpen: false,
+};
+
+type State = typeof STATE;
+
+class ProfileUser extends React.Component<Props, State> {
+  state = STATE;
+
   render() {
     const {
       authUser,
@@ -52,6 +61,7 @@ class ProfileUser extends React.Component<Props> {
             </div>
           )}
         </div>
+        {!isSelf && <TipJarBlock address={user.tipJarAddress} type="user" isCard />}
       </div>
     );
   }

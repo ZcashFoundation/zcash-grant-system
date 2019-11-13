@@ -349,9 +349,12 @@ def get_user_settings(user_id):
 @body({
     "emailSubscriptions": fields.Dict(required=False, missing=None),
     "refundAddress": fields.Str(required=False, missing=None,
-                                validate=lambda r: validate_blockchain_get('/validate/address', {'address': r}))
+                                validate=lambda r: validate_blockchain_get('/validate/address', {'address': r})),
+    "tipJarAddress": fields.Str(required=False, missing=None,
+                                validate=lambda r: validate_blockchain_get('/validate/address', {'address': r})),
+    "tipJarViewKey": fields.Str(required=False, missing=None)  # TODO: add viewkey validation here
 })
-def set_user_settings(user_id, email_subscriptions, refund_address):
+def set_user_settings(user_id, email_subscriptions, refund_address, tip_jar_address, tip_jar_view_key):
     if email_subscriptions:
         try:
             email_subscriptions = keys_to_snake_case(email_subscriptions)
@@ -363,6 +366,12 @@ def set_user_settings(user_id, email_subscriptions, refund_address):
         return {"message": "Refund address cannot be unset, only changed"}, 400
     if refund_address:
         g.current_user.settings.refund_address = refund_address
+
+    # TODO: is additional validation needed similar to refund_address?
+    if tip_jar_address is not None:
+        g.current_user.settings.tip_jar_address = tip_jar_address
+    if tip_jar_view_key is not None:
+        g.current_user.settings.tip_jar_view_key = tip_jar_view_key
 
     db.session.commit()
     return user_settings_schema.dump(g.current_user.settings)
