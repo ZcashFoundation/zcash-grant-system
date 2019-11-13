@@ -1,0 +1,85 @@
+@import '~styles/variables.less';
+
+@small-query: ~'(max-width: 640px)';
+
+.Explainer {
+  display: flex;
+  flex-direction: column;
+
+  &-header {
+    margin: 3rem auto 5rem;
+
+    &-title {
+      font-size: 2rem;
+      text-align: center;
+
+    }
+
+    &-subtitle {
+      font-size: 1.4rem;
+      margin-bottom: 0;
+      opacity: 0.7;
+      text-align: center;
+
+      @media @small-query {
+        font-size: 1.8rem;
+      }
+    }
+  }
+
+  &-create {
+    display: block;
+    width: 280px;
+    margin-top: 0.5rem;
+    height: 3.2rem;
+  }
+
+  &-actions {
+    margin: 4rem auto;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-items {
+    max-width: 1200px;
+    padding: 0 2rem;
+    margin: 0 auto;
+    display: flex;
+
+    @media @small-query {
+      flex-direction: column;
+    }
+
+    &-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 2rem;
+      flex-direction: column;
+
+      @media @small-query {
+        margin-bottom: 5rem;
+      }
+
+      &-text {
+        font-size: 1.1rem;
+        text-align: center;
+        margin-top: 1rem;
+
+        @media @small-query {
+          font-size: 1.5rem;
+        }
+      }
+
+      &-icon {
+        flex-shrink: 0;
+        width: 8rem;
+
+        @media @small-query {
+          width: 12rem;
+        }
+      }
+    }
+  }
+}
