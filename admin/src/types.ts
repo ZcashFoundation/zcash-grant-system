@@ -17,7 +17,8 @@ export interface Milestone {
   index: number;
   content: string;
   dateCreated: number;
-  dateEstimated: number;
+  dateEstimated?: number;
+  daysEstimated?: string;
   dateRequested: number;
   dateAccepted: number;
   dateRejected: number;

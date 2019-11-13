@@ -170,9 +170,69 @@ class PruneDraft:
         db.session.commit()
 
 
+class MilestoneDeadline:
+    JOB_TYPE = 5
+
+    def __init__(self, proposal, milestone):
+        self.proposal = proposal
+        self.milestone = milestone
+
+    def blobify(self):
+        from grant.proposal.models import ProposalUpdate
+
+        update_count = len(ProposalUpdate.query.filter_by(proposal_id=self.proposal.id).all())
+        return {
+            "proposal_id": self.proposal.id,
+            "milestone_id": self.milestone.id,
+            "update_count": update_count
+        }
+
+    def make_task(self):
+        from .models import Task
+        task = Task(
+            job_type=self.JOB_TYPE,
+            blob=self.blobify(),
+            execute_after=self.milestone.date_estimated,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+    @staticmethod
+    def process_task(task):
+        from grant.proposal.models import Proposal, ProposalUpdate
+        from grant.milestone.models import Milestone
+
+        proposal_id = task.blob["proposal_id"]
+        milestone_id = task.blob["milestone_id"]
+        update_count = task.blob["update_count"]
+
+        proposal = Proposal.query.filter_by(id=proposal_id).first()
+        milestone = Milestone.query.filter_by(id=milestone_id).first()
+        current_update_count = len(ProposalUpdate.query.filter_by(proposal_id=proposal_id).all())
+
+        # if proposal was deleted or cancelled, noop out
+        if not proposal or proposal.status == ProposalStatus.DELETED or proposal.stage == ProposalStage.CANCELED:
+            return
+
+        # if milestone was deleted, noop out
+        if not milestone:
+            return
+
+        # if milestone payout has been requested or an update has been posted, noop out
+        if current_update_count > update_count or milestone.date_requested:
+            return
+
+        # send email to arbiter notifying milestone deadline has been missed
+        send_email(proposal.arbiter.user.email_address, 'milestone_deadline', {
+            'proposal': proposal,
+            'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
+        })
+
+
 JOBS = {
     1: ProposalReminder.process_task,
     2: ProposalDeadline.process_task,
     3: ContributionExpired.process_task,
-    4: PruneDraft.process_task
+    4: PruneDraft.process_task,
+    5: MilestoneDeadline.process_task
 }

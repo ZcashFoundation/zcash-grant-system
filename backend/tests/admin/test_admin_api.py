@@ -260,6 +260,10 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assertEqual(resp.json["acceptedWithFunding"], True)
         self.assertEqual(resp.json["target"], resp.json["contributionBounty"])
 
+        # milestones should have estimated dates
+        for milestone in resp.json["milestones"]:
+            self.assertIsNotNone(milestone["dateEstimated"])
+
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_accept_proposal_without_funding(self, mock_get):
         self.login_admin()
@@ -277,6 +281,10 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assertEqual(resp.json["status"], ProposalStatus.LIVE)
         self.assertEqual(resp.json["acceptedWithFunding"], False)
         self.assertEqual(resp.json["contributionBounty"], "0")
+
+        # milestones should not have estimated dates
+        for milestone in resp.json["milestones"]:
+            self.assertIsNone(milestone["dateEstimated"])
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_change_proposal_to_accepted_with_funding(self, mock_get):
@@ -299,6 +307,10 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         self.assert200(resp)
         self.assertEqual(resp.json["acceptedWithFunding"], True)
+
+        # milestones should have estimated dates
+        for milestone in resp.json["milestones"]:
+            self.assertIsNotNone(milestone["dateEstimated"])
 
         # should fail if proposal is already accepted with funding
         resp = self.app.put(

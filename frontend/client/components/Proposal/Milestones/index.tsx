@@ -331,7 +331,9 @@ interface MilestoneProps extends MSProps {
   isFunded: boolean;
 }
 const Milestone: React.SFC<MilestoneProps> = p => {
-  const estimatedDate = moment(p.dateEstimated * 1000).format('MMMM YYYY');
+  const estimatedDate = p.dateEstimated
+    ? moment(p.dateEstimated * 1000).format('MMMM YYYY')
+    : 'N/A';
   const reward = <UnitDisplay value={p.amount} symbol="ZEC" displayShortBalance={4} />;
   const getAlertProps = {
     [MILESTONE_STAGE.IDLE]: () => null,

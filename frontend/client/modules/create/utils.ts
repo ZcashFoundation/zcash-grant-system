@@ -1,11 +1,4 @@
-import {
-  ProposalDraft,
-  STATUS,
-  MILESTONE_STAGE,
-  PROPOSAL_ARBITER_STATUS,
-  CreateMilestone,
-} from 'types';
-import moment from 'moment';
+import { ProposalDraft, STATUS, MILESTONE_STAGE, PROPOSAL_ARBITER_STATUS } from 'types';
 import { User } from 'types';
 import {
   getAmountError,
@@ -131,7 +124,6 @@ export function getCreateErrors(
   // Milestones
   if (milestones) {
     let cumulativeMilestonePct = 0;
-    let lastMsEst: CreateMilestone['dateEstimated'] = 0;
     const milestoneErrors = milestones.map((ms, idx) => {
       // check payout first so we collect the cumulativePayout even if other fields are invalid
       if (!ms.payoutPercent) {
@@ -161,22 +153,18 @@ export function getCreateErrors(
         return 'Description can only be 200 characters maximum';
       }
 
-      if (!ms.dateEstimated) {
-        return 'Estimate date is required';
-      } else {
-        // FE validation on milestone estimation
-        if (
-          ms.dateEstimated <
-          moment(Date.now())
-            .startOf('month')
-            .unix()
-        ) {
-          return 'Estimate date should be in the future';
+      if (!ms.immediatePayout) {
+        if (!ms.daysEstimated) {
+          return 'Estimate in days is required';
+        } else if (Number.isNaN(parseInt(ms.daysEstimated, 10))) {
+          return 'Days estimated must be a valid number';
+        } else if (parseInt(ms.daysEstimated, 10) !== parseFloat(ms.daysEstimated)) {
+          return 'Days estimated must be a whole number, no decimals';
+        } else if (parseInt(ms.daysEstimated, 10) <= 0) {
+          return 'Days estimated must be greater than 0';
+        } else if (parseInt(ms.daysEstimated, 10) > 365) {
+          return 'Days estimated must be less than or equal to 365';
         }
-        if (ms.dateEstimated <= lastMsEst) {
-          return 'Estimate date should be later than previous estimate date';
-        }
-        lastMsEst = ms.dateEstimated;
       }
 
       if (
@@ -260,7 +248,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
       title: m.title,
       content: m.content,
       amount: toZat(target * (parseInt(m.payoutPercent, 10) / 100)),
-      dateEstimated: m.dateEstimated,
+      daysEstimated: m.daysEstimated,
       immediatePayout: m.immediatePayout,
       payoutPercent: m.payoutPercent.toString(),
       stage: MILESTONE_STAGE.IDLE,

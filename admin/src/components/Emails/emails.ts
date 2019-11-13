@@ -131,6 +131,11 @@ export default [
     description: 'Sent when milestone is paid',
   },
   {
+    id: 'milestone_deadline',
+    title: 'Milestone deadline',
+    description: 'Sent when the estimated deadline for milestone has been reached',
+  },
+  {
     id: 'admin_approval',
     title: 'Admin Approval',
     description: 'Sent when proposal is ready for review',

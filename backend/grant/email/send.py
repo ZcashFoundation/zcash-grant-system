@@ -245,6 +245,17 @@ def milestone_request(email_args):
     }
 
 
+def milestone_deadline(email_args):
+    p = email_args['proposal']
+    ms = p.current_milestone
+    return {
+        'subject': f'Milestone deadline reached for {p.title} - {ms.title}',
+        'title': f'Milestone deadline reached',
+        'preview': f'The estimated deadline for milestone {ms.title} has been reached.',
+        'subscription': EmailSubscription.ARBITER,
+    }
+
+
 def milestone_reject(email_args):
     p = email_args['proposal']
     ms = p.current_milestone
@@ -351,6 +362,7 @@ get_info_lookup = {
     'comment_reply': comment_reply,
     'proposal_arbiter': proposal_arbiter,
     'milestone_request': milestone_request,
+    'milestone_deadline': milestone_deadline,
     'milestone_reject': milestone_reject,
     'milestone_accept': milestone_accept,
     'milestone_paid': milestone_paid,

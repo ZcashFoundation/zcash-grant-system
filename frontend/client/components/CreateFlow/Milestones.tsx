@@ -1,6 +1,5 @@
 import React from 'react';
-import { Form, Input, DatePicker, Card, Icon, Alert, Checkbox, Button } from 'antd';
-import moment from 'moment';
+import { Form, Input, Card, Icon, Alert, Checkbox, Button } from 'antd';
 import { ProposalDraft, CreateMilestone } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 
@@ -18,7 +17,7 @@ const DEFAULT_STATE: State = {
     {
       title: '',
       content: '',
-      dateEstimated: moment().unix(),
+      daysEstimated: '',
       payoutPercent: '',
       immediatePayout: false,
     },
@@ -78,11 +77,7 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
             milestone={milestone}
             index={idx}
             error={errors.milestones && errors.milestones[idx]}
-            previousMilestoneDateEstimate={
-              milestones[idx - 1] && milestones[idx - 1].dateEstimated
-                ? moment(milestones[idx - 1].dateEstimated * 1000)
-                : undefined
-            }
+
             onChange={this.handleMilestoneChange}
             onRemove={this.removeMilestone}
           />
@@ -101,7 +96,7 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
 interface MilestoneFieldsProps {
   index: number;
   milestone: CreateMilestone;
-  previousMilestoneDateEstimate: moment.Moment | undefined;
+  // previousMilestoneDateEstimate: moment.Moment | undefined;
   error: Falsy | string;
   onChange(index: number, milestone: CreateMilestone): void;
   onRemove(index: number): void;
@@ -113,7 +108,6 @@ const MilestoneFields = ({
   error,
   onChange,
   onRemove,
-  previousMilestoneDateEstimate,
 }: MilestoneFieldsProps) => (
   <Card style={{ marginBottom: '2rem' }}>
     <div style={{ display: 'flex', marginBottom: '0.5rem', alignItems: 'center' }}>
@@ -153,35 +147,20 @@ const MilestoneFields = ({
     </div>
 
     <div style={{ display: 'flex' }}>
-      <DatePicker.MonthPicker
-        style={{ flex: 1, marginRight: '0.5rem' }}
-        placeholder="Expected completion date"
-        value={
-          milestone.dateEstimated ? moment(milestone.dateEstimated * 1000) : undefined
-        }
-        format="MMMM YYYY"
-        allowClear={false}
-        onChange={time =>
-          onChange(index, { ...milestone, dateEstimated: time.startOf('month').unix() })
-        }
+      <Input
+        value={milestone.daysEstimated}
         disabled={milestone.immediatePayout}
-        disabledDate={current => {
-          if (!previousMilestoneDateEstimate) {
-            return current
-              ? current <
-                  moment()
-                    .subtract(1, 'month')
-                    .endOf('month')
-              : false;
-          } else {
-            return current
-              ? current <
-                  moment()
-                    .subtract(1, 'month')
-                    .endOf('month') || current < previousMilestoneDateEstimate
-              : false;
-          }
-        }}
+        placeholder="Estimated days to complete"
+        onChange={ev =>{
+          return onChange(index, {
+            ...milestone,
+            daysEstimated: ev.currentTarget.value
+          })
+        }
+        }
+        addonAfter="days"
+        style={{ flex: 1, marginRight: '0.5rem' }}
+        maxLength={6}
       />
       <Input
         value={milestone.payoutPercent}
@@ -204,9 +183,6 @@ const MilestoneFields = ({
               onChange(index, {
                 ...milestone,
                 immediatePayout: ev.target.checked,
-                dateEstimated: ev.target.checked
-                  ? moment().unix()
-                  : milestone.dateEstimated,
               })
             }
           >

@@ -138,14 +138,14 @@ class BaseProposalCreatorConfig(BaseUserConfig):
             {
                 "title": "Milestone 1",
                 "content": "Content 1",
-                "date_estimated": (datetime.now() + timedelta(days=364)).timestamp(),  # random unix time in the future
+                "days_estimated": "30",
                 "payout_percent": 50,
                 "immediate_payout": True
             },
             {
                 "title": "Milestone 2",
                 "content": "Content 2",
-                "date_estimated": (datetime.now() + timedelta(days=365)).timestamp(),  # random unix time in the future
+                "days_estimated": "20",
                 "payout_percent": 50,
                 "immediate_payout": False
             }

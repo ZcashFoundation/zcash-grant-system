@@ -149,6 +149,10 @@ example_email_args = {
         'proposal': proposal,
         'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
     },
+    'milestone_deadline': {
+        'proposal': proposal,
+        'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
+    },
     'milestone_reject': {
         'proposal': proposal,
         'admin_note': 'We noticed that the tests were failing for the features outlined in this milestone. Please address these issues.',

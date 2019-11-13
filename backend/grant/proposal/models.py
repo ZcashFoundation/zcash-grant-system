@@ -381,13 +381,24 @@ class Proposal(db.Model):
         # Then run through regular validation
         Proposal.simple_validate(vars(self))
 
-    # only do this when user submits for approval, there is a chance the dates will
-    # be passed by the time admin approval / user publishing occurs
-    def validate_milestone_dates(self):
-        present = datetime.datetime.today().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    def validate_milestone_days(self):
         for milestone in self.milestones:
-            if present > milestone.date_estimated:
-                raise ValidationException("Milestone date estimate must be in the future ")
+            if milestone.immediate_payout:
+                continue
+
+            try:
+                p = float(milestone.days_estimated)
+                if not p.is_integer():
+                    raise ValidationException("Milestone days estimated must be whole numbers, no decimals")
+                if p <= 0:
+                    raise ValidationException("Milestone days estimated must be greater than zero")
+                if p > 365:
+                    raise ValidationException("Milestone days estimated must be less than 365")
+
+            except ValueError:
+                raise ValidationException("Milestone days estimated must be a number")
+        return
 
     @staticmethod
     def create(**kwargs):
@@ -499,7 +510,7 @@ class Proposal(db.Model):
     # state: status (DRAFT || REJECTED) -> (PENDING || STAKING)
     def submit_for_approval(self):
         self.validate_publishable()
-        self.validate_milestone_dates()
+        self.validate_milestone_days()
         allowed_statuses = [ProposalStatus.DRAFT, ProposalStatus.REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
@@ -536,6 +547,11 @@ class Proposal(db.Model):
             self.status = ProposalStatus.LIVE
             self.date_approved = datetime.datetime.now()
             self.accepted_with_funding = with_funding
+
+            # also update date_published and stage since publish() is no longer called by user
+            self.date_published = datetime.datetime.now()
+            self.stage = ProposalStage.WIP
+
             with_or_out = 'without'
             if with_funding:
                 self.fully_fund_contibution_bounty()
