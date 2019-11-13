@@ -7,7 +7,7 @@ from flask.cli import with_appcontext
 from .models import Proposal, db
 from grant.milestone.models import Milestone
 from grant.comment.models import Comment
-from grant.utils.enums import ProposalStatus, Category, ProposalStageEnum
+from grant.utils.enums import ProposalStatus, Category, ProposalStage
 from grant.user.models import User
 
 
@@ -35,9 +35,9 @@ def create_proposals(count):
     user = User.query.filter_by().first()
     for i in range(count):
         if i < 5:
-            stage = ProposalStageEnum.WIP
+            stage = ProposalStage.WIP
         else:
-            stage = ProposalStageEnum.COMPLETED
+            stage = ProposalStage.COMPLETED
         p = Proposal.create(
             stage=stage,
             status=ProposalStatus.LIVE,
@@ -76,3 +76,43 @@ def create_proposals(count):
 
     db.session.commit()
     print(f'Added {count} LIVE fake proposals')
+
+
+@click.command()
+@click.argument('dry', required=False)
+@with_appcontext
+def retire_v1_proposals(dry):
+    now = datetime.datetime.now()
+    proposals = Proposal.query.filter_by(stage="FUNDING_REQUIRED").all()
+    modified_count = 0
+
+    if not proposals:
+        print("No proposals found. Exiting...")
+        return
+
+    print(f"Found {len(proposals)} proposals to modify")
+    if dry:
+        print(f"This is a dry run. Changes will not be committed to database")
+
+    confirm = input("Continue? (y/n) ")
+
+    if confirm != "y":
+        print("Exiting...")
+        return
+
+    for p in proposals:
+        if not dry:
+            new_deadline = (now - p.date_published).total_seconds()
+            p.stage = ProposalStage.FAILED
+            p.deadline_duration = int(new_deadline)
+            db.session.add(p)
+            modified_count += 1
+
+        print(f"Modified proposal {p.id} - {p.title}")
+
+    if not dry:
+        print(f"Committing changes to database")
+        db.session.commit()
+
+    print(f"Modified {modified_count} proposals")
+

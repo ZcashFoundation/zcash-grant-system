@@ -163,5 +163,6 @@ def register_commands(app):
     app.cli.add_command(commands.reset_db_chain_data)
     app.cli.add_command(proposal.commands.create_proposal)
     app.cli.add_command(proposal.commands.create_proposals)
+    app.cli.add_command(proposal.commands.retire_v1_proposals)
     app.cli.add_command(user.commands.set_admin)
     app.cli.add_command(task.commands.create_task)
