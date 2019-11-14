@@ -6,8 +6,6 @@ import './TipJarBlock.less';
 import '../Proposal/index.less';
 
 interface Props {
-  isCard?: boolean;
-  hideTitle?: boolean;
   address?: string | null;
   type: 'user' | 'proposal';
 }
@@ -23,7 +21,7 @@ export class TipJarBlock extends React.Component<Props, State> {
   state = STATE;
 
   render() {
-    const { isCard, address, type, hideTitle } = this.props;
+    const { address, type } = this.props;
     const { tipAmount, modalOpen } = this.state;
     const amountError = tipAmount ? getAmountErrorFromString(tipAmount) : '';
 
@@ -34,9 +32,8 @@ export class TipJarBlock extends React.Component<Props, State> {
     const isDisabled = addressNotSet || !tipAmount || !!amountError;
 
     return (
-      <div className={isCard ? 'Proposal-top-main-block' : undefined}>
+      <div>
         <Form layout="vertical" className="TipJarBlock">
-          {!hideTitle && <h1 className="TipJarBlock-title">Tip</h1>}
           <Form.Item
             validateStatus={amountError ? 'error' : undefined}
             help={amountError}
@@ -47,7 +44,7 @@ export class TipJarBlock extends React.Component<Props, State> {
               name="amountToTip"
               type="number"
               value={tipAmount}
-              placeholder="0.5"
+              placeholder="Show them you care"
               min={0}
               step={0.1}
               onChange={this.handleAmountChange}
@@ -59,23 +56,24 @@ export class TipJarBlock extends React.Component<Props, State> {
               onClick={this.handleTipJarModalOpen}
               size="large"
               type="primary"
-              disabled={isDisabled}
               block
+              disabled={isDisabled}
             >
-              Donate
+              🎉 Tip
             </Button>
           </Tooltip>
         </Form>
 
-        {address && tipAmount && (
-          <TipJarModal
-            isOpen={modalOpen}
-            onClose={this.handleTipJarModalClose}
-            type={type}
-            address={address}
-            amount={tipAmount}
-          />
-        )}
+        {address &&
+          tipAmount && (
+            <TipJarModal
+              isOpen={modalOpen}
+              onClose={this.handleTipJarModalClose}
+              type={type}
+              address={address}
+              amount={tipAmount}
+            />
+          )}
       </div>
     );
   }

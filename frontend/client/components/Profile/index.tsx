@@ -31,6 +31,7 @@ import './style.less';
 interface StateProps {
   usersMap: AppState['users']['map'];
   authUser: AppState['auth']['user'];
+  hasCheckedUser: AppState['auth']['hasCheckedUser'];
 }
 
 interface DispatchProps {
@@ -63,7 +64,7 @@ class Profile extends React.Component<Props, State> {
   }
 
   render() {
-    const { authUser, match, location } = this.props;
+    const { authUser, match, location, hasCheckedUser } = this.props;
     const { activeContribution } = this.state;
     const userLookupParam = match.params.id;
 
@@ -76,7 +77,7 @@ class Profile extends React.Component<Props, State> {
     }
 
     const user = this.props.usersMap[userLookupParam];
-    const waiting = !user || !user.hasFetched;
+    const waiting = !user || !user.hasFetched || !hasCheckedUser;
     const isAuthedUser = user && authUser && user.userid === authUser.userid;
 
     if (waiting) {
@@ -271,6 +272,7 @@ const withConnect = connect<StateProps, DispatchProps, {}, AppState>(
   state => ({
     usersMap: state.users.map,
     authUser: state.auth.user,
+    hasCheckedUser: state.auth.hasCheckedUser,
   }),
   {
     fetchUser: usersActions.fetchUser,
