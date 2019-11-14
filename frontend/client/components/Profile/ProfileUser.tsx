@@ -61,7 +61,7 @@ class ProfileUser extends React.Component<Props, State> {
             </div>
           )}
         </div>
-        {!isSelf && <TipJarBlock address={user.tipJarAddress} type="user" isCard />}
+        {!isSelf && <TipJarBlock address={user.tipJarAddress} type="user" />}
       </div>
     );
   }
