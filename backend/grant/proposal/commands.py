@@ -78,9 +78,8 @@ def create_proposals(count):
             )
             db.session.add(c)
 
-        if stage == ProposalStage.WIP:
-            Milestone.set_v2_date_estimates(p)
-            db.session.add(p)
+        Milestone.set_v2_date_estimates(p)
+        db.session.add(p)
 
     db.session.commit()
     print(f'Added {count} LIVE fake proposals')
