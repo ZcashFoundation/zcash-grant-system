@@ -8,6 +8,7 @@ import { Proposal } from 'types';
 import { Comment, RFP } from 'types';
 import { likeProposal, likeComment, likeRfp } from 'api/api';
 import AuthButton from 'components/AuthButton';
+import classnames from 'classnames';
 import './index.less';
 
 interface OwnProps {
@@ -16,6 +17,7 @@ interface OwnProps {
   comment?: Comment;
   rfp?: RFP;
   style?: React.CSSProperties;
+  className?: string;
 }
 
 interface StateProps {
@@ -40,7 +42,7 @@ class Like extends React.Component<Props, State> {
 
   render() {
     const { likesCount, authedLiked } = this.deriveInfo();
-    const { proposal, rfp, comment, style, proposal_card } = this.props;
+    const { proposal, rfp, comment, style, proposal_card, className } = this.props;
     const { loading } = this.state;
     const zoom = comment || proposal_card ? 0.8 : 1;
     const shouldShowLikeText = (!!proposal && !proposal_card) || !!rfp;
@@ -54,7 +56,11 @@ class Like extends React.Component<Props, State> {
     const handleIconButtonClick = proposal_card ? undefined : this.handleLike;
 
     return (
-      <Input.Group className="Like" compact style={{ zoom, pointerEvents, ...style }}>
+      <Input.Group
+        className={classnames('Like', className)}
+        compact
+        style={{ zoom, pointerEvents, ...style }}
+      >
         <IconButton onClick={handleIconButtonClick}>
           <Icon
             theme={authedLiked ? 'filled' : 'outlined'}

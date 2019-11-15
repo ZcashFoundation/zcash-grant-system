@@ -6,11 +6,13 @@ import { proposalActions } from 'modules/proposals';
 import { ProposalDetail } from 'modules/proposals/reducers';
 import { followProposal } from 'api/api';
 import AuthButton from 'components/AuthButton';
+import classnames from 'classnames';
 import './index.less';
 
 interface OwnProps {
   proposal: ProposalDetail;
   style?: React.CSSProperties;
+  className?: string;
 }
 
 interface StateProps {
@@ -31,11 +33,11 @@ type State = typeof STATE;
 class Follow extends React.Component<Props, State> {
   state: State = { ...STATE };
   render() {
-    const { style } = this.props;
+    const { style, className } = this.props;
     const { authedFollows, followersCount } = this.props.proposal;
     const { loading } = this.state;
     return (
-      <Input.Group style={style} className="Follow" compact>
+      <Input.Group style={style} className={classnames('Follow', className)} compact>
         <AuthButton onClick={this.handleFollow}>
           <Icon
             theme={authedFollows ? 'filled' : 'outlined'}
