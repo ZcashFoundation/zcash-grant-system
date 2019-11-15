@@ -51,6 +51,10 @@ def create_proposals(count):
         )
         p.date_published = datetime.datetime.now()
         p.team.append(user)
+        p.date_approved = datetime.datetime.now()
+        p.accepted_with_funding = True
+        p.version = '2'
+        p.fully_fund_contibution_bounty()
         db.session.add(p)
         db.session.flush()
         num_ms = randint(1, 9)
@@ -58,7 +62,7 @@ def create_proposals(count):
             m = Milestone(
                 title=f'Fake MS {j}',
                 content=f'Fake milestone #{j} on fake proposal #{i}!',
-                date_estimated=datetime.datetime.now(),
+                days_estimated='10',
                 payout_percent=str(floor(1 / num_ms * 100)),
                 immediate_payout=j == 0,
                 proposal_id=p.id,
@@ -73,6 +77,10 @@ def create_proposals(count):
                 content=f'Fake comment #{j} on fake proposal #{i}!'
             )
             db.session.add(c)
+
+        if stage == ProposalStage.WIP:
+            Milestone.set_v2_date_estimates(p)
+            db.session.add(p)
 
     db.session.commit()
     print(f'Added {count} LIVE fake proposals')
