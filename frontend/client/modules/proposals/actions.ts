@@ -119,6 +119,18 @@ export function fetchProposal(proposalId: Proposal['proposalId']) {
   };
 }
 
+export type TUpdateProposal = typeof updateProposal;
+export function updateProposal(
+  proposal: Proposal
+) {
+  return (dispatch: Dispatch<any>, getState: GetState) => {
+    dispatch({
+      type: types.PROPOSAL_DATA_FULFILLED,
+      payload: addProposalUserRoles(proposal, getState()),
+    });
+  }
+}
+
 export function fetchProposalComments(id?: number) {
   return async (dispatch: Dispatch<any>, getState: GetState) => {
     const state = getState();

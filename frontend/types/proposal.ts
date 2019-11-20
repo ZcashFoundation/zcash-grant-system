@@ -43,6 +43,7 @@ export interface ProposalDraft {
   invites: TeamInvite[];
   status: STATUS;
   isStaked: boolean;
+  tipJarAddress: string | null;
   deadlineDuration?: number;
   rfp?: RFP;
   rfpOptIn?: boolean;
@@ -67,6 +68,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   followersCount: number;
   authedLiked: boolean;
   likesCount: number;
+  tipJarViewKey: string | null;
   isTeamMember?: boolean; // FE derived
   isArbiter?: boolean; // FE derived
 }

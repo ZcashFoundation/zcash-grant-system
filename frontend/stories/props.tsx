@@ -165,6 +165,8 @@ export function generateProposal({
     followersCount: 0,
     authedLiked: false,
     likesCount: 0,
+    tipJarAddress: null,
+    tipJarViewKey: null,
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
       user: {

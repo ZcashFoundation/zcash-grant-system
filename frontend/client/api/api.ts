@@ -211,6 +211,21 @@ export async function fetchCrowdFundJSON(): Promise<any> {
   return res.data;
 }
 
+interface ProposalTipJarArgs {
+  address?: string;
+  viewKey?: string;
+}
+export function updateProposalTipJarSettings(
+  proposalId: string | number,
+  args?: ProposalTipJarArgs,
+): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposalId}/tips`, args).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
+
 export function postProposalUpdate(
   proposalId: number,
   title: string,

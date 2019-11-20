@@ -8,6 +8,7 @@ import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
 import UnitDisplay from 'components/UnitDisplay';
+import { TipJarBlock } from 'components/TipJar';
 import Loader from 'components/Loader';
 import { PROPOSAL_STAGE } from 'api/constants';
 import './style.less';
@@ -170,59 +171,6 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                     }}
                   />
                 </div>
-
-                {/* TODO: use this as a base for tipjar? */}
-
-                {/* <Form layout="vertical" className="ProposalCampaignBlock-contribute">
-                <Form.Item
-                  validateStatus={amountError ? 'error' : undefined}
-                  help={amountError}
-                  style={{ marginBottom: '0.5rem', paddingBottom: 0 }}
-                >
-                  <Input
-                    size="large"
-                    name="amountToRaise"
-                    type="number"
-                    value={amountToRaise}
-                    placeholder="0.5"
-                    min={0}
-                    max={remainingTargetNum}
-                    step={0.1}
-                    onChange={this.handleAmountChange}
-                    addonAfter="ZEC"
-                    disabled={isPreview}
-                  />
-                </Form.Item>
-                {amountToRaise &&
-                  !!authUser && (
-                    <Radio.Group
-                      onChange={this.handleChangePrivate}
-                      value={isPrivate ? 'isPrivate' : 'isNotPrivate'}
-                    >
-                      <Radio value={'isPrivate'}>
-                        Contribute without attribution
-                        <Tooltip title="Other users will not see who made this contribution.">
-                          <Icon type="question-circle" />
-                        </Tooltip>
-                      </Radio>
-                      <Radio value={'isNotPrivate'}>
-                        Attribute contribution publicly
-                        <Tooltip title="Other users will be able to see that you made this contribution.">
-                          <Icon type="question-circle" />
-                        </Tooltip>
-                      </Radio>
-                    </Radio.Group>
-                  )}
-                <Button
-                  onClick={this.openContributionModal}
-                  size="large"
-                  type="primary"
-                  disabled={isDisabled}
-                  block
-                >
-                  Fund this project
-                </Button>
-              </Form> */}
               </>
             ))}
 
@@ -248,15 +196,11 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               </div>
             )}
 
-          {/* TODO: adapt below for tipjar? */}
-          {/* <ContributionModal
-            isVisible={isContributing}
-            proposalId={proposal.proposalId}
-            amount={amountToRaise}
-            isAnonymous={!authUser}
-            isPublic={!isPrivate}
-            handleClose={this.closeContributionModal}
-          /> */}
+          {proposal.tipJarAddress && (
+            <div className="ProposalCampaignBlock-tipJarWrapper">
+              <TipJarBlock address={proposal.tipJarAddress} type="proposal" />
+            </div>
+          )}
         </React.Fragment>
       );
     } else {

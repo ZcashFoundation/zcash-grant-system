@@ -25,6 +25,7 @@ from grant.utils.auth import (
     get_authed_user,
     internal_webhook
 )
+from grant.utils.requests import validate_blockchain_get
 from grant.utils.enums import Category
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, RFPStatus
 from grant.utils.exceptions import ValidationException
@@ -229,6 +230,7 @@ def get_proposal_drafts():
     "content": fields.Str(required=True),
     "target": fields.Str(required=True),
     "payoutAddress": fields.Str(required=True),
+    "tipJarAddress": fields.Str(required=False, missing=None),
     "milestones": fields.List(fields.Dict(), required=True),
     "rfpOptIn": fields.Bool(required=False, missing=None),
 })
@@ -252,6 +254,24 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     Milestone.make(milestones, g.current_proposal)
 
     # Commit
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
+
+
+@blueprint.route("/<proposal_id>/tips", methods=["PUT"])
+@requires_team_member_auth
+@body({
+    "address": fields.Str(required=False, missing=None,
+                          validate=lambda r: validate_blockchain_get('/validate/address', {'address': r})),
+    "viewKey": fields.Str(required=False, missing=None)
+})
+def update_proposal_tip_jar(proposal_id, address, view_key):
+    if address is not None:
+        g.current_proposal.tip_jar_address = address
+    if view_key is not None:
+        g.current_proposal.tip_jar_view_key = view_key
+
+    db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
 

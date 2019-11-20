@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 from decimal import Decimal, ROUND_DOWN
 from functools import reduce
 
@@ -255,6 +256,8 @@ class Proposal(db.Model):
     contribution_bounty = db.Column(db.String(255), nullable=False, default='0', server_default=db.text("'0'"))
     rfp_opt_in = db.Column(db.Boolean(), nullable=True)
     contributed = db.column_property()
+    tip_jar_address = db.Column(db.String(255), nullable=True)
+    tip_jar_view_key = db.Column(db.String(255), nullable=True)
 
     # Relations
     team = db.relationship("User", secondary=proposal_team)
@@ -366,7 +369,7 @@ class Proposal(db.Model):
         if self.deadline_duration > 7776000:
             raise ValidationException("Deadline duration cannot be more than 90 days")
 
-        # Check with node that the address is kosher
+        # Check with node that the payout address is kosher
         try:
             res = blockchain_get('/validate/address', {'address': self.payout_address})
         except:
@@ -374,6 +377,16 @@ class Proposal(db.Model):
                 "Could not validate your payout address due to an internal server error, please try again later")
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
+
+        if self.tip_jar_address:
+            # Check with node that the tip jar address is kosher
+            try:
+                res = blockchain_get('/validate/address', {'address': self.tip_jar_address})
+            except:
+                raise ValidationException(
+                    "Could not validate your tipping address due to an internal server error, please try again later")
+            if not res['valid']:
+                raise ValidationException("Tipping address is not a valid Zcash address")
 
         # Then run through regular validation
         Proposal.simple_validate(vars(self))
@@ -438,6 +451,7 @@ class Proposal(db.Model):
             content: str = '',
             target: str = '0',
             payout_address: str = '',
+            tip_jar_address: Optional[str] = None,
             deadline_duration: int = 5184000  # 60 days
     ):
         self.title = title[:255]
@@ -446,6 +460,7 @@ class Proposal(db.Model):
         self.content = content[:300000]
         self.target = target[:255] if target != '' else '0'
         self.payout_address = payout_address[:255]
+        self.tip_jar_address = tip_jar_address[:255] if tip_jar_address is not None else None
         self.deadline_duration = deadline_duration
         Proposal.simple_validate(vars(self))
 
@@ -746,6 +761,16 @@ class Proposal(db.Model):
             return True
         return False
 
+    @hybrid_property
+    def get_tip_jar_view_key(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if authed not in self.team:
+            return None
+        else:
+            return self.tip_jar_view_key
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -784,7 +809,9 @@ class ProposalSchema(ma.Schema):
             "authed_follows",
             "followers_count",
             "authed_liked",
-            "likes_count"
+            "likes_count",
+            "tip_jar_address",
+            "tip_jar_view_key"
         )
 
     date_created = ma.Method("get_date_created")
@@ -792,6 +819,7 @@ class ProposalSchema(ma.Schema):
     date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
     is_version_two = ma.Method("get_is_version_two")
+    tip_jar_view_key = ma.Method("get_tip_jar_view_key")
 
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
@@ -815,6 +843,9 @@ class ProposalSchema(ma.Schema):
 
     def get_is_version_two(self, obj):
         return True if obj.version == '2' else False
+
+    def get_tip_jar_view_key(self, obj):
+        return obj.get_tip_jar_view_key
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)

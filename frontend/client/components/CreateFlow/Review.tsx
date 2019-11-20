@@ -108,6 +108,17 @@ class CreateReview extends React.Component<Props> {
           },
         ],
       },
+      {
+        step: CREATE_STEP.TIPPING,
+        name: 'Tipping',
+        fields: [
+          {
+            key: 'tipJarAddress',
+            content: <code>{form.tipJarAddress}</code>,
+            error: errors.tipJarAddress,
+          },
+        ],
+      },
     ];
 
     return (
