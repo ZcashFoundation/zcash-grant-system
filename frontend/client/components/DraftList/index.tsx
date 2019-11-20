@@ -120,7 +120,7 @@ class DraftList extends React.Component<Props, State> {
                     title={
                       <>
                         {d.title || <em>Untitled proposal</em>}
-                        {d.status === STATUS.REJECTED && <em> (rejected)</em>}
+                        {d.status === STATUS.REJECTED && <em> (changes requested)</em>}
                       </>
                     }
                     description={d.brief || <em>No description</em>}

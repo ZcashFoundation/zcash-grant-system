@@ -54,10 +54,10 @@ class ProfilePending extends React.Component<Props, State> {
       },
       [STATUS.REJECTED]: {
         color: 'red',
-        tag: 'Rejected',
+        tag: 'Changes requested',
         blurb: (
           <>
-            <div>This proposal was rejected for the following reason:</div>
+            <div>This proposal has changes requested:</div>
             <q>{rejectReason}</q>
             <div>You may edit this proposal and re-submit it for approval.</div>
           </>

@@ -77,9 +77,9 @@ def proposal_approved(email_args):
 
 def proposal_rejected(email_args):
     return {
-        'subject': 'Your proposal has been rejected',
-        'title': 'Your proposal has been rejected',
-        'preview': '{} has been rejected'.format(email_args['proposal'].title),
+        'subject': 'Your proposal has changes requested',
+        'title': 'Your proposal has changes requested',
+        'preview': '{} has changes requested'.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 

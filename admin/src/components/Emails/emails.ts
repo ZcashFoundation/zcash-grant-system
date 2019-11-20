@@ -43,8 +43,8 @@ export default [
   },
   {
     id: 'proposal_rejected',
-    title: 'Proposal rejected',
-    description: 'Sent when an admin rejects your submitted proposal',
+    title: 'Proposal changes requested',
+    description: 'Sent when an admin requests changes for your submitted proposal',
   },
   {
     id: 'proposal_contribution',

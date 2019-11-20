@@ -1,4 +1,4 @@
-Your proposal has unfortunately been rejected. You're free to modify it
+Your proposal has changes requested. You're free to modify it
 and try submitting again.
 
 {% if args.admin_note %}

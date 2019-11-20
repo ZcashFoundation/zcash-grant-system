@@ -149,8 +149,8 @@ export class ProposalDetail extends React.Component<Props, State> {
       [STATUS.REJECTED]: {
         blurb: (
           <>
-            Your proposal was rejected and is only visible to the team. Visit your{' '}
-            <Link to="/profile?tab=pending">profile's pending tab</Link> for more
+            Your proposal has changes requested and is only visible to the team. Visit
+            your <Link to="/profile?tab=pending">profile's pending tab</Link> for more
             information.
           </>
         ),

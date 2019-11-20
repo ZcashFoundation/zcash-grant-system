@@ -48,7 +48,7 @@ export const EMAIL_SUBSCRIPTIONS: { [key in ESKey]: EmailSubscriptionInfo } = {
 
   // MY PROPOSAL
   myProposalApproval: {
-    description: 'is approved or rejected',
+    description: 'is approved or has changes requested',
     category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
     value: false,
   },

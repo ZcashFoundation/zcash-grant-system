@@ -221,11 +221,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         <Alert
           showIcon
           type="error"
-          message="Rejected"
+          message="Changes requested"
           description={
             <div>
               <p>
-                This proposal has been rejected. The team will be able to re-submit it for
+                This proposal has changes requested. The team will be able to re-submit it for
                 approval should they desire to do so.
               </p>
               <b>Reason:</b>
@@ -547,7 +547,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
   private handleReject = async (reason: string) => {
     await store.approveProposal(false, false, reason);
-    message.info('Proposal rejected');
+    message.info('Proposal changes requested');
   };
 
   private handlePaidMilestone = async () => {

@@ -77,14 +77,14 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     id: PROPOSAL_STATUS.PENDING,
     tagDisplay: 'Awaiting Approval',
     tagColor: '#ffaa00',
-    hint: 'User is waiting for admin to approve or reject this Proposal.',
+    hint: 'User is waiting for admin to approve or request changes to this Proposal.',
   },
   {
     id: PROPOSAL_STATUS.REJECTED,
-    tagDisplay: 'Approval Rejected',
+    tagDisplay: 'Changes Requested',
     tagColor: '#eb4118',
     hint:
-      'Admin has rejected this proposal. User may adjust it and resubmit for approval.',
+      'Admin has requested changes for this proposal. User may adjust it and resubmit for approval.',
   },
   {
     id: PROPOSAL_STATUS.STAKING,
