@@ -19,6 +19,7 @@ import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
+import { Alert } from 'antd';
 
 import { AppState } from 'store/reducers';
 
@@ -196,8 +197,32 @@ class CreateFlow extends React.Component<Props, State> {
       );
     }
 
+    const proposalSubmissionDisabled = true;
+
     return (
       <div>
+        {proposalSubmissionDisabled && (
+          <div className={'CreateFlow-notice'}>
+            {' '}
+            <Alert
+              className={'CreateFlow-notice-alert'}
+              message="Proposal Submissions Are Disabled"
+              description={
+                <>
+                  Changes are coming to ZF Grants. To prepare for these changes, we're
+                  temporarily disabling proposal submissions.
+                  <br />
+                  To get notified once admissions are re-opened, you can subscribe to the
+                  Zcash Foundation
+                  <a href={'https://www.zfnd.org/'}> newsletter </a>
+                  or monitor the <a href={'https://www.zfnd.org/blog/'}>blog</a>.
+                </>
+              }
+              type="warning"
+              showIcon
+            />
+          </div>
+        )}
         {content}
         {showFooter && (
           <div className="CreateFlow-footer">
@@ -214,14 +239,16 @@ class CreateFlow extends React.Component<Props, State> {
                   className="CreateFlow-footer-button is-primary"
                   key="submit"
                   onClick={this.openPublishWarning}
-                  disabled={this.checkFormErrors()}
+                  disabled={this.checkFormErrors() || proposalSubmissionDisabled}
                 >
                   Submit
                 </button>
               </>
             ) : (
               <>
-                <div className="CreateFlow-footer-help">{info.help}</div>
+                <div className="CreateFlow-footer-help">
+                  <p>{info.help}</p>
+                </div>
                 <button
                   className="CreateFlow-footer-button"
                   key="next"
