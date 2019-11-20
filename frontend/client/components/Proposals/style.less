@@ -2,7 +2,58 @@
 
 .Proposals {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+
+  &-content {
+    display: flex;
+    flex-direction: row;
+  }
+
+  &-about {
+    display: flex;
+    align-content: center;
+
+    &-logo {
+      flex-shrink: 0;
+      width: 140px;
+      padding-right: 1.5rem;
+
+      margin-left: 3.5rem;
+      margin-right: 4.5rem;
+
+      @media (max-width: 900px) {
+        margin-left: 3.5rem;
+        margin-right: 5.5rem;
+      }
+
+      @media @small-query {
+        margin-left: 1rem;
+        margin-right: 1.5rem;
+      }
+
+      svg {
+        width: 100%;
+        height: auto;
+      }
+    }
+
+    &-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      &-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      &-desc {
+        font-size: 1rem;
+      }
+    }
+  }
 
   &-filters {
     width: 220px;

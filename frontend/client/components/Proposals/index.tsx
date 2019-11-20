@@ -8,6 +8,7 @@ import { Input, Divider, Drawer, Icon, Button } from 'antd';
 import ProposalResults from './Results';
 import ProposalFilters from './Filters';
 import { PROPOSAL_SORT } from 'api/constants';
+import ZCFLogo from 'static/images/zcf.svg';
 import './style.less';
 
 interface StateProps {
@@ -60,47 +61,66 @@ class Proposals extends React.Component<Props, State> {
     );
     return (
       <div className="Proposals">
-        {isFiltersDrawered ? (
-          <Drawer
-            placement="right"
-            visible={isDrawerShowing}
-            onClose={this.closeFilterDrawer}
-            closable={false}
-            width={300}
-          >
-            {filtersComponent}
-            <Button
-              type="primary"
-              onClick={this.closeFilterDrawer}
-              style={{ marginTop: '1rem' }}
-              block
-            >
-              Done
-            </Button>
-          </Drawer>
-        ) : (
-          <div className="Proposals-filters">{filtersComponent}</div>
-        )}
-
-        <div className="Proposals-results">
-          <div className="Proposals-search">
-            <Input.Search
-              placeholder="Search for a proposal"
-              onChange={this.handleChangeSearch}
-              value={this.state.searchQuery}
-              size="large"
-            />
-            <Button
-              className="Proposals-search-filterButton"
-              type="primary"
-              size="large"
-              onClick={this.openFilterDrawer}
-            >
-              <Icon type="filter" /> Filters
-            </Button>
+        <div className="Proposals-about">
+          <div className="Proposals-about-logo">
+            <ZCFLogo />
           </div>
-          <Divider />
-          <ProposalResults page={this.props.page} onPageChange={this.handlePageChange} />
+          <div className="Proposals-about-text">
+            <h2 className="Proposals-about-text-title">Zcash Foundation Proposals</h2>
+            <p className="Proposals-about-text-desc">
+              The Zcash Foundation accepts proposals from community members to improve the
+              Zcash ecosystem. Proposals are either accepted with or without funding,
+              should they be approved by the Zcash Foundation.
+            </p>
+          </div>
+        </div>
+        <Divider />
+        <div className="Proposals-content">
+          {isFiltersDrawered ? (
+            <Drawer
+              placement="right"
+              visible={isDrawerShowing}
+              onClose={this.closeFilterDrawer}
+              closable={false}
+              width={300}
+            >
+              {filtersComponent}
+              <Button
+                type="primary"
+                onClick={this.closeFilterDrawer}
+                style={{ marginTop: '1rem' }}
+                block
+              >
+                Done
+              </Button>
+            </Drawer>
+          ) : (
+            <div className="Proposals-filters">{filtersComponent}</div>
+          )}
+
+          <div className="Proposals-results">
+            <div className="Proposals-search">
+              <Input.Search
+                placeholder="Search for a proposal"
+                onChange={this.handleChangeSearch}
+                value={this.state.searchQuery}
+                size="large"
+              />
+              <Button
+                className="Proposals-search-filterButton"
+                type="primary"
+                size="large"
+                onClick={this.openFilterDrawer}
+              >
+                <Icon type="filter" /> Filters
+              </Button>
+            </div>
+            <Divider />
+            <ProposalResults
+              page={this.props.page}
+              onPageChange={this.handlePageChange}
+            />
+          </div>
         </div>
       </div>
     );
