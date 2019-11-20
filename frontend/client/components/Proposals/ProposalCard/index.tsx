@@ -1,6 +1,4 @@
 import React from 'react';
-import classnames from 'classnames';
-import { Progress } from 'antd';
 import { Redirect } from 'react-router-dom';
 import { Proposal } from 'types';
 import Card from 'components/Card';
@@ -22,9 +20,7 @@ export class ProposalCard extends React.Component<Proposal> {
       dateCreated,
       team,
       target,
-      funded,
       contributionMatching,
-      percentFunded,
     } = this.props;
 
     return (
@@ -39,23 +35,9 @@ export class ProposalCard extends React.Component<Proposal> {
         )}
         <div className="ProposalCard-funding">
           <div className="ProposalCard-funding-raised">
-            <UnitDisplay value={funded} symbol="ZEC" /> <small>raised</small> of{' '}
-            <UnitDisplay value={target} symbol="ZEC" /> goal
-          </div>
-          <div
-            className={classnames({
-              ['ProposalCard-funding-percent']: true,
-              ['is-funded']: percentFunded >= 100,
-            })}
-          >
-            {percentFunded}%
+            <UnitDisplay value={target} symbol="ZEC" />
           </div>
         </div>
-        <Progress
-          percent={percentFunded}
-          status={percentFunded >= 100 ? 'success' : 'active'}
-          showInfo={false}
-        />
 
         <div className="ProposalCard-team">
           <div className="ProposalCard-team-name">
