@@ -8,9 +8,9 @@ import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
 import UnitDisplay from 'components/UnitDisplay';
-import { TipJarBlock } from 'components/TipJar';
 import Loader from 'components/Loader';
 import { PROPOSAL_STAGE } from 'api/constants';
+import ZFGrantsLogo from 'static/images/logo-name-light.svg'
 import './style.less';
 
 interface OwnProps {
@@ -70,13 +70,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       }
 
       const isAcceptedWithFunding = proposal.acceptedWithFunding === true;
-      const isAcceptedWithoutFunding = proposal.acceptedWithFunding === false;
-      const isAccepted = isAcceptedWithFunding || isAcceptedWithoutFunding;
-      const isCancelled = proposal.stage === PROPOSAL_STAGE.CANCELED;
-      const isJudged = isAccepted || isCancelled;
-
-      const displayBountyFunding =
-        !isVersionTwo || (isVersionTwo && isAcceptedWithFunding);
+      const isCanceled = proposal.stage === PROPOSAL_STAGE.CANCELED;
 
       content = (
         <React.Fragment>
@@ -97,23 +91,48 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 </div>
               </div>
             )}
-          <div className="ProposalCampaignBlock-info">
-            <div className="ProposalCampaignBlock-info-label">Funding</div>
-            <div className="ProposalCampaignBlock-info-value">
-              <UnitDisplay value={funded} /> / <UnitDisplay value={target} symbol="ZEC" />
+          {!isVersionTwo && (
+            <div className="ProposalCampaignBlock-info">
+              <div className="ProposalCampaignBlock-info-label">Funding</div>
+              <div className="ProposalCampaignBlock-info-value">
+                <UnitDisplay value={funded} /> /{' '}
+                <UnitDisplay value={target} symbol="ZEC" />
+              </div>
             </div>
-          </div>
+          )}
+
+          {isVersionTwo && (
+            <div className="ProposalCampaignBlock-info">
+              <div className="ProposalCampaignBlock-info-label">
+                {isAcceptedWithFunding ? 'Funding' : 'Requested Funding'}
+              </div>
+              <div className="ProposalCampaignBlock-info-value">
+                <UnitDisplay value={target} symbol="ZEC" />
+              </div>
+            </div>
+          )}
 
           {bounty &&
-            displayBountyFunding && (
+            !isVersionTwo && (
               <div className="ProposalCampaignBlock-bounty">
                 Awarded with <UnitDisplay value={bounty} symbol="ZEC" /> bounty
               </div>
             )}
 
-          {isAcceptedWithoutFunding && (
-            <div className="ProposalCampaignBlock-bounty">Accepted without funding</div>
-          )}
+          {isVersionTwo &&
+            isAcceptedWithFunding && (
+              <div className="ProposalCampaignBlock-with-funding">
+                Funded through &nbsp;
+                <ZFGrantsLogo style={{ height: '1.5rem' }} />
+              </div>
+            )}
+
+          {isVersionTwo &&
+            !isAcceptedWithFunding && (
+              <div className="ProposalCampaignBlock-without-funding">
+                Open for Community Donations
+              </div>
+            )}
 
           {!isVersionTwo &&
             proposal.contributionMatching > 0 && (
@@ -144,7 +163,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                   ['is-success']: isRaiseGoalReached,
                 })}
               >
-                {isCancelled ? (
+                {isCanceled ? (
                   <>
                     <Icon type="close-circle-o" />
                     <span>Proposal was canceled</span>
@@ -175,32 +194,12 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             ))}
 
           {isVersionTwo &&
-            isJudged && (
-              <div
-                className={classnames({
-                  ['ProposalCampaignBlock-fundingOver']: true,
-                  ['is-success']: isAccepted,
-                })}
-              >
-                {proposal.stage === PROPOSAL_STAGE.CANCELED ? (
-                  <>
-                    <Icon type="close-circle-o" />
-                    <span>Proposal was canceled</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon type="check-circle-o" />
-                    <span>Proposal has been accepted</span>
-                  </>
-                )}
+            isCanceled && (
+              <div className="ProposalCampaignBlock-fundingOver">
+                <Icon type="close-circle-o" />
+                <span>Proposal was canceled</span>
               </div>
             )}
-
-          {proposal.tipJarAddress && (
-            <div className="ProposalCampaignBlock-tipJarWrapper">
-              <TipJarBlock address={proposal.tipJarAddress} type="proposal" />
-            </div>
-          )}
         </React.Fragment>
       );
     } else {

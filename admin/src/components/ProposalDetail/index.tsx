@@ -225,8 +225,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           description={
             <div>
               <p>
-                This proposal has changes requested. The team will be able to re-submit it for
-                approval should they desire to do so.
+                This proposal has changes requested. The team will be able to re-submit it
+                for approval should they desire to do so.
               </p>
               <b>Reason:</b>
               <br />

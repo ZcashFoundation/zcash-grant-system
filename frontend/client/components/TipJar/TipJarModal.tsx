@@ -3,7 +3,7 @@ import { Modal, Icon, Button, Form, Input } from 'antd';
 import classnames from 'classnames';
 import QRCode from 'qrcode.react';
 import { formatZcashCLI, formatZcashURI } from 'utils/formatters';
-import { getAmountErrorFromString } from 'utils/validators'
+import { getAmountErrorFromString } from 'utils/validators';
 import Loader from 'components/Loader';
 import './TipJarModal.less';
 import CopyInput from 'components/CopyInput';
@@ -17,27 +17,25 @@ interface Props {
 }
 
 interface State {
-  amount: string | null;
+  amount: string;
 }
 
 export class TipJarModal extends React.Component<Props, State> {
-  static getDerivedStateFromProps = (nextProps: Props, prevState: State) => {
-    return prevState.amount === null ? { amount: nextProps.amount } : {};
+  static getDerivedStateFromProps = (nextProps: Props) => {
+    // while modal is closed, set amount state via props
+    return !nextProps.isOpen ? { amount: nextProps.amount } : {};
   };
 
   state: State = {
-    amount: null,
+    amount: '',
   };
 
   render() {
     const { isOpen, onClose, type, address } = this.props;
     const { amount } = this.state;
 
-    // should not be possible due to derived state, but makes TS happy
-    if (amount === null) return;
-
-    const amountError = getAmountErrorFromString(amount)
-    const amountIsValid = !amountError
+    const amountError = getAmountErrorFromString(amount);
+    const amountIsValid = !amountError;
 
     const cli = amountIsValid ? formatZcashCLI(address, amount) : '';
     const uri = amountIsValid ? formatZcashURI(address, amount) : '';
@@ -122,5 +120,5 @@ export class TipJarModal extends React.Component<Props, State> {
       amount: e.currentTarget.value,
     });
 
-    private handleAfterClose = () => this.setState({ amount: null });
+  private handleAfterClose = () => this.setState({ amount: '' });
 }

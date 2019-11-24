@@ -1,0 +1,32 @@
+@import '~styles/variables.less';
+
+.TippingBlock {
+  &-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    line-height: 1.7rem;
+
+    &-label {
+      font-size: 0.95rem;
+      font-weight: 300;
+      opacity: 0.8;
+      letter-spacing: 0.05rem;
+      flex: 0 0 auto;
+      margin-right: 1.5rem;
+    }
+
+    &-value {
+      font-size: 1.1rem;
+      flex-basis: 0;
+      flex-grow: 1;
+      overflow: hidden;
+      text-align: right;
+    }
+  }
+
+  &-tipJarWrapper {
+    margin-top: 1rem;
+  }
+}

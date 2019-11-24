@@ -57,6 +57,25 @@
     margin-top: 0;
   }
 
+  &-with-funding,
+  &-without-funding {
+    margin: 0.5rem -1.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #fff;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+  }
+
+  &-with-funding {
+    background: @secondary-color;
+  }
+
+  &-without-funding {
+    background: @info-color;
+  }
+
   &-popover {
     &-overlay {
       max-width: 400px;

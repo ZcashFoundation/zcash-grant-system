@@ -14,6 +14,7 @@ import { AlertProps } from 'antd/lib/alert';
 import ExceptionPage from 'components/ExceptionPage';
 import HeaderDetails from 'components/HeaderDetails';
 import CampaignBlock from './CampaignBlock';
+import TippingBlock from './TippingBlock'
 import TeamBlock from './TeamBlock';
 import RFPBlock from './RFPBlock';
 import Milestones from './Milestones';
@@ -246,6 +247,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           </div>
           <div className="Proposal-top-side">
             <CampaignBlock proposal={proposal} isPreview={!isLive} />
+            <TippingBlock proposal={proposal} />
             <TeamBlock proposal={proposal} />
             {proposal.rfp && <RFPBlock rfp={proposal.rfp} />}
           </div>
