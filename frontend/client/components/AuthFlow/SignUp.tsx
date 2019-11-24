@@ -41,7 +41,7 @@ class SignUp extends React.Component<Props> {
               )}
             </Form.Item>
 
-            <Form.Item className="SignUp-form-item" label="Title">
+            <Form.Item className="SignUp-form-item" label="About you">
               {getFieldDecorator('title', {
                 rules: [{ required: true, message: 'Please add your title' }],
               })(

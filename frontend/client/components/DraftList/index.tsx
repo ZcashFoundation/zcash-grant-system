@@ -44,13 +44,17 @@ interface State {
   deletingId: number | null;
 }
 
+const EMAIL_VERIFIED_RELOAD_TIMEOUT = 10000;
+
 class DraftList extends React.Component<Props, State> {
   state: State = {
     deletingId: null,
   };
 
+  private reloadTimeout: number | null = null;
+
   componentDidMount() {
-    const { createIfNone, createWithRfpId } = this.props;
+    const { createIfNone, createWithRfpId, isVerified } = this.props;
     if (createIfNone || createWithRfpId) {
       this.props.fetchAndCreateDrafts({
         rfpId: createWithRfpId,
@@ -58,6 +62,18 @@ class DraftList extends React.Component<Props, State> {
       });
     } else {
       this.props.fetchDrafts();
+    }
+
+    if (!isVerified) {
+      this.reloadTimeout = window.setTimeout(() => {
+        window.location.reload();
+      }, EMAIL_VERIFIED_RELOAD_TIMEOUT);
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.reloadTimeout !== null) {
+      window.clearTimeout(this.reloadTimeout);
     }
   }
 

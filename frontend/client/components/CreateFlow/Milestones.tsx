@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Card, Icon, Alert, Checkbox, Button } from 'antd';
+import { Form, Input, Card, Icon, Alert, Checkbox, Button, Tooltip } from 'antd';
 import { ProposalDraft, CreateMilestone } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 
@@ -77,7 +77,6 @@ export default class CreateFlowMilestones extends React.Component<Props, State> 
             milestone={milestone}
             index={idx}
             error={errors.milestones && errors.milestones[idx]}
-
             onChange={this.handleMilestoneChange}
             onRemove={this.removeMilestone}
           />
@@ -151,13 +150,12 @@ const MilestoneFields = ({
         value={milestone.daysEstimated}
         disabled={milestone.immediatePayout}
         placeholder="Estimated days to complete"
-        onChange={ev =>{
+        onChange={ev => {
           return onChange(index, {
             ...milestone,
-            daysEstimated: ev.currentTarget.value
-          })
-        }
-        }
+            daysEstimated: ev.currentTarget.value,
+          });
+        }}
         addonAfter="days"
         style={{ flex: 1, marginRight: '0.5rem' }}
         maxLength={6}
@@ -188,6 +186,9 @@ const MilestoneFields = ({
           >
             <span style={{ opacity: 0.7 }}>Payout Immediately</span>
           </Checkbox>
+          <Tooltip title="Allows the milestone to be paid out immediatly if the proposal is accepted with funding.">
+            <Icon type="info-circle" style={{fontSize: '16px'}} />
+          </Tooltip>
         </div>
       )}
     </div>
