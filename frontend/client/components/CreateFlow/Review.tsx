@@ -109,7 +109,7 @@ class CreateReview extends React.Component<Props> {
         ],
       },
       {
-        step: CREATE_STEP.TIPPING,
+        step: CREATE_STEP.PAYMENT,
         name: 'Tipping',
         fields: [
           {

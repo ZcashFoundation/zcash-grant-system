@@ -11,7 +11,6 @@ import Team from './Team';
 import Details from './Details';
 import Milestones from './Milestones';
 import Payment from './Payment';
-import Tipping from './Tipping';
 import Review from './Review';
 import Preview from './Preview';
 import Final from './Final';
@@ -33,7 +32,6 @@ export enum CREATE_STEP {
   DETAILS = 'DETAILS',
   MILESTONES = 'MILESTONES',
   PAYMENT = 'PAYMENT',
-  TIPPING = 'TIPPING',
   REVIEW = 'REVIEW',
 }
 
@@ -43,7 +41,6 @@ const STEP_ORDER = [
   CREATE_STEP.DETAILS,
   CREATE_STEP.MILESTONES,
   CREATE_STEP.PAYMENT,
-  CREATE_STEP.TIPPING,
   CREATE_STEP.REVIEW,
 ];
 
@@ -94,19 +91,11 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   },
   [CREATE_STEP.PAYMENT]: {
     short: 'Payment',
-    title: 'Set your payout address',
+    title: 'Set your payout and tip addresses',
     subtitle: '',
     help:
-      'Double check your address, and make sure it’s secure. Once sent, payments are irreversible!',
+      'Double check your addresses, and make sure they’re secure. Once sent, transactions are irreversible!',
     component: Payment,
-  },
-  [CREATE_STEP.TIPPING]: {
-    short: 'Tipping',
-    title: 'Set your proposal tip address (optional)',
-    subtitle: 'Setting this address allows your team to receive tips for this proposal',
-    help:
-      'Double check your address, and make sure it’s secure. Once sent, tips are irreversible!',
-    component: Tipping,
   },
   [CREATE_STEP.REVIEW]: {
     short: 'Review',
