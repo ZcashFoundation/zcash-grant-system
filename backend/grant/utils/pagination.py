@@ -58,6 +58,7 @@ class ProposalPagination(Pagination):
         self.FILTERS.extend([f'CAT_{c}' for c in Category.list()])
         self.FILTERS.extend([f'ARBITER_{c}' for c in ProposalArbiterStatus.list()])
         self.FILTERS.extend([f'MILESTONE_{c}' for c in MilestoneStage.list()])
+        self.FILTERS.extend(['ACCEPTED_WITH_FUNDING', 'ACCEPTED_WITHOUT_FUNDING'])
         self.PAGE_SIZE = 9
         self.SORT_MAP = {
             'CREATED:DESC': Proposal.date_created.desc(),
@@ -102,6 +103,10 @@ class ProposalPagination(Pagination):
             if milestone_filters:
                 query = query.join(Proposal.milestones) \
                     .filter(Milestone.stage.in_(milestone_filters))
+            if 'ACCEPTED_WITH_FUNDING' in filters:
+                query = query.filter(Proposal.accepted_with_funding == True)
+            if 'ACCEPTED_WITHOUT_FUNDING' in filters:
+                query = query.filter(Proposal.accepted_with_funding == False)
 
         # SORT (see self.SORT_MAP)
         if sort:

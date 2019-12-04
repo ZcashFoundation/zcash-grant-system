@@ -32,7 +32,7 @@ class Home extends React.Component {
         <div>
           <Icon type="exclamation-circle" /> There are <b>{proposalNoArbiterCount}</b>{' '}
           live proposals <b>without an arbiter</b>.{' '}
-          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=ARBITER_MISSING&filters[]=STAGE_NOT_CANCELED">
+          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=ARBITER_MISSING&filters[]=STAGE_NOT_CANCELED&filters[]=ACCEPTED_WITH_FUNDING">
             Click here
           </Link>{' '}
           to view them.

@@ -59,7 +59,21 @@ const PROPOSAL_FILTERS = PROPOSAL_STATUSES.map(s => ({
       color: s.tagColor,
       group: 'Milestone',
     })),
-  );
+  )
+  .concat([
+    {
+      id: 'ACCEPTED_WITH_FUNDING',
+      display: 'Accepted With Funding',
+      color: '#2D2A26',
+      group: 'Funding',
+    },
+    {
+      id: 'ACCEPTED_WITHOUT_FUNDING',
+      display: 'Accepted Without Funding',
+      color: '#108ee9',
+      group: 'Funding',
+    },
+  ]);
 
 export const proposalFilters: Filters = {
   list: PROPOSAL_FILTERS,
@@ -87,17 +101,20 @@ const CONTRIBUTION_FILTERS = CONTRIBUTION_STATUSES.map(s => ({
   display: `Status: ${s.tagDisplay}`,
   color: s.tagColor,
   group: 'Status',
-})).concat([{
-  id: 'REFUNDABLE',
-  display: 'Refundable',
-  color: '#afd500',
-  group: 'Refundable',
-}, {
-  id: 'DONATION',
-  display: 'Donations',
-  color: '#afd500',
-  group: 'Donations',
-}]);
+})).concat([
+  {
+    id: 'REFUNDABLE',
+    display: 'Refundable',
+    color: '#afd500',
+    group: 'Refundable',
+  },
+  {
+    id: 'DONATION',
+    display: 'Donations',
+    color: '#afd500',
+    group: 'Donations',
+  },
+]);
 
 export const contributionFilters: Filters = {
   list: CONTRIBUTION_FILTERS,
