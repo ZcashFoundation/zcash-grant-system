@@ -90,16 +90,26 @@ def create_proposals(count):
 @with_appcontext
 def retire_v1_proposals(dry):
     now = datetime.datetime.now()
-    proposals = Proposal.query.filter_by(stage="FUNDING_REQUIRED").all()
-    modified_count = 0
+    proposals_funding_required = Proposal.query.filter_by(stage="FUNDING_REQUIRED").all()
+    proposals_draft = Proposal.query.filter_by(status=ProposalStatus.DRAFT).all()
+    proposals_pending = Proposal.query.filter_by(status=ProposalStatus.PENDING).all()
+    proposals_staking = Proposal.query.filter_by(status=ProposalStatus.STAKING).all()
+    modified_funding_required_count = 0
+    modified_draft_count = 0
+    modified_pending_count = 0
+    modified_staking_count = 0
 
-    if not proposals:
+    if not proposals_funding_required and not proposals_draft and not proposals_pending and not proposals_staking:
         print("No proposals found. Exiting...")
         return
 
-    print(f"Found {len(proposals)} proposals to modify")
+    print(f"Found {len(proposals_funding_required)} 'FUNDING_REQUIRED' proposals to modify")
+    print(f"Found {len(proposals_draft)} 'DRAFT' proposals to modify")
+    print(f"Found {len(proposals_pending)} 'PENDING' proposals to modify")
+    print(f"Found {len(proposals_staking)} 'STAKING' proposals to modify")
+
     if dry:
-        print(f"This is a dry run. Changes will not be committed to database")
+        print(f"This is a dry run. Changes will not be committed to the database")
 
     confirm = input("Continue? (y/n) ")
 
@@ -107,19 +117,59 @@ def retire_v1_proposals(dry):
         print("Exiting...")
         return
 
-    for p in proposals:
+    # move 'FUNDING_REQUIRED' proposals to a failed state
+    for p in proposals_funding_required:
         if not dry:
             new_deadline = (now - p.date_published).total_seconds()
             p.stage = ProposalStage.FAILED
             p.deadline_duration = int(new_deadline)
             db.session.add(p)
-            modified_count += 1
+            modified_funding_required_count += 1
 
-        print(f"Modified proposal {p.id} - {p.title}")
+        print(f"Modified 'FUNDING_REQUIRED' proposal {p.id} - {p.title}")
+
+    # reset proposal to draft state
+    def convert_proposal_to_v2_draft(proposal):
+        milestones = Milestone.query.filter_by(proposal_id=proposal.id).all()
+
+        if not dry:
+            # reset target because v2 estimates are in USD
+            proposal.target = 0
+            proposal.version = '2'
+            proposal.stage = ProposalStage.PREVIEW
+            proposal.status = ProposalStatus.DRAFT
+            db.session.add(p)
+
+            for m in milestones:
+                # clear date estimated because v2 proposals use days_estimated (date_estimated is dynamically set)
+                m.date_estimated = None
+                db.session.add(m)
+
+        print(f"Modified {len(milestones)} milestones on proposal {p.id}")
+
+    for p in proposals_draft:
+        convert_proposal_to_v2_draft(p)
+        modified_draft_count += 1
+        print(f"Modified 'DRAFT' proposal {p.id} - {p.title}")
+
+    for p in proposals_pending:
+        convert_proposal_to_v2_draft(p)
+        modified_pending_count += 1
+        print(f"Modified 'PENDING' proposal {p.id} - {p.title}")
+
+    for p in proposals_staking:
+        convert_proposal_to_v2_draft(p)
+        modified_staking_count += 1
+        print(f"Modified 'STAKING' proposal {p.id} - {p.title}")
 
     if not dry:
         print(f"Committing changes to database")
         db.session.commit()
 
-    print(f"Modified {modified_count} proposals")
+    print("")
+    print(f"Modified {modified_funding_required_count} 'FUNDING_REQUIRED' proposals")
+    print(f"Modified {modified_draft_count} 'DRAFT' proposals")
+    print(f"Modified {modified_pending_count} 'PENDING' proposals")
+    print(f"Modified {modified_staking_count} 'STAKING' proposals")
+
 
