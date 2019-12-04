@@ -22,6 +22,8 @@ import { proposalActions } from 'modules/proposals';
 import { ProposalDetail } from 'modules/proposals/reducers';
 import './index.less';
 import { Link } from 'react-router-dom';
+import { formatUsd } from 'utils/formatters';
+import { Zat } from 'utils/units';
 
 enum STEP_STATUS {
   WAIT = 'wait',
@@ -254,6 +256,7 @@ class ProposalMilestones extends React.Component<Props, State> {
                 !!proposal.arbiter.user &&
                 proposal.arbiter.status === PROPOSAL_ARBITER_STATUS.ACCEPTED
               }
+              isVersionTwo={proposal.isVersionTwo}
             />
           </>
         ) : (
@@ -329,12 +332,17 @@ interface MilestoneProps extends MSProps {
   isCurrent: boolean;
   proposalId: number;
   isFunded: boolean;
+  isVersionTwo: boolean;
 }
 const Milestone: React.SFC<MilestoneProps> = p => {
   const estimatedDate = p.dateEstimated
     ? moment(p.dateEstimated * 1000).format('MMMM YYYY')
     : 'N/A';
-  const reward = <UnitDisplay value={p.amount} symbol="ZEC" displayShortBalance={4} />;
+  const reward = p.isVersionTwo ? (
+    formatUsd(p.amount as string, true, 2)
+  ) : (
+    <UnitDisplay value={p.amount as Zat} symbol="ZEC" displayShortBalance={4} />
+  );
   const getAlertProps = {
     [MILESTONE_STAGE.IDLE]: () => null,
     [MILESTONE_STAGE.REQUESTED]: () => ({
@@ -370,7 +378,7 @@ const Milestone: React.SFC<MilestoneProps> = p => {
       type: 'success',
       message: (
         <span>
-          The team was awarded <strong>{reward}</strong>{' '}
+          The team was awarded <strong>{reward}</strong> {p.isVersionTwo && `in ZEC`}
           {p.immediatePayout && ` as an initial payout `} on {fmtDate(p.datePaid)}.
         </span>
       ),

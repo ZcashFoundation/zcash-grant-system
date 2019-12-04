@@ -6,6 +6,7 @@ import { Proposal } from 'types';
 import Card from 'components/Card';
 import UserAvatar from 'components/UserAvatar';
 import UnitDisplay from 'components/UnitDisplay';
+import { formatUsd } from 'utils/formatters'
 import './style.less';
 
 export class ProposalCard extends React.Component<Proposal> {
@@ -41,7 +42,7 @@ export class ProposalCard extends React.Component<Proposal> {
         {isVersionTwo && (
           <div className="ProposalCard-funding">
             <div className="ProposalCard-funding-raised">
-              <UnitDisplay value={target} symbol="ZEC" />
+              {formatUsd(target.toString(10))}
             </div>
           </div>
         )}

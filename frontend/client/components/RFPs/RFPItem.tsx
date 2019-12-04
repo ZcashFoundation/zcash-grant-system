@@ -5,6 +5,7 @@ import { Tag } from 'antd';
 import { Link } from 'react-router-dom';
 import UnitDisplay from 'components/UnitDisplay';
 import { RFP } from 'types';
+import { formatUsd } from 'utils/formatters';
 import './RFPItem.less';
 
 interface Props {
@@ -25,17 +26,26 @@ export default class RFPItem extends React.Component<Props> {
       dateClosed,
       bounty,
       matching,
+      isVersionTwo,
     } = rfp;
     const closeDate = dateCloses || dateClosed;
 
     const tags = [];
     if (!isSmall) {
       if (bounty) {
-        tags.push(
-          <Tag key="bounty" color="#CF8A00">
-            <UnitDisplay value={bounty} symbol="ZEC" /> bounty
-          </Tag>,
-        );
+        if (isVersionTwo) {
+          tags.push(
+            <Tag key="bounty" color="#CF8A00">
+              {formatUsd(bounty.toString(10))} bounty
+            </Tag>,
+          );
+        } else {
+          tags.push(
+            <Tag key="bounty" color="#CF8A00">
+              <UnitDisplay value={bounty} symbol="ZEC" /> bounty
+            </Tag>,
+          );
+        }
       }
       if (matching) {
         tags.push(

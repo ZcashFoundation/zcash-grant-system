@@ -44,7 +44,7 @@ test_proposal = {
     "brief": "$$$",
     "milestones": milestones,
     "category": Category.ACCESSIBILITY,
-    "target": "123.456",
+    "target": "12345",
     "payoutAddress": "123",
     "deadlineDuration": 100
 }

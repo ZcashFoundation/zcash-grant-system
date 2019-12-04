@@ -29,6 +29,7 @@ import Markdown from 'components/Markdown';
 import ArbiterControl from 'components/ArbiterControl';
 import { toZat, fromZat } from 'src/util/units';
 import FeedbackModal from '../FeedbackModal';
+import { formatUsd } from 'util/formatters';
 import './index.less';
 
 type Props = RouteComponentProps<any>;
@@ -285,11 +286,23 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         return;
       }
       const ms = p.currentMilestone;
-      const amount = fromZat(
-        toZat(p.target)
-          .mul(new BN(ms.payoutPercent))
-          .divn(100),
-      );
+
+      let paymentMsg;
+      if (p.isVersionTwo) {
+        const target = parseFloat(p.target.toString());
+        const payoutPercent = parseFloat(ms.payoutPercent);
+        const amountNum = (target * payoutPercent) / 100;
+        const amount = formatUsd(amountNum, true, 2);
+        paymentMsg = `${amount} in ZEC`;
+      } else {
+        const amount = fromZat(
+          toZat(p.target)
+            .mul(new BN(ms.payoutPercent))
+            .divn(100),
+        );
+        paymentMsg = `${amount} ZEC`;
+      }
+
       return (
         <Alert
           className="ProposalDetail-alert"
@@ -306,7 +319,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               </p>
               <p>
                 {' '}
-                Please make a payment of <b>{amount.toString()} ZEC</b> to:
+                Please make a payment of <b>{paymentMsg}</b> to:
               </p>{' '}
               <pre>{p.payoutAddress}</pre>
               <Input.Search
@@ -445,9 +458,12 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               {renderDeetItem('isFailed', JSON.stringify(p.isFailed))}
               {renderDeetItem('status', p.status)}
               {renderDeetItem('stage', p.stage)}
-              {renderDeetItem('target', p.target)}
+              {renderDeetItem('target', p.isVersionTwo ? formatUsd(p.target) : p.target)}
               {renderDeetItem('contributed', p.contributed)}
-              {renderDeetItem('funded (inc. matching)', p.funded)}
+              {renderDeetItem(
+                'funded (inc. matching)',
+                p.isVersionTwo ? formatUsd(p.funded) : p.funded,
+              )}
               {renderDeetItem('matching', p.contributionMatching)}
               {renderDeetItem('bounty', p.contributionBounty)}
               {renderDeetItem('rfpOptIn', JSON.stringify(p.rfpOptIn))}

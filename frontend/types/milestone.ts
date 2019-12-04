@@ -19,7 +19,7 @@ export enum MILESTONE_STAGE {
 export interface Milestone {
   index: number;
   stage: MILESTONE_STAGE;
-  amount: Zat;
+  amount: Zat | string;
   immediatePayout: boolean;
   dateEstimated?: number;
   daysEstimated?: string;

@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { Icon, Popover } from 'antd';
+import { Icon, Popover, Tooltip } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
@@ -10,7 +10,8 @@ import { withRouter } from 'react-router';
 import UnitDisplay from 'components/UnitDisplay';
 import Loader from 'components/Loader';
 import { PROPOSAL_STAGE } from 'api/constants';
-import ZFGrantsLogo from 'static/images/logo-name-light.svg'
+import { formatUsd } from 'utils/formatters';
+import ZFGrantsLogo from 'static/images/logo-name-light.svg';
 import './style.less';
 
 interface OwnProps {
@@ -107,7 +108,15 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
                 {isAcceptedWithFunding ? 'Funding' : 'Requested Funding'}
               </div>
               <div className="ProposalCampaignBlock-info-value">
-                <UnitDisplay value={target} symbol="ZEC" />
+                {formatUsd(target.toString(10))}
+                {isAcceptedWithFunding && (
+                  <Tooltip
+                    placement="left"
+                    title="Proposal owners will be paid out in ZEC at market price at payout time"
+                  >
+                    &nbsp; <Icon type="info-circle" />
+                  </Tooltip>
+                )}
               </div>
             </div>
           )}

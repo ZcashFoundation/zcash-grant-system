@@ -1,8 +1,3 @@
-import qs from 'query-string';
-
-export function stripHexPrefix(value: string) {
-  return value.replace('0x', '');
-}
 
 const toFixed = (num: string, digits: number = 3) => {
   const [integerPart, fractionPart = ''] = num.split('.');
@@ -64,35 +59,6 @@ export function formatNumber(num: string, digits?: number): string {
   return parts.join('.');
 }
 
-export function formatZcashURI(address: string, amount?: string | number, memo?: string) {
-  const params: any = {};
-  if (amount) {
-    params.amount = amount;
-  }
-  if (memo) {
-    params.memo = memo;
-  }
-  return `zcash:${address}?${qs.stringify(params)}`;
-}
-
-export function formatZcashCLI(address: string, amount?: string | number, memo?: string) {
-  const tx: any = { address };
-  if (amount) {
-    tx.amount = parseFloat(amount.toString());
-  }
-  if (memo) {
-    tx.memo = memo;
-  }
-  return `zcash-cli z_sendmany YOUR_ADDRESS '${JSON.stringify([tx])}'`;
-}
-
-export function formatTxExplorerUrl(txid: string) {
-  if (process.env.EXPLORER_URL) {
-    return process.env.EXPLORER_URL.replace('<txid>', txid);
-  }
-  throw new Error('EXPLORER_URL env variable needs to be set!');
-}
-
 export function formatUsd(
   amount: number | string | undefined | null,
   includeDollarSign: boolean = true,
@@ -103,3 +69,4 @@ export function formatUsd(
   const str = formatNumber(a, digits);
   return includeDollarSign ? `$${str}` : str;
 }
+
