@@ -98,6 +98,7 @@ def retire_v1_proposals(dry):
     modified_draft_count = 0
     modified_pending_count = 0
     modified_staking_count = 0
+    deleted_draft_count = 0
 
     if not proposals_funding_required and not proposals_draft and not proposals_pending and not proposals_staking:
         print("No proposals found. Exiting...")
@@ -134,11 +135,11 @@ def retire_v1_proposals(dry):
 
         if not dry:
             # reset target because v2 estimates are in USD
-            proposal.target = 0
+            proposal.target = '0'
             proposal.version = '2'
             proposal.stage = ProposalStage.PREVIEW
             proposal.status = ProposalStatus.DRAFT
-            db.session.add(p)
+            db.session.add(proposal)
 
             for m in milestones:
                 # clear date estimated because v2 proposals use days_estimated (date_estimated is dynamically set)
@@ -147,7 +148,26 @@ def retire_v1_proposals(dry):
 
         print(f"Modified {len(milestones)} milestones on proposal {p.id}")
 
+    # delete drafts that have no content
+    def delete_stale_draft(proposal):
+        if proposal.title or proposal.brief or proposal.content or proposal.category or proposal.target != "0":
+            return False
+
+        if proposal.payout_address or proposal.milestones:
+            return False
+
+        if not dry:
+            db.session.delete(proposal)
+
+        return True
+
     for p in proposals_draft:
+        is_stale = delete_stale_draft(p)
+        if is_stale:
+            deleted_draft_count += 1
+            print(f"Deleted stale 'DRAFT' proposal {p.id} - {p.title}")
+            continue
+
         convert_proposal_to_v2_draft(p)
         modified_draft_count += 1
         print(f"Modified 'DRAFT' proposal {p.id} - {p.title}")
@@ -171,5 +191,6 @@ def retire_v1_proposals(dry):
     print(f"Modified {modified_draft_count} 'DRAFT' proposals")
     print(f"Modified {modified_pending_count} 'PENDING' proposals")
     print(f"Modified {modified_staking_count} 'STAKING' proposals")
+    print(f"Deleted {deleted_draft_count} stale 'DRAFT' proposals")
 
 

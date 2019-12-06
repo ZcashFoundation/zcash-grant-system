@@ -195,7 +195,7 @@ async function fetchCCRs(params: Partial<PageQuery>) {
   return data;
 }
 
-async function deleteCCR(id: number) {
+export async function deleteCCR(id: number) {
   await api.delete(`/admin/ccrs/${id}`);
 }
 
@@ -549,7 +549,7 @@ const app = store({
   resetCCRPageQuery() {
     resetPageParams(app.ccrs);
   },
-  
+
   async fetchCCRDetail(id: number) {
     app.ccrDetailFetching = true;
     try {
