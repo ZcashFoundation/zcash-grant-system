@@ -114,8 +114,8 @@ export class ProposalDetail extends React.Component<Props, State> {
     const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
     const isLive = proposal.status === STATUS.LIVE;
     const milestonesDisabled = proposal.isVersionTwo
-        ? !proposal.acceptedWithFunding
-        : false;
+      ? !proposal.acceptedWithFunding
+      : false;
     const defaultTab = !milestonesDisabled || !isLive ? 'milestones' : 'discussions';
 
     const adminMenu = (

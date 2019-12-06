@@ -179,7 +179,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
     const renderReview = () =>
       p.status === PROPOSAL_STATUS.PENDING && (
-        <Alert
+        <>
+          <Row gutter={16}>
+            <Col span={isVersionTwo ? 16 : 24}>
+          <Alert
           showIcon
           type="warning"
           message="Review Pending"
@@ -211,18 +214,35 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 type="danger"
                 onClick={() => {
                   FeedbackModal.open({
-                    title: 'Reject this proposal?',
+                    title: 'Request changes to this proposal?',
                     label: 'Please provide a reason:',
                     okText: 'Reject',
                     onOk: this.handleReject,
                   });
                 }}
               >
-                Reject
+                Request changes
               </Button>
             </div>
           }
         />
+            </Col>
+          {p.isVersionTwo && <Col span={8}>
+        <Alert
+          showIcon
+          type={p.rfpOptIn ? "success" : "error"}
+          message={p.rfpOptIn ? "KYC accepted" : "KYC rejected"}
+          description={
+            <div>
+              {p.rfpOptIn ? <p>KYC has been accepted by the proposer.</p> : <p>KYC has been rejected. Recommend against approving with funding.</p>}
+
+            </div>}
+          />
+          </Col>
+          }
+
+          </Row>
+        </>
       );
 
     const renderRejected = () =>
@@ -438,6 +458,14 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
           {/* RIGHT SIDE */}
           <Col span={6}>
+            {p.isVersionTwo && !p.acceptedWithFunding && p.stage === PROPOSAL_STAGE.WIP && <Alert
+                message="Accepted without funding"
+                description="This proposal has been posted publicly, but isn't being funded by the Zcash Foundation."
+                type="info"
+                showIcon
+            />
+            }
+
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">
               {renderCancelControl()}

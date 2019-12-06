@@ -60,6 +60,9 @@ class CreateFlowBasics extends React.Component<Props, State> {
   render() {
     const { isUnlinkingProposalRFP } = this.props;
     const { title, brief, target, rfp, rfpOptIn } = this.state;
+    if (rfp && rfp.bounty && (target === null || target === '0')) {
+      this.setState({ target: rfp.bounty.toString() });
+    }
     const errors = getCreateErrors(this.state, true);
 
     // Don't show target error at zero since it defaults to that
@@ -67,9 +70,6 @@ class CreateFlowBasics extends React.Component<Props, State> {
     if (target === '0') {
       errors.target = undefined;
     }
-
-    const rfpOptInRequired =
-      rfp && (rfp.matching || (rfp.bounty && parseFloat(rfp.bounty.toString()) > 0));
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
@@ -99,41 +99,29 @@ class CreateFlowBasics extends React.Component<Props, State> {
           />
         )}
 
-        {rfpOptInRequired && (
-          <Alert
-            className="CreateFlow-rfpAlert"
-            type="warning"
-            message="KYC (know your customer)"
-            description={
-              <>
-                <div>
-                  This RFP offers either a bounty or matching. This will require ZFGrants
-                  to fulfill{' '}
-                  <a
-                    target="_blank"
-                    href="https://en.wikipedia.org/wiki/Know_your_customer"
-                  >
-                    KYC
-                  </a>{' '}
-                  due dilligence. In the event your proposal is successful, you will need
-                  to provide identifying information to ZFGrants.
-                  <Radio.Group onChange={this.handleRfpOptIn}>
-                    <Radio value={true} checked={rfpOptIn && rfpOptIn === true}>
-                      <b>Yes</b>, I am willing to provide KYC information
-                    </Radio>
-                    <Radio
-                      value={false}
-                      checked={rfpOptIn !== null && rfpOptIn === false}
-                    >
-                      <b>No</b>, I do not wish to provide KYC information and understand I
-                      will not receive any matching or bounty funds from ZFGrants
-                    </Radio>
-                  </Radio.Group>
-                </div>
-              </>
-            }
-          />
-        )}
+        <Alert
+          className="CreateFlow-rfpAlert"
+          type="warning"
+          message="KYC (know your customer)"
+          description={
+            <>
+              <div>
+                In the event your proposal is accepted with funding, you will need to
+                provide identifying information to the Zcash Foundation.
+                <Radio.Group onChange={this.handleRfpOptIn}>
+                  <Radio value={true} checked={rfpOptIn && rfpOptIn === true}>
+                    <b>Yes</b>, I am willing to provide KYC information
+                  </Radio>
+                  <Radio value={false} checked={rfpOptIn !== null && rfpOptIn === false}>
+                    <b>No</b>, I do not wish to provide KYC information and understand my
+                    proposal may still be posted on ZF Grants, but I will not be eligible
+                    to funding from the Zcash Foundation.
+                  </Radio>
+                </Radio.Group>
+              </div>
+            </>
+          }
+        />
 
         <Form.Item
           label="Title"

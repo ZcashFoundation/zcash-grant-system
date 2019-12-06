@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { Icon, Popover, Tooltip } from 'antd';
+import { Icon, Popover, Tooltip, Alert } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
@@ -217,6 +217,19 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
     return (
       <div className="ProposalCampaignBlock Proposal-top-side-block">
+        {proposal &&
+          proposal.isVersionTwo &&
+          !proposal.acceptedWithFunding &&
+          proposal.stage === PROPOSAL_STAGE.WIP && (
+            <div>
+              <Alert
+                message="Accepted without funding"
+                description="This proposal has been posted publicly, but isn't being funded by the Zcash Foundation."
+                type="info"
+                showIcon
+              />
+            </div>
+          )}
         <h2 className="Proposal-top-main-block-title">Campaign</h2>
         <div className="Proposal-top-main-block">{content}</div>
       </div>

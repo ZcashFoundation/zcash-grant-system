@@ -51,7 +51,6 @@ class CreateReview extends React.Component<Props> {
             key: 'rfpOptIn',
             content: <div>{form.rfpOptIn ? 'Accepted' : 'Declined'}</div>,
             error: errors.rfpOptIn,
-            isHide: !form.rfp || (form.rfp && !form.rfp.matching && !form.rfp.bounty),
           },
           {
             key: 'brief',
