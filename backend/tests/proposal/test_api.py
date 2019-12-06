@@ -126,7 +126,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.login_default_user()
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert200(resp)
-        self.assertEqual(resp.json['status'], ProposalStatus.STAKING)
+        self.assertEqual(resp.json['status'], ProposalStatus.PENDING)
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_no_auth_proposal_draft_submit_for_approval(self, mock_get):
@@ -152,60 +152,6 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert400(resp)
 
-    # /stake
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_proposal_stake(self, mock_get):
-        self.login_default_user()
-        self.proposal.status = ProposalStatus.STAKING
-        resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
-        print(resp)
-        self.assert200(resp)
-        self.assertEquals(resp.json['amount'], str(PROPOSAL_STAKING_AMOUNT.normalize()))
-
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_proposal_stake_no_auth(self, mock_get):
-        self.proposal.status = ProposalStatus.STAKING
-        resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
-        print(resp)
-        self.assert401(resp)
-
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_proposal_stake_bad_status(self, mock_get):
-        self.login_default_user()
-        self.proposal.status = ProposalStatus.PENDING  # should be staking
-        resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
-        print(resp)
-        self.assert400(resp)
-
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_proposal_stake_funded(self, mock_get):
-        self.login_default_user()
-        # fake stake contribution with confirmation
-        self.stake_proposal()
-        resp = self.app.get(f"/api/v1/proposals/{self.proposal.id}/stake")
-        print(resp)
-        self.assert400(resp)
-
-    # /publish
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_publish_proposal_approved(self, mock_get):
-        self.login_default_user()
-        # proposal needs to be APPROVED
-        self.proposal.status = ProposalStatus.APPROVED
-        resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
-        self.assert200(resp)
-
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_no_auth_publish_proposal(self, mock_get):
-        resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
-        self.assert401(resp)
-
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_invalid_proposal_publish_proposal(self, mock_get):
-        self.login_default_user()
-        resp = self.app.put("/api/v1/proposals/12345/publish")
-        self.assert404(resp)
-
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_invalid_status_proposal_publish_proposal(self, mock_get):
         self.login_default_user()
@@ -223,18 +169,17 @@ class TestProposalAPI(BaseProposalCreatorConfig):
 
     # /
     def test_get_proposals(self):
-        self.test_publish_proposal_approved()
+        self.proposal.status = ProposalStatus.LIVE
         resp = self.app.get("/api/v1/proposals/")
         self.assert200(resp)
 
     def test_get_proposals_does_not_include_team_member_email_addresses(self):
-        self.test_publish_proposal_approved()
+        self.proposal.status = ProposalStatus.LIVE
         resp = self.app.get("/api/v1/proposals/")
         self.assert200(resp)
         for each_proposal in resp.json['items']:
             for team_member in each_proposal["team"]:
                 self.assertIsNone(team_member.get('email_address'))
-
 
     def test_follow_proposal(self):
         # not logged in

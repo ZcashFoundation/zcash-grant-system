@@ -3,7 +3,7 @@ import { Button, Form, Input, message } from 'antd';
 import classnames from 'classnames';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
-import './ContributionModal/PaymentInfo.less'
+import './ContributionModal/PaymentInfo.less';
 
 interface CopyInputProps {
   label: string;

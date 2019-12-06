@@ -1,12 +1,14 @@
 import abc
-from sqlalchemy import or_, and_
 
+from sqlalchemy import or_
+
+from grant.ccr.models import CCR
 from grant.comment.models import Comment, comments_schema
-from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
-from grant.comment.models import Comment, comments_schema
-from grant.user.models import User, UserSettings, users_schema
 from grant.milestone.models import Milestone
-from .enums import ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, MilestoneStage
+from grant.proposal.models import db, ma, Proposal, ProposalContribution, ProposalArbiter, proposal_contributions_schema
+from grant.user.models import User, UserSettings, users_schema
+from .enums import CCRStatus, ProposalStatus, ProposalStage, Category, ContributionStatus, ProposalArbiterStatus, \
+    MilestoneStage
 
 
 def extract_filters(sw, strings):
@@ -39,13 +41,13 @@ class Pagination(abc.ABC):
     # consider moving these args into __init__ and attaching to self
     @abc.abstractmethod
     def paginate(
-        self,
-        schema: ma.Schema,
-        query: db.Query,
-        page: int,
-        filters: list,
-        search: str,
-        sort: str,
+            self,
+            schema: ma.Schema,
+            query: db.Query,
+            page: int,
+            filters: list,
+            search: str,
+            sort: str,
     ):
         pass
 
@@ -68,13 +70,13 @@ class ProposalPagination(Pagination):
         }
 
     def paginate(
-        self,
-        schema: ma.Schema,
-        query: db.Query=None,
-        page: int=1,
-        filters: list=None,
-        search: str=None,
-        sort: str='PUBLISHED:DESC',
+            self,
+            schema: ma.Schema,
+            query: db.Query = None,
+            page: int = 1,
+            filters: list = None,
+            search: str = None,
+            sort: str = 'PUBLISHED:DESC',
     ):
         query = query or Proposal.query
         sort = sort or 'PUBLISHED:DESC'
@@ -142,13 +144,13 @@ class ContributionPagination(Pagination):
         }
 
     def paginate(
-        self,
-        schema: ma.Schema=proposal_contributions_schema,
-        query: db.Query=None,
-        page: int=1,
-        filters: list=None,
-        search: str=None,
-        sort: str='PUBLISHED:DESC',
+            self,
+            schema: ma.Schema = proposal_contributions_schema,
+            query: db.Query = None,
+            page: int = 1,
+            filters: list = None,
+            search: str = None,
+            sort: str = 'PUBLISHED:DESC',
     ):
         query = query or ProposalContribution.query
         sort = sort or 'CREATED:DESC'
@@ -167,9 +169,9 @@ class ContributionPagination(Pagination):
                     .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
                     .join(Proposal) \
                     .filter(or_(
-                        Proposal.stage == ProposalStage.FAILED,
-                        Proposal.stage == ProposalStage.CANCELED,
-                    )) \
+                    Proposal.stage == ProposalStage.FAILED,
+                    Proposal.stage == ProposalStage.CANCELED,
+                )) \
                     .join(ProposalContribution.user) \
                     .join(UserSettings) \
                     .filter(UserSettings.refund_address != None)
@@ -179,9 +181,9 @@ class ContributionPagination(Pagination):
                     .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
                     .join(Proposal) \
                     .filter(or_(
-                        Proposal.stage == ProposalStage.FAILED,
-                        Proposal.stage == ProposalStage.CANCELED,
-                    )) \
+                    Proposal.stage == ProposalStage.FAILED,
+                    Proposal.stage == ProposalStage.CANCELED,
+                )) \
                     .join(ProposalContribution.user, isouter=True) \
                     .join(UserSettings, isouter=True) \
                     .filter(UserSettings.refund_address == None)
@@ -222,13 +224,13 @@ class UserPagination(Pagination):
         }
 
     def paginate(
-        self,
-        schema: ma.Schema=users_schema,
-        query: db.Query=None,
-        page: int=1,
-        filters: list=None,
-        search: str=None,
-        sort: str='EMAIL:DESC',
+            self,
+            schema: ma.Schema = users_schema,
+            query: db.Query = None,
+            page: int = 1,
+            filters: list = None,
+            search: str = None,
+            sort: str = 'EMAIL:DESC',
     ):
         query = query or Proposal.query
         sort = sort or 'EMAIL:DESC'
@@ -278,13 +280,13 @@ class CommentPagination(Pagination):
         }
 
     def paginate(
-        self,
-        schema: ma.Schema=comments_schema,
-        query: db.Query=None,
-        page: int=1,
-        filters: list=None,
-        search: str=None,
-        sort: str='CREATED:DESC',
+            self,
+            schema: ma.Schema = comments_schema,
+            query: db.Query = None,
+            page: int = 1,
+            filters: list = None,
+            search: str = None,
+            sort: str = 'CREATED:DESC',
     ):
         query = query or Comment.query
         sort = sort or 'CREATED:DESC'
@@ -320,7 +322,58 @@ class CommentPagination(Pagination):
         }
 
 
+class CCRPagination(Pagination):
+    def __init__(self):
+        self.FILTERS = [f'STATUS_{s}' for s in CCRStatus.list()]
+        self.PAGE_SIZE = 9
+        self.SORT_MAP = {
+            'CREATED:DESC': CCR.date_created.desc(),
+            'CREATED:ASC': CCR.date_created
+        }
+
+    def paginate(
+            self,
+            schema: ma.Schema,
+            query: db.Query = None,
+            page: int = 1,
+            filters: list = None,
+            search: str = None,
+            sort: str = 'PUBLISHED:DESC',
+    ):
+        query = query or CCR.query
+        sort = sort or 'PUBLISHED:DESC'
+
+        # FILTER
+        if filters:
+            self.validate_filters(filters)
+            status_filters = extract_filters('STATUS_', filters)
+
+            if status_filters:
+                query = query.filter(CCR.status.in_(status_filters))
+
+        # SORT (see self.SORT_MAP)
+        if sort:
+            self.validate_sort(sort)
+            query = query.order_by(self.SORT_MAP[sort])
+
+        # SEARCH
+        if search:
+            query = query.filter(CCR.title.ilike(f'%{search}%'))
+
+        res = query.paginate(page, self.PAGE_SIZE, False)
+        return {
+            'page': res.page,
+            'total': res.total,
+            'page_size': self.PAGE_SIZE,
+            'items': schema.dump(res.items),
+            'filters': filters,
+            'search': search,
+            'sort': sort
+        }
+
+
 # expose pagination methods here
+ccr = CCRPagination().paginate
 proposal = ProposalPagination().paginate
 contribution = ContributionPagination().paginate
 comment = CommentPagination().paginate

@@ -321,17 +321,6 @@ def submit_for_approval_proposal(proposal_id):
     return proposal_schema.dump(g.current_proposal), 200
 
 
-@blueprint.route("/<proposal_id>/stake", methods=["GET"])
-@requires_team_member_auth
-def get_proposal_stake(proposal_id):
-    if g.current_proposal.status != ProposalStatus.STAKING:
-        return {"message": "ok"}, 400
-    contribution = g.current_proposal.get_staking_contribution(g.current_user.id)
-    if contribution:
-        return proposal_contribution_schema.dump(contribution)
-    return {"message": "ok"}, 404
-
-
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
 @requires_team_member_auth
 def publish_proposal(proposal_id):

@@ -2,12 +2,7 @@ import React from 'react';
 import { Select, Radio, Card } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import { SelectValue } from 'antd/lib/select';
-import {
-  PROPOSAL_SORT,
-  SORT_LABELS,
-  PROPOSAL_STAGE,
-  STAGE_UI,
-} from 'api/constants';
+import { PROPOSAL_SORT, SORT_LABELS, PROPOSAL_STAGE, STAGE_UI } from 'api/constants';
 import { typedKeys } from 'utils/ts';
 import { ProposalPage } from 'types';
 
@@ -55,7 +50,7 @@ export default class ProposalFilters extends React.Component<Props> {
                   PROPOSAL_STAGE.PREVIEW,
                   PROPOSAL_STAGE.FAILED,
                   PROPOSAL_STAGE.CANCELED,
-                  PROPOSAL_STAGE.FUNDING_REQUIRED
+                  PROPOSAL_STAGE.FUNDING_REQUIRED,
                 ].includes(s as PROPOSAL_STAGE),
             ) // skip a few
             .map(s => (

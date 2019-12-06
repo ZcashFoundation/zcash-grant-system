@@ -13,14 +13,12 @@ interface Props {
 }
 
 interface State {
-  isSaving: boolean
-  refundAddress: string | null
-  refundAddressSet: string | null
+  isSaving: boolean;
+  refundAddress: string | null;
+  refundAddressSet: string | null;
 }
 
-
 export default class RefundAddress extends React.Component<Props, State> {
-
   static getDerivedStateFromProps(nextProps: Props, prevState: State) {
     const { userSettings } = nextProps;
     const { refundAddress, refundAddressSet } = prevState;
@@ -42,11 +40,11 @@ export default class RefundAddress extends React.Component<Props, State> {
     return ret;
   }
 
-  state: State = { 
+  state: State = {
     isSaving: false,
     refundAddress: null,
-    refundAddressSet: null
-   };
+    refundAddressSet: null,
+  };
 
   render() {
     const { isSaving, refundAddress, refundAddressSet } = this.state;

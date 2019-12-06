@@ -124,8 +124,8 @@ class CreateReview extends React.Component<Props> {
 
     return (
       <div className="CreateReview">
-        {sections.map(s => (
-          <div className="CreateReview-section" key={s.step}>
+        {sections.map((s, i) => (
+          <div className="CreateReview-section" key={`${s.step}${i}`}>
             {s.fields.map(
               f =>
                 !f.isHide && (

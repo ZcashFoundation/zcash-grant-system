@@ -28,7 +28,7 @@ class VerifyEmail extends React.Component<RouteComponentProps, State> {
           this.setState({
             hasVerified: true,
             isVerifying: false,
-          })
+          });
         })
         .catch(err => {
           this.setState({
@@ -41,7 +41,7 @@ class VerifyEmail extends React.Component<RouteComponentProps, State> {
         error: `
           Missing code parameter from email.
           Make sure you copied the full link.
-        `
+        `,
       });
     }
   }
@@ -63,7 +63,7 @@ class VerifyEmail extends React.Component<RouteComponentProps, State> {
         </Link>
       </div>
     );
-    
+
     if (hasVerified) {
       return (
         <Result

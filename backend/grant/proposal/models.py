@@ -228,6 +228,28 @@ class ProposalArbiter(db.Model):
         raise ValidationException('User is not arbiter')
 
 
+def default_proposal_content():
+    return """# Overview
+
+Help us understand the goal(s) of the proposal at a high level. 
+
+
+# Approach
+
+The plan for accomplishing the goal(s) laid out in the overview.
+
+
+# Team
+
+Who you are, and why you're credible to execute on the goals of the proposal.
+
+
+# Deliverable
+    
+The end result of your efforts as related to this proposal.
+"""
+
+
 class Proposal(db.Model):
     __tablename__ = "proposal"
 
@@ -241,7 +263,7 @@ class Proposal(db.Model):
     title = db.Column(db.String(255), nullable=False)
     brief = db.Column(db.String(255), nullable=False)
     stage = db.Column(db.String(255), nullable=False)
-    content = db.Column(db.Text, nullable=False)
+    content = db.Column(db.Text, nullable=False, default=default_proposal_content())
     category = db.Column(db.String(255), nullable=True)
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
@@ -290,7 +312,7 @@ class Proposal(db.Model):
             status: str = ProposalStatus.DRAFT,
             title: str = '',
             brief: str = '',
-            content: str = '',
+            content: str = default_proposal_content(),
             stage: str = ProposalStage.PREVIEW,
             target: str = '0',
             payout_address: str = '',
@@ -521,7 +543,7 @@ class Proposal(db.Model):
                 'proposal_url': make_admin_url(f'/proposals/{self.id}'),
             })
 
-    # state: status (DRAFT || REJECTED) -> (PENDING || STAKING)
+    # state: status (DRAFT || REJECTED) -> (PENDING)
     def submit_for_approval(self):
         self.validate_publishable()
         self.validate_milestone_days()
@@ -529,11 +551,7 @@ class Proposal(db.Model):
         # specific validation
         if self.status not in allowed_statuses:
             raise ValidationException(f"Proposal status must be draft or rejected to submit for approval")
-        # set to PENDING if staked, else STAKING
-        if self.is_staked:
-            self.status = ProposalStatus.PENDING
-        else:
-            self.status = ProposalStatus.STAKING
+        self.set_pending()
 
     def set_pending_when_ready(self):
         if self.status == ProposalStatus.STAKING and self.is_staked:
@@ -541,10 +559,6 @@ class Proposal(db.Model):
 
     # state: status STAKING -> PENDING
     def set_pending(self):
-        if self.status != ProposalStatus.STAKING:
-            raise ValidationException(f"Proposal status must be staking in order to be set to pending")
-        if not self.is_staked:
-            raise ValidationException(f"Proposal is not fully staked, cannot set to pending")
         self.send_admin_email('admin_approval')
         self.status = ProposalStatus.PENDING
         db.session.add(self)
@@ -566,16 +580,23 @@ class Proposal(db.Model):
             self.date_published = datetime.datetime.now()
             self.stage = ProposalStage.WIP
 
-            with_or_out = 'without'
             if with_funding:
                 self.fully_fund_contibution_bounty()
-                with_or_out = 'with'
             for t in self.team:
+                admin_note = ''
+                if with_funding:
+                    admin_note = 'Congratulations! Your proposal has been accepted with funding from the Zcash Foundation.'
+                else:
+                    admin_note = '''
+                    We've chosen to list your proposal on ZF Grants, but we won't be funding your proposal at this time. 
+                    Your proposal can still receive funding from the community in the form of tips if you have set a tip address for your proposal. 
+                    If you have not yet done so, you can do this from the actions dropdown at your proposal.
+                    '''
                 send_email(t.email_address, 'proposal_approved', {
                     'user': t,
                     'proposal': self,
                     'proposal_url': make_url(f'/proposals/{self.id}'),
-                    'admin_note': f'Congratulations! Your proposal has been accepted {with_or_out} funding.'
+                    'admin_note': admin_note
                 })
         else:
             if not reject_reason:

@@ -27,6 +27,7 @@ export default class RFPItem extends React.Component<Props> {
       bounty,
       matching,
       isVersionTwo,
+      ccr,
     } = rfp;
     const closeDate = dateCloses || dateClosed;
 
@@ -54,6 +55,13 @@ export default class RFPItem extends React.Component<Props> {
           </Tag>,
         );
       }
+      if (ccr) {
+        tags.push(
+          <Tag key="matching" color="#52c41a">
+            Community Created Request
+          </Tag>,
+        );
+      }
     }
 
     return (
@@ -75,6 +83,11 @@ export default class RFPItem extends React.Component<Props> {
           <div className="RFPItem-details-detail">
             {acceptedProposals.length} proposals approved
           </div>
+          {ccr && (
+            <div className="RFPItem-details-detail">
+              Submitted by {ccr.author.displayName}
+            </div>
+          )}
         </div>
       </Link>
     );

@@ -37,6 +37,7 @@ def set_admin(identity):
 
     if user:
         user.set_admin(True)
+        user.email_verification.has_verified = True
         db.session.add(user)
         db.session.commit()
         click.echo(f'Successfully set {user.display_name} (uid {user.id}) to admin')

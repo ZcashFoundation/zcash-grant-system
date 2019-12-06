@@ -8,6 +8,7 @@ import {
   deleteProposalContribution,
   deleteProposalDraft,
   putProposalPublish,
+  deleteCCR,
 } from 'api/api';
 import { Dispatch } from 'redux';
 import { cleanClone } from 'utils/helpers';
@@ -93,7 +94,10 @@ export function respondToInvite(
   };
 }
 
-export function deleteContribution(userId: string | number, contributionId: string | number) {
+export function deleteContribution(
+  userId: string | number,
+  contributionId: string | number,
+) {
   // Fire and forget
   deleteProposalContribution(contributionId);
   return {
@@ -123,6 +127,15 @@ export function publishPendingProposal(userId: number, proposalId: number) {
         proposalId,
         proposal: res.data,
       })),
+    });
+  };
+}
+
+export function deletePendingRequest(userId: number, requestId: number) {
+  return async (dispatch: Dispatch<any>) => {
+    await dispatch({
+      type: types.USER_DELETE_REQUEST,
+      payload: deleteCCR(requestId).then(_ => ({ userId, requestId })),
     });
   };
 }

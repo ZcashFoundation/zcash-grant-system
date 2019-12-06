@@ -18,7 +18,7 @@ interface State {
   userSettings: UserSettings | undefined;
   isFetching: boolean;
   errorFetching: boolean;
-};
+}
 
 const STATE: State = {
   userSettings: undefined,

@@ -8,8 +8,9 @@
 
     "intro": {
       "title": "Funding for Zcash ecosystem projects",
-      "subtitle": "Development, research, and community growth",
+      "subtitle": "Development, research, and community growth.\nHelp us build a better Zcash by creating a proposal or requesting an improvement!",
       "signup": "Sign up now",
+      "ccr": "Create a request",
       "browse": "Browse proposals",
       "learn": "or learn more below"
     },
@@ -23,7 +24,7 @@
 
     "requests": {
       "title": "Open Requests from the ZF",
-      "description": "The Zcash Foundation will periodically open up requests for proposals that have financial incentives attached to them in the form of fixed bounties, or pledges of contribution matching.\nProposals will be reviewed and chosen based on the ZF’s confidence in the team and their plan.\nTo be eligible for funding from the Zcash Foundation, teams must provide identifying information for legal reasons.\nIf none of the RFPs catch your eye, check out the <a href=\"https://www.zfnd.org/grants/#ideas\" target=\"_blank\">list of promising ideas<\/a>!",
+      "description": "The Zcash Foundation will periodically open up requests for proposals that have financial incentives attached to them in the form of fixed bounties.\nProposals will be reviewed and chosen based on the ZF’s confidence in the team and their plan.\nTo be eligible for funding from the Zcash Foundation, teams must provide identifying information for legal reasons.\nIf none of the RFPs catch your eye, check out the <a href=\"https://www.zfnd.org/grants/#ideas\" target=\"_blank\">list of promising ideas<\/a>!",
       "more": "See all requests",
       "emptyTitle": "No open requests at this time",
       "emptySubtitle": "But don’t let that stop you! Proposals can be submitted at any time."
@@ -31,10 +32,10 @@
 
     "guide": {
       "title": "How it works",
-      "submit": "Individuals and teams submit proposals against requests from the Zcash Foundation, or of their own ideas",
-      "review": "Their proposal is reviewed by the Zcash Foundation, and potentially rewarded a bounty or met with matching contributions",
-      "community": "The proposal is then opened up to the community to discuss, provide feedback, and help it reach its funding goal",
-      "complete": "Once successfully funded, the proposal creator(s) post updates with their progress and are paid out as they reach project milestones"
+      "submit": "Individuals and teams submit proposals against requests from the community or the Zcash Foundation, or submit one of their own ideas",
+      "review": "The proposal is reviewed by the Zcash Foundation, after which the proposal may be accepted with or without funding. In cases where the proposal is accepted without funding, the community may donate directly when the team has set a tip address.",
+      "community": "The proposal is then opened up to the community to discuss, provide feedback, and optionally donate to the team",
+      "complete": "The proposal creator(s) post updates with their progress, and if having received a bounty, are paid out as they reach project milestones"
     },
 
     "actions": {

@@ -6,6 +6,7 @@ from flask_testing import TestCase
 from mock import patch
 
 from grant.app import create_app
+from grant.ccr.models import CCR
 from grant.extensions import limiter
 from grant.milestone.models import Milestone
 from grant.proposal.models import Proposal
@@ -13,7 +14,7 @@ from grant.settings import PROPOSAL_STAKING_AMOUNT
 from grant.task.jobs import ProposalReminder
 from grant.user.models import User, SocialMedia, db, Avatar
 from grant.utils.enums import ProposalStatus
-from .test_data import test_user, test_other_user, test_proposal, mock_blockchain_api_requests
+from .test_data import test_user, test_other_user, test_proposal, mock_blockchain_api_requests, test_ccr
 
 
 class BaseTestConfig(TestCase):
@@ -184,3 +185,23 @@ class BaseProposalCreatorConfig(BaseUserConfig):
         db.session.add(contribution)
         db.session.flush()
         self.proposal.set_pending_when_ready()
+
+
+class BaseCCRCreatorConfig(BaseUserConfig):
+    def setUp(self):
+        super().setUp()
+        self._ccr = CCR.create(
+            status=ProposalStatus.DRAFT,
+            title=test_ccr["title"],
+            content=test_ccr["content"],
+            brief=test_ccr["brief"],
+            target=test_ccr["target"],
+            user_id=self.user.id
+        )
+        self._ccr_id = self._ccr.id
+        db.session.commit()
+
+    # always return fresh (avoid detached instance issues)
+    @property
+    def ccr(self):
+        return CCR.query.filter_by(id=self._ccr_id).first()

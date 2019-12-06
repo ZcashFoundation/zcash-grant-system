@@ -151,15 +151,19 @@ class PruneDraft:
 
     @staticmethod
     def process_task(task):
-        from grant.proposal.models import Proposal
+        from grant.proposal.models import Proposal, default_proposal_content
         proposal = Proposal.query.filter_by(id=task.blob["proposal_id"]).first()
 
         # If it was deleted or moved out of a draft, noop out
         if not proposal or proposal.status != ProposalStatus.DRAFT:
             return
 
-        # If any of the proposal fields are filled, noop out
-        if proposal.title or proposal.brief or proposal.content or proposal.category or proposal.target != "0":
+        # If proposal content deviates from the default, noop out
+        if proposal.content != default_proposal_content():
+            return
+
+        # If any of the remaining proposal fields are filled, noop out
+        if proposal.title or proposal.brief or proposal.category or proposal.target != "0":
             return
 
         if proposal.payout_address or proposal.milestones:

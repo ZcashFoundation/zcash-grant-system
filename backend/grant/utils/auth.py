@@ -1,10 +1,11 @@
-from functools import wraps
 from datetime import datetime, timedelta
+from functools import wraps
 
 import sentry_sdk
 from flask import request, g, jsonify, session, current_app
 from flask_security.core import current_user
 from flask_security.utils import logout_user
+
 from grant.settings import BLOCKCHAIN_API_SECRET
 
 
@@ -26,7 +27,7 @@ def throw_on_banned(user):
         raise AuthException("You are banned")
 
 
-def is_auth_fresh(minutes: int=20):
+def is_auth_fresh(minutes: int = 20):
     if 'last_login_time' in session:
         last = session['last_login_time']
         now = datetime.now()
@@ -130,6 +131,28 @@ def requires_team_member_auth(f):
             return jsonify(message="You are not authorized to modify this proposal"), 403
 
         g.current_proposal = proposal
+        return f(*args, **kwargs)
+
+    return requires_email_verified_auth(decorated)
+
+
+def requires_ccr_owner_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        from grant.ccr.models import CCR
+
+        ccr_id = kwargs["ccr_id"]
+        if not ccr_id:
+            return jsonify(message="Decorator requires_ccr_owner_auth requires path variable <ccr_id>"), 500
+
+        ccr = CCR.query.filter_by(id=ccr_id).first()
+        if not ccr:
+            return jsonify(message="No CCR exists with id {}".format(ccr_id)), 404
+
+        if g.current_user.id != ccr.author.id:
+            return jsonify(message="You are not authorized to modify this CCR"), 403
+
+        g.current_ccr = ccr
         return f(*args, **kwargs)
 
     return requires_email_verified_auth(decorated)

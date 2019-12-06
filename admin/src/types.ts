@@ -48,6 +48,7 @@ export interface RFP {
   bounty: string | null;
   dateCloses: number | null;
   isVersionTwo: boolean;
+  ccr?: CCR;
 }
 export interface RFPArgs {
   title: string;
@@ -198,6 +199,30 @@ export enum PROPOSAL_CATEGORY {
   COMMUNITY = 'COMMUNITY',
   DOCUMENTATION = 'DOCUMENTATION',
   ACCESSIBILITY = 'ACCESSIBILITY',
+}
+
+export enum CCR_STATUS {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  LIVE = 'LIVE',
+  DELETED = 'DELETED',
+}
+
+export interface CCR {
+  ccrId: number;
+  brief: string;
+  status: CCR_STATUS;
+  dateCreated: number;
+  dateApproved: number;
+  datePublished: number;
+  title: string;
+  content: string;
+  target: string;
+  rejectReason: string;
+  rfp?: RFP;
+  author: User;
 }
 
 export interface PageQuery {

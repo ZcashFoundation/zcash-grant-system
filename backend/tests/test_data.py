@@ -49,6 +49,14 @@ test_proposal = {
     "deadlineDuration": 100
 }
 
+test_ccr = {
+    "user_id": test_user,
+    "content": "## My Proposal",
+    "title": "Give Me Money",
+    "brief": "$$$",
+    "target": "123.456",
+}
+
 test_comment = {
     "comment": "Test comment"
 }

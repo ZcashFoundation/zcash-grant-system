@@ -69,6 +69,10 @@ To run all tests, run
 
     flask test
 
+To run only select test, Flask allows you to match against the test filename with ``-t` like so:
+
+    flask test -t proposal
+
 ## Migrations
 
 Whenever a database migration needs to be made. Run the following commands

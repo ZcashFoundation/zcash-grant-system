@@ -6,6 +6,7 @@ import {
   UserContribution,
   TeamInviteWithProposal,
   UserProposalArbiter,
+  UserCCR,
 } from 'types';
 import types from './types';
 
@@ -21,8 +22,10 @@ export interface UserState extends User {
   isUpdating: boolean;
   updateError: string | null;
   pendingProposals: UserProposal[];
+  pendingRequests: UserCCR[];
   arbitrated: UserProposalArbiter[];
   proposals: UserProposal[];
+  requests: UserCCR[];
   contributions: UserContribution[];
   comments: UserComment[];
   isFetchingInvites: boolean;
@@ -53,8 +56,10 @@ export const INITIAL_USER_STATE: UserState = {
   isUpdating: false,
   updateError: null,
   pendingProposals: [],
+  pendingRequests: [],
   arbitrated: [],
   proposals: [],
+  requests: [],
   contributions: [],
   comments: [],
   isFetchingInvites: false,
@@ -109,24 +114,6 @@ export default (state = INITIAL_STATE, action: any) => {
       return updateUserState(state, payload.user.userid, {
         isUpdating: false,
         updateError: errorMessage,
-      });
-    // invites
-    case types.FETCH_USER_INVITES_PENDING:
-      return updateUserState(state, userFetchId, {
-        isFetchingInvites: true,
-        fetchErrorInvites: null,
-      });
-    case types.FETCH_USER_INVITES_FULFILLED:
-      return updateUserState(state, userFetchId, {
-        isFetchingInvites: false,
-        hasFetchedInvites: true,
-        invites,
-      });
-    case types.FETCH_USER_INVITES_REJECTED:
-      return updateUserState(state, userFetchId, {
-        isFetchingInvites: false,
-        hasFetchedInvites: true,
-        fetchErrorInvites: errorMessage,
       });
     // invites
     case types.FETCH_USER_INVITES_PENDING:

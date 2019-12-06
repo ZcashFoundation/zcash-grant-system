@@ -1,0 +1,41 @@
+@import '~styles/variables.less';
+
+.CCRFinal {
+  max-width: 550px;
+  padding: 1rem;
+  margin: 3rem auto;
+
+  &-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    .anticon {
+      margin-right: 1rem;
+      font-size: 3.2rem;
+    }
+    &.is-error .anticon {
+      color: @error-color;
+    }
+    &.is-success .anticon {
+      color: @success-color;
+    }
+
+    &-text {
+      font-size: 1rem;
+      text-align: left;
+    }
+  }
+
+  &-contribute {
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+  }
+
+  &-staked {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    text-align: center;
+  }
+}

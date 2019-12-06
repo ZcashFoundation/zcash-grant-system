@@ -2,7 +2,7 @@ import React from 'react';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Row, Col, Collapse, Card, Button, Popconfirm, Spin } from 'antd';
+import { Row, Col, Collapse, Card, Button, Popconfirm, Spin, Alert } from 'antd';
 import Exception from 'ant-design-pro/lib/Exception';
 import Back from 'components/Back';
 import Markdown from 'components/Markdown';
@@ -69,6 +69,20 @@ class RFPDetail extends React.Component<Props> {
 
           {/* RIGHT SIDE */}
           <Col span={6}>
+            {rfp.ccr && (
+              <Alert
+                message="Linked CCR"
+                description={
+                  <React.Fragment>
+                    This RFP has been generated from a CCR{' '}
+                    <Link to={`/ccrs/${rfp.ccr.ccrId}`}>here</Link>.
+                  </React.Fragment>
+                }
+                type="info"
+                showIcon
+              />
+            )}
+
             {/* ACTIONS */}
             <Card className="RFPDetail-actions" size="small">
               <Link to={`/rfps/${rfp.id}/edit`}>

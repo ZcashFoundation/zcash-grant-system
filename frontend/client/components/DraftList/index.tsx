@@ -135,7 +135,7 @@ class DraftList extends React.Component<Props, State> {
                   <List.Item.Meta
                     title={
                       <>
-                        {d.title || <em>Untitled proposal</em>}
+                        {d.title || <em>Untitled Proposal</em>}
                         {d.status === STATUS.REJECTED && <em> (changes requested)</em>}
                       </>
                     }
@@ -158,7 +158,7 @@ class DraftList extends React.Component<Props, State> {
 
     return (
       <div className="DraftList">
-        <h2 className="DraftList-title">Your drafts</h2>
+        <h2 className="DraftList-title">Your Proposal Drafts</h2>
         {draftsEl}
         <Divider>or</Divider>
         <Button

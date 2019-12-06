@@ -50,7 +50,7 @@ export default class TipJarAddress extends React.Component<Props, State> {
     const { isSaving, tipJarAddress, tipJarAddressSet } = this.state;
     const { isFetching, errorFetching, userSettings } = this.props;
     const addressChanged = tipJarAddress !== tipJarAddressSet;
-    const hasViewKeySet = userSettings && userSettings.tipJarViewKey
+    const hasViewKeySet = userSettings && userSettings.tipJarViewKey;
 
     let addressIsValid;
     let status: 'validating' | 'error' | undefined;
@@ -69,7 +69,7 @@ export default class TipJarAddress extends React.Component<Props, State> {
 
     if (tipJarAddress === '' && hasViewKeySet) {
       status = 'error';
-      help = 'You must unset your view key before unsetting your address'
+      help = 'You must unset your view key before unsetting your address';
     }
 
     return (

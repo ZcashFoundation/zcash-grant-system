@@ -4,6 +4,7 @@ import axios, { AxiosError } from 'axios';
 import {
   User,
   Proposal,
+  CCR,
   Contribution,
   ContributionArgs,
   RFP,
@@ -149,8 +150,8 @@ async function cancelProposal(id: number) {
 }
 
 async function changeProposalToAcceptedWithFunding(id: number) {
-  const { data } = await api.put(`/admin/proposals/${id}/accept/fund`)
-  return data
+  const { data } = await api.put(`/admin/proposals/${id}/accept/fund`);
+  return data;
 }
 
 async function fetchComments(params: Partial<PageQuery>) {
@@ -174,6 +175,28 @@ async function markMilestonePaid(proposalId: number, milestoneId: number, txId: 
 async function getEmailExample(type: string) {
   const { data } = await api.get(`/admin/email/example/${type}`);
   return data;
+}
+
+async function fetchCCRDetail(id: number) {
+  const { data } = await api.get(`/admin/ccrs/${id}`);
+  return data;
+}
+
+async function approveCCR(id: number, isAccepted: boolean, rejectReason?: string) {
+  const { data } = await api.put(`/admin/ccrs/${id}/accept`, {
+    isAccepted,
+    rejectReason,
+  });
+  return data;
+}
+
+async function fetchCCRs(params: Partial<PageQuery>) {
+  const { data } = await api.get(`/admin/ccrs`, { params });
+  return data;
+}
+
+async function deleteCCR(id: number) {
+  await api.delete(`/admin/ccrs/${id}`);
 }
 
 async function getRFPs() {
@@ -229,6 +252,7 @@ const app = store({
   stats: {
     userCount: 0,
     proposalCount: 0,
+    ccrPendingCount: 0,
     proposalPendingCount: 0,
     proposalNoArbiterCount: 0,
     proposalMilestonePayoutsCount: 0,
@@ -294,6 +318,24 @@ const app = store({
   proposalDetailUpdating: false,
   proposalDetailUpdated: false,
   proposalDetailChangingToAcceptedWithFunding: false,
+
+  ccrs: {
+    page: createDefaultPageData<CCR>('CREATED:DESC'),
+  },
+  ccrSaving: false,
+  ccrSaved: false,
+  ccrDeleting: false,
+  ccrDeleted: false,
+
+  ccrDetail: null as null | CCR,
+  ccrDetailFetching: false,
+  ccrDetailApproving: false,
+  ccrDetailMarkingMilestonePaid: false,
+  ccrDetailCanceling: false,
+  ccrDetailUpdating: false,
+  ccrDetailUpdated: false,
+  ccrDetailChangingToAcceptedWithFunding: false,
+  ccrCreatedRFPId: null,
 
   comments: {
     page: createDefaultPageData<Comment>('CREATED:DESC'),
@@ -494,6 +536,53 @@ const app = store({
     app.arbiterSaving = false;
   },
 
+  // CCRS
+
+  async fetchCCRs() {
+    return await pageFetch(app.ccrs, fetchCCRs);
+  },
+
+  setCCRPageQuery(params: Partial<PageQuery>) {
+    setPageParams(app.ccrs, params);
+  },
+
+  resetCCRPageQuery() {
+    resetPageParams(app.ccrs);
+  },
+  
+  async fetchCCRDetail(id: number) {
+    app.ccrDetailFetching = true;
+    try {
+      app.ccrDetail = await fetchCCRDetail(id);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.ccrDetailFetching = false;
+  },
+
+  async approveCCR(isAccepted: boolean, rejectReason?: string) {
+    if (!app.ccrDetail) {
+      const m = 'store.approveCCR(): Expected ccrDetail to be populated!';
+      app.generalError.push(m);
+      console.error(m);
+      return;
+    }
+    app.ccrCreatedRFPId = null;
+    app.ccrDetailApproving = true;
+    try {
+      const { ccrId } = app.ccrDetail;
+      const res = await approveCCR(ccrId, isAccepted, rejectReason);
+      await app.fetchCCRs();
+      await app.fetchRFPs();
+      if (isAccepted) {
+        app.ccrCreatedRFPId = res.rfpId;
+      }
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.ccrDetailApproving = false;
+  },
+
   // Proposals
 
   async fetchProposals() {
@@ -548,7 +637,11 @@ const app = store({
     }
   },
 
-  async approveProposal(isAccepted: boolean, withFunding: boolean, rejectReason?: string) {
+  async approveProposal(
+    isAccepted: boolean,
+    withFunding: boolean,
+    rejectReason?: string,
+  ) {
     if (!app.proposalDetail) {
       const m = 'store.approveProposal(): Expected proposalDetail to be populated!';
       app.generalError.push(m);
@@ -558,7 +651,12 @@ const app = store({
     app.proposalDetailApproving = true;
     try {
       const { proposalId } = app.proposalDetail;
-      const res = await approveProposal(proposalId, isAccepted, withFunding, rejectReason);
+      const res = await approveProposal(
+        proposalId,
+        isAccepted,
+        withFunding,
+        rejectReason,
+      );
       app.updateProposalInStore(res);
     } catch (e) {
       handleApiError(e);
@@ -578,16 +676,16 @@ const app = store({
   },
 
   async changeProposalToAcceptedWithFunding(id: number) {
-    app.proposalDetailChangingToAcceptedWithFunding = true
+    app.proposalDetailChangingToAcceptedWithFunding = true;
 
     try {
-      const res = await changeProposalToAcceptedWithFunding(id)
-      app.updateProposalInStore(res)
+      const res = await changeProposalToAcceptedWithFunding(id);
+      app.updateProposalInStore(res);
     } catch (e) {
-      handleApiError(e)
+      handleApiError(e);
     }
 
-    app.proposalDetailChangingToAcceptedWithFunding = false
+    app.proposalDetailChangingToAcceptedWithFunding = false;
   },
 
   async markMilestonePaid(proposalId: number, milestoneId: number, txId: string) {

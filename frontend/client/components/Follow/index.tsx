@@ -58,7 +58,6 @@ class Follow extends React.Component<Props, State> {
     try {
       await followProposal(proposalId, !authedFollows);
       await this.props.fetchProposal(proposalId);
-      message.success(<>Proposal {authedFollows ? 'unfollowed' : 'followed'}</>);
     } catch (error) {
       // tslint:disable:no-console
       console.error('Follow.handleFollow - unable to change follow state', error);

@@ -248,7 +248,8 @@ class CreateFlow extends React.Component<Props, State> {
                   key="next"
                   onClick={this.nextStep}
                 >
-                  {isSecondToLastStep ? 'Review' : 'Continue' } <Icon type="right-circle-o" />
+                  {isSecondToLastStep ? 'Review' : 'Continue'}{' '}
+                  <Icon type="right-circle-o" />
                 </button>
               </>
             )}

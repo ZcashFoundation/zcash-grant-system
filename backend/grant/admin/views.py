@@ -8,6 +8,7 @@ from sqlalchemy import func, or_, text
 
 import grant.utils.admin as admin
 import grant.utils.auth as auth
+from grant.ccr.models import CCR, ccrs_schema, ccr_schema
 from grant.comment.models import Comment, user_comments_schema, admin_comments_schema, admin_comment_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
@@ -26,7 +27,6 @@ from grant.proposal.models import (
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.utils import pagination
-from grant.utils.enums import Category
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -34,6 +34,7 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage,
     RFPStatus,
+    CCRStatus
 )
 from grant.utils.misc import make_url, make_explore_url
 from .example_emails import example_email_args
@@ -137,6 +138,9 @@ def logout():
 def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
     proposal_count = db.session.query(func.count(Proposal.id)).scalar()
+    ccr_pending_count = db.session.query(func.count(CCR.id)) \
+        .filter(CCR.status == CCRStatus.PENDING) \
+        .scalar()
     proposal_pending_count = db.session.query(func.count(Proposal.id)) \
         .filter(Proposal.status == ProposalStatus.PENDING) \
         .scalar()
@@ -160,15 +164,16 @@ def stats():
         .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
         .filter(or_(
-            Proposal.stage == ProposalStage.FAILED,
-            Proposal.stage == ProposalStage.CANCELED,
-        )) \
+        Proposal.stage == ProposalStage.FAILED,
+        Proposal.stage == ProposalStage.CANCELED,
+    )) \
         .join(ProposalContribution.user) \
         .join(UserSettings) \
         .filter(UserSettings.refund_address != None) \
         .scalar()
     return {
         "userCount": user_count,
+        "ccrPendingCount": ccr_pending_count,
         "proposalCount": proposal_count,
         "proposalPendingCount": proposal_pending_count,
         "proposalNoArbiterCount": proposal_no_arbiter_count,
@@ -314,9 +319,9 @@ def set_arbiter(proposal_id, user_id):
     db.session.commit()
 
     return {
-        'proposal': proposal_schema.dump(proposal),
-        'user': admin_user_schema.dump(user)
-    }, 200
+               'proposal': proposal_schema.dump(proposal),
+               'user': admin_user_schema.dump(user)
+           }, 200
 
 
 # PROPOSALS
@@ -473,6 +478,64 @@ def get_email_example(type):
     return email
 
 
+# CCRs
+
+
+@blueprint.route("/ccrs", methods=["GET"])
+@query(paginated_fields)
+@admin.admin_auth_required
+def get_ccrs(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.ccr(
+        schema=ccrs_schema,
+        query=CCR.query,
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
+
+
+@blueprint.route('/ccrs/<ccr_id>', methods=['DELETE'])
+@admin.admin_auth_required
+def delete_ccr(ccr_id):
+    ccr = CCR.query.filter(CCR.id == ccr_id).first()
+    if not ccr:
+        return {"message": "No CCR matching that id"}, 404
+
+    db.session.delete(ccr)
+    db.session.commit()
+    return {"message": "ok"}, 200
+
+
+@blueprint.route('/ccrs/<id>', methods=['GET'])
+@admin.admin_auth_required
+def get_ccr(id):
+    ccr = CCR.query.filter(CCR.id == id).first()
+    if ccr:
+        return ccr_schema.dump(ccr)
+    return {"message": f"Could not find ccr with id {id}"}, 404
+
+
+@blueprint.route('/ccrs/<ccr_id>/accept', methods=['PUT'])
+@body({
+    "isAccepted": fields.Bool(required=True),
+    "rejectReason": fields.Str(required=False, missing=None)
+})
+@admin.admin_auth_required
+def approve_ccr(ccr_id, is_accepted, reject_reason=None):
+    ccr = CCR.query.filter_by(id=ccr_id).first()
+    if ccr:
+        rfp_id = ccr.approve_pending(is_accepted, reject_reason)
+        if is_accepted:
+            return {"rfpId": rfp_id}, 201
+        else:
+            return ccr_schema.dump(ccr)
+
+    return {"message": "No CCR found."}, 404
+
+
 # Requests for Proposal
 
 
@@ -602,7 +665,7 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
     db.session.add(contribution)
     db.session.flush()
 
-    #TODO: should this stay? 
+    # TODO: should this stay?
     contribution.proposal.set_pending_when_ready()
 
     db.session.commit()
@@ -726,7 +789,6 @@ def edit_comment(comment_id, hidden, reported):
 @blueprint.route("/financials", methods=["GET"])
 @admin.admin_auth_required
 def financials():
-
     nfmt = '999999.99999999'  # smallest unit of ZEC
 
     def sql_pc(where: str):
@@ -758,7 +820,8 @@ def financials():
         'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
         'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
         'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
-        'funded': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
+        'funded': str(
+            ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
         # should have a refund_address
         'refunding': str(ex(sql_pc_p(
             '''

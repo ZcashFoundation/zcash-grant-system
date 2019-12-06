@@ -19,17 +19,20 @@ const HomeIntro: React.SFC<Props> = ({ t, authUser }) => (
       <p className="HomeIntro-content-subtitle">{t('home.intro.subtitle')}</p>
       <div className="HomeIntro-content-buttons">
         {authUser ? (
-          <Link className="HomeIntro-content-buttons-main" to="/proposals">
+          <Link className="HomeIntro-content-buttons-button is-primary" to="/proposals">
             {t('home.intro.browse')}
           </Link>
         ) : (
-          <Link className="HomeIntro-content-buttons-main" to="/auth/sign-up">
+          <Link
+            className="HomeIntro-content-buttons-button is-primary"
+            to="/auth/sign-up"
+          >
             {t('home.intro.signup')}
           </Link>
         )}
-        <a className="HomeIntro-content-buttons-learn" href="#home-guide">
-          {t('home.intro.learn')}
-        </a>
+        <Link className="HomeIntro-content-buttons-button" to="/create-request">
+          {t('home.intro.ccr')}
+        </Link>
       </div>
     </div>
     <div

@@ -4,6 +4,7 @@ export interface EmailSubscriptions {
   fundedProposalContribution: boolean;
   fundedProposalFunded: boolean;
   fundedProposalPayoutRequest: boolean;
+  followedProposal: boolean;
   fundedProposalUpdate: boolean;
   myCommentReply: boolean;
   myProposalApproval: boolean;
@@ -15,6 +16,7 @@ export interface EmailSubscriptions {
   adminApproval: boolean;
   adminArbiter: boolean;
   adminPayout: boolean;
+  adminApprovalCcr: boolean;
 }
 
 export enum EMAIL_SUBSCRIPTION_CATEGORY {

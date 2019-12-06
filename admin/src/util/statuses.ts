@@ -1,5 +1,6 @@
 import {
   PROPOSAL_STATUS,
+  CCR_STATUS,
   RFP_STATUS,
   CONTRIBUTION_STATUS,
   PROPOSAL_ARBITER_STATUS,
@@ -45,6 +46,46 @@ export const MILESTONE_STAGES: Array<StatusSoT<MILESTONE_STAGE>> = [
     tagDisplay: 'Paid',
     tagColor: '#e9c510',
     hint: 'Proposal has a paid milestone.',
+  },
+];
+
+export const CCR_STATUSES: Array<StatusSoT<CCR_STATUS>> = [
+  {
+    id: CCR_STATUS.APPROVED,
+    tagDisplay: 'Approved',
+    tagColor: '#afd500',
+    hint: 'Request has been approved and is awaiting being published by user.',
+  },
+  {
+    id: CCR_STATUS.DELETED,
+    tagDisplay: 'Deleted',
+    tagColor: '#bebebe',
+    hint: 'Request has been deleted and is not visible on the platform.',
+  },
+  {
+    id: CCR_STATUS.DRAFT,
+    tagDisplay: 'Draft',
+    tagColor: '#8d8d8d',
+    hint: 'Request is being created by the user.',
+  },
+  {
+    id: CCR_STATUS.LIVE,
+    tagDisplay: 'Live',
+    tagColor: '#108ee9',
+    hint: 'Request is live on the platform.',
+  },
+  {
+    id: CCR_STATUS.PENDING,
+    tagDisplay: 'Awaiting Approval',
+    tagColor: '#ffaa00',
+    hint: 'User is waiting for admin to approve or request changes to this Request.',
+  },
+  {
+    id: CCR_STATUS.REJECTED,
+    tagDisplay: 'Changes Requested',
+    tagColor: '#eb4118',
+    hint:
+      'Admin has requested changes for this Request. User may adjust it and resubmit for approval.',
   },
 ];
 

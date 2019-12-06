@@ -4,6 +4,7 @@ import proposal, {
   ProposalState,
   INITIAL_STATE as proposalInitialState,
 } from 'modules/proposals';
+import ccr, { CCRState, INITIAL_STATE as ccrInitialState } from 'modules/ccr';
 import create, { CreateState, INITIAL_STATE as createInitialState } from 'modules/create';
 import auth, { AuthState, INITIAL_STATE as authInitialState } from 'modules/auth';
 import users, { UsersState, INITIAL_STATE as usersInitialState } from 'modules/users';
@@ -13,6 +14,7 @@ import history from './history';
 export interface AppState {
   proposal: ProposalState;
   create: CreateState;
+  ccr: CCRState;
   users: UsersState;
   auth: AuthState;
   rfps: RFPState;
@@ -25,9 +27,11 @@ export const combineInitialState: Omit<AppState, 'router'> = {
   users: usersInitialState,
   auth: authInitialState,
   rfps: rfpsInitialState,
+  ccr: ccrInitialState,
 };
 
 export default combineReducers<AppState>({
+  ccr,
   proposal,
   create,
   users,

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
 import classnames from 'classnames';
-import { Progress } from 'antd'
+import { Progress } from 'antd';
 import { Proposal } from 'types';
 import Card from 'components/Card';
 import UserAvatar from 'components/UserAvatar';
 import UnitDisplay from 'components/UnitDisplay';
-import { formatUsd } from 'utils/formatters'
+import { formatUsd } from 'utils/formatters';
 import './style.less';
 
 export class ProposalCard extends React.Component<Proposal> {
@@ -26,7 +26,7 @@ export class ProposalCard extends React.Component<Proposal> {
       contributionMatching,
       isVersionTwo,
       funded,
-      percentFunded
+      percentFunded,
     } = this.props;
 
     return (

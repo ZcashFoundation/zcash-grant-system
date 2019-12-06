@@ -1,0 +1,28 @@
+@import '~styles/variables.less';
+
+.CCRPreview {
+  &-preview {
+    // simulate non-fullscreen template margins
+    margin: @template-space-top @template-space-sides;
+    padding-bottom: 8rem;
+  }
+
+  &-banner {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin: 0 -50vw 1rem;
+    text-align: center;
+
+    .ant-alert {
+      padding: 1rem;
+    }
+  }
+
+  &-loader {
+    flex: 1;
+    position: relative;
+    height: 14rem;
+  }
+}

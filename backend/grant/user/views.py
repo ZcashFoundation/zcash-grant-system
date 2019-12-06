@@ -8,17 +8,18 @@ from webargs import validate
 import grant.utils.auth as auth
 from grant.comment.models import Comment, user_comments_schema
 from grant.email.models import EmailRecovery
+from grant.ccr.models import CCR, ccrs_schema
 from grant.extensions import limiter
 from grant.parser import query, body
 from grant.proposal.models import (
     Proposal,
     ProposalTeamInvite,
     invites_with_proposal_schema,
-    ProposalContribution,
     user_proposal_contributions_schema,
     user_proposals_schema,
     user_proposal_arbiters_schema
 )
+from grant.proposal.models import ProposalContribution
 from grant.utils.enums import ProposalStatus, ContributionStatus
 from grant.utils.exceptions import ValidationException
 from grant.utils.requests import validate_blockchain_get
@@ -50,14 +51,20 @@ def get_me():
     "withComments": fields.Bool(required=False, missing=None),
     "withFunded": fields.Bool(required=False, missing=None),
     "withPending": fields.Bool(required=False, missing=None),
-    "withArbitrated": fields.Bool(required=False, missing=None)
+    "withArbitrated": fields.Bool(required=False, missing=None),
+    "withRequests": fields.Bool(required=False, missing=None)
+
 })
-def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated):
+def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated, with_requests):
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
         authed_user = auth.get_authed_user()
         is_self = authed_user and authed_user.id == user.id
+        if with_requests:
+            requests = CCR.get_by_user(user)
+            requests_dump = ccrs_schema.dump(requests)
+            result["requests"] = requests_dump
         if with_proposals:
             proposals = Proposal.get_by_user(user)
             proposals_dump = user_proposals_schema.dump(proposals)
@@ -75,14 +82,22 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
             comments_dump = user_comments_schema.dump(comments)
             result["comments"] = comments_dump
         if with_pending and is_self:
-            pending = Proposal.get_by_user(user, [
+            pending_proposals = Proposal.get_by_user(user, [
                 ProposalStatus.STAKING,
                 ProposalStatus.PENDING,
                 ProposalStatus.APPROVED,
                 ProposalStatus.REJECTED,
             ])
-            pending_dump = user_proposals_schema.dump(pending)
-            result["pendingProposals"] = pending_dump
+            pending_proposals_dump = user_proposals_schema.dump(pending_proposals)
+            result["pendingProposals"] = pending_proposals_dump
+            pending_ccrs = CCR.get_by_user(user, [
+                ProposalStatus.STAKING,
+                ProposalStatus.PENDING,
+                ProposalStatus.APPROVED,
+                ProposalStatus.REJECTED,
+            ])
+            pending_ccrs_dump = ccrs_schema.dump(pending_ccrs)
+            result["pendingRequests"] = pending_ccrs_dump
         if with_arbitrated and is_self:
             result["arbitrated"] = user_proposal_arbiters_schema.dump(user.arbiter_proposals)
 

@@ -5,6 +5,7 @@ import {
   PROPOSAL_ARBITER_STATUSES,
   MILESTONE_STAGES,
   PROPOSAL_STAGES,
+  CCR_STATUSES,
 } from './statuses';
 
 export interface Filter {
@@ -92,6 +93,20 @@ const RFP_FILTERS = RFP_STATUSES.map(s => ({
 export const rfpFilters: Filters = {
   list: RFP_FILTERS,
   getById: getFilterById(RFP_FILTERS),
+};
+
+// CCR
+
+const CCR_FILTERS = CCR_STATUSES.map(c => ({
+  id: `STATUS_${c.id}`,
+  display: `Status: ${c.tagDisplay}`,
+  color: c.tagColor,
+  group: 'Status',
+}));
+
+export const ccrFilters: Filters = {
+  list: CCR_FILTERS,
+  getById: getFilterById(CCR_FILTERS),
 };
 
 // Contribution

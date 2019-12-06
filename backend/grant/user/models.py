@@ -3,6 +3,7 @@ from flask_security.core import current_user
 from flask_security.utils import hash_password, verify_and_update_password, login_user
 from sqlalchemy.ext.hybrid import hybrid_property
 from grant.comment.models import Comment
+from grant.ccr.models import CCR
 from grant.email.models import EmailVerification, EmailRecovery
 from grant.email.send import send_email
 from grant.email.subscription_settings import (
@@ -125,6 +126,7 @@ class User(db.Model, UserMixin):
     # relations
     social_medias = db.relationship(SocialMedia, backref="user", lazy=True, cascade="all, delete-orphan")
     comments = db.relationship(Comment, backref="user", lazy=True)
+    ccrs = db.relationship(CCR, back_populates="author", lazy=True, cascade="all, delete-orphan")
     avatar = db.relationship(Avatar, uselist=False, back_populates="user", cascade="all, delete-orphan")
     settings = db.relationship(UserSettings, uselist=False, back_populates="user",
                                lazy=True, cascade="all, delete-orphan")
@@ -147,7 +149,6 @@ class User(db.Model, UserMixin):
     liked_rfps = db.relationship(
         "RFP", secondary="rfp_liker", back_populates="likes"
     )
-
 
     def __init__(
             self,

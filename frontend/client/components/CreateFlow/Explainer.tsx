@@ -32,9 +32,10 @@ const Explainer: React.SFC<Props> = ({ t, startSteps }) => {
   return (
     <div className="Explainer">
       <div className="Explainer-header">
-        <h2 className="Explainer-header-title">{t('home.guide.title')}</h2>
+        <h2 className="Explainer-header-title">Creating a Proposal</h2>
         <div className="Explainer-header-subtitle">
-          You're almost ready to create a proposal.
+          We can't wait to get your request! Before starting, here's what you should
+          know...
         </div>
       </div>
       <div className="Explainer-items">

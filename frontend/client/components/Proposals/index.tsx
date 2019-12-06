@@ -61,20 +61,6 @@ class Proposals extends React.Component<Props, State> {
     );
     return (
       <div className="Proposals">
-        <div className="Proposals-about">
-          <div className="Proposals-about-logo">
-            <ZCFLogo />
-          </div>
-          <div className="Proposals-about-text">
-            <h2 className="Proposals-about-text-title">Zcash Foundation Proposals</h2>
-            <p className="Proposals-about-text-desc">
-              The Zcash Foundation accepts proposals from community members to improve the
-              Zcash ecosystem. Proposals are either accepted with or without funding,
-              should they be approved by the Zcash Foundation.
-            </p>
-          </div>
-        </div>
-        <Divider />
         <div className="Proposals-content">
           {isFiltersDrawered ? (
             <Drawer
@@ -95,26 +81,43 @@ class Proposals extends React.Component<Props, State> {
               </Button>
             </Drawer>
           ) : (
-            <div className="Proposals-filters">{filtersComponent}</div>
+            <div className="Proposals-filters">
+              <div className="Proposals-search">
+                <Input.Search
+                  placeholder="Search for a proposal"
+                  onChange={this.handleChangeSearch}
+                  value={this.state.searchQuery}
+                  size="large"
+                />
+                <Button
+                  className="Proposals-search-filterButton"
+                  type="primary"
+                  size="large"
+                  onClick={this.openFilterDrawer}
+                >
+                  <Icon type="filter" /> Filters
+                </Button>
+              </div>
+              {filtersComponent}
+            </div>
           )}
 
           <div className="Proposals-results">
-            <div className="Proposals-search">
-              <Input.Search
-                placeholder="Search for a proposal"
-                onChange={this.handleChangeSearch}
-                value={this.state.searchQuery}
-                size="large"
-              />
-              <Button
-                className="Proposals-search-filterButton"
-                type="primary"
-                size="large"
-                onClick={this.openFilterDrawer}
-              >
-                <Icon type="filter" /> Filters
-              </Button>
+            <div className="Proposals-about">
+              <div className="Proposals-about-logo">
+                <ZCFLogo />
+              </div>
+              <div className="Proposals-about-text">
+                <h2 className="Proposals-about-text-title">Zcash Foundation Proposals</h2>
+                <p className="Proposals-about-text-desc">
+                  The Zcash Foundation accepts proposals from community members to improve
+                  the Zcash ecosystem. Proposals are either funded by the Zcash Foundation
+                  directly, or are opened for community donations should they be approved
+                  by the Zcash Foundation."
+                </p>
+              </div>
             </div>
+
             <Divider />
             <ProposalResults
               page={this.props.page}

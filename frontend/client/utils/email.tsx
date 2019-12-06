@@ -89,6 +89,16 @@ export const EMAIL_SUBSCRIPTIONS: { [key in ESKey]: EmailSubscriptionInfo } = {
     category: EMAIL_SUBSCRIPTION_CATEGORY.ADMIN,
     value: false,
   },
+  followedProposal: {
+    description: `proposals you're following`,
+    category: EMAIL_SUBSCRIPTION_CATEGORY.PROPOSAL,
+    value: false,
+  },
+  adminApprovalCcr: {
+    description: 'CCR needs review',
+    category: EMAIL_SUBSCRIPTION_CATEGORY.ADMIN,
+    value: false,
+  },
 };
 
 export const EMAIL_SUBSCRIPTION_CATEGORIES: {

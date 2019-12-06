@@ -14,7 +14,7 @@ import { AlertProps } from 'antd/lib/alert';
 import ExceptionPage from 'components/ExceptionPage';
 import HeaderDetails from 'components/HeaderDetails';
 import CampaignBlock from './CampaignBlock';
-import TippingBlock from './TippingBlock'
+import TippingBlock from './TippingBlock';
 import TeamBlock from './TeamBlock';
 import RFPBlock from './RFPBlock';
 import Milestones from './Milestones';
@@ -28,7 +28,7 @@ import { withRouter } from 'react-router';
 import SocialShare from 'components/SocialShare';
 import Follow from 'components/Follow';
 import Like from 'components/Like';
-import { TipJarProposalSettingsModal } from 'components/TipJar'
+import { TipJarProposalSettingsModal } from 'components/TipJar';
 import './index.less';
 
 interface OwnProps {
@@ -63,7 +63,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     isBodyOverflowing: false,
     isUpdateOpen: false,
     isCancelOpen: false,
-    isTipJarOpen: false
+    isTipJarOpen: false,
   };
 
   bodyEl: HTMLElement | null = null;
@@ -94,7 +94,13 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   render() {
     const { user, detail: proposal, isPreview, detailError } = this.props;
-    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, isUpdateOpen, isTipJarOpen } = this.state;
+    const {
+      isBodyExpanded,
+      isBodyOverflowing,
+      isCancelOpen,
+      isUpdateOpen,
+      isTipJarOpen,
+    } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
     const wrongProposal = proposal && proposal.proposalId !== this.props.proposalId;
 
@@ -246,8 +252,8 @@ export class ProposalDetail extends React.Component<Props, State> {
             </div>
           </div>
           <div className="Proposal-top-side">
-            <CampaignBlock proposal={proposal} isPreview={!isLive} />
             <TippingBlock proposal={proposal} />
+            <CampaignBlock proposal={proposal} isPreview={!isLive} />
             <TeamBlock proposal={proposal} />
             {proposal.rfp && <RFPBlock rfp={proposal.rfp} />}
           </div>
@@ -266,9 +272,11 @@ export class ProposalDetail extends React.Component<Props, State> {
             <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
               <UpdatesTab proposalId={proposal.proposalId} />
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
-              <ContributorsTab proposalId={proposal.proposalId} />
-            </Tabs.TabPane>
+            {!proposal.isVersionTwo && (
+              <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
+                <ContributorsTab proposalId={proposal.proposalId} />
+              </Tabs.TabPane>
+            )}
           </LinkableTabs>
         </div>
 
@@ -284,7 +292,7 @@ export class ProposalDetail extends React.Component<Props, State> {
               isVisible={isCancelOpen}
               handleClose={this.closeCancelModal}
             />
-            <TipJarProposalSettingsModal 
+            <TipJarProposalSettingsModal
               proposal={proposal}
               isVisible={isTipJarOpen}
               handleClose={this.closeTipJarModal}
@@ -314,7 +322,6 @@ export class ProposalDetail extends React.Component<Props, State> {
       this.setState({ isBodyOverflowing: true });
     }
   };
-
 
   private openTipJarModal = () => this.setState({ isTipJarOpen: true });
   private closeTipJarModal = () => this.setState({ isTipJarOpen: false });

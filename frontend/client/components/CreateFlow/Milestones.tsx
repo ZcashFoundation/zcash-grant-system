@@ -144,6 +144,12 @@ const MilestoneFields = ({
         maxLength={255}
       />
     </div>
+    {index > 0 && (
+      <div style={{ marginBottom: '8px', opacity: 0.7, fontSize: '13px' }}>
+        (Note: This number represents the number of days past the previous milestone day
+        estimate)
+      </div>
+    )}
 
     <div style={{ display: 'flex' }}>
       <Input
@@ -187,7 +193,7 @@ const MilestoneFields = ({
             <span style={{ opacity: 0.7 }}>Payout Immediately</span>
           </Checkbox>
           <Tooltip title="Allows the milestone to be paid out immediatly if the proposal is accepted with funding.">
-            <Icon type="info-circle" style={{fontSize: '16px'}} />
+            <Icon type="info-circle" style={{ fontSize: '16px' }} />
           </Tooltip>
         </div>
       )}

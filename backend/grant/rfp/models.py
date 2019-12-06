@@ -34,6 +34,8 @@ class RFP(db.Model):
     date_closed = db.Column(db.DateTime, nullable=True)
     version = db.Column(db.String(255), nullable=True)
 
+    ccr = db.relationship("CCR", uselist=False, back_populates="rfp")
+
     # Relationships
     proposals = db.relationship(
         "Proposal",
@@ -56,7 +58,6 @@ class RFP(db.Model):
         .where(rfp_liker.c.rfp_id == id)
         .correlate_except(rfp_liker)
     )
-
 
     @hybrid_property
     def bounty(self):
@@ -134,9 +135,11 @@ class RFPSchema(ma.Schema):
             "accepted_proposals",
             "authed_liked",
             "likes_count",
-            "is_version_two"
+            "is_version_two",
+            "ccr"
         )
 
+    ccr = ma.Nested("CCRSchema", exclude=["rfp"])
     status = ma.Method("get_status")
     date_closes = ma.Method("get_date_closes")
     date_opened = ma.Method("get_date_opened")
@@ -184,9 +187,11 @@ class AdminRFPSchema(ma.Schema):
             "date_opened",
             "date_closed",
             "proposals",
-            "is_version_two"
+            "is_version_two",
+            "ccr"
         )
 
+    ccr = ma.Nested("CCRSchema", exclude=["rfp"])
     status = ma.Method("get_status")
     date_created = ma.Method("get_date_created")
     date_closes = ma.Method("get_date_closes")

@@ -16,13 +16,11 @@ export default class SubmitWarningModal extends React.Component<Props> {
     const { proposal, isVisible, handleClose, handleSubmit } = this.props;
     const warnings = proposal ? getCreateWarnings(proposal) : [];
 
-    const staked = proposal && proposal.isStaked;
-
     return (
       <Modal
         title={<>Confirm submission</>}
         visible={isVisible}
-        okText={staked ? 'Submit' : `I'm ready to stake`}
+        okText={'Submit'}
         cancelText="Never mind"
         onOk={handleSubmit}
         onCancel={handleClose}
@@ -45,20 +43,10 @@ export default class SubmitWarningModal extends React.Component<Props> {
               }
             />
           )}
-          {staked && (
-            <p>
-              Are you sure you're ready to submit your proposal for approval? Once you’ve
-              done so, you won't be able to edit it.
-            </p>
-          )}
-          {!staked && (
-            <p>
-              Are you sure you're ready to submit your proposal? You will be asked to send
-              a staking contribution of <b>{process.env.PROPOSAL_STAKING_AMOUNT} ZEC</b>.
-              Once confirmed, the proposal will be submitted for approval by site
-              administrators.
-            </p>
-          )}
+          <p>
+            Are you sure you're ready to submit your proposal for approval? Once you’ve
+            done so, you won't be able to edit it.
+          </p>
         </div>
       </Modal>
     );

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
-import sentry_sdk
 import logging
 import traceback
+
+import sentry_sdk
 from animal_case import animalify
 from flask import Flask, Response, jsonify, request, current_app, g
 from flask_cors import CORS
@@ -10,7 +11,21 @@ from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-from grant import commands, proposal, user, comment, milestone, admin, email, blockchain, task, rfp, e2e, home
+from grant import (
+    commands,
+    proposal,
+    user,
+    ccr,
+    comment,
+    milestone,
+    admin,
+    email,
+    blockchain,
+    task,
+    rfp,
+    e2e,
+    home
+)
 from grant.extensions import bcrypt, migrate, db, ma, security, limiter
 from grant.settings import SENTRY_RELEASE, ENV, E2E_TESTING, DEBUG, CORS_DOMAINS
 from grant.utils.auth import AuthException, handle_auth_error, get_authed_user
@@ -129,6 +144,7 @@ def register_extensions(app):
 
 def register_blueprints(app):
     """Register Flask blueprints."""
+    app.register_blueprint(ccr.views.blueprint)
     app.register_blueprint(comment.views.blueprint)
     app.register_blueprint(proposal.views.blueprint)
     app.register_blueprint(user.views.blueprint)
@@ -165,4 +181,5 @@ def register_commands(app):
     app.cli.add_command(proposal.commands.create_proposals)
     app.cli.add_command(proposal.commands.retire_v1_proposals)
     app.cli.add_command(user.commands.set_admin)
+    app.cli.add_command(user.commands.mangle_users)
     app.cli.add_command(task.commands.create_task)

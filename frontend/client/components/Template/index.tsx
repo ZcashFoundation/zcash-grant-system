@@ -36,6 +36,8 @@ export default class Template extends React.PureComponent<Props> {
           </noscript>
         )}
         <div className={className}>
+          {/*
+          // @ts-ignore */}
           <Header isTransparent={isHeaderTransparent} />
           <Layout.Content className="Template-content">
             <div className="Template-content-inner">{content}</div>

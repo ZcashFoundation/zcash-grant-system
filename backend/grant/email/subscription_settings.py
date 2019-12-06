@@ -69,6 +69,10 @@ class EmailSubscription(Enum):
         'bit': 15,
         'key': 'followed_proposal'
     }
+    ADMIN_APPROVAL_CCR = {
+        'bit': 16,
+        'key': 'admin_approval_ccr'
+    }
 
 
 def is_email_sub_key(k: str):

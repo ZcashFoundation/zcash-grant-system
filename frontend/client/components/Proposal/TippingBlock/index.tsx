@@ -24,7 +24,7 @@ const TippingBlock: React.SFC<Props> = ({ proposal }) => {
             ??? &nbsp;
             <Tooltip
               placement="left"
-              title="Made possible if a proposal owner supplies a view key with their tip address."
+              title="Tip amount unavailable until view key support is added. A future update to ZF Grants will enable this."
             >
               <Icon type="info-circle" />
             </Tooltip>

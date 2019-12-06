@@ -14,6 +14,7 @@ import {
   ProposalPageParams,
   PageParams,
   UserSettings,
+  CCR,
 } from 'types';
 import {
   formatUserForPost,
@@ -23,6 +24,7 @@ import {
   formatProposalPageParamsForGet,
   formatProposalPageFromGet,
 } from 'utils/api';
+import { CCRDraft } from 'types/ccr';
 
 export function getProposals(page?: ProposalPageParams): Promise<{ data: ProposalPage }> {
   let serverParams;
@@ -88,6 +90,7 @@ export function getUser(address: string): Promise<{ data: User }> {
   return axios
     .get(`/api/v1/users/${address}`, {
       params: {
+        withRequests: true,
         withProposals: true,
         withComments: true,
         withFunded: true,
@@ -201,16 +204,6 @@ export function verifySocial(service: SOCIAL_SERVICE, code: string): Promise<any
   return axios.post(`/api/v1/users/social/${service}/verify`, { code });
 }
 
-export async function fetchCrowdFundFactoryJSON(): Promise<any> {
-  const res = await axios.get(process.env.CROWD_FUND_FACTORY_URL as string);
-  return res.data;
-}
-
-export async function fetchCrowdFundJSON(): Promise<any> {
-  const res = await axios.get(process.env.CROWD_FUND_URL as string);
-  return res.data;
-}
-
 interface ProposalTipJarArgs {
   address?: string;
   viewKey?: string;
@@ -224,7 +217,6 @@ export function updateProposalTipJarSettings(
     return res;
   });
 }
-
 
 export function postProposalUpdate(
   proposalId: number,
@@ -379,12 +371,6 @@ export function getProposalContribution(
   return axios.get(`/api/v1/proposals/${proposalId}/contributions/${contributionId}`);
 }
 
-export function getProposalStakingContribution(
-  proposalId: number,
-): Promise<{ data: ContributionWithAddressesAndUser }> {
-  return axios.get(`/api/v1/proposals/${proposalId}/stake`);
-}
-
 export function getRFPs(): Promise<{ data: RFP[] }> {
   return axios.get('/api/v1/rfps/').then(res => {
     res.data = res.data.map(formatRFPFromGet);
@@ -414,6 +400,37 @@ export function getHomeLatest(): Promise<{
       latestProposals: res.data.latestProposals.map(formatProposalFromGet),
       latestRfps: res.data.latestRfps.map(formatRFPFromGet),
     };
+    return res;
+  });
+}
+
+// CCRs
+export function getCCRDrafts(): Promise<{ data: CCRDraft[] }> {
+  return axios.get('/api/v1/ccrs/drafts');
+}
+
+export function postCCRDraft(): Promise<{ data: CCRDraft }> {
+  return axios.post('/api/v1/ccrs/drafts');
+}
+
+export function deleteCCR(ccrId: number): Promise<any> {
+  return axios.delete(`/api/v1/ccrs/${ccrId}`);
+}
+
+export function putCCR(ccr: CCRDraft): Promise<{ data: CCRDraft }> {
+  // Exclude some keys
+  const { ccrId, author, dateCreated, status, ...rest } = ccr;
+  return axios.put(`/api/v1/ccrs/${ccrId}`, rest);
+}
+
+export function getCCR(ccrId: number | string): Promise<{ data: CCR }> {
+  return axios.get(`/api/v1/ccrs/${ccrId}`).then(res => {
+    return res;
+  });
+}
+
+export async function putCCRSubmitForApproval(ccr: CCRDraft): Promise<{ data: CCR }> {
+  return axios.put(`/api/v1/ccrs/${ccr.ccrId}/submit_for_approval`).then(res => {
     return res;
   });
 }

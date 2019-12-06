@@ -1,0 +1,60 @@
+@small-query: ~'(max-width: 640px)';
+
+.ProfileCCR {
+  display: flex;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: none;
+  }
+
+  @media @small-query {
+    flex-direction: column;
+    padding-bottom: 0.6rem;
+  }
+
+  &-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: inherit;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  &-block {
+    flex: 1 0 0%;
+
+    &:last-child {
+      margin-left: 1.2rem;
+      flex: 0 0 0%;
+      min-width: 15rem;
+
+      @media @small-query {
+        margin-left: 0;
+        margin-top: 0.6rem;
+      }
+    }
+
+    &-team {
+      @media @small-query {
+        display: flex;
+        flex-flow: wrap;
+      }
+
+      & .UserRow {
+        margin-right: 1rem;
+      }
+    }
+  }
+
+  &-raised {
+    margin-top: 0.6rem;
+
+    & small {
+      opacity: 0.6;
+    }
+  }
+}
