@@ -26,7 +26,12 @@ const HTML: React.SFC<Props> = ({
 
   // Move `bundle.css` to beginning of array so custom styles don't get overwritten
   const bundleIndex = extractedStyleElements.findIndex(element => {
-    return typeof element.key === 'string' && /^.*\/bundle\.css$/.test(element.key);
+    const devBundle = /^.*\/bundle\.css$/;
+    const prodBundle = /^.*\/bundle\..*\.css$/;
+    return (
+      typeof element.key === 'string' &&
+      (devBundle.test(element.key) || prodBundle.test(element.key))
+    );
   });
   if (bundleIndex !== -1) {
     const [bundle] = extractedStyleElements.splice(bundleIndex, 1);
