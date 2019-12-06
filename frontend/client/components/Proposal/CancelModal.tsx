@@ -11,7 +11,11 @@ interface Props {
 
 export default class CancelModal extends React.Component<Props> {
   render() {
-    const { isVisible, handleClose } = this.props;
+    const {
+      isVisible,
+      handleClose,
+      proposal: { isVersionTwo },
+    } = this.props;
 
     return (
       <Modal
@@ -23,13 +27,15 @@ export default class CancelModal extends React.Component<Props> {
         onCancel={handleClose}
       >
         <p>
-          Are you sure you would like to cancel this proposal, and refund any
-          contributors? <strong>This cannot be undone</strong>.
+          Are you sure you would like to cancel this proposal
+          {isVersionTwo ? '' : ', and refund any contributors'}?{' '}
+          <strong>This cannot be undone</strong>.
         </p>
         <p>
-          Canceled proposals cannot be deleted and will still be viewable by contributors
-          or anyone with a direct link. However, they will be de-listed everywhere else on
-          ZF Grants.
+          Canceled proposals cannot be deleted and will still be viewable by{' '}
+          {isVersionTwo ? '' : 'contributors or '}
+          anyone with a direct link. However, they will be de-listed everywhere else on ZF
+          Grants.
         </p>
         <p>
           If you're sure you'd like to cancel, please{' '}

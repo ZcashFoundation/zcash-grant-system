@@ -106,7 +106,7 @@ class TipJarProposalSettingsModalBase extends React.Component<Props, State> {
           >
             <Input
               value={address || ''}
-              placeholder="Z or T address"
+              placeholder="Z address"
               onChange={this.handleTipJarAddressChange}
               disabled={addressInputDisabled}
             />

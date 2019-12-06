@@ -127,7 +127,8 @@ class SignUp extends React.Component<Props> {
     ev.preventDefault();
     const { createUser } = this.props;
     this.props.form.validateFieldsAndScroll((err: any, values: any) => {
-      if (!err) {
+      const hasAgreed = this.props.form.getFieldValue('hasAgreed')
+      if (!err && hasAgreed) {
         delete values.passwordConfirm;
         createUser(values);
       }

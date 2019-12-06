@@ -77,7 +77,7 @@ export default class TipJarAddress extends React.Component<Props, State> {
         <Form.Item label="Tip jar address" validateStatus={status} help={help}>
           <Input
             value={tipJarAddress || ''}
-            placeholder="Z or T address"
+            placeholder="Z address"
             onChange={this.handleChange}
             disabled={isFetching || isSaving || errorFetching}
           />

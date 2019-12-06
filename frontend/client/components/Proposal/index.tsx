@@ -110,7 +110,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     const milestonesDisabled = proposal.isVersionTwo
         ? !proposal.acceptedWithFunding
         : false;
-    const defaultTab = milestonesDisabled ? 'discussions' : 'milestones';
+    const defaultTab = !milestonesDisabled || !isLive ? 'milestones' : 'discussions';
 
     const adminMenu = (
       <Menu>

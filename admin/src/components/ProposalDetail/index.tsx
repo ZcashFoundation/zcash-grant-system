@@ -78,11 +78,19 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       return (
         <Popconfirm
           title={
-            <p>
-              Are you sure you want to cancel proposal and begin
-              <br />
-              the refund process? This cannot be undone.
-            </p>
+            isVersionTwo ? (
+              <p>
+                Are you sure you want to cancel proposal?
+                <br />
+                This cannot be undone.
+              </p>
+            ) : (
+              <p>
+                Are you sure you want to cancel proposal and begin
+                <br />
+                the refund process? This cannot be undone.
+              </p>
+            )
           }
           placement="left"
           cancelText="cancel"
