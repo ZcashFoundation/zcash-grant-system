@@ -365,8 +365,7 @@ def get_user_settings(user_id):
     "emailSubscriptions": fields.Dict(required=False, missing=None),
     "refundAddress": fields.Str(required=False, missing=None,
                                 validate=lambda r: validate_blockchain_get('/validate/address', {'address': r})),
-    "tipJarAddress": fields.Str(required=False, missing=None,
-                                validate=lambda r: validate_blockchain_get('/validate/address', {'address': r})),
+    "tipJarAddress": fields.Str(required=False, missing=None),
     "tipJarViewKey": fields.Str(required=False, missing=None)  # TODO: add viewkey validation here
 })
 def set_user_settings(user_id, email_subscriptions, refund_address, tip_jar_address, tip_jar_view_key):
@@ -382,8 +381,10 @@ def set_user_settings(user_id, email_subscriptions, refund_address, tip_jar_addr
     if refund_address:
         g.current_user.settings.refund_address = refund_address
 
-    # TODO: is additional validation needed similar to refund_address?
     if tip_jar_address is not None:
+        if tip_jar_address is not '':
+            validate_blockchain_get('/validate/address', {'address': tip_jar_address})
+
         g.current_user.settings.tip_jar_address = tip_jar_address
     if tip_jar_view_key is not None:
         g.current_user.settings.tip_jar_view_key = tip_jar_view_key

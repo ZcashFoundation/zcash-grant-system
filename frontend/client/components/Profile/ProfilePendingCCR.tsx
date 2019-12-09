@@ -39,10 +39,10 @@ class ProfilePendingCCR extends React.Component<Props, State> {
     const st = {
       [STATUS.REJECTED]: {
         color: 'red',
-        tag: 'Rejected',
+        tag: 'Changes Requested',
         blurb: (
           <>
-            <div>This request was rejected for the following reason:</div>
+            <div>This request has changes requested for the following reason:</div>
             <q>{rejectReason}</q>
             <div>You may edit this request and re-submit it for approval.</div>
           </>
@@ -50,7 +50,7 @@ class ProfilePendingCCR extends React.Component<Props, State> {
       },
       [STATUS.PENDING]: {
         color: 'purple',
-        tag: 'Pending',
+        tag: 'Pending Request',
         blurb: (
           <div>
             You will receive an email when this request has completed the review process.
@@ -63,7 +63,7 @@ class ProfilePendingCCR extends React.Component<Props, State> {
       <div className="ProfilePending">
         <div className="ProfilePending-block">
           <Link to={`/ccrs/${ccrId}`} className="ProfilePending-title">
-            {title} <Tag color={st[status].color}>{st[status].tag} Request</Tag>
+            {title} <Tag color={st[status].color}>{st[status].tag}</Tag>
           </Link>
           <div className={`ProfilePending-status is-${status.toLowerCase()}`}>
             {st[status].blurb}

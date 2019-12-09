@@ -717,12 +717,7 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_staked(self):
-        # Don't use self.contributed since that ignores stake contributions
-        contributions = ProposalContribution.query \
-            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
-            .all()
-        funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
-        return Decimal(funded) >= PROPOSAL_STAKING_AMOUNT
+        return True
 
     @hybrid_property
     def is_funded(self):

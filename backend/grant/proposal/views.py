@@ -264,12 +264,14 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
 @blueprint.route("/<proposal_id>/tips", methods=["PUT"])
 @requires_team_member_auth
 @body({
-    "address": fields.Str(required=False, missing=None,
-                          validate=lambda r: validate_blockchain_get('/validate/address', {'address': r})),
+    "address": fields.Str(required=False, missing=None),
     "viewKey": fields.Str(required=False, missing=None)
 })
 def update_proposal_tip_jar(proposal_id, address, view_key):
     if address is not None:
+        if address is not '':
+            validate_blockchain_get('/validate/address', {'address': address})
+
         g.current_proposal.tip_jar_address = address
     if view_key is not None:
         g.current_proposal.tip_jar_view_key = view_key
