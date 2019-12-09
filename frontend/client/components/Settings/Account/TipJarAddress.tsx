@@ -74,7 +74,7 @@ export default class TipJarAddress extends React.Component<Props, State> {
 
     return (
       <Form className="RefundAddress" layout="vertical" onSubmit={this.handleSubmit}>
-        <Form.Item label="Tip jar address" validateStatus={status} help={help}>
+        <Form.Item label="Tip address" validateStatus={status} help={help}>
           <Input
             value={tipJarAddress || ''}
             placeholder="Z address"
@@ -97,7 +97,7 @@ export default class TipJarAddress extends React.Component<Props, State> {
           loading={isSaving}
           block
         >
-          Change tip jar address
+          Change tip address
         </Button>
       </Form>
     );

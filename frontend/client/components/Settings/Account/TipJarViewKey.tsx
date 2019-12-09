@@ -64,10 +64,10 @@ export default class TipJarViewKey extends React.Component<Props, State> {
 
     return (
       <Form className="RefundAddress" layout="vertical" onSubmit={this.handleSubmit}>
-        <Form.Item label="Tip jar view key">
+        <Form.Item label="Tip view key">
           <Input
             value={tipJarViewKey || ''}
-            placeholder="A view key for your tip jar address (optional)"
+            placeholder="A view key for your tip address (optional)"
             onChange={this.handleChange}
             disabled={viewKeyDisabled || isFetching || isSaving || errorFetching}
           />
@@ -87,7 +87,7 @@ export default class TipJarViewKey extends React.Component<Props, State> {
           loading={isSaving}
           block
         >
-          Change tip jar view key
+          Change tip view key
         </Button>
       </Form>
     );
