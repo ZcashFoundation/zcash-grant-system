@@ -229,24 +229,38 @@ class ProposalArbiter(db.Model):
 
 
 def default_proposal_content():
-    return """# Overview
+    return """# Applicant background
 
-Help us understand the goal(s) of the proposal at a high level. 
+Summarize you and/or your team’s background and experience. Demonstrate that you have the skills and expertise necessary for the project that you’re proposing. Institutional bona fides are not required, but we want to hear about your track record.
 
+# Motivation and overview
 
-# Approach
+What are your high-level goals? Why are they important? How is your project connected to [ZF’s mission](https://www.zfnd.org/about/#mission) and priorities? Whose needs will it serve?
 
-The plan for accomplishing the goal(s) laid out in the overview.
+# Technical approach
 
+Dive into the _how_ of your project. Describe your approaches, components, workflows, methodology, etc. Bullet points and diagrams are appreciated!
 
-# Team
+# Execution risks
 
-Who you are, and why you're credible to execute on the goals of the proposal.
+What obstacles do you expect? What is most likely to go wrong? Which unknown factors or dependencies could jeopardize success? What are your contingency plans? Will subsequent activities be required to maximize impact?
 
+# Downsides
 
-# Deliverable
-    
-The end result of your efforts as related to this proposal.
+What are the negative ramifications if your project is successful? Consider usability, stability, privacy, integrity, availability, decentralization, interoperability, maintainability, technical debt, requisite education, etc.
+
+# Evaluation plan
+
+What will your project look like if successful? How will we be able to tell? Include quantifiable metrics if possible.
+
+# Tasks and schedule
+
+What is your timeline for the project? Include concrete milestones and the major tasks required to complete each milestone.
+
+# Budget and justification
+
+How much funding do you need, and how will it be allocated (e.g., compensation for your effort, specific equipment, specific external services)? Specify a total cost, break it up into budget items, and explain the rationale for each. Feel free to present multiple options in terms of scope and cost.
+
 """
 
 

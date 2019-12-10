@@ -77,7 +77,7 @@ class CCRFlowBasics extends React.Component<Props, State> {
           validateStatus={errors.target ? 'error' : undefined}
           help={
             errors.target ||
-            'Accepted proposals will be paid out in ZEC at market price at payout time. Zcash Foundation administrators may opt to adjust this value before approval.'
+            'Accepted proposals will be paid out in ZEC based in USD market price at payout time. Zcash Foundation administrators may opt to adjust this value before approval.'
           }
         >
           <Input

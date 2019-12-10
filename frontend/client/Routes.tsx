@@ -25,6 +25,7 @@ const RequestEdit = loadable(() => import('pages/request-edit'), opts);
 const ProposalEdit = loadable(() => import('pages/proposal-edit'), opts);
 const Proposals = loadable(() => import('pages/proposals'), opts);
 const Proposal = loadable(() => import('pages/proposal'), opts);
+const Guide = loadable(() => import('pages/guide'), opts);
 const Ccr = loadable(() => import('pages/ccr'), opts);
 const Auth = loadable(() => import('pages/auth'));
 const SignOut = loadable(() => import('pages/sign-out'), opts);
@@ -202,6 +203,18 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Terms of Service',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Terms of Service page
+    route: {
+      path: '/guide',
+      component: Guide,
+      exact: true,
+    },
+    template: {
+      title: 'Guide',
     },
     onlyLoggedIn: false,
   },

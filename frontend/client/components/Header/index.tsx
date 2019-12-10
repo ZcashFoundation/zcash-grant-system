@@ -67,6 +67,9 @@ class Header extends React.Component<Props, State> {
             <Link to="/requests" className="Header-links-link">
               Requests
             </Link>
+            <Link to="/guide" className="Header-links-link">
+              Guide
+            </Link>
           </div>
 
           <div className="Header-links is-left is-mobile">
