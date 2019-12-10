@@ -182,65 +182,71 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         <>
           <Row gutter={16}>
             <Col span={isVersionTwo ? 16 : 24}>
-          <Alert
-          showIcon
-          type="warning"
-          message="Review Pending"
-          description={
-            <div>
-              <p>Please review this proposal and render your judgment.</p>
-              <Button
-                className="ProposalDetail-review"
-                loading={store.proposalDetailApproving}
-                icon="check"
-                type="primary"
-                onClick={() => this.handleApprove(true)}
-              >
-                Approve With Funding
-              </Button>
-              <Button
-                className="ProposalDetail-review"
-                loading={store.proposalDetailApproving}
-                icon="check"
-                type="default"
-                onClick={() => this.handleApprove(false)}
-              >
-                Approve Without Funding
-              </Button>
-              <Button
-                className="ProposalDetail-review"
-                loading={store.proposalDetailApproving}
-                icon="close"
-                type="danger"
-                onClick={() => {
-                  FeedbackModal.open({
-                    title: 'Request changes to this proposal?',
-                    label: 'Please provide a reason:',
-                    okText: 'Reject',
-                    onOk: this.handleReject,
-                  });
-                }}
-              >
-                Request changes
-              </Button>
-            </div>
-          }
-        />
+              <Alert
+                showIcon
+                type="warning"
+                message="Review Pending"
+                description={
+                  <div>
+                    <p>Please review this proposal and render your judgment.</p>
+                    <Button
+                      className="ProposalDetail-review"
+                      loading={store.proposalDetailApproving}
+                      icon="check"
+                      type="primary"
+                      onClick={() => this.handleApprove(true)}
+                    >
+                      Approve With Funding
+                    </Button>
+                    <Button
+                      className="ProposalDetail-review"
+                      loading={store.proposalDetailApproving}
+                      icon="check"
+                      type="default"
+                      onClick={() => this.handleApprove(false)}
+                    >
+                      Approve Without Funding
+                    </Button>
+                    <Button
+                      className="ProposalDetail-review"
+                      loading={store.proposalDetailApproving}
+                      icon="close"
+                      type="danger"
+                      onClick={() => {
+                        FeedbackModal.open({
+                          title: 'Request changes to this proposal?',
+                          label: 'Please provide a reason:',
+                          okText: 'Request changes',
+                          onOk: this.handleReject,
+                        });
+                      }}
+                    >
+                      Request changes
+                    </Button>
+                  </div>
+                }
+              />
             </Col>
-          {p.isVersionTwo && <Col span={8}>
-        <Alert
-          showIcon
-          type={p.rfpOptIn ? "success" : "error"}
-          message={p.rfpOptIn ? "KYC accepted" : "KYC rejected"}
-          description={
-            <div>
-              {p.rfpOptIn ? <p>KYC has been accepted by the proposer.</p> : <p>KYC has been rejected. Recommend against approving with funding.</p>}
-
-            </div>}
-          />
-          </Col>
-          }
-
+            {p.isVersionTwo && (
+              <Col span={8}>
+                <Alert
+                  showIcon
+                  type={p.rfpOptIn ? 'success' : 'error'}
+                  message={p.rfpOptIn ? 'KYC accepted' : 'KYC rejected'}
+                  description={
+                    <div>
+                      {p.rfpOptIn ? (
+                        <p>KYC has been accepted by the proposer.</p>
+                      ) : (
+                        <p>
+                          KYC has been rejected. Recommend against approving with funding.
+                        </p>
+                      )}
+                    </div>
+                  }
+                />
+              </Col>
+            )}
           </Row>
         </>
       );
@@ -458,13 +464,16 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
           {/* RIGHT SIDE */}
           <Col span={6}>
-            {p.isVersionTwo && !p.acceptedWithFunding && p.stage === PROPOSAL_STAGE.WIP && <Alert
-                message="Accepted without funding"
-                description="This proposal has been posted publicly, but isn't being funded by the Zcash Foundation."
-                type="info"
-                showIcon
-            />
-            }
+            {p.isVersionTwo &&
+              !p.acceptedWithFunding &&
+              p.stage === PROPOSAL_STAGE.WIP && (
+                <Alert
+                  message="Accepted without funding"
+                  description="This proposal has been posted publicly, but isn't being funded by the Zcash Foundation."
+                  type="info"
+                  showIcon
+                />
+              )}
 
             {/* ACTIONS */}
             <Card size="small" className="ProposalDetail-controls">

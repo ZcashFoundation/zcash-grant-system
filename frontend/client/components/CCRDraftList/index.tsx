@@ -109,7 +109,7 @@ class CCRDraftList extends React.Component<Props, State> {
                     title={
                       <>
                         {d.title || <em>Untitled Request</em>}
-                        {d.status === CCRSTATUS.REJECTED && <em> (rejected)</em>}
+                        {d.status === CCRSTATUS.REJECTED && <em> (changes requested)</em>}
                       </>
                     }
                     description={d.brief || <em>No description</em>}
