@@ -1,0 +1,3 @@
+{{ args.ccr.title }} is awaiting approval. As an admin you can help out by reviewing it.
+
+Visit the request and review: {{ args.ccr_url }}

@@ -92,3 +92,14 @@ export function formatTxExplorerUrl(txid: string) {
   }
   throw new Error('EXPLORER_URL env variable needs to be set!');
 }
+
+export function formatUsd(
+  amount: number | string | undefined | null,
+  includeDollarSign: boolean = true,
+  digits: number = 0,
+) {
+  if (!amount) return includeDollarSign ? '$0' : '0';
+  const a = typeof amount === 'number' ? amount.toString() : amount;
+  const str = formatNumber(a, digits);
+  return includeDollarSign ? `$${str}` : str;
+}

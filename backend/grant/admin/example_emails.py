@@ -149,6 +149,10 @@ example_email_args = {
         'proposal': proposal,
         'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
     },
+    'milestone_deadline': {
+        'proposal': proposal,
+        'proposal_milestones_url': 'http://zfnd.org/proposals/999-my-proposal?tab=milestones',
+    },
     'milestone_reject': {
         'proposal': proposal,
         'admin_note': 'We noticed that the tests were failing for the features outlined in this milestone. Please address these issues.',
@@ -177,5 +181,14 @@ example_email_args = {
     'admin_payout': {
         'proposal': proposal,
         'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
+    },
+    'followed_proposal_milestone': {
+        "proposal": proposal,
+        "milestone": milestone,
+        "proposal_url": "http://someproposal.com",
+    },
+    'followed_proposal_update': {
+        "proposal": proposal,
+        "proposal_url": "http://someproposal.com",
     },
 }

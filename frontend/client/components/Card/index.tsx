@@ -1,27 +1,22 @@
 import React from 'react';
 import moment from 'moment';
 import classnames from 'classnames';
-import { Icon } from 'antd';
-import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
 import './index.less';
 import { Link } from 'react-router-dom';
+import { Proposal } from 'types';
+import Like from 'components/Like';
 
 interface CardInfoProps {
-  category: PROPOSAL_CATEGORY;
+  proposal: Proposal;
   time: number;
 }
 
-export const CardInfo: React.SFC<CardInfoProps> = ({ category, time }) => (
+export const CardInfo: React.SFC<CardInfoProps> = ({ proposal, time }) => (
   <div className="Card-info">
-    <div
-      className="ProposalCard-info-category"
-      style={{ color: CATEGORY_UI[category].color }}
-    >
-      <Icon type={CATEGORY_UI[category].icon} /> {CATEGORY_UI[category].label}
+    <div className="ProposalCard-info-category">
+      <Like proposal={proposal} proposal_card />
     </div>
-    <div className="ProposalCard-info-created">
-      {moment(time).fromNow()}
-    </div>
+    <div className="ProposalCard-info-created">{moment(time).fromNow()}</div>
   </div>
 );
 
@@ -44,7 +39,7 @@ export class Card extends React.Component<CardProps> {
           {children}
         </div>
       </Link>
-    )
+    );
   }
 }
 

@@ -8,7 +8,7 @@ from grant.user.models import User, user_schema, db
 from mock import patch
 
 from ..config import BaseUserConfig
-from ..test_data import test_user
+from ..test_data import test_user, mock_blockchain_api_requests
 
 
 class TestUserAPI(BaseUserConfig):
@@ -385,3 +385,34 @@ class TestUserAPI(BaseUserConfig):
             content_type='application/json'
         )
         self.assert400(resp)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_put_user_settings_tip_jar_address(self, mock_get):
+        address = "address"
+
+        self.login_default_user()
+        resp = self.app.put(
+            "/api/v1/users/{}/settings".format(self.user.id),
+            data=json.dumps({'tipJarAddress': address}),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["tipJarAddress"], address)
+        user = User.query.get(self.user.id)
+        self.assertEqual(user.settings.tip_jar_address, address)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_put_user_settings_tip_jar_view_key(self, mock_get):
+        view_key = "view_key"
+
+        self.login_default_user()
+        resp = self.app.put(
+            "/api/v1/users/{}/settings".format(self.user.id),
+            data=json.dumps({'tipJarViewKey': view_key}),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["tipJarViewKey"], view_key)
+        user = User.query.get(self.user.id)
+        self.assertEqual(user.settings.tip_jar_view_key, view_key)
+

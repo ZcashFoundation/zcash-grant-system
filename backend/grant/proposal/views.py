@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime
 
 from flask import Blueprint, g, request, current_app
 from marshmallow import fields, validate
@@ -13,7 +14,7 @@ from grant.milestone.models import Milestone
 from grant.parser import body, query, paginated_fields
 from grant.rfp.models import RFP
 from grant.settings import PROPOSAL_STAKING_AMOUNT
-from grant.task.jobs import ProposalDeadline
+from grant.task.jobs import ProposalDeadline, PruneDraft
 from grant.user.models import User
 from grant.utils import pagination
 from grant.utils.auth import (
@@ -24,8 +25,9 @@ from grant.utils.auth import (
     get_authed_user,
     internal_webhook
 )
+from grant.utils.requests import validate_blockchain_get
 from grant.utils.enums import Category
-from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus
+from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, RFPStatus
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import is_email, make_url, from_zat, make_explore_url
 from .models import (
@@ -108,6 +110,9 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
+    if proposal.status != ProposalStatus.LIVE:
+        return {"message": "Proposal must be live to comment"}, 400
+
     # Make sure the parent comment exists
     parent = None
     if parent_comment_id:
@@ -187,9 +192,15 @@ def make_proposal_draft(rfp_id):
         rfp = RFP.query.filter_by(id=rfp_id).first()
         if not rfp:
             return {"message": "The request this proposal was made for doesn’t exist"}, 400
-        proposal.category = rfp.category
+        if datetime.now() > rfp.date_closes:
+            return {"message": "The request this proposal was made for has expired"}, 400
+        if rfp.status == RFPStatus.CLOSED:
+            return {"message": "The request this proposal was made for has been closed"}, 400
         rfp.proposals.append(proposal)
         db.session.add(rfp)
+
+    task = PruneDraft(proposal)
+    task.make_task()
 
     db.session.add(proposal)
     db.session.commit()
@@ -219,11 +230,10 @@ def get_proposal_drafts():
     # Length checks are to prevent database errors, not actual user limits imposed
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
-    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list() + [''])),
     "content": fields.Str(required=True),
     "target": fields.Str(required=True),
     "payoutAddress": fields.Str(required=True),
-    "deadlineDuration": fields.Int(required=True),
+    "tipJarAddress": fields.Str(required=False, missing=None),
     "milestones": fields.List(fields.Dict(), required=True),
     "rfpOptIn": fields.Bool(required=False, missing=None),
 })
@@ -247,6 +257,26 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     Milestone.make(milestones, g.current_proposal)
 
     # Commit
+    db.session.commit()
+    return proposal_schema.dump(g.current_proposal), 200
+
+
+@blueprint.route("/<proposal_id>/tips", methods=["PUT"])
+@requires_team_member_auth
+@body({
+    "address": fields.Str(required=False, missing=None),
+    "viewKey": fields.Str(required=False, missing=None)
+})
+def update_proposal_tip_jar(proposal_id, address, view_key):
+    if address is not None:
+        if address is not '':
+            validate_blockchain_get('/validate/address', {'address': address})
+
+        g.current_proposal.tip_jar_address = address
+    if view_key is not None:
+        g.current_proposal.tip_jar_view_key = view_key
+
+    db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
 
@@ -291,17 +321,6 @@ def submit_for_approval_proposal(proposal_id):
     db.session.add(g.current_proposal)
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
-
-
-@blueprint.route("/<proposal_id>/stake", methods=["GET"])
-@requires_team_member_auth
-def get_proposal_stake(proposal_id):
-    if g.current_proposal.status != ProposalStatus.STAKING:
-        return {"message": "ok"}, 400
-    contribution = g.current_proposal.get_staking_contribution(g.current_user.id)
-    if contribution:
-        return proposal_contribution_schema.dump(contribution)
-    return {"message": "ok"}, 404
 
 
 @blueprint.route("/<proposal_id>/publish", methods=["PUT"])
@@ -366,6 +385,11 @@ def post_proposal_update(proposal_id, title, content):
             'proposal_update': update,
             'update_url': make_url(f'/proposals/{proposal_id}?tab=updates&update={update.id}'),
         })
+
+    # Send email to all followers
+    g.current_proposal.send_follower_email(
+        "followed_proposal_update", url_suffix="?tab=updates"
+    )
 
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
@@ -566,9 +590,6 @@ def post_contribution_confirmation(contribution_id, to, amount, txid):
                 'contributor_url': make_url(f'/profile/{contribution.user.id}') if contribution.user else '',
             })
 
-    # on funding target reached.
-    contribution.proposal.set_funded_when_ready()
-
     db.session.commit()
     return {"message": "ok"}, 200
 
@@ -662,3 +683,37 @@ def reject_milestone_payout_request(proposal_id, milestone_id, reason):
             return proposal_schema.dump(g.current_proposal), 200
 
     return {"message": "No milestone matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/follow", methods=["PUT"])
+@requires_auth
+@body({"isFollow": fields.Bool(required=True)})
+def follow_proposal(proposal_id, is_follow):
+    user = g.current_user
+    # Make sure proposal exists
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    proposal.follow(user, is_follow)
+    db.session.commit()
+    return {"message": "ok"}, 200
+
+
+@blueprint.route("/<proposal_id>/like", methods=["PUT"])
+@requires_auth
+@body({"isLiked": fields.Bool(required=True)})
+def like_proposal(proposal_id, is_liked):
+    user = g.current_user
+    # Make sure proposal exists
+    proposal = Proposal.query.filter_by(id=proposal_id).first()
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    if not proposal.status == ProposalStatus.LIVE:
+        return {"message": "Cannot like a proposal that's not live"}, 404
+
+    proposal.like(user, is_liked)
+    db.session.commit()
+    return {"message": "ok"}, 200
+

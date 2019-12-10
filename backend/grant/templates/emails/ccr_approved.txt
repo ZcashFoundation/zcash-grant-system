@@ -1,0 +1,9 @@
+Congratulations on your approval! We look forward to seeing proposals that are generated as a result of your request.
+
+{% if args.admin_note %}
+A note from the admin team was attached to your approval:
+
+> {{ args.admin_note }}
+{% endif %}
+
+{{ args.proposal_url }}

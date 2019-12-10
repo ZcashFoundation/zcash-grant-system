@@ -17,7 +17,8 @@ export interface Milestone {
   index: number;
   content: string;
   dateCreated: number;
-  dateEstimated: number;
+  dateEstimated?: number;
+  daysEstimated?: string;
   dateRequested: number;
   dateAccepted: number;
   dateRejected: number;
@@ -41,18 +42,18 @@ export interface RFP {
   title: string;
   brief: string;
   content: string;
-  category: string;
   status: string;
   proposals: Proposal[];
   matching: boolean;
   bounty: string | null;
   dateCloses: number | null;
+  isVersionTwo: boolean;
+  ccr?: CCR;
 }
 export interface RFPArgs {
   title: string;
   brief: string;
   content: string;
-  category: string;
   matching: boolean;
   dateCloses: number | null | undefined;
   bounty: string | null | undefined;
@@ -102,7 +103,6 @@ export interface Proposal {
   title: string;
   content: string;
   stage: PROPOSAL_STAGE;
-  category: string;
   milestones: Milestone[];
   currentMilestone?: Milestone;
   team: User[];
@@ -116,6 +116,8 @@ export interface Proposal {
   rfpOptIn: null | boolean;
   rfp?: RFP;
   arbiter: ProposalArbiter;
+  acceptedWithFunding: boolean | null;
+  isVersionTwo: boolean;
 }
 export interface Comment {
   id: number;
@@ -197,6 +199,30 @@ export enum PROPOSAL_CATEGORY {
   COMMUNITY = 'COMMUNITY',
   DOCUMENTATION = 'DOCUMENTATION',
   ACCESSIBILITY = 'ACCESSIBILITY',
+}
+
+export enum CCR_STATUS {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  LIVE = 'LIVE',
+  DELETED = 'DELETED',
+}
+
+export interface CCR {
+  ccrId: number;
+  brief: string;
+  status: CCR_STATUS;
+  dateCreated: number;
+  dateApproved: number;
+  datePublished: number;
+  title: string;
+  content: string;
+  target: string;
+  rejectReason: string;
+  rfp?: RFP;
+  author: User;
 }
 
 export interface PageQuery {

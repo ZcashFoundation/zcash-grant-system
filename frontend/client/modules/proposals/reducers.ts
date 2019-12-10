@@ -375,6 +375,9 @@ export default (state = INITIAL_STATE, action: any) => {
     case types.REPORT_PROPOSAL_COMMENT_FULFILLED:
       return updateCommentInStore(state, payload.commentId, { reported: true });
 
+    case types.UPDATE_PROPOSAL_COMMENT:
+      return updateCommentInStore(state, payload.commentId, payload.commentUpdate);
+
     case types.PROPOSAL_UPDATES_PENDING:
       return {
         ...state,

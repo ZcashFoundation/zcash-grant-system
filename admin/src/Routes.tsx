@@ -13,6 +13,8 @@ import UserDetail from 'components/UserDetail';
 import Emails from 'components/Emails';
 import Proposals from 'components/Proposals';
 import ProposalDetail from 'components/ProposalDetail';
+import CCRs from 'components/CCRs';
+import CCRDetail from 'components/CCRDetail';
 import RFPs from 'components/RFPs';
 import RFPForm from 'components/RFPForm';
 import RFPDetail from 'components/RFPDetail';
@@ -47,6 +49,8 @@ class Routes extends React.Component<Props> {
             <Route path="/users" component={Users} />
             <Route path="/proposals/:id" component={ProposalDetail} />
             <Route path="/proposals" component={Proposals} />
+            <Route path="/ccrs/:id" component={CCRDetail} />
+            <Route path="/ccrs" component={CCRs} />
             <Route path="/rfps/new" component={RFPForm} />
             <Route path="/rfps/:id/edit" component={RFPForm} />
             <Route path="/rfps/:id" component={RFPDetail} />

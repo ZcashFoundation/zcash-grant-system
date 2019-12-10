@@ -40,6 +40,20 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-size: 1rem;
+
+      small {
+        opacity: 0.6;
+        font-size: 0.6rem;
+        font-weight: 500;
+      }
+    }
+
+    &-name-v1 {
+      opacity: 0.8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       small {
         opacity: 0.6;
@@ -54,6 +68,14 @@
       margin-left: 1.25rem;
 
       &-avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-left: -0.75rem;
+        border-radius: 100%;
+        border: 2px solid #fff;
+      }
+
+      &-avatar-v1 {
         width: 1.8rem;
         height: 1.8rem;
         margin-left: -0.75rem;
@@ -64,9 +86,32 @@
   }
 
   &-funding {
+    line-height: 2.5rem;
+
+    &-raised {
+      font-size: 2.2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      small {
+        opacity: 0.6;
+      }
+    }
+
+    &-percent {
+      font-size: 0.7rem;
+      padding-left: 0.25rem;
+      &.is-funded {
+        color: @success-color;
+      }
+    }
+  }
+
+  &-funding-v1 {
     display: flex;
     justify-content: space-between;
-    line-height: 1.2rem;
+    line-height: 1.9rem;
 
     &-raised {
       font-size: 0.9rem;

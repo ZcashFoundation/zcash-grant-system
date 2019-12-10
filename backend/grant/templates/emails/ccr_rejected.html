@@ -1,0 +1,19 @@
+<p style="margin: 0;">
+    Your request has changes requested. You're free to modify it
+    and try submitting again.
+</p>
+
+{% if args.admin_note %}
+<p style="margin: 20px 0 0;">
+    A note from the admin team was attached to your rejection:
+</p>
+<p style="margin: 10px 0; padding: 20px; background: #F8F8F8;">
+    “{{ args.admin_note }}”
+</p>
+{% endif %}
+
+<p style="margin: 20px 0 0; font-size: 12px; line-height: 18px; color: #999; text-align: center;">
+    Please note that repeated submissions without significant changes or with
+    content that doesn't match the platform guidelines may result in a removal
+    of your submission privileges.
+</p>

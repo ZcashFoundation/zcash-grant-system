@@ -1,7 +1,9 @@
 import click
 from flask.cli import with_appcontext
 
-from .models import User, db
+from .models import User, db, SocialMedia
+from grant.task.models import Task
+from grant.settings import STAGING_PASSWORD
 
 
 # @click.command()
@@ -23,7 +25,6 @@ from .models import User, db
 #                                  'account address, or email address of an ' \
 #                                  'existing user.')
 
-
 @click.command()
 @click.argument('identity')
 @with_appcontext
@@ -36,6 +37,7 @@ def set_admin(identity):
 
     if user:
         user.set_admin(True)
+        user.email_verification.has_verified = True
         db.session.add(user)
         db.session.commit()
         click.echo(f'Successfully set {user.display_name} (uid {user.id}) to admin')
@@ -43,3 +45,28 @@ def set_admin(identity):
         raise click.BadParameter('''Invalid user identity. Must be a userid, 
                                  'account address, or email address of an  
                                  'existing user.''')
+
+
+@click.command()
+@with_appcontext
+def mangle_users():
+    if STAGING_PASSWORD:
+        print("Mangling all users")
+        for i, user in enumerate(User.query.all()):
+            user.email_address = "random" + str(i) + "@grant.io"
+            user.password = STAGING_PASSWORD
+            # DELETE TOTP SECRET
+            user.totp_secret = None
+            # DELETE BACKUP CODES
+            user.backup_codes = None
+            db.session.add(user)
+
+        # DELETE ALL TASKS
+        for task in Task.query.all():
+            db.session.delete(task)
+
+        # REMOVE ALL SOCIAL MEDIA
+        for social in SocialMedia.query.all():
+            db.session.delete(social)
+
+        db.session.commit()

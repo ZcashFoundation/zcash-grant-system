@@ -1,8 +1,11 @@
-from flask import Blueprint
+from flask import Blueprint, g
 from sqlalchemy import or_
 
 from grant.utils.enums import RFPStatus
-from .models import RFP, rfp_schema, rfps_schema
+from grant.utils.auth import requires_auth
+from grant.parser import body
+from .models import RFP, rfp_schema, rfps_schema, db
+from marshmallow import fields
 
 blueprint = Blueprint("rfp", __name__, url_prefix="/api/v1/rfps")
 
@@ -25,3 +28,20 @@ def get_rfp(rfp_id):
     if not rfp or rfp.status == RFPStatus.DRAFT:
         return {"message": "No RFP with that ID"}, 404
     return rfp_schema.dump(rfp)
+
+
+@blueprint.route("/<rfp_id>/like", methods=["PUT"])
+@requires_auth
+@body({"isLiked": fields.Bool(required=True)})
+def like_rfp(rfp_id, is_liked):
+    user = g.current_user
+    # Make sure rfp exists
+    rfp = RFP.query.filter_by(id=rfp_id).first()
+    if not rfp:
+        return {"message": "No RFP matching id"}, 404
+    if not rfp.status == RFPStatus.LIVE:
+        return {"message": "RFP is not live"}, 404
+
+    rfp.like(user, is_liked)
+    db.session.commit()
+    return {"message": "ok"}, 200

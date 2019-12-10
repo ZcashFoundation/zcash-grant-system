@@ -10,9 +10,12 @@ export interface User {
   socialMedias: SocialMedia[];
   avatar: { imageUrl: string } | null;
   isAdmin?: boolean;
+  tipJarAddress?: string;
 }
 
 export interface UserSettings {
   emailSubscriptions: EmailSubscriptions;
   refundAddress?: string | null;
+  tipJarAddress?: string | null;
+  tipJarViewKey?: string | null;
 }

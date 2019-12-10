@@ -3,23 +3,10 @@ import moment from 'moment';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import {
-  Form,
-  Input,
-  Select,
-  Icon,
-  Button,
-  message,
-  Spin,
-  Checkbox,
-  Row,
-  Col,
-  DatePicker,
-} from 'antd';
+import { Form, Input, Select, Button, message, Spin, Row, Col, DatePicker } from 'antd';
 import Exception from 'ant-design-pro/lib/Exception';
 import { FormComponentProps } from 'antd/lib/form';
-import { PROPOSAL_CATEGORY, RFP_STATUS, RFPArgs } from 'src/types';
-import { CATEGORY_UI } from 'util/ui';
+import { RFP_STATUS, RFPArgs } from 'src/types';
 import { typedKeys } from 'util/ts';
 import { RFP_STATUSES, getStatusById } from 'util/statuses';
 import Markdown from 'components/Markdown';
@@ -54,13 +41,14 @@ class RFPForm extends React.Component<Props, State> {
       title: '',
       brief: '',
       content: '',
-      category: '',
       status: '',
       matching: false,
       bounty: undefined,
       dateCloses: undefined,
     };
     const rfpId = this.getRFPId();
+    let isVersionTwo = true;
+
     if (rfpId) {
       if (!store.rfpsFetched) {
         return <Spin />;
@@ -72,12 +60,12 @@ class RFPForm extends React.Component<Props, State> {
           title: rfp.title,
           brief: rfp.brief,
           content: rfp.content,
-          category: rfp.category,
           status: rfp.status,
           matching: rfp.matching,
           bounty: rfp.bounty,
           dateCloses: rfp.dateCloses || undefined,
         };
+        isVersionTwo = rfp.isVersionTwo;
       } else {
         return <Exception type="404" desc="This RFP does not exist" />;
       }
@@ -87,6 +75,10 @@ class RFPForm extends React.Component<Props, State> {
       ? getFieldValue('dateCloses')
       : defaults.dateCloses && moment(defaults.dateCloses * 1000);
     const forceClosed = dateCloses && dateCloses.isBefore(moment.now());
+
+    const bountyMatchRule = isVersionTwo
+      ? { pattern: /^[^.]*$/, message: 'Cannot contain a decimal' }
+      : {};
 
     return (
       <Form className="RFPForm" layout="vertical" onSubmit={this.handleSubmit}>
@@ -130,28 +122,6 @@ class RFPForm extends React.Component<Props, State> {
             )}
           </Form.Item>
         )}
-
-        <Form.Item label="Category">
-          {getFieldDecorator('category', {
-            initialValue: defaults.category,
-            rules: [
-              { required: true, message: 'Category is required' },
-              { max: 60, message: 'Max 60 chars' },
-            ],
-          })(
-            <Select size="large" placeholder="Select a category">
-              {typedKeys(PROPOSAL_CATEGORY).map(c => (
-                <Select.Option value={c} key={c}>
-                  <Icon
-                    type={CATEGORY_UI[c].icon}
-                    style={{ color: CATEGORY_UI[c].color }}
-                  />{' '}
-                  {CATEGORY_UI[c].label}
-                </Select.Option>
-              ))}
-            </Select>,
-          )}
-        </Form.Item>
 
         <Form.Item label="Brief description">
           {getFieldDecorator('brief', {
@@ -199,25 +169,19 @@ class RFPForm extends React.Component<Props, State> {
             <Form.Item className="RFPForm-bounty" label="Bounty">
               {getFieldDecorator('bounty', {
                 initialValue: defaults.bounty,
+                rules: [
+                  { required: true, message: 'Bounty is required' },
+                  bountyMatchRule,
+                ],
               })(
                 <Input
                   autoComplete="off"
                   name="bounty"
-                  placeholder="100"
-                  addonAfter="ZEC"
+                  placeholder="1000"
+                  addonBefore={isVersionTwo ? '$' : undefined}
+                  addonAfter={isVersionTwo ? undefined : 'ZEC'}
                   size="large"
                 />,
-              )}
-              {getFieldDecorator('matching', {
-                initialValue: defaults.matching,
-              })(
-                <Checkbox
-                  className="RFPForm-bounty-matching"
-                  name="matching"
-                  defaultChecked={defaults.matching}
-                >
-                  Match community contributions for approved proposals
-                </Checkbox>,
               )}
             </Form.Item>
           </Col>

@@ -30,7 +30,7 @@ export default class CreateFlowTeam extends React.Component<Props, State> {
         <MarkdownEditor
           onChange={this.handleChange}
           initialMarkdown={this.state.content}
-          minHeight={200}
+          minHeight={400}
         />
         {errors.content && <Alert type="error" message={errors.content} showIcon />}
       </Form>

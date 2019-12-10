@@ -1,13 +1,13 @@
 import datetime
+from typing import Optional
 from decimal import Decimal, ROUND_DOWN
 from functools import reduce
 
-from flask import current_app
 from marshmallow import post_dump
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import column_property
 
-from flask import current_app
 from grant.comment.models import Comment
 from grant.email.send import send_email
 from grant.extensions import ma, db
@@ -30,6 +30,20 @@ proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('proposal_id', db.Integer, db.ForeignKey('proposal.id'))
+)
+
+proposal_follower = db.Table(
+    "proposal_follower",
+    db.Model.metadata,
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
+    db.Column("proposal_id", db.Integer, db.ForeignKey("proposal.id")),
+)
+
+proposal_liker = db.Table(
+    "proposal_liker",
+    db.Model.metadata,
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
+    db.Column("proposal_id", db.Integer, db.ForeignKey("proposal.id")),
 )
 
 
@@ -145,6 +159,8 @@ class ProposalContribution(db.Model):
             raise ValidationException('Proposal ID is required')
         # User ID (must belong to an existing user)
         if user_id:
+            from grant.user.models import User
+
             user = User.query.filter(User.id == user_id).first()
             if not user:
                 raise ValidationException('No user matching that ID')
@@ -212,32 +228,72 @@ class ProposalArbiter(db.Model):
         raise ValidationException('User is not arbiter')
 
 
+def default_proposal_content():
+    return """# Applicant background
+
+Summarize you and/or your team’s background and experience. Demonstrate that you have the skills and expertise necessary for the project that you’re proposing. Institutional bona fides are not required, but we want to hear about your track record.
+
+# Motivation and overview
+
+What are your high-level goals? Why are they important? How is your project connected to [ZF’s mission](https://www.zfnd.org/about/#mission) and priorities? Whose needs will it serve?
+
+# Technical approach
+
+Dive into the _how_ of your project. Describe your approaches, components, workflows, methodology, etc. Bullet points and diagrams are appreciated!
+
+# Execution risks
+
+What obstacles do you expect? What is most likely to go wrong? Which unknown factors or dependencies could jeopardize success? What are your contingency plans? Will subsequent activities be required to maximize impact?
+
+# Downsides
+
+What are the negative ramifications if your project is successful? Consider usability, stability, privacy, integrity, availability, decentralization, interoperability, maintainability, technical debt, requisite education, etc.
+
+# Evaluation plan
+
+What will your project look like if successful? How will we be able to tell? Include quantifiable metrics if possible.
+
+# Tasks and schedule
+
+What is your timeline for the project? Include concrete milestones and the major tasks required to complete each milestone.
+
+# Budget and justification
+
+How much funding do you need, and how will it be allocated (e.g., compensation for your effort, specific equipment, specific external services)? Specify a total cost, break it up into budget items, and explain the rationale for each. Feel free to present multiple options in terms of scope and cost.
+
+"""
+
+
 class Proposal(db.Model):
     __tablename__ = "proposal"
 
     id = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime)
     rfp_id = db.Column(db.Integer(), db.ForeignKey('rfp.id'), nullable=True)
+    version = db.Column(db.String(255), nullable=True)
 
     # Content info
     status = db.Column(db.String(255), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     brief = db.Column(db.String(255), nullable=False)
     stage = db.Column(db.String(255), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False, default=default_proposal_content())
+    category = db.Column(db.String(255), nullable=True)
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
+    accepted_with_funding = db.Column(db.Boolean(), nullable=True)
 
     # Payment info
     target = db.Column(db.String(255), nullable=False)
     payout_address = db.Column(db.String(255), nullable=False)
-    deadline_duration = db.Column(db.Integer(), nullable=False)
+    deadline_duration = db.Column(db.Integer(), nullable=True)
     contribution_matching = db.Column(db.Float(), nullable=False, default=0, server_default=db.text("0"))
     contribution_bounty = db.Column(db.String(255), nullable=False, default='0', server_default=db.text("'0'"))
     rfp_opt_in = db.Column(db.Boolean(), nullable=True)
     contributed = db.column_property()
+    tip_jar_address = db.Column(db.String(255), nullable=True)
+    tip_jar_view_key = db.Column(db.String(255), nullable=True)
 
     # Relations
     team = db.relationship("User", secondary=proposal_team)
@@ -248,13 +304,29 @@ class Proposal(db.Model):
                                  order_by="asc(Milestone.index)", lazy=True, cascade="all, delete-orphan")
     invites = db.relationship(ProposalTeamInvite, backref="proposal", lazy=True, cascade="all, delete-orphan")
     arbiter = db.relationship(ProposalArbiter, uselist=False, back_populates="proposal", cascade="all, delete-orphan")
+    followers = db.relationship(
+        "User", secondary=proposal_follower, back_populates="followed_proposals"
+    )
+    followers_count = column_property(
+        select([func.count(proposal_follower.c.proposal_id)])
+        .where(proposal_follower.c.proposal_id == id)
+        .correlate_except(proposal_follower)
+    )
+    likes = db.relationship(
+        "User", secondary=proposal_liker, back_populates="liked_proposals"
+    )
+    likes_count = column_property(
+        select([func.count(proposal_liker.c.proposal_id)])
+        .where(proposal_liker.c.proposal_id == id)
+        .correlate_except(proposal_liker)
+    )
 
     def __init__(
             self,
             status: str = ProposalStatus.DRAFT,
             title: str = '',
             brief: str = '',
-            content: str = '',
+            content: str = default_proposal_content(),
             stage: str = ProposalStage.PREVIEW,
             target: str = '0',
             payout_address: str = '',
@@ -272,18 +344,16 @@ class Proposal(db.Model):
         self.payout_address = payout_address
         self.deadline_duration = deadline_duration
         self.stage = stage
+        self.version = '2'
 
     @staticmethod
     def simple_validate(proposal):
         # Validate fields to be database save-able.
         # Stricter validation is done in validate_publishable.
         stage = proposal.get('stage')
-        category = proposal.get('category')
 
         if stage and not ProposalStage.includes(stage):
             raise ValidationException("Proposal stage {} is not a valid stage".format(stage))
-        if category and not Category.includes(category):
-            raise ValidationException("Category {} not a valid category".format(category))
 
     def validate_publishable_milestones(self):
         payout_total = 0.0
@@ -316,7 +386,7 @@ class Proposal(db.Model):
         self.validate_publishable_milestones()
 
         # Require certain fields
-        required_fields = ['title', 'content', 'brief', 'category', 'target', 'payout_address']
+        required_fields = ['title', 'content', 'brief', 'target', 'payout_address']
         for field in required_fields:
             if not hasattr(self, field):
                 raise ValidationException("Proposal must have a {}".format(field))
@@ -329,13 +399,15 @@ class Proposal(db.Model):
         if len(self.content) > 250000:
             raise ValidationException("Content cannot be longer than 250,000 characters")
         if Decimal(self.target) > PROPOSAL_TARGET_MAX:
-            raise ValidationException("Target cannot be more than {} ZEC".format(PROPOSAL_TARGET_MAX))
-        if Decimal(self.target) < 0.0001:
-            raise ValidationException("Target cannot be less than 0.0001")
+            raise ValidationException("Target cannot be more than {} USD".format(PROPOSAL_TARGET_MAX))
+        if Decimal(self.target) < 0:
+            raise ValidationException("Target cannot be less than 0")
+        if not self.target.isdigit():
+            raise ValidationException("Target must be a whole number")
         if self.deadline_duration > 7776000:
             raise ValidationException("Deadline duration cannot be more than 90 days")
 
-        # Check with node that the address is kosher
+        # Check with node that the payout address is kosher
         try:
             res = blockchain_get('/validate/address', {'address': self.payout_address})
         except:
@@ -344,16 +416,37 @@ class Proposal(db.Model):
         if not res['valid']:
             raise ValidationException("Payout address is not a valid Zcash address")
 
+        if self.tip_jar_address:
+            # Check with node that the tip jar address is kosher
+            try:
+                res = blockchain_get('/validate/address', {'address': self.tip_jar_address})
+            except:
+                raise ValidationException(
+                    "Could not validate your tipping address due to an internal server error, please try again later")
+            if not res['valid']:
+                raise ValidationException("Tipping address is not a valid Zcash address")
+
         # Then run through regular validation
         Proposal.simple_validate(vars(self))
 
-    # only do this when user submits for approval, there is a chance the dates will
-    # be passed by the time admin approval / user publishing occurs
-    def validate_milestone_dates(self):
-        present = datetime.datetime.today().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    def validate_milestone_days(self):
         for milestone in self.milestones:
-            if present > milestone.date_estimated:
-                raise ValidationException("Milestone date estimate must be in the future ")
+            if milestone.immediate_payout:
+                continue
+
+            try:
+                p = float(milestone.days_estimated)
+                if not p.is_integer():
+                    raise ValidationException("Milestone days estimated must be whole numbers, no decimals")
+                if p <= 0:
+                    raise ValidationException("Milestone days estimated must be greater than zero")
+                if p > 365:
+                    raise ValidationException("Milestone days estimated must be less than 365")
+
+            except ValueError:
+                raise ValidationException("Milestone days estimated must be a number")
+        return
 
     @staticmethod
     def create(**kwargs):
@@ -396,6 +489,7 @@ class Proposal(db.Model):
             content: str = '',
             target: str = '0',
             payout_address: str = '',
+            tip_jar_address: Optional[str] = None,
             deadline_duration: int = 5184000  # 60 days
     ):
         self.title = title[:255]
@@ -404,18 +498,12 @@ class Proposal(db.Model):
         self.content = content[:300000]
         self.target = target[:255] if target != '' else '0'
         self.payout_address = payout_address[:255]
+        self.tip_jar_address = tip_jar_address[:255] if tip_jar_address is not None else None
         self.deadline_duration = deadline_duration
         Proposal.simple_validate(vars(self))
 
     def update_rfp_opt_in(self, opt_in: bool):
         self.rfp_opt_in = opt_in
-        # add/remove matching and/or bounty values from RFP
-        if opt_in and self.rfp:
-            self.set_contribution_matching(1 if self.rfp.matching else 0)
-            self.set_contribution_bounty(self.rfp.bounty or '0')
-        else:
-            self.set_contribution_matching(0)
-            self.set_contribution_bounty('0')
 
     def create_contribution(
         self,
@@ -469,19 +557,15 @@ class Proposal(db.Model):
                 'proposal_url': make_admin_url(f'/proposals/{self.id}'),
             })
 
-    # state: status (DRAFT || REJECTED) -> (PENDING || STAKING)
+    # state: status (DRAFT || REJECTED) -> (PENDING)
     def submit_for_approval(self):
         self.validate_publishable()
-        self.validate_milestone_dates()
+        self.validate_milestone_days()
         allowed_statuses = [ProposalStatus.DRAFT, ProposalStatus.REJECTED]
         # specific validation
         if self.status not in allowed_statuses:
             raise ValidationException(f"Proposal status must be draft or rejected to submit for approval")
-        # set to PENDING if staked, else STAKING
-        if self.is_staked:
-            self.status = ProposalStatus.PENDING
-        else:
-            self.status = ProposalStatus.STAKING
+        self.set_pending()
 
     def set_pending_when_ready(self):
         if self.status == ProposalStatus.STAKING and self.is_staked:
@@ -489,31 +573,44 @@ class Proposal(db.Model):
 
     # state: status STAKING -> PENDING
     def set_pending(self):
-        if self.status != ProposalStatus.STAKING:
-            raise ValidationException(f"Proposal status must be staking in order to be set to pending")
-        if not self.is_staked:
-            raise ValidationException(f"Proposal is not fully staked, cannot set to pending")
         self.send_admin_email('admin_approval')
         self.status = ProposalStatus.PENDING
         db.session.add(self)
         db.session.flush()
 
-    # state: status PENDING -> (APPROVED || REJECTED)
-    def approve_pending(self, is_approve, reject_reason=None):
+    # state: status PENDING -> (LIVE || REJECTED)
+    def approve_pending(self, is_approve, with_funding, reject_reason=None):
         self.validate_publishable()
         # specific validation
         if not self.status == ProposalStatus.PENDING:
             raise ValidationException(f"Proposal must be pending to approve or reject")
 
         if is_approve:
-            self.status = ProposalStatus.APPROVED
+            self.status = ProposalStatus.LIVE
             self.date_approved = datetime.datetime.now()
+            self.accepted_with_funding = with_funding
+
+            # also update date_published and stage since publish() is no longer called by user
+            self.date_published = datetime.datetime.now()
+            self.stage = ProposalStage.WIP
+
+            if with_funding:
+                self.fully_fund_contibution_bounty()
             for t in self.team:
+                admin_note = ''
+                if with_funding:
+                    admin_note = 'Congratulations! Your proposal has been accepted with funding from the Zcash Foundation.'
+                else:
+                    admin_note = '''
+                    We've chosen to list your proposal on ZF Grants, but we won't be funding your proposal at this time. 
+                    Your proposal can still receive funding from the community in the form of tips if you have set a tip address for your proposal. 
+                    If you have not yet done so, you can do this from the actions dropdown at your proposal.
+                    '''
                 send_email(t.email_address, 'proposal_approved', {
                     'user': t,
                     'proposal': self,
                     'proposal_url': make_url(f'/proposals/{self.id}'),
-                    'admin_note': 'Congratulations! Your proposal has been approved.'
+                    'admin_note': admin_note
                 })
         else:
             if not reject_reason:
@@ -528,6 +625,10 @@ class Proposal(db.Model):
                     'admin_note': reject_reason
                 })
 
+    def update_proposal_with_funding(self):
+        self.accepted_with_funding = True
+        self.fully_fund_contibution_bounty()
+
     # state: status APPROVE -> LIVE, stage PREVIEW -> FUNDING_REQUIRED
     def publish(self):
         self.validate_publishable()
@@ -536,28 +637,7 @@ class Proposal(db.Model):
             raise ValidationException(f"Proposal status must be approved")
         self.date_published = datetime.datetime.now()
         self.status = ProposalStatus.LIVE
-        self.stage = ProposalStage.FUNDING_REQUIRED
-        # If we had a bounty that pushed us into funding, skip straight into WIP
-        self.set_funded_when_ready()
-
-    def set_funded_when_ready(self):
-        if self.status == ProposalStatus.LIVE and self.stage == ProposalStage.FUNDING_REQUIRED and self.is_funded:
-            self.set_funded()
-
-    # state: stage FUNDING_REQUIRED -> WIP
-    def set_funded(self):
-        if self.status != ProposalStatus.LIVE:
-            raise ValidationException(f"Proposal status must be live in order transition to funded state")
-        if self.stage != ProposalStage.FUNDING_REQUIRED:
-            raise ValidationException(f"Proposal stage must be funding_required in order transition to funded state")
-        if not self.is_funded:
-            raise ValidationException(f"Proposal is not fully funded, cannot set to funded state")
-        self.send_admin_email('admin_arbiter')
         self.stage = ProposalStage.WIP
-        db.session.add(self)
-        db.session.flush()
-        # check the first step, if immediate payout bump it to accepted
-        self.current_milestone.accept_immediate()
 
     def set_contribution_bounty(self, bounty: str):
         # do not allow changes on funded/WIP proposals
@@ -567,20 +647,9 @@ class Proposal(db.Model):
         self.contribution_bounty = str(Decimal(bounty))
         db.session.add(self)
         db.session.flush()
-        self.set_funded_when_ready()
 
-    def set_contribution_matching(self, matching: float):
-        # do not allow on funded/WIP proposals
-        if self.is_funded:
-            raise ValidationException("Cannot set contribution matching on fully-funded proposal")
-        # enforce 1 or 0 for now
-        if matching == 0.0 or matching == 1.0:
-            self.contribution_matching = matching
-            db.session.add(self)
-            db.session.flush()
-            self.set_funded_when_ready()
-        else:
-            raise ValidationException("Bad value for contribution_matching, must be 1 or 0")
+    def fully_fund_contibution_bounty(self):
+        self.set_contribution_bounty(self.target)
 
     def cancel(self):
         if self.status != ProposalStatus.LIVE:
@@ -602,6 +671,33 @@ class Proposal(db.Model):
                 'refund_address': u.settings.refund_address,
                 'account_settings_url': make_url('/profile/settings?tab=account')
             })
+
+    def follow(self, user, is_follow):
+        if is_follow:
+            self.followers.append(user)
+        else:
+            self.followers.remove(user)
+        db.session.flush()
+
+    def like(self, user, is_liked):
+        if is_liked:
+            self.likes.append(user)
+        else:
+            self.likes.remove(user)
+        db.session.flush()
+
+    def send_follower_email(self, type: str, email_args={}, url_suffix=""):
+        for u in self.followers:
+            send_email(
+                u.email_address,
+                type,
+                {
+                    "user": u,
+                    "proposal": self,
+                    "proposal_url": make_url(f"/proposals/{self.id}{url_suffix}"),
+                    **email_args,
+                },
+            )
 
     @hybrid_property
     def contributed(self):
@@ -635,12 +731,7 @@ class Proposal(db.Model):
 
     @hybrid_property
     def is_staked(self):
-        # Don't use self.contributed since that ignores stake contributions
-        contributions = ProposalContribution.query \
-            .filter_by(proposal_id=self.id, status=ContributionStatus.CONFIRMED) \
-            .all()
-        funded = reduce(lambda prev, c: prev + Decimal(c.amount), contributions, 0)
-        return Decimal(funded) >= PROPOSAL_STAKING_AMOUNT
+        return True
 
     @hybrid_property
     def is_funded(self):
@@ -670,6 +761,48 @@ class Proposal(db.Model):
         d = {c.user.id: c.user for c in self.contributions if c.user and c.status == ContributionStatus.CONFIRMED}
         return d.values()
 
+    @hybrid_property
+    def authed_follows(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if not authed:
+            return False
+        res = (
+            db.session.query(proposal_follower)
+            .filter_by(user_id=authed.id, proposal_id=self.id)
+            .count()
+        )
+        if res:
+            return True
+        return False
+
+    @hybrid_property
+    def authed_liked(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if not authed:
+            return False
+        res = (
+            db.session.query(proposal_liker)
+            .filter_by(user_id=authed.id, proposal_id=self.id)
+            .count()
+        )
+        if res:
+            return True
+        return False
+
+    @hybrid_property
+    def get_tip_jar_view_key(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if authed not in self.team:
+            return None
+        else:
+            return self.tip_jar_view_key
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -694,7 +827,6 @@ class ProposalSchema(ma.Schema):
             "updates",
             "milestones",
             "current_milestone",
-            "category",
             "team",
             "payout_address",
             "deadline_duration",
@@ -703,13 +835,23 @@ class ProposalSchema(ma.Schema):
             "invites",
             "rfp",
             "rfp_opt_in",
-            "arbiter"
+            "arbiter",
+            "accepted_with_funding",
+            "is_version_two",
+            "authed_follows",
+            "followers_count",
+            "authed_liked",
+            "likes_count",
+            "tip_jar_address",
+            "tip_jar_view_key"
         )
 
     date_created = ma.Method("get_date_created")
     date_approved = ma.Method("get_date_approved")
     date_published = ma.Method("get_date_published")
     proposal_id = ma.Method("get_proposal_id")
+    is_version_two = ma.Method("get_is_version_two")
+    tip_jar_view_key = ma.Method("get_tip_jar_view_key")
 
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
@@ -731,6 +873,11 @@ class ProposalSchema(ma.Schema):
     def get_date_published(self, obj):
         return dt_to_unix(obj.date_published) if obj.date_published else None
 
+    def get_is_version_two(self, obj):
+        return True if obj.version == '2' else False
+
+    def get_tip_jar_view_key(self, obj):
+        return obj.get_tip_jar_view_key
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)
@@ -748,6 +895,10 @@ user_fields = [
     "date_published",
     "reject_reason",
     "team",
+    "accepted_with_funding",
+    "is_version_two",
+    "authed_follows",
+    "authed_liked"
 ]
 user_proposal_schema = ProposalSchema(only=user_fields)
 user_proposals_schema = ProposalSchema(many=True, only=user_fields)

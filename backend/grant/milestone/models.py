@@ -5,6 +5,7 @@ from grant.utils.enums import MilestoneStage
 from grant.utils.exceptions import ValidationException
 from grant.utils.ma_fields import UnixDate
 from grant.utils.misc import gen_random_id
+from grant.task.jobs import MilestoneDeadline
 
 
 class MilestoneException(Exception):
@@ -22,7 +23,8 @@ class Milestone(db.Model):
     content = db.Column(db.Text, nullable=False)
     payout_percent = db.Column(db.String(255), nullable=False)
     immediate_payout = db.Column(db.Boolean)
-    date_estimated = db.Column(db.DateTime, nullable=False)
+    date_estimated = db.Column(db.DateTime, nullable=True)
+    days_estimated = db.Column(db.String(255), nullable=True)
 
     stage = db.Column(db.String(255), nullable=False)
 
@@ -46,7 +48,7 @@ class Milestone(db.Model):
             index: int,
             title: str,
             content: str,
-            date_estimated: datetime,
+            days_estimated: str,
             payout_percent: str,
             immediate_payout: bool,
             stage: str = MilestoneStage.IDLE,
@@ -56,12 +58,13 @@ class Milestone(db.Model):
         self.title = title[:255]
         self.content = content[:255]
         self.stage = stage
-        self.date_estimated = date_estimated
+        self.days_estimated = days_estimated[:255]
         self.payout_percent = payout_percent[:255]
         self.immediate_payout = immediate_payout
         self.proposal_id = proposal_id
         self.date_created = datetime.datetime.now()
         self.index = index
+
 
     @staticmethod
     def make(milestones_data, proposal):
@@ -72,13 +75,62 @@ class Milestone(db.Model):
                 m = Milestone(
                     title=milestone_data["title"][:255],
                     content=milestone_data["content"][:255],
-                    date_estimated=datetime.datetime.fromtimestamp(milestone_data["date_estimated"]),
+                    days_estimated=str(milestone_data["days_estimated"])[:255],
                     payout_percent=str(milestone_data["payout_percent"])[:255],
                     immediate_payout=milestone_data["immediate_payout"],
                     proposal_id=proposal.id,
                     index=i
                 )
                 db.session.add(m)
+
+    #  The purpose of this method is to set the `date_estimated` property on all milestones in a proposal. This works
+    #  by figuring out a starting point for each milestone  (the `base_date` below) and adding `days_estimated`.
+    #
+    #  As proposal creators now estimate their milestones in days (instead of picking months), this method allows us to
+    #  keep `date_estimated` in sync throughout the lifecycle of a proposal. For example, if a user misses their
+    #  first milestone deadline by a week, this method would take the actual completion date of that milestone and
+    #  adjust the `date_estimated` of the remaining milestones accordingly.
+    #
+    @staticmethod
+    def set_v2_date_estimates(proposal):
+        if not proposal.date_approved:
+            raise MilestoneException(f'Cannot estimate milestone dates because proposal has no date_approved set')
+
+        # The milestone being actively worked on
+        current_milestone = proposal.current_milestone
+
+        if current_milestone.stage == MilestoneStage.PAID:
+            raise MilestoneException(f'Cannot estimate milestone dates because they are all completed')
+
+        # The starting point for `date_estimated` calculation for each uncompleted milestone
+        # We add `days_estimated` to `base_date` to calculate `date_estimated`
+        base_date = None
+
+        for index, milestone in enumerate(proposal.milestones):
+            if index == 0:
+                # If it's the first milestone, use the proposal approval date as a `base_date`
+                base_date = proposal.date_approved
+
+            if milestone.date_paid:
+                # If milestone has been paid, set `base_date` for the next milestone and noop out
+                base_date = milestone.date_paid
+                continue
+
+            days_estimated = milestone.days_estimated if not milestone.immediate_payout else "0"
+            date_estimated = base_date + datetime.timedelta(days=int(days_estimated))
+            milestone.date_estimated = date_estimated
+
+            # Set the `base_date` for the next milestone using the estimate completion date of the current milestone
+            base_date = date_estimated
+            db.session.add(milestone)
+
+        # Skip task creation if current milestone has an immediate payout
+        if current_milestone.immediate_payout:
+            return
+
+        # Create MilestoneDeadline task for the current milestone so arbiters will be alerted if the deadline is missed
+        task = MilestoneDeadline(proposal, current_milestone)
+        task.make_task()
 
     def request_payout(self, user_id: int):
         if self.stage not in [MilestoneStage.IDLE, MilestoneStage.REJECTED]:
@@ -140,6 +192,7 @@ class MilestoneSchema(ma.Schema):
             "date_rejected",
             "date_accepted",
             "date_paid",
+            "days_estimated"
         )
 
     date_created = UnixDate(attribute='date_created')

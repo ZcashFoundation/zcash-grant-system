@@ -1,14 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Icon, Timeline } from 'antd';
-import moment from 'moment';
+import { Timeline } from 'antd';
 import { getCreateErrors, KeyOfForm, FIELD_NAME_MAP } from 'modules/create/utils';
 import Markdown from 'components/Markdown';
 import UserAvatar from 'components/UserAvatar';
 import { AppState } from 'store/reducers';
 import { CREATE_STEP } from './index';
-import { CATEGORY_UI, PROPOSAL_CATEGORY } from 'api/constants';
 import { ProposalDraft } from 'types';
+import { formatUsd } from 'utils/formatters';
 import './Review.less';
 
 interface OwnProps {
@@ -38,7 +37,6 @@ class CreateReview extends React.Component<Props> {
   render() {
     const { form } = this.props;
     const errors = getCreateErrors(this.props.form);
-    const catUI = CATEGORY_UI[form.category as PROPOSAL_CATEGORY] || ({} as any);
     const sections: Section[] = [
       {
         step: CREATE_STEP.BASICS,
@@ -53,7 +51,6 @@ class CreateReview extends React.Component<Props> {
             key: 'rfpOptIn',
             content: <div>{form.rfpOptIn ? 'Accepted' : 'Declined'}</div>,
             error: errors.rfpOptIn,
-            isHide: !form.rfp || (form.rfp && !form.rfp.matching && !form.rfp.bounty),
           },
           {
             key: 'brief',
@@ -61,17 +58,8 @@ class CreateReview extends React.Component<Props> {
             error: errors.brief,
           },
           {
-            key: 'category',
-            content: (
-              <div style={{ color: catUI.color }}>
-                <Icon type={catUI.icon} /> {catUI.label}
-              </div>
-            ),
-            error: errors.category,
-          },
-          {
             key: 'target',
-            content: <div style={{ fontSize: '1.2rem' }}>{form.target} ZEC</div>,
+            content: <div style={{ fontSize: '1.2rem' }}>{formatUsd(form.target)}</div>,
             error: errors.target,
           },
         ],
@@ -118,12 +106,16 @@ class CreateReview extends React.Component<Props> {
             content: <code>{form.payoutAddress}</code>,
             error: errors.payoutAddress,
           },
+        ],
+      },
+      {
+        step: CREATE_STEP.PAYMENT,
+        name: 'Tipping',
+        fields: [
           {
-            key: 'deadlineDuration',
-            content: `${Math.floor(
-              moment.duration((form.deadlineDuration || 0) * 1000).asDays(),
-            )} days`,
-            error: errors.deadlineDuration,
+            key: 'tipJarAddress',
+            content: <code>{form.tipJarAddress}</code>,
+            error: errors.tipJarAddress,
           },
         ],
       },
@@ -131,8 +123,8 @@ class CreateReview extends React.Component<Props> {
 
     return (
       <div className="CreateReview">
-        {sections.map(s => (
-          <div className="CreateReview-section" key={s.step}>
+        {sections.map((s, i) => (
+          <div className="CreateReview-section" key={`${s.step}${i}`}>
             {s.fields.map(
               f =>
                 !f.isHide && (
@@ -197,9 +189,9 @@ const ReviewMilestones = ({
         <div className="ReviewMilestone">
           <div className="ReviewMilestone-title">{m.title || <em>No title</em>}</div>
           <div className="ReviewMilestone-info">
-            {moment(m.dateEstimated * 1000).format('MMMM YYYY')}
+            {m.immediatePayout || !m.daysEstimated ? '0' : m.daysEstimated} days
             {' – '}
-            {m.payoutPercent}% of funds
+            {m.payoutPercent || '0'}% of funds
           </div>
           <div className="ReviewMilestone-description">
             {m.content || <em>No description</em>}

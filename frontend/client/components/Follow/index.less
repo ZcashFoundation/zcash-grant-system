@@ -1,0 +1,24 @@
+@import '~styles/variables.less';
+
+@collapse-width: 800px;
+
+.Follow {
+  white-space: nowrap;
+
+  .ant-btn:focus,
+  .ant-btn:active {
+    border-color: inherit;
+    outline-color: inherit;
+    color: inherit;
+  }
+
+  &-label {
+    @media (max-width: @collapse-width) {
+      display: none !important;
+    }
+  }
+
+  &-count {
+    color: @text-color !important;
+  }
+}

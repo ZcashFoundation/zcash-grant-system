@@ -31,7 +31,7 @@ milestones = [
     {
         "title": "All the money straightaway",
         "content": "cool stuff with it",
-        "dateEstimated": 1549505307,
+        "daysEstimated": "30",
         "payoutPercent": "100",
         "immediatePayout": False
     }
@@ -44,9 +44,17 @@ test_proposal = {
     "brief": "$$$",
     "milestones": milestones,
     "category": Category.ACCESSIBILITY,
-    "target": "123.456",
+    "target": "12345",
     "payoutAddress": "123",
     "deadlineDuration": 100
+}
+
+test_ccr = {
+    "user_id": test_user,
+    "content": "## My Proposal",
+    "title": "Give Me Money",
+    "brief": "$$$",
+    "target": "123.456",
 }
 
 test_comment = {
