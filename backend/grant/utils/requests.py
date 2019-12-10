@@ -30,6 +30,9 @@ def blockchain_get(path, params=None):
 
 
 def validate_blockchain_get(path, params=None):
+    if path == '/validate/address' and params and params['address'] and params['address'][0] == 't':
+        raise ValidationException('T addresses are not allowed')
+
     try:
         res = blockchain_get(path, params)
     except Exception:

@@ -48,6 +48,7 @@ def make_ccr_draft():
 def get_ccr_drafts():
     ccrs = (
         CCR.query
+            .filter_by(user_id=g.current_user.id)
             .filter(or_(
             CCR.status == CCRStatus.DRAFT,
             CCR.status == CCRStatus.REJECTED,

@@ -78,5 +78,5 @@ export function isValidSaplingAddress(address: string): boolean {
 }
 
 export function isValidAddress(a: string): boolean {
-  return isValidTAddress(a) || isValidSproutAddress(a) || isValidSaplingAddress(a);
+  return isValidSproutAddress(a) || isValidSaplingAddress(a);
 }

@@ -65,7 +65,7 @@ export default class RefundAddress extends React.Component<Props, State> {
         <Form.Item label="Refund address" validateStatus={status} help={help}>
           <Input
             value={refundAddress || ''}
-            placeholder="Z or T address"
+            placeholder="Z address"
             onChange={this.handleChange}
             disabled={isFetching || isSaving || errorFetching}
           />
