@@ -1,6 +1,6 @@
 # Writing a Fantastic Grant Proposal
 
-Looking for a walk-through of the interface? [Click here](/proposal_tutorial).
+Looking for a walk-through of the interface? [Click here](/proposal-tutorial).
 
 The Zcash Foundation awards grant funding to Zcash ecosystem projects that advance [our mission as a public charity](https://www.zfnd.org/about/#mission). In short, that mission is to build and support privacy tools for everyone and anyone, both serving and guided by the Zcash Community.
 
