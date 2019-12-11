@@ -6,7 +6,7 @@ import {
   STATUS,
   PROPOSAL_ARBITER_STATUS,
 } from 'types';
-import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
+import { PROPOSAL_STAGE } from 'api/constants';
 import BN from 'bn.js';
 import moment from 'moment';
 
@@ -160,8 +160,13 @@ export function generateProposal({
     brief: 'A cool test crowdfund',
     content: 'body',
     stage: PROPOSAL_STAGE.WIP,
-    category: PROPOSAL_CATEGORY.COMMUNITY,
     isStaked: true,
+    authedFollows: false,
+    followersCount: 0,
+    authedLiked: false,
+    likesCount: 0,
+    tipJarAddress: null,
+    tipJarViewKey: null,
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
       user: {
@@ -173,6 +178,8 @@ export function generateProposal({
         socialMedias: [],
       },
     },
+    acceptedWithFunding: null,
+    isVersionTwo: false,
     team: [
       {
         userid: 123,

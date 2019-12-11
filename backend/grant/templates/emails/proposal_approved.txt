@@ -1,6 +1,5 @@
-Congratulations on your approval! We look forward to seeing the support your
-proposal receives. To start the fundraising (and the clock) go to the URL
-below and publish your proposal.
+Your proposal has been reviewed by the Zcash Foundation and is now listed on ZF Grants!
+
 
 {% if args.admin_note %}
 A note from the admin team was attached to your approval:

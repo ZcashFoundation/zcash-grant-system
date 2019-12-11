@@ -242,30 +242,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # 2 proposals created by BaseProposalCreatorConfig
         self.assertEqual(len(resp.json['items']), 2)
 
-    def test_update_proposal(self):
-        self.login_admin()
-        # set to 1 (on)
-        resp_on = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}",
-                               data=json.dumps({"contributionMatching": 1}))
-        self.assert200(resp_on)
-        self.assertEqual(resp_on.json['contributionMatching'], 1)
-        resp_off = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}",
-                                data=json.dumps({"contributionMatching": 0}))
-        self.assert200(resp_off)
-        self.assertEqual(resp_off.json['contributionMatching'], 0)
-
-    def test_update_proposal_no_auth(self):
-        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data=json.dumps({"contributionMatching": 1}))
-        self.assert401(resp)
-
-    def test_update_proposal_bad_matching(self):
-        self.login_admin()
-        resp = self.app.put(f"/api/v1/admin/proposals/{self.proposal.id}", data=json.dumps({"contributionMatching": 2}))
-        self.assert400(resp)
-        self.assertTrue(resp.json['message'])
-
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_approve_proposal(self, mock_get):
+    def test_accept_proposal_with_funding(self, mock_get):
         self.login_admin()
 
         # proposal needs to be PENDING
@@ -273,11 +251,94 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
         # approve
         resp = self.app.put(
-            "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
-            data=json.dumps({"isApprove": True})
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": True, "withFunding": True})
+        )
+        print(resp.json)
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.LIVE)
+        self.assertEqual(resp.json["acceptedWithFunding"], True)
+        self.assertEqual(resp.json["target"], resp.json["contributionBounty"])
+
+        # milestones should have estimated dates
+        for milestone in resp.json["milestones"]:
+            self.assertIsNotNone(milestone["dateEstimated"])
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_accept_proposal_without_funding(self, mock_get):
+        self.login_admin()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # approve
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": True, "withFunding": False})
+        )
+        print(resp.json)
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.LIVE)
+        self.assertEqual(resp.json["acceptedWithFunding"], False)
+        self.assertEqual(resp.json["contributionBounty"], "0")
+
+        # milestones should not have estimated dates
+        for milestone in resp.json["milestones"]:
+            self.assertIsNone(milestone["dateEstimated"])
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_change_proposal_to_accepted_with_funding(self, mock_get):
+        self.login_admin()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # accept without funding
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": True, "withFunding": False})
         )
         self.assert200(resp)
-        self.assertEqual(resp.json["status"], ProposalStatus.APPROVED)
+        self.assertEqual(resp.json["acceptedWithFunding"], False)
+
+        # change to accepted with funding
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["acceptedWithFunding"], True)
+
+        # milestones should have estimated dates
+        for milestone in resp.json["milestones"]:
+            self.assertIsNotNone(milestone["dateEstimated"])
+
+        # should fail if proposal is already accepted with funding
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert404(resp)
+        self.assertEqual(resp.json['message'], "Proposal already accepted with funding.")
+        self.proposal.accepted_with_funding = False
+
+        # should fail if proposal is not version two
+        self.proposal.version = ''
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert404(resp)
+        self.assertEqual(resp.json['message'], "Only version two proposals can be accepted with funding")
+        self.proposal.version = '2'
+
+        # should failed if proposal is not LIVE or APPROVED
+        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.accepted_with_funding = False
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
+        )
+        self.assert404(resp)
+        self.assertEqual(resp.json["message"], 'Only live or approved proposals can be modified by this endpoint')
+
+
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_reject_proposal(self, mock_get):
@@ -288,8 +349,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
         # reject
         resp = self.app.put(
-            "/api/v1/admin/proposals/{}/approve".format(self.proposal.id),
-            data=json.dumps({"isApprove": False, "rejectReason": "Funnzies."})
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": False, "withFunding": False, "rejectReason": "Funnzies."})
         )
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
@@ -325,19 +386,3 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             })
         )
         self.assert200(resp)
-
-    def test_create_rfp_fails_with_bad_category(self):
-        self.login_admin()
-
-        resp = self.app.post(
-            "/api/v1/admin/rfps",
-            data=json.dumps({
-                "brief": "Some brief",
-                "category": "NOT_CORE_DEV",
-                "content": "CONTENT",
-                "dateCloses": 1553980004,
-                "status": "DRAFT",
-                "title": "TITLE"
-            })
-        )
-        self.assert400(resp)

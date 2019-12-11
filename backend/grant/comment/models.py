@@ -4,9 +4,18 @@ from functools import reduce
 from grant.extensions import ma, db
 from grant.utils.ma_fields import UnixDate
 from grant.utils.misc import gen_random_id
-from sqlalchemy.orm import raiseload
+from sqlalchemy.orm import raiseload, column_property
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import func, select
 
 HIDDEN_CONTENT = '~~comment removed by admin~~'
+
+comment_liker = db.Table(
+    "comment_liker",
+    db.Model.metadata,
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
+    db.Column("comment_id", db.Integer, db.ForeignKey("comment.id")),
+)
 
 
 class Comment(db.Model):
@@ -24,6 +33,15 @@ class Comment(db.Model):
 
     author = db.relationship("User", back_populates="comments")
     replies = db.relationship("Comment")
+
+    likes = db.relationship(
+        "User", secondary=comment_liker, back_populates="liked_comments"
+    )
+    likes_count = column_property(
+        select([func.count(comment_liker.c.comment_id)])
+        .where(comment_liker.c.comment_id == id)
+        .correlate_except(comment_liker)
+    )
 
     def __init__(self, proposal_id, user_id, parent_comment_id, content):
         self.id = gen_random_id(Comment)
@@ -49,6 +67,28 @@ class Comment(db.Model):
         self.hidden = hidden
         db.session.add(self)
 
+    @hybrid_property
+    def authed_liked(self):
+        from grant.utils.auth import get_authed_user
+
+        authed = get_authed_user()
+        if not authed:
+            return False
+        res = (
+            db.session.query(comment_liker)
+            .filter_by(user_id=authed.id, comment_id=self.id)
+            .count()
+        )
+        if res:
+            return True
+        return False
+
+    def like(self, user, is_liked):
+        if is_liked:
+            self.likes.append(user)
+        else:
+            self.likes.remove(user)
+        db.session.flush()
 
 # are all of the replies hidden?
 def all_hidden(replies):
@@ -74,6 +114,8 @@ class CommentSchema(ma.Schema):
             "replies",
             "reported",
             "hidden",
+            "authed_liked",
+            "likes_count"
         )
 
     content = ma.Method("get_content")

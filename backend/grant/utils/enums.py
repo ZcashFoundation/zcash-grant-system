@@ -11,10 +11,22 @@ class CustomEnum():
                 not attr.startswith('__')]
 
 
-class ProposalStatusEnum(CustomEnum):
+class CCRStatusEnum(CustomEnum):
     DRAFT = 'DRAFT'
     PENDING = 'PENDING'
+    APPROVED = 'APPROVED'
+    REJECTED = 'REJECTED'
+    LIVE = 'LIVE'
+    DELETED = 'DELETED'
+
+
+CCRStatus = CCRStatusEnum()
+
+
+class ProposalStatusEnum(CustomEnum):
+    DRAFT = 'DRAFT'
     STAKING = 'STAKING'
+    PENDING = 'PENDING'
     APPROVED = 'APPROVED'
     REJECTED = 'REJECTED'
     LIVE = 'LIVE'
@@ -34,7 +46,6 @@ ProposalSort = ProposalSortEnum()
 
 class ProposalStageEnum(CustomEnum):
     PREVIEW = 'PREVIEW'
-    FUNDING_REQUIRED = 'FUNDING_REQUIRED'
     WIP = 'WIP'
     COMPLETED = 'COMPLETED'
     FAILED = 'FAILED'

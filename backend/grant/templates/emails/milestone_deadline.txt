@@ -1,0 +1,3 @@
+The estimated deadline has been reached for proposal milestone "{{ args.proposal.title }} - {{args.proposal.current_milestone.title }}".
+
+View the milestone: {{ args.proposal_milestones_url }}

@@ -14,6 +14,7 @@ class Home extends React.Component {
     const {
       userCount,
       proposalCount,
+      ccrPendingCount,
       proposalPendingCount,
       proposalNoArbiterCount,
       proposalMilestonePayoutsCount,
@@ -21,6 +22,13 @@ class Home extends React.Component {
     } = store.stats;
 
     const actionItems = [
+      !!ccrPendingCount && (
+        <div>
+          <Icon type="exclamation-circle" /> There are <b>{ccrPendingCount}</b> community
+          created requests <b>waiting for review</b>.{' '}
+          <Link to="/ccrs?filters[]=STATUS_PENDING">Click here</Link> to view them.
+        </div>
+      ),
       !!proposalPendingCount && (
         <div>
           <Icon type="exclamation-circle" /> There are <b>{proposalPendingCount}</b>{' '}
@@ -32,7 +40,7 @@ class Home extends React.Component {
         <div>
           <Icon type="exclamation-circle" /> There are <b>{proposalNoArbiterCount}</b>{' '}
           live proposals <b>without an arbiter</b>.{' '}
-          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=ARBITER_MISSING&filters[]=STAGE_NOT_CANCELED">
+          <Link to="/proposals?filters[]=STATUS_LIVE&filters[]=ARBITER_MISSING&filters[]=STAGE_NOT_CANCELED&filters[]=ACCEPTED_WITH_FUNDING">
             Click here
           </Link>{' '}
           to view them.

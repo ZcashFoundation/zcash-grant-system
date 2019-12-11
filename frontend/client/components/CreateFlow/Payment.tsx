@@ -1,14 +1,12 @@
 import React from 'react';
-import { Input, Form, Radio } from 'antd';
-import { RadioChangeEvent } from 'antd/lib/radio';
+import { Input, Form } from 'antd';
 import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
-import { ONE_DAY } from 'utils/time';
 import { DONATION } from 'utils/constants';
 
 interface State {
   payoutAddress: string;
-  deadlineDuration: number;
+  tipJarAddress: string;
 }
 
 interface Props {
@@ -21,18 +19,23 @@ export default class CreateFlowPayment extends React.Component<Props, State> {
     super(props);
     this.state = {
       payoutAddress: '',
-      deadlineDuration: ONE_DAY * 60,
+      tipJarAddress: '',
       ...(props.initialState || {}),
     };
   }
 
   render() {
-    const { payoutAddress, deadlineDuration } = this.state;
+    const { payoutAddress, tipJarAddress } = this.state;
     const errors = getCreateErrors(this.state, true);
     const payoutHelp =
       errors.payoutAddress ||
       `
       This must be a Sapling Z address
+    `;
+    const tipJarHelp =
+      errors.tipJarAddress ||
+      `
+      Allows your proposal to receive tips. Must be a Sapling Z address
     `;
 
     return (
@@ -49,39 +52,30 @@ export default class CreateFlowPayment extends React.Component<Props, State> {
             placeholder={DONATION.ZCASH_SAPLING}
             type="text"
             value={payoutAddress}
-            onChange={this.handleInputChange}
+            onChange={this.handlePaymentInputChange}
           />
         </Form.Item>
 
-        <Form.Item label="Funding Deadline">
-          <Radio.Group
-            name="deadlineDuration"
-            value={deadlineDuration}
-            onChange={this.handleRadioChange}
+        <Form.Item
+          label="Tip address (optional)"
+          validateStatus={errors.tipJarAddress ? 'error' : undefined}
+          help={tipJarHelp}
+          style={{ marginBottom: '2rem' }}
+        >
+          <Input
             size="large"
-            style={{ display: 'flex', textAlign: 'center' }}
-          >
-            {deadlineDuration === 300 && (
-              <Radio.Button style={{ flex: 1 }} value={300}>
-                5 minutes
-              </Radio.Button>
-            )}
-            <Radio.Button style={{ flex: 1 }} value={ONE_DAY * 30}>
-              30 Days
-            </Radio.Button>
-            <Radio.Button style={{ flex: 1 }} value={ONE_DAY * 60}>
-              60 Days
-            </Radio.Button>
-            <Radio.Button style={{ flex: 1 }} value={ONE_DAY * 90}>
-              90 Days
-            </Radio.Button>
-          </Radio.Group>
+            name="tipJarAddress"
+            placeholder={DONATION.ZCASH_SAPLING}
+            type="text"
+            value={tipJarAddress}
+            onChange={this.handleTippingInputChange}
+          />
         </Form.Item>
       </Form>
     );
   }
 
-  private handleInputChange = (
+  private handlePaymentInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { value, name } = event.currentTarget;
@@ -90,9 +84,11 @@ export default class CreateFlowPayment extends React.Component<Props, State> {
     });
   };
 
-  private handleRadioChange = (event: RadioChangeEvent) => {
-    const { value, name } = event.target;
-    this.setState({ [name as string]: value } as any, () => {
+  private handleTippingInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { value, name } = event.currentTarget;
+    this.setState({ [name]: value } as any, () => {
       this.props.updateForm(this.state);
     });
   };

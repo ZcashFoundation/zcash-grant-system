@@ -4,6 +4,13 @@
 @link-padding: 0.7rem;
 @small-query: ~'(max-width: 820px)';
 @big-query: ~'(min-width: 821px)';
+@big: ~'(max-width: 1040px)';
+
+.is-desktop {
+  @media @big {
+    display: none;
+  }
+}
 
 .Header {
   top: 0;
@@ -67,6 +74,8 @@
 
   &-links {
     display: flex;
+    align-items: center;
+    justify-content: center;
     transition: transform @header-transition ease;
 
     .is-transparent & {
@@ -94,6 +103,11 @@
         display: none;
       }
     }
+
+    &-button {
+      padding: 0 @link-padding / 2;
+    }
+
 
     &-link {
       display: block;

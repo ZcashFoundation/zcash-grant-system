@@ -9,6 +9,7 @@ export const Units = {
 };
 
 export type Zat = BN;
+export type Usd = BN;
 export type UnitKey = keyof typeof Units;
 
 export const handleValues = (input: string | BN) => {
@@ -59,6 +60,16 @@ export const toZat = (value: string | number): Zat => {
   value = value.toString();
   const zat = convertedToBaseUnit(value, ZCASH_DECIMAL);
   return Zat(zat);
+};
+
+export const toUsd = (value: string | number): Usd => {
+  value = value.toString();
+  const hasDecimal = value.indexOf('.') !== -1;
+
+  // decimals aren't allowed for proposal targets,
+  // but remove decimal if it exists
+  value = hasDecimal ? value.split('.')[0] : value;
+  return new BN(value, 10);
 };
 
 export const getDecimalFromUnitKey = (key: UnitKey) => Units[key].length - 1;

@@ -1,14 +1,15 @@
-from .subscription_settings import EmailSubscription, is_subscribed
-from sendgrid.helpers.mail import Email, Mail, Content
-from python_http_client import HTTPError
-from grant.utils.misc import make_url
-from sentry_sdk import capture_exception
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, SENDGRID_DEFAULT_FROMNAME, UI
-from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
-import sendgrid
 from threading import Thread
-from flask import render_template, Markup, current_app, g
 
+import sendgrid
+from flask import render_template, Markup, current_app, g
+from python_http_client import HTTPError
+from sendgrid.helpers.mail import Email, Mail, Content
+from sentry_sdk import capture_exception
+
+from grant.settings import SENDGRID_API_KEY, SENDGRID_DEFAULT_FROM, UI, E2E_TESTING
+from grant.settings import SENDGRID_DEFAULT_FROMNAME
+from grant.utils.misc import make_url
+from .subscription_settings import EmailSubscription, is_subscribed
 
 default_template_args = {
     'home_url': make_url('/'),
@@ -68,18 +69,34 @@ def change_password_info(email_args):
 
 def proposal_approved(email_args):
     return {
-        'subject': 'Your proposal has been approved!',
-        'title': 'Your proposal has been approved',
-        'preview': 'Start raising funds for {} now'.format(email_args['proposal'].title),
+        'subject': 'Your proposal has been reviewed',
+        'title': 'Your proposal has been reviewed',
+        'preview': '{} is now live on ZF Grants.'.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def ccr_approved(email_args):
+    return {
+        'subject': 'Your request has been approved!',
+        'title': 'Your request has been approved',
+        'preview': '{} will soon be live on ZF Grants!'.format(email_args['ccr'].title),
+    }
+
+
+def ccr_rejected(email_args):
+    return {
+        'subject': 'Your request has changes requested',
+        'title': 'Your request has changes requested',
+        'preview': '{} has changes requested'.format(email_args['ccr'].title),
     }
 
 
 def proposal_rejected(email_args):
     return {
-        'subject': 'Your proposal has been rejected',
-        'title': 'Your proposal has been rejected',
-        'preview': '{} has been rejected'.format(email_args['proposal'].title),
+        'subject': 'Your proposal has changes requested',
+        'title': 'Your proposal has changes requested',
+        'preview': '{} has changes requested'.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 
@@ -245,6 +262,17 @@ def milestone_request(email_args):
     }
 
 
+def milestone_deadline(email_args):
+    p = email_args['proposal']
+    ms = p.current_milestone
+    return {
+        'subject': f'Milestone deadline reached for {p.title} - {ms.title}',
+        'title': f'Milestone deadline reached',
+        'preview': f'The estimated deadline for milestone {ms.title} has been reached.',
+        'subscription': EmailSubscription.ARBITER,
+    }
+
+
 def milestone_reject(email_args):
     p = email_args['proposal']
     ms = p.current_milestone
@@ -289,6 +317,15 @@ def admin_approval(email_args):
     }
 
 
+def admin_approval_ccr(email_args):
+    return {
+        'subject': f'Review needed for {email_args["ccr"].title}',
+        'title': f'CCR Review',
+        'preview': f'{email_args["ccr"].title} needs review, as an admin you can help.',
+        'subscription': EmailSubscription.ADMIN_APPROVAL_CCR,
+    }
+
+
 def admin_arbiter(email_args):
     return {
         'subject': f'Arbiter needed for {email_args["proposal"].title}',
@@ -307,6 +344,27 @@ def admin_payout(email_args):
     }
 
 
+def followed_proposal_milestone(email_args):
+    p = email_args["proposal"]
+    ms = email_args["milestone"]
+    return {
+        "subject": f"Milestone accepted for {p.title}",
+        "title": f"Milestone Accepted",
+        "preview": f"Followed proposal {p.title} has passed a milestone",
+        "subscription": EmailSubscription.FOLLOWED_PROPOSAL,
+    }
+
+
+def followed_proposal_update(email_args):
+    p = email_args["proposal"]
+    return {
+        "subject": f"Proposal update for {p.title}",
+        "title": f"Proposal Update",
+        "preview": f"Followed proposal {p.title} has an update",
+        "subscription": EmailSubscription.FOLLOWED_PROPOSAL,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -314,6 +372,8 @@ get_info_lookup = {
     'change_email': change_email_info,
     'change_email_old': change_email_old_info,
     'change_password': change_password_info,
+    'ccr_rejected': ccr_rejected,
+    'ccr_approved': ccr_approved,
     'proposal_approved': proposal_approved,
     'proposal_rejected': proposal_rejected,
     'proposal_contribution': proposal_contribution,
@@ -330,12 +390,16 @@ get_info_lookup = {
     'comment_reply': comment_reply,
     'proposal_arbiter': proposal_arbiter,
     'milestone_request': milestone_request,
+    'milestone_deadline': milestone_deadline,
     'milestone_reject': milestone_reject,
     'milestone_accept': milestone_accept,
     'milestone_paid': milestone_paid,
     'admin_approval': admin_approval,
+    'admin_approval_ccr': admin_approval_ccr,
     'admin_arbiter': admin_arbiter,
-    'admin_payout': admin_payout
+    'admin_payout': admin_payout,
+    'followed_proposal_milestone': followed_proposal_milestone,
+    'followed_proposal_update': followed_proposal_update
 }
 
 

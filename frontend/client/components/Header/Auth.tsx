@@ -11,6 +11,7 @@ interface StateProps {
   user: AppState['auth']['user'];
   isAuthingUser: AppState['auth']['isAuthingUser'];
   isCheckingUser: AppState['auth']['isCheckingUser'];
+  hasCheckedUser: AppState['auth']['hasCheckedUser'];
 }
 
 type Props = StateProps;
@@ -25,7 +26,7 @@ class HeaderAuth extends React.Component<Props> {
   };
 
   render() {
-    const { user, isAuthingUser, isCheckingUser } = this.props;
+    const { user, isAuthingUser, isCheckingUser, hasCheckedUser } = this.props;
     const { isMenuOpen } = this.state;
     const isAuthed = !!user;
 
@@ -33,7 +34,7 @@ class HeaderAuth extends React.Component<Props> {
     let isLoading;
     if (user) {
       avatar = <UserAvatar user={user} />;
-    } else if (isAuthingUser || isCheckingUser) {
+    } else if (isAuthingUser || isCheckingUser || !hasCheckedUser) {
       isLoading = true;
     }
 
@@ -83,16 +84,13 @@ class HeaderAuth extends React.Component<Props> {
         >
           {link}
         </Dropdown>
-      )
-    }
-    else {
+      );
+    } else {
       content = link;
     }
 
     return (
-      <div className={classnames('AuthButton', isLoading && 'is-loading')}>
-        {content}
-      </div>
+      <div className={classnames('AuthButton', isLoading && 'is-loading')}>{content}</div>
     );
   }
 
@@ -120,4 +118,5 @@ export default connect<StateProps, {}, {}, AppState>(state => ({
   user: state.auth.user,
   isAuthingUser: state.auth.isAuthingUser,
   isCheckingUser: state.auth.isCheckingUser,
+  hasCheckedUser: state.auth.hasCheckedUser,
 }))(HeaderAuth);

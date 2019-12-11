@@ -20,15 +20,20 @@ import 'styles/style.less';
 const opts = { fallback: <Loader size="large" /> };
 const Home = loadable(() => import('pages/index'), opts);
 const Create = loadable(() => import('pages/create'), opts);
+const CreateRequest = loadable(() => import('pages/create-request'), opts);
+const RequestEdit = loadable(() => import('pages/request-edit'), opts);
 const ProposalEdit = loadable(() => import('pages/proposal-edit'), opts);
 const Proposals = loadable(() => import('pages/proposals'), opts);
 const Proposal = loadable(() => import('pages/proposal'), opts);
+const Guide = loadable(() => import('pages/guide'), opts);
+const Ccr = loadable(() => import('pages/ccr'), opts);
 const Auth = loadable(() => import('pages/auth'));
 const SignOut = loadable(() => import('pages/sign-out'), opts);
 const Profile = loadable(() => import('pages/profile'), opts);
 const Settings = loadable(() => import('pages/settings'), opts);
 const Exception = loadable(() => import('pages/exception'), opts);
 const Tos = loadable(() => import('pages/tos'));
+const ProposalTutorial = loadable(() => import('pages/proposal-tutorial'));
 const About = loadable(() => import('pages/about'), opts);
 const Privacy = loadable(() => import('pages/privacy'), opts);
 const Contact = loadable(() => import('pages/contact'), opts);
@@ -62,6 +67,43 @@ const routeConfigs: RouteConfig[] = [
       isHeaderTransparent: true,
       isFullScreen: true,
     },
+  },
+  {
+    // Create request
+    route: {
+      path: '/create-request',
+      component: CreateRequest,
+    },
+    template: {
+      title: 'Create a Request',
+    },
+    onlyLoggedIn: true,
+  },
+  {
+    // Request edit page
+    route: {
+      path: '/ccrs/:id/edit',
+      component: RequestEdit,
+    },
+    template: {
+      title: 'Edit Request',
+      isFullScreen: true,
+      hideFooter: true,
+    },
+    onlyLoggedIn: true,
+  },
+  {
+    // Request view page
+    route: {
+      path: '/ccrs/:id',
+      component: Ccr,
+    },
+    template: {
+      title: 'View Request',
+      isFullScreen: true,
+      hideFooter: true,
+    },
+    onlyLoggedIn: true,
   },
   {
     // Create proposal
@@ -162,6 +204,30 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Terms of Service',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Terms of Service page
+    route: {
+      path: '/guide',
+      component: Guide,
+      exact: true,
+    },
+    template: {
+      title: 'Guide',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Terms of Service page
+    route: {
+      path: '/proposal-tutorial',
+      component: ProposalTutorial,
+      exact: true,
+    },
+    template: {
+      title: 'Proposal Tutorial',
     },
     onlyLoggedIn: false,
   },

@@ -44,13 +44,17 @@ interface State {
   deletingId: number | null;
 }
 
+const EMAIL_VERIFIED_RELOAD_TIMEOUT = 10000;
+
 class DraftList extends React.Component<Props, State> {
   state: State = {
     deletingId: null,
   };
 
+  private reloadTimeout: number | null = null;
+
   componentDidMount() {
-    const { createIfNone, createWithRfpId } = this.props;
+    const { createIfNone, createWithRfpId, isVerified } = this.props;
     if (createIfNone || createWithRfpId) {
       this.props.fetchAndCreateDrafts({
         rfpId: createWithRfpId,
@@ -58,6 +62,18 @@ class DraftList extends React.Component<Props, State> {
       });
     } else {
       this.props.fetchDrafts();
+    }
+
+    if (!isVerified) {
+      this.reloadTimeout = window.setTimeout(() => {
+        window.location.reload();
+      }, EMAIL_VERIFIED_RELOAD_TIMEOUT);
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.reloadTimeout !== null) {
+      window.clearTimeout(this.reloadTimeout);
     }
   }
 
@@ -119,8 +135,8 @@ class DraftList extends React.Component<Props, State> {
                   <List.Item.Meta
                     title={
                       <>
-                        {d.title || <em>Untitled proposal</em>}
-                        {d.status === STATUS.REJECTED && <em> (rejected)</em>}
+                        {d.title || <em>Untitled Proposal</em>}
+                        {d.status === STATUS.REJECTED && <em> (changes requested)</em>}
                       </>
                     }
                     description={d.brief || <em>No description</em>}
@@ -142,7 +158,7 @@ class DraftList extends React.Component<Props, State> {
 
     return (
       <div className="DraftList">
-        <h2 className="DraftList-title">Your drafts</h2>
+        <h2 className="DraftList-title">Your Proposal Drafts</h2>
         {draftsEl}
         <Divider>or</Divider>
         <Button

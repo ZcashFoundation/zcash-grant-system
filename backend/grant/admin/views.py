@@ -8,6 +8,7 @@ from sqlalchemy import func, or_, text
 
 import grant.utils.admin as admin
 import grant.utils.auth as auth
+from grant.ccr.models import CCR, ccrs_schema, ccr_schema
 from grant.comment.models import Comment, user_comments_schema, admin_comments_schema, admin_comment_schema
 from grant.email.send import generate_email, send_email
 from grant.extensions import db
@@ -26,7 +27,6 @@ from grant.proposal.models import (
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
 from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
 from grant.utils import pagination
-from grant.utils.enums import Category
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
@@ -34,6 +34,7 @@ from grant.utils.enums import (
     ProposalArbiterStatus,
     MilestoneStage,
     RFPStatus,
+    CCRStatus
 )
 from grant.utils.misc import make_url, make_explore_url
 from .example_emails import example_email_args
@@ -137,6 +138,9 @@ def logout():
 def stats():
     user_count = db.session.query(func.count(User.id)).scalar()
     proposal_count = db.session.query(func.count(Proposal.id)).scalar()
+    ccr_pending_count = db.session.query(func.count(CCR.id)) \
+        .filter(CCR.status == CCRStatus.PENDING) \
+        .scalar()
     proposal_pending_count = db.session.query(func.count(Proposal.id)) \
         .filter(Proposal.status == ProposalStatus.PENDING) \
         .scalar()
@@ -145,6 +149,7 @@ def stats():
         .filter(Proposal.status == ProposalStatus.LIVE) \
         .filter(ProposalArbiter.status == ProposalArbiterStatus.MISSING) \
         .filter(Proposal.stage != ProposalStage.CANCELED) \
+        .filter(Proposal.accepted_with_funding == True) \
         .scalar()
     proposal_milestone_payouts_count = db.session.query(func.count(Proposal.id)) \
         .join(Proposal.milestones) \
@@ -159,15 +164,16 @@ def stats():
         .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
         .join(Proposal) \
         .filter(or_(
-            Proposal.stage == ProposalStage.FAILED,
-            Proposal.stage == ProposalStage.CANCELED,
-        )) \
+        Proposal.stage == ProposalStage.FAILED,
+        Proposal.stage == ProposalStage.CANCELED,
+    )) \
         .join(ProposalContribution.user) \
         .join(UserSettings) \
         .filter(UserSettings.refund_address != None) \
         .scalar()
     return {
         "userCount": user_count,
+        "ccrPendingCount": ccr_pending_count,
         "proposalCount": proposal_count,
         "proposalPendingCount": proposal_pending_count,
         "proposalNoArbiterCount": proposal_no_arbiter_count,
@@ -313,9 +319,9 @@ def set_arbiter(proposal_id, user_id):
     db.session.commit()
 
     return {
-        'proposal': proposal_schema.dump(proposal),
-        'user': admin_user_schema.dump(user)
-    }, 200
+               'proposal': proposal_schema.dump(proposal),
+               'user': admin_user_schema.dump(user)
+           }, 200
 
 
 # PROPOSALS
@@ -352,43 +358,46 @@ def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
 
-@blueprint.route('/proposals/<id>', methods=['PUT'])
+@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
 @body({
-    "contributionMatching": fields.Int(required=False, missing=None),
-    "contributionBounty": fields.Str(required=False, missing=None)
-})
-@admin.admin_auth_required
-def update_proposal(id, contribution_matching, contribution_bounty):
-    proposal = Proposal.query.filter(Proposal.id == id).first()
-    if not proposal:
-        return {"message": f"Could not find proposal with id {id}"}, 404
-
-    if contribution_matching is not None:
-        proposal.set_contribution_matching(contribution_matching)
-
-    if contribution_bounty is not None:
-        proposal.set_contribution_bounty(contribution_bounty)
-
-    db.session.add(proposal)
-    db.session.commit()
-
-    return proposal_schema.dump(proposal)
-
-
-@blueprint.route('/proposals/<id>/approve', methods=['PUT'])
-@body({
-    "isApprove": fields.Bool(required=True),
+    "isAccepted": fields.Bool(required=True),
+    "withFunding": fields.Bool(required=True),
     "rejectReason": fields.Str(required=False, missing=None)
 })
 @admin.admin_auth_required
-def approve_proposal(id, is_approve, reject_reason=None):
+def approve_proposal(id, is_accepted, with_funding, reject_reason=None):
     proposal = Proposal.query.filter_by(id=id).first()
     if proposal:
-        proposal.approve_pending(is_approve, reject_reason)
+        proposal.approve_pending(is_accepted, with_funding, reject_reason)
+
+        if is_accepted and with_funding:
+            Milestone.set_v2_date_estimates(proposal)
+
         db.session.commit()
         return proposal_schema.dump(proposal)
 
     return {"message": "No proposal found."}, 404
+
+
+@blueprint.route('/proposals/<id>/accept/fund', methods=['PUT'])
+@admin.admin_auth_required
+def change_proposal_to_accepted_with_funding(id):
+    proposal = Proposal.query.filter_by(id=id).first()
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+    if proposal.accepted_with_funding:
+        return {"message": "Proposal already accepted with funding."}, 404
+    if proposal.version != '2':
+        return {"message": "Only version two proposals can be accepted with funding"}, 404
+    if proposal.status != ProposalStatus.LIVE and proposal.status != ProposalStatus.APPROVED:
+        return {"message": "Only live or approved proposals can be modified by this endpoint"}, 404
+
+    proposal.update_proposal_with_funding()
+    Milestone.set_v2_date_estimates(proposal)
+    db.session.add(proposal)
+    db.session.commit()
+
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route('/proposals/<id>/cancel', methods=['PUT'])
@@ -417,12 +426,14 @@ def paid_milestone_payout_request(id, mid, tx_id):
         return {"message": "Proposal is not fully funded"}, 400
     for ms in proposal.milestones:
         if ms.id == int(mid):
+            is_final_milestone = False
             ms.mark_paid(tx_id)
             db.session.add(ms)
             db.session.flush()
             # check if this is the final ms, and update proposal.stage
             num_paid = reduce(lambda a, x: a + (1 if x.stage == MilestoneStage.PAID else 0), proposal.milestones, 0)
             if num_paid == len(proposal.milestones):
+                is_final_milestone = True
                 proposal.stage = ProposalStage.COMPLETED  # WIP -> COMPLETED
                 db.session.add(proposal)
                 db.session.flush()
@@ -437,6 +448,18 @@ def paid_milestone_payout_request(id, mid, tx_id):
                     'tx_explorer_url': make_explore_url(tx_id),
                     'proposal_milestones_url': make_url(f'/proposals/{proposal.id}?tab=milestones'),
                 })
+
+            # email FOLLOWERS that milestone was accepted
+            proposal.send_follower_email(
+                "followed_proposal_milestone",
+                email_args={"milestone": ms},
+                url_suffix="?tab=milestones",
+            )
+
+            if not is_final_milestone:
+                Milestone.set_v2_date_estimates(proposal)
+                db.session.commit()
+
             return proposal_schema.dump(proposal), 200
 
     return {"message": "No milestone matching id"}, 404
@@ -455,6 +478,64 @@ def get_email_example(type):
     return email
 
 
+# CCRs
+
+
+@blueprint.route("/ccrs", methods=["GET"])
+@query(paginated_fields)
+@admin.admin_auth_required
+def get_ccrs(page, filters, search, sort):
+    filters_workaround = request.args.getlist('filters[]')
+    page = pagination.ccr(
+        schema=ccrs_schema,
+        query=CCR.query,
+        page=page,
+        filters=filters_workaround,
+        search=search,
+        sort=sort,
+    )
+    return page
+
+
+@blueprint.route('/ccrs/<ccr_id>', methods=['DELETE'])
+@admin.admin_auth_required
+def delete_ccr(ccr_id):
+    ccr = CCR.query.filter(CCR.id == ccr_id).first()
+    if not ccr:
+        return {"message": "No CCR matching that id"}, 404
+
+    db.session.delete(ccr)
+    db.session.commit()
+    return {"message": "ok"}, 200
+
+
+@blueprint.route('/ccrs/<id>', methods=['GET'])
+@admin.admin_auth_required
+def get_ccr(id):
+    ccr = CCR.query.filter(CCR.id == id).first()
+    if ccr:
+        return ccr_schema.dump(ccr)
+    return {"message": f"Could not find ccr with id {id}"}, 404
+
+
+@blueprint.route('/ccrs/<ccr_id>/accept', methods=['PUT'])
+@body({
+    "isAccepted": fields.Bool(required=True),
+    "rejectReason": fields.Str(required=False, missing=None)
+})
+@admin.admin_auth_required
+def approve_ccr(ccr_id, is_accepted, reject_reason=None):
+    ccr = CCR.query.filter_by(id=ccr_id).first()
+    if ccr:
+        rfp_id = ccr.approve_pending(is_accepted, reject_reason)
+        if is_accepted:
+            return {"rfpId": rfp_id}, 201
+        else:
+            return ccr_schema.dump(ccr)
+
+    return {"message": "No CCR found."}, 404
+
+
 # Requests for Proposal
 
 
@@ -470,7 +551,6 @@ def get_rfps():
     "title": fields.Str(required=True),
     "brief": fields.Str(required=True),
     "content": fields.Str(required=True),
-    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=False, missing=0),
     "matching": fields.Bool(required=False, missing=False),
     "dateCloses": fields.Int(required=False, missing=None)
@@ -502,13 +582,12 @@ def get_rfp(rfp_id):
     "brief": fields.Str(required=True),
     "status": fields.Str(required=True, validate=validate.OneOf(choices=RFPStatus.list())),
     "content": fields.Str(required=True),
-    "category": fields.Str(required=True, validate=validate.OneOf(choices=Category.list())),
     "bounty": fields.Str(required=False, allow_none=True, missing=None),
     "matching": fields.Bool(required=False, default=False, missing=False),
     "dateCloses": fields.Int(required=False, missing=None),
 })
 @admin.admin_auth_required
-def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_closes, status):
+def update_rfp(rfp_id, title, brief, content, bounty, matching, date_closes, status):
     rfp = RFP.query.filter(RFP.id == rfp_id).first()
     if not rfp:
         return {"message": "No RFP matching that id"}, 404
@@ -517,7 +596,6 @@ def update_rfp(rfp_id, title, brief, content, category, bounty, matching, date_c
     rfp.title = title
     rfp.brief = brief
     rfp.content = content
-    rfp.category = category
     rfp.matching = matching
     rfp.bounty = bounty
     rfp.date_closes = datetime.fromtimestamp(date_closes) if date_closes else None
@@ -587,8 +665,8 @@ def create_contribution(proposal_id, user_id, status, amount, tx_id):
     db.session.add(contribution)
     db.session.flush()
 
+    # TODO: should this stay?
     contribution.proposal.set_pending_when_ready()
-    contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
     return admin_proposal_contribution_schema.dump(contribution), 200
@@ -660,8 +738,8 @@ def edit_contribution(contribution_id, proposal_id, user_id, status, amount, tx_
     db.session.add(contribution)
     db.session.flush()
 
+    # TODO: should this stay?
     contribution.proposal.set_pending_when_ready()
-    contribution.proposal.set_funded_when_ready()
 
     db.session.commit()
     return admin_proposal_contribution_schema.dump(contribution), 200
@@ -711,7 +789,6 @@ def edit_comment(comment_id, hidden, reported):
 @blueprint.route("/financials", methods=["GET"])
 @admin.admin_auth_required
 def financials():
-
     nfmt = '999999.99999999'  # smallest unit of ZEC
 
     def sql_pc(where: str):
@@ -743,7 +820,8 @@ def financials():
         'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
         'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
         'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
-        'funded': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
+        'funded': str(
+            ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
         # should have a refund_address
         'refunding': str(ex(sql_pc_p(
             '''

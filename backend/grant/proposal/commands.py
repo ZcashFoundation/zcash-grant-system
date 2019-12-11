@@ -7,7 +7,7 @@ from flask.cli import with_appcontext
 from .models import Proposal, db
 from grant.milestone.models import Milestone
 from grant.comment.models import Comment
-from grant.utils.enums import ProposalStatus, Category, ProposalStageEnum
+from grant.utils.enums import ProposalStatus, Category, ProposalStage
 from grant.user.models import User
 
 
@@ -35,9 +35,9 @@ def create_proposals(count):
     user = User.query.filter_by().first()
     for i in range(count):
         if i < 5:
-            stage = ProposalStageEnum.FUNDING_REQUIRED
+            stage = ProposalStage.WIP
         else:
-            stage = ProposalStageEnum.COMPLETED
+            stage = ProposalStage.COMPLETED
         p = Proposal.create(
             stage=stage,
             status=ProposalStatus.LIVE,
@@ -51,6 +51,10 @@ def create_proposals(count):
         )
         p.date_published = datetime.datetime.now()
         p.team.append(user)
+        p.date_approved = datetime.datetime.now()
+        p.accepted_with_funding = True
+        p.version = '2'
+        p.fully_fund_contibution_bounty()
         db.session.add(p)
         db.session.flush()
         num_ms = randint(1, 9)
@@ -58,7 +62,7 @@ def create_proposals(count):
             m = Milestone(
                 title=f'Fake MS {j}',
                 content=f'Fake milestone #{j} on fake proposal #{i}!',
-                date_estimated=datetime.datetime.now(),
+                days_estimated='10',
                 payout_percent=str(floor(1 / num_ms * 100)),
                 immediate_payout=j == 0,
                 proposal_id=p.id,
@@ -74,5 +78,119 @@ def create_proposals(count):
             )
             db.session.add(c)
 
+        Milestone.set_v2_date_estimates(p)
+        db.session.add(p)
+
     db.session.commit()
     print(f'Added {count} LIVE fake proposals')
+
+
+@click.command()
+@click.argument('dry', required=False)
+@with_appcontext
+def retire_v1_proposals(dry):
+    now = datetime.datetime.now()
+    proposals_funding_required = Proposal.query.filter_by(stage="FUNDING_REQUIRED").all()
+    proposals_draft = Proposal.query.filter_by(status=ProposalStatus.DRAFT).all()
+    proposals_pending = Proposal.query.filter_by(status=ProposalStatus.PENDING).all()
+    proposals_staking = Proposal.query.filter_by(status=ProposalStatus.STAKING).all()
+    modified_funding_required_count = 0
+    modified_draft_count = 0
+    modified_pending_count = 0
+    modified_staking_count = 0
+    deleted_draft_count = 0
+
+    if not proposals_funding_required and not proposals_draft and not proposals_pending and not proposals_staking:
+        print("No proposals found. Exiting...")
+        return
+
+    print(f"Found {len(proposals_funding_required)} 'FUNDING_REQUIRED' proposals to modify")
+    print(f"Found {len(proposals_draft)} 'DRAFT' proposals to modify")
+    print(f"Found {len(proposals_pending)} 'PENDING' proposals to modify")
+    print(f"Found {len(proposals_staking)} 'STAKING' proposals to modify")
+
+    if dry:
+        print(f"This is a dry run. Changes will not be committed to the database")
+
+    confirm = input("Continue? (y/n) ")
+
+    if confirm != "y":
+        print("Exiting...")
+        return
+
+    # move 'FUNDING_REQUIRED' proposals to a failed state
+    for p in proposals_funding_required:
+        if not dry:
+            new_deadline = (now - p.date_published).total_seconds()
+            p.stage = ProposalStage.FAILED
+            p.deadline_duration = int(new_deadline)
+            db.session.add(p)
+            modified_funding_required_count += 1
+
+        print(f"Modified 'FUNDING_REQUIRED' proposal {p.id} - {p.title}")
+
+    # reset proposal to draft state
+    def convert_proposal_to_v2_draft(proposal):
+        milestones = Milestone.query.filter_by(proposal_id=proposal.id).all()
+
+        if not dry:
+            # reset target because v2 estimates are in USD
+            proposal.target = '0'
+            proposal.version = '2'
+            proposal.stage = ProposalStage.PREVIEW
+            proposal.status = ProposalStatus.DRAFT
+            db.session.add(proposal)
+
+            for m in milestones:
+                # clear date estimated because v2 proposals use days_estimated (date_estimated is dynamically set)
+                m.date_estimated = None
+                db.session.add(m)
+
+        print(f"Modified {len(milestones)} milestones on proposal {p.id}")
+
+    # delete drafts that have no content
+    def delete_stale_draft(proposal):
+        if proposal.title or proposal.brief or proposal.content or proposal.category or proposal.target != "0":
+            return False
+
+        if proposal.payout_address or proposal.milestones:
+            return False
+
+        if not dry:
+            db.session.delete(proposal)
+
+        return True
+
+    for p in proposals_draft:
+        is_stale = delete_stale_draft(p)
+        if is_stale:
+            deleted_draft_count += 1
+            print(f"Deleted stale 'DRAFT' proposal {p.id} - {p.title}")
+            continue
+
+        convert_proposal_to_v2_draft(p)
+        modified_draft_count += 1
+        print(f"Modified 'DRAFT' proposal {p.id} - {p.title}")
+
+    for p in proposals_pending:
+        convert_proposal_to_v2_draft(p)
+        modified_pending_count += 1
+        print(f"Modified 'PENDING' proposal {p.id} - {p.title}")
+
+    for p in proposals_staking:
+        convert_proposal_to_v2_draft(p)
+        modified_staking_count += 1
+        print(f"Modified 'STAKING' proposal {p.id} - {p.title}")
+
+    if not dry:
+        print(f"Committing changes to database")
+        db.session.commit()
+
+    print("")
+    print(f"Modified {modified_funding_required_count} 'FUNDING_REQUIRED' proposals")
+    print(f"Modified {modified_draft_count} 'DRAFT' proposals")
+    print(f"Modified {modified_pending_count} 'PENDING' proposals")
+    print(f"Modified {modified_staking_count} 'STAKING' proposals")
+    print(f"Deleted {deleted_draft_count} stale 'DRAFT' proposals")
+
+

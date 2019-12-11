@@ -1,12 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Input, Form, Icon, Select, Alert, Popconfirm, message, Radio } from 'antd';
-import { SelectValue } from 'antd/lib/select';
+import { Input, Form, Alert, Popconfirm, message, Radio } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
-import { PROPOSAL_CATEGORY, CATEGORY_UI } from 'api/constants';
 import { ProposalDraft, RFP } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
-import { typedKeys } from 'utils/ts';
 import { Link } from 'react-router-dom';
 import { unlinkProposalRFP } from 'modules/create/actions';
 import { AppState } from 'store/reducers';
@@ -31,7 +28,6 @@ type Props = OwnProps & StateProps & DispatchProps;
 interface State extends Partial<ProposalDraft> {
   title: string;
   brief: string;
-  category?: PROPOSAL_CATEGORY;
   target: string;
   rfp?: RFP;
 }
@@ -42,7 +38,6 @@ class CreateFlowBasics extends React.Component<Props, State> {
     this.state = {
       title: '',
       brief: '',
-      category: undefined,
       target: '',
       ...(props.initialState || {}),
     };
@@ -64,7 +59,10 @@ class CreateFlowBasics extends React.Component<Props, State> {
 
   render() {
     const { isUnlinkingProposalRFP } = this.props;
-    const { title, brief, category, target, rfp, rfpOptIn } = this.state;
+    const { title, brief, target, rfp, rfpOptIn } = this.state;
+    if (rfp && rfp.bounty && (target === null || target === '0')) {
+      this.setState({ target: rfp.bounty.toString() });
+    }
     const errors = getCreateErrors(this.state, true);
 
     // Don't show target error at zero since it defaults to that
@@ -72,9 +70,6 @@ class CreateFlowBasics extends React.Component<Props, State> {
     if (target === '0') {
       errors.target = undefined;
     }
-
-    const rfpOptInRequired =
-      rfp && (rfp.matching || (rfp.bounty && parseFloat(rfp.bounty.toString()) > 0));
 
     return (
       <Form layout="vertical" style={{ maxWidth: 600, margin: '0 auto' }}>
@@ -104,41 +99,29 @@ class CreateFlowBasics extends React.Component<Props, State> {
           />
         )}
 
-        {rfpOptInRequired && (
-          <Alert
-            className="CreateFlow-rfpAlert"
-            type="warning"
-            message="KYC (know your customer)"
-            description={
-              <>
-                <div>
-                  This RFP offers either a bounty or matching. This will require ZFGrants
-                  to fulfill{' '}
-                  <a
-                    target="_blank"
-                    href="https://en.wikipedia.org/wiki/Know_your_customer"
-                  >
-                    KYC
-                  </a>{' '}
-                  due dilligence. In the event your proposal is successful, you will need
-                  to provide identifying information to ZFGrants.
-                  <Radio.Group onChange={this.handleRfpOptIn}>
-                    <Radio value={true} checked={rfpOptIn && rfpOptIn === true}>
-                      <b>Yes</b>, I am willing to provide KYC information
-                    </Radio>
-                    <Radio
-                      value={false}
-                      checked={rfpOptIn !== null && rfpOptIn === false}
-                    >
-                      <b>No</b>, I do not wish to provide KYC information and understand I
-                      will not receive any matching or bounty funds from ZFGrants
-                    </Radio>
-                  </Radio.Group>
-                </div>
-              </>
-            }
-          />
-        )}
+        <Alert
+          className="CreateFlow-rfpAlert"
+          type="warning"
+          message="KYC (know your customer)"
+          description={
+            <>
+              <div>
+                In the event your proposal is accepted with funding, you will need to
+                provide identifying information to the Zcash Foundation.
+                <Radio.Group onChange={this.handleRfpOptIn}>
+                  <Radio value={true} checked={rfpOptIn && rfpOptIn === true}>
+                    <b>Yes</b>, I am willing to provide KYC information
+                  </Radio>
+                  <Radio value={false} checked={rfpOptIn !== null && rfpOptIn === false}>
+                    <b>No</b>, I do not wish to provide KYC information and understand my
+                    proposal may still be posted on ZF Grants, but I will not be eligible
+                    to funding from the Zcash Foundation.
+                  </Radio>
+                </Radio.Group>
+              </div>
+            </>
+          }
+        />
 
         <Form.Item
           label="Title"
@@ -171,29 +154,13 @@ class CreateFlowBasics extends React.Component<Props, State> {
           />
         </Form.Item>
 
-        <Form.Item label="Category">
-          <Select
-            size="large"
-            placeholder="Select a category"
-            value={category || undefined}
-            onChange={this.handleCategoryChange}
-          >
-            {typedKeys(PROPOSAL_CATEGORY).map(c => (
-              <Select.Option value={c} key={c}>
-                <Icon
-                  type={CATEGORY_UI[c].icon}
-                  style={{ color: CATEGORY_UI[c].color }}
-                />{' '}
-                {CATEGORY_UI[c].label}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-
         <Form.Item
           label="Target amount"
           validateStatus={errors.target ? 'error' : undefined}
-          help={errors.target || 'This cannot be changed once your proposal starts'}
+          help={
+            errors.target ||
+            'You will be paid out in ZEC based in USD market price at payout time. This cannot be changed once your proposal starts'
+          }
         >
           <Input
             size="large"
@@ -202,7 +169,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
             type="number"
             value={target}
             onChange={this.handleInputChange}
-            addonAfter="ZEC"
+            addonBefore="$"
             maxLength={16}
           />
         </Form.Item>
@@ -215,12 +182,6 @@ class CreateFlowBasics extends React.Component<Props, State> {
   ) => {
     const { value, name } = event.currentTarget;
     this.setState({ [name]: value } as any, () => {
-      this.props.updateForm(this.state);
-    });
-  };
-
-  private handleCategoryChange = (value: SelectValue) => {
-    this.setState({ category: value as PROPOSAL_CATEGORY }, () => {
       this.props.updateForm(this.state);
     });
   };

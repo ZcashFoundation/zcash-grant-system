@@ -1,0 +1,50 @@
+.CCRDetail {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  &-controls {
+    &-control + &-control {
+      margin-left: 0 !important;
+      margin-top: 0.8rem;
+    }
+  }
+
+  &-deet {
+    position: relative;
+    margin-bottom: 1rem;
+
+    & > span {
+      font-size: 0.7rem;
+      position: absolute;
+      opacity: 0.8;
+      bottom: -0.7rem;
+    }
+  }
+
+  & .ant-card,
+  .ant-alert,
+  .ant-collapse {
+    margin-bottom: 16px;
+  }
+
+  &-popover {
+    &-overlay {
+      max-width: 400px;
+    }
+  }
+
+  &-alert {
+    & pre {
+      margin: 1rem 0;
+      overflow: hidden;
+      word-break: break-all;
+      white-space: inherit;
+    }
+  }
+
+  &-review {
+    margin-right: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+}

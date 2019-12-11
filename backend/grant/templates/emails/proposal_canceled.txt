@@ -1,6 +1,5 @@
 This notice is to inform you that your proposal "{{ args.proposal.title }}"
-has been canceled. We've let your contributors know, and they should be expecting refunds
-shortly.
+has been canceled.
   
 If you have any further questions, please contact support for more information:
 {{ args.support_url }}

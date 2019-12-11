@@ -14,11 +14,13 @@ import Payment from './Payment';
 import Review from './Review';
 import Preview from './Preview';
 import Final from './Final';
+import Explainer from './Explainer';
 import SubmitWarningModal from './SubmitWarningModal';
 import createExampleProposal from './example';
 import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
+import ls from 'local-storage';
 
 import { AppState } from 'store/reducers';
 
@@ -49,6 +51,11 @@ interface StepInfo {
   help: React.ReactNode;
   component: any;
 }
+
+interface LSExplainer {
+  noExplain: boolean;
+}
+
 const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   [CREATE_STEP.BASICS]: {
     short: 'Basics',
@@ -84,10 +91,10 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   },
   [CREATE_STEP.PAYMENT]: {
     short: 'Payment',
-    title: 'Choose how you get paid',
-    subtitle: 'You’ll only be paid if your funding target is reached',
+    title: 'Set your payout and tip addresses',
+    subtitle: '',
     help:
-      'Double check your address, and make sure it’s secure. Once sent, payments are irreversible!',
+      'Double check your addresses, and make sure they’re secure. Once sent, transactions are irreversible!',
     component: Payment,
   },
   [CREATE_STEP.REVIEW]: {
@@ -117,6 +124,7 @@ interface State {
   isPreviewing: boolean;
   isShowingSubmitWarning: boolean;
   isSubmitting: boolean;
+  isExplaining: boolean;
   isExample: boolean;
 }
 
@@ -132,12 +140,15 @@ class CreateFlow extends React.Component<Props, State> {
       queryStep && CREATE_STEP[queryStep]
         ? (CREATE_STEP[queryStep] as CREATE_STEP)
         : CREATE_STEP.BASICS;
+    const noExplain = !!ls<LSExplainer>('noExplain');
+
     this.state = {
       step,
       isPreviewing: false,
       isSubmitting: false,
       isExample: false,
       isShowingSubmitWarning: false,
+      isExplaining: !noExplain,
     };
     this.debouncedUpdateForm = debounce(this.updateForm, 800);
     this.historyUnlisten = this.props.history.listen(this.handlePop);
@@ -151,11 +162,18 @@ class CreateFlow extends React.Component<Props, State> {
 
   render() {
     const { isSavingDraft, saveDraftError } = this.props;
-    const { step, isPreviewing, isSubmitting, isShowingSubmitWarning } = this.state;
+    const {
+      step,
+      isPreviewing,
+      isSubmitting,
+      isShowingSubmitWarning,
+      isExplaining,
+    } = this.state;
 
     const info = STEP_INFO[step];
     const currentIndex = STEP_ORDER.indexOf(step);
-    const isLastStep = STEP_ORDER.indexOf(step) === STEP_ORDER.length - 1;
+    const isLastStep = currentIndex === STEP_ORDER.length - 1;
+    const isSecondToLastStep = currentIndex === STEP_ORDER.length - 2;
     const StepComponent = info.component;
 
     let content;
@@ -165,6 +183,9 @@ class CreateFlow extends React.Component<Props, State> {
       showFooter = false;
     } else if (isPreviewing) {
       content = <Preview />;
+    } else if (isExplaining) {
+      content = <Explainer startSteps={this.startSteps} />;
+      showFooter = false;
     } else {
       // Antd definitions are missing `onClick` for step, even though it works.
       const Step = Steps.Step as any;
@@ -172,7 +193,7 @@ class CreateFlow extends React.Component<Props, State> {
         <div className="CreateFlow">
           <div className="CreateFlow-header">
             <Steps current={currentIndex}>
-              {STEP_ORDER.slice(0, 5).map(s => (
+              {STEP_ORDER.map(s => (
                 <Step
                   key={s}
                   title={STEP_INFO[s].short}
@@ -227,7 +248,8 @@ class CreateFlow extends React.Component<Props, State> {
                   key="next"
                   onClick={this.nextStep}
                 >
-                  Continue <Icon type="right-circle-o" />
+                  {isSecondToLastStep ? 'Review' : 'Continue'}{' '}
+                  <Icon type="right-circle-o" />
                 </button>
               </>
             )}
@@ -262,6 +284,10 @@ class CreateFlow extends React.Component<Props, State> {
 
   private updateForm = (form: Partial<ProposalDraft>) => {
     this.props.updateForm(form);
+  };
+
+  private startSteps = () => {
+    this.setState({ step: CREATE_STEP.BASICS, isExplaining: false });
   };
 
   private setStep = (step: CREATE_STEP, skipHistory?: boolean) => {

@@ -14,6 +14,7 @@ import { AlertProps } from 'antd/lib/alert';
 import ExceptionPage from 'components/ExceptionPage';
 import HeaderDetails from 'components/HeaderDetails';
 import CampaignBlock from './CampaignBlock';
+import TippingBlock from './TippingBlock';
 import TeamBlock from './TeamBlock';
 import RFPBlock from './RFPBlock';
 import Milestones from './Milestones';
@@ -25,6 +26,9 @@ import CancelModal from './CancelModal';
 import classnames from 'classnames';
 import { withRouter } from 'react-router';
 import SocialShare from 'components/SocialShare';
+import Follow from 'components/Follow';
+import Like from 'components/Like';
+import { TipJarProposalSettingsModal } from 'components/TipJar';
 import './index.less';
 
 interface OwnProps {
@@ -50,6 +54,7 @@ interface State {
   isBodyOverflowing: boolean;
   isUpdateOpen: boolean;
   isCancelOpen: boolean;
+  isTipJarOpen: boolean;
 }
 
 export class ProposalDetail extends React.Component<Props, State> {
@@ -58,6 +63,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     isBodyOverflowing: false,
     isUpdateOpen: false,
     isCancelOpen: false,
+    isTipJarOpen: false,
   };
 
   bodyEl: HTMLElement | null = null;
@@ -88,7 +94,13 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   render() {
     const { user, detail: proposal, isPreview, detailError } = this.props;
-    const { isBodyExpanded, isBodyOverflowing, isCancelOpen, isUpdateOpen } = this.state;
+    const {
+      isBodyExpanded,
+      isBodyOverflowing,
+      isCancelOpen,
+      isUpdateOpen,
+      isTipJarOpen,
+    } = this.state;
     const showExpand = !isBodyExpanded && isBodyOverflowing;
     const wrongProposal = proposal && proposal.proposalId !== this.props.proposalId;
 
@@ -101,9 +113,16 @@ export class ProposalDetail extends React.Component<Props, State> {
 
     const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
     const isLive = proposal.status === STATUS.LIVE;
+    const milestonesDisabled = proposal.isVersionTwo
+      ? !proposal.acceptedWithFunding
+      : false;
+    const defaultTab = !milestonesDisabled || !isLive ? 'milestones' : 'discussions';
 
     const adminMenu = (
       <Menu>
+        <Menu.Item disabled={!isLive} onClick={this.openTipJarModal}>
+          Manage Tipping
+        </Menu.Item>
         <Menu.Item disabled={!isLive} onClick={this.openUpdateModal}>
           Post an Update
         </Menu.Item>
@@ -137,8 +156,8 @@ export class ProposalDetail extends React.Component<Props, State> {
       [STATUS.REJECTED]: {
         blurb: (
           <>
-            Your proposal was rejected and is only visible to the team. Visit your{' '}
-            <Link to="/profile?tab=pending">profile's pending tab</Link> for more
+            Your proposal has changes requested and is only visible to the team. Visit
+            your <Link to="/profile?tab=pending">profile's pending tab</Link> for more
             information.
           </>
         ),
@@ -184,9 +203,34 @@ export class ProposalDetail extends React.Component<Props, State> {
             </div>
           )}
           <div className="Proposal-top-main">
-            <h1 className="Proposal-top-main-title">
-              {proposal ? proposal.title : <span>&nbsp;</span>}
-            </h1>
+            <div className="Proposal-top-main-title">
+              <h1>{proposal ? proposal.title : <span>&nbsp;</span>}</h1>
+              {isLive && (
+                <div className="Proposal-top-main-title-menu">
+                  {isTrustee && (
+                    <Dropdown
+                      overlay={adminMenu}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button>
+                        <span>Actions</span>
+                        <Icon type="down" style={{ marginRight: '-0.25rem' }} />
+                      </Button>
+                    </Dropdown>
+                  )}
+                  <Like
+                    proposal={proposal}
+                    className="Proposal-top-main-title-menu-item"
+                  />
+                  <Follow
+                    proposal={proposal}
+                    className="Proposal-top-main-title-menu-item"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
               <div
                 ref={el => (this.bodyEl = el)}
@@ -206,23 +250,9 @@ export class ProposalDetail extends React.Component<Props, State> {
                 </button>
               )}
             </div>
-            {isLive &&
-              isTrustee && (
-                <div className="Proposal-top-main-menu">
-                  <Dropdown
-                    overlay={adminMenu}
-                    trigger={['click']}
-                    placement="bottomRight"
-                  >
-                    <Button>
-                      <span>Actions</span>
-                      <Icon type="down" style={{ marginRight: '-0.25rem' }} />
-                    </Button>
-                  </Dropdown>
-                </div>
-              )}
           </div>
           <div className="Proposal-top-side">
+            <TippingBlock proposal={proposal} />
             <CampaignBlock proposal={proposal} isPreview={!isLive} />
             <TeamBlock proposal={proposal} />
             {proposal.rfp && <RFPBlock rfp={proposal.rfp} />}
@@ -230,7 +260,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         </div>
 
         <div className="Proposal-bottom">
-          <LinkableTabs scrollToTabs defaultActiveKey="milestones">
+          <LinkableTabs scrollToTabs defaultActiveKey={defaultTab}>
             <Tabs.TabPane tab="Milestones" key="milestones">
               <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
                 <Milestones proposal={proposal} />
@@ -242,9 +272,11 @@ export class ProposalDetail extends React.Component<Props, State> {
             <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
               <UpdatesTab proposalId={proposal.proposalId} />
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
-              <ContributorsTab proposalId={proposal.proposalId} />
-            </Tabs.TabPane>
+            {!proposal.isVersionTwo && (
+              <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
+                <ContributorsTab proposalId={proposal.proposalId} />
+              </Tabs.TabPane>
+            )}
           </LinkableTabs>
         </div>
 
@@ -259,6 +291,11 @@ export class ProposalDetail extends React.Component<Props, State> {
               proposal={proposal}
               isVisible={isCancelOpen}
               handleClose={this.closeCancelModal}
+            />
+            <TipJarProposalSettingsModal
+              proposal={proposal}
+              isVisible={isTipJarOpen}
+              handleClose={this.closeTipJarModal}
             />
           </>
         )}
@@ -285,6 +322,9 @@ export class ProposalDetail extends React.Component<Props, State> {
       this.setState({ isBodyOverflowing: true });
     }
   };
+
+  private openTipJarModal = () => this.setState({ isTipJarOpen: true });
+  private closeTipJarModal = () => this.setState({ isTipJarOpen: false });
 
   private openUpdateModal = () => this.setState({ isUpdateOpen: true });
   private closeUpdateModal = () => this.setState({ isUpdateOpen: false });

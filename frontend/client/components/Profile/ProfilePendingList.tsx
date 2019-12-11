@@ -1,54 +1,29 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Modal } from 'antd';
-import { UserProposal } from 'types';
+import { UserProposal, UserCCR } from 'types';
 import ProfilePending from './ProfilePending';
+import ProfilePendingCCR from './ProfilePendingCCR';
 
 interface OwnProps {
   proposals: UserProposal[];
+  requests: UserCCR[];
 }
 
 type Props = OwnProps;
 
-const STATE = {
-  publishedId: null as null | UserProposal['proposalId'],
-};
-
-type State = typeof STATE;
-
-class ProfilePendingList extends React.Component<Props, State> {
-  state = STATE;
+class ProfilePendingList extends React.Component<Props> {
   render() {
-    const { proposals } = this.props;
-    const { publishedId } = this.state;
+    const { proposals, requests } = this.props;
     return (
       <>
         {proposals.map(p => (
-          <ProfilePending
-            key={p.proposalId}
-            proposal={p}
-            onPublish={this.handlePublish}
-          />
+          <ProfilePending key={p.proposalId} proposal={p} />
         ))}
-
-        <Modal
-          title="Proposal Published"
-          visible={!!publishedId}
-          footer={null}
-          onCancel={() => this.setState({ publishedId: null })}
-        >
-          <div>
-            Your proposal is live!{' '}
-            <Link to={`/proposals/${publishedId}`}>Click here</Link> to check it out.
-          </div>
-        </Modal>
+        {requests.map(r => (
+          <ProfilePendingCCR key={r.ccrId} ccr={r} />
+        ))}
       </>
     );
   }
-
-  private handlePublish = (publishedId: UserProposal['proposalId']) => {
-    this.setState({ publishedId });
-  };
 }
 
 export default ProfilePendingList;

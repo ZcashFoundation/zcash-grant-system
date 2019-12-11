@@ -13,6 +13,9 @@ import Markdown from 'components/Markdown';
 import ProposalCard from 'components/Proposals/ProposalCard';
 import UnitDisplay from 'components/UnitDisplay';
 import HeaderDetails from 'components/HeaderDetails';
+import Like from 'components/Like';
+import { RFP_STATUS } from 'api/constants';
+import { formatUsd } from 'utils/formatters';
 import './index.less';
 
 interface OwnProps {
@@ -31,7 +34,7 @@ interface DispatchProps {
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-class RFPDetail extends React.Component<Props> {
+export class RFPDetail extends React.Component<Props> {
   componentDidMount() {
     this.props.fetchRfp(this.props.rfpId);
   }
@@ -48,6 +51,7 @@ class RFPDetail extends React.Component<Props> {
       }
     }
 
+    const isLive = rfp.status === RFP_STATUS.LIVE;
     const tags = [];
 
     if (rfp.matching) {
@@ -59,9 +63,25 @@ class RFPDetail extends React.Component<Props> {
     }
 
     if (rfp.bounty) {
+      if (rfp.isVersionTwo) {
+        tags.push(
+          <Tag key="bounty" color="#CF8A00">
+            {formatUsd(rfp.bounty.toString(10))} bounty
+          </Tag>,
+        );
+      } else {
+        tags.push(
+          <Tag key="bounty" color="#CF8A00">
+            <UnitDisplay value={rfp.bounty} symbol="ZEC" /> bounty
+          </Tag>,
+        );
+      }
+    }
+
+    if (!isLive) {
       tags.push(
-        <Tag key="bounty" color="#CF8A00">
-          <UnitDisplay value={rfp.bounty} symbol="ZEC" /> bounty
+        <Tag key="closed" color="#f5222d">
+          Closed
         </Tag>,
       );
     }
@@ -77,6 +97,7 @@ class RFPDetail extends React.Component<Props> {
           <div className="RFPDetail-top-date">
             Opened {moment(rfp.dateOpened * 1000).format('LL')}
           </div>
+          <Like rfp={rfp} />
         </div>
 
         <h1 className="RFPDetail-title">{rfp.title}</h1>
@@ -86,14 +107,22 @@ class RFPDetail extends React.Component<Props> {
         <Markdown className="RFPDetail-content" source={rfp.content} />
         <div className="RFPDetail-rules">
           <ul>
-            {rfp.bounty && (
-              <li>
-                Accepted proposals will be funded up to{' '}
-                <strong>
-                  <UnitDisplay value={rfp.bounty} symbol="ZEC" />
-                </strong>
-              </li>
-            )}
+            {rfp.bounty &&
+              rfp.isVersionTwo && (
+                <li>
+                  Accepted proposals will be funded up to{' '}
+                  <strong>{formatUsd(rfp.bounty.toString(10))}</strong> in ZEC
+                </li>
+              )}
+            {rfp.bounty &&
+              !rfp.isVersionTwo && (
+                <li>
+                  Accepted proposals will be funded up to{' '}
+                  <strong>
+                    <UnitDisplay value={rfp.bounty} symbol="ZEC" />
+                  </strong>
+                </li>
+              )}
             {rfp.matching && (
               <li>
                 Contributions will have their <strong>funding matched</strong> by the
@@ -103,6 +132,14 @@ class RFPDetail extends React.Component<Props> {
             {rfp.dateCloses && (
               <li>
                 Proposal submissions end {moment(rfp.dateCloses * 1000).format('LL')}
+              </li>
+            )}
+            {rfp.ccr && (
+              <li>
+                Submitted by{' '}
+                <Link to={`/profile/${rfp.ccr.author.userid}`}>
+                  {rfp.ccr.author.displayName}
+                </Link>
               </li>
             )}
           </ul>
@@ -117,23 +154,25 @@ class RFPDetail extends React.Component<Props> {
           </div>
         )}
 
-        <div className="RFPDetail-submit">
-          <Affix offsetBottom={0}>
-            <div className="RFPDetail-submit-inner">
-              <span>Ready to take on this request?</span>{' '}
-              <Link to={`/create?rfp=${rfp.id}`}>
-                <Button
-                  className="RFPDetail-submit-inner-button"
-                  type="primary"
-                  size="large"
-                >
-                  Start a Proposal
-                  <Icon type="right-circle" />
-                </Button>
-              </Link>
-            </div>
-          </Affix>
-        </div>
+        {isLive && (
+          <div className="RFPDetail-submit">
+            <Affix offsetBottom={0}>
+              <div className="RFPDetail-submit-inner">
+                <span>Ready to take on this request?</span>{' '}
+                <Link to={`/create?rfp=${rfp.id}`}>
+                  <Button
+                    className="RFPDetail-submit-inner-button"
+                    type="primary"
+                    size="large"
+                  >
+                    Start a Proposal
+                    <Icon type="right-circle" />
+                  </Button>
+                </Link>
+              </div>
+            </Affix>
+          </div>
+        )}
       </div>
     );
   }

@@ -43,8 +43,8 @@ export default [
   },
   {
     id: 'proposal_rejected',
-    title: 'Proposal rejected',
-    description: 'Sent when an admin rejects your submitted proposal',
+    title: 'Proposal changes requested',
+    description: 'Sent when an admin requests changes for your submitted proposal',
   },
   {
     id: 'proposal_contribution',
@@ -131,6 +131,11 @@ export default [
     description: 'Sent when milestone is paid',
   },
   {
+    id: 'milestone_deadline',
+    title: 'Milestone deadline',
+    description: 'Sent when the estimated deadline for milestone has been reached',
+  },
+  {
     id: 'admin_approval',
     title: 'Admin Approval',
     description: 'Sent when proposal is ready for review',
@@ -144,5 +149,16 @@ export default [
     id: 'admin_payout',
     title: 'Admin Payout',
     description: 'Sent when milestone payout has been approved',
+  },
+  {
+    id: 'followed_proposal_milestone',
+    title: 'Followed Proposal Milestone',
+    description:
+      'Sent to followers of a proposal when one of its milestones has been approved',
+  },
+  {
+    id: 'followed_proposal_update',
+    title: 'Followed Proposal Update',
+    description: 'Sent to followers of a proposal when it has a new update',
   },
 ] as Email[];

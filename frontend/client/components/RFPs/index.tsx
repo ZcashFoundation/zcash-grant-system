@@ -75,9 +75,9 @@ class RFPs extends React.Component<Props> {
             <h2 className="RFPs-about-text-title">Zcash Foundation Requests</h2>
             <p className="RFPs-about-text-desc">
               The Zcash Foundation periodically makes requests for proposals that solve
-              high-priority needs in the Zcash ecosystem. These proposals will typically
-              receive large or matched contributions, should they be approved by the
-              Foundation.
+              high-priority needs in the Zcash ecosystem. In addition to funding from the
+              Zcash Foundation, accepted proposals may receive supplemental donations from
+              the community when they have set a "tip address" for their proposal.
             </p>
           </div>
         </div>

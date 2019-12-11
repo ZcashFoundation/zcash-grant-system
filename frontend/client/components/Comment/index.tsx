@@ -10,6 +10,7 @@ import { postProposalComment, reportProposalComment } from 'modules/proposals/ac
 import { getIsSignedIn } from 'modules/auth/selectors';
 import { Comment as IComment } from 'types';
 import { AppState } from 'store/reducers';
+import Like from 'components/Like';
 import './style.less';
 
 interface OwnProps {
@@ -20,6 +21,7 @@ interface StateProps {
   isPostCommentPending: AppState['proposal']['isPostCommentPending'];
   postCommentError: AppState['proposal']['postCommentError'];
   isSignedIn: ReturnType<typeof getIsSignedIn>;
+  detail: AppState['proposal']['detail'];
 }
 
 interface DispatchProps {
@@ -71,19 +73,23 @@ class Comment extends React.Component<Props> {
           <Markdown source={comment.content} type={MARKDOWN_TYPE.REDUCED} />
         </div>
 
-        {isSignedIn && (
-          <div className="Comment-controls">
+        <div className="Comment-controls">
+          <div className="Comment-controls-button">
+            <Like comment={comment} />
+          </div>
+          {isSignedIn && (
             <a className="Comment-controls-button" onClick={this.toggleReply}>
               {isReplying ? 'Cancel' : 'Reply'}
             </a>
-            {!comment.hidden &&
-              !comment.reported && (
-                <a className="Comment-controls-button" onClick={this.report}>
-                  Report
-                </a>
-              )}
-          </div>
-        )}
+          )}
+          {isSignedIn &&
+            !comment.hidden &&
+            !comment.reported && (
+              <a className="Comment-controls-button" onClick={this.report}>
+                Report
+              </a>
+            )}
+        </div>
 
         {(comment.replies.length || isReplying) && (
           <div className="Comment-replies">
@@ -143,6 +149,7 @@ const ConnectedComment = connect<StateProps, DispatchProps, OwnProps, AppState>(
     isPostCommentPending: state.proposal.isPostCommentPending,
     postCommentError: state.proposal.postCommentError,
     isSignedIn: getIsSignedIn(state),
+    detail: state.proposal.detail,
   }),
   {
     postProposalComment,

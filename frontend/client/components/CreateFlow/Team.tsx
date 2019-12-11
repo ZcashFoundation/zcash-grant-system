@@ -81,7 +81,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
           </div>
         )}
         <div className="TeamForm-add">
-          <h3 className="TeamForm-add-title">Add a team member</h3>
+          <h3 className="TeamForm-add-title">Add an optional team member</h3>
           <Form className="TeamForm-add-form" onSubmit={this.handleAddSubmit}>
             <Form.Item
               className="TeamForm-add-form-field"

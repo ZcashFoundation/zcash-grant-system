@@ -1,19 +1,17 @@
 import React from 'react';
 import moment from 'moment';
-import { Form, Input, Button, Icon, Popover, Tooltip, Radio } from 'antd';
-import { RadioChangeEvent } from 'antd/lib/radio';
+import { Icon, Popover, Tooltip, Alert } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
-import { fromZat } from 'utils/units';
 import { connect } from 'react-redux';
 import { compose } from 'recompose';
 import { AppState } from 'store/reducers';
 import { withRouter } from 'react-router';
 import UnitDisplay from 'components/UnitDisplay';
-import ContributionModal from 'components/ContributionModal';
 import Loader from 'components/Loader';
-import { getAmountError } from 'utils/validators';
-import { CATEGORY_UI, PROPOSAL_STAGE } from 'api/constants';
+import { PROPOSAL_STAGE } from 'api/constants';
+import { formatUsd } from 'utils/formatters';
+import ZFGrantsLogo from 'static/images/logo-name-light.svg';
 import './style.less';
 
 interface OwnProps {
@@ -46,23 +44,23 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposal, isPreview, authUser } = this.props;
-    const { amountToRaise, amountError, isPrivate, isContributing } = this.state;
-    const amountFloat = parseFloat(amountToRaise) || 0;
+    const { proposal } = this.props;
     let content;
     if (proposal) {
-      const { target, funded, percentFunded } = proposal;
+      const { target, funded, percentFunded, isVersionTwo } = proposal;
       const datePublished = proposal.datePublished || Date.now() / 1000;
       const isRaiseGoalReached = funded.gte(target);
-      const deadline = (datePublished + proposal.deadlineDuration) * 1000;
+      const deadline = proposal.deadlineDuration
+        ? (datePublished + proposal.deadlineDuration) * 1000
+        : 0;
       const isFrozen =
         proposal.stage === PROPOSAL_STAGE.FAILED ||
         proposal.stage === PROPOSAL_STAGE.CANCELED;
       const isLive = proposal.status === STATUS.LIVE;
 
-      const isFundingOver = isRaiseGoalReached || deadline < Date.now() || isFrozen;
-      const isDisabled = isFundingOver || !!amountError || !amountFloat || isPreview;
-      const remainingTargetNum = parseFloat(fromZat(target.sub(funded)));
+      const isFundingOver = deadline
+        ? isRaiseGoalReached || deadline < Date.now() || isFrozen
+        : null;
 
       // Get bounty from RFP. If it exceeds proposal target, show bounty as full amount
       let bounty;
@@ -71,6 +69,9 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
           ? proposal.target
           : proposal.contributionBounty;
       }
+
+      const isAcceptedWithFunding = proposal.acceptedWithFunding === true;
+      const isCanceled = proposal.stage === PROPOSAL_STAGE.CANCELED;
 
       content = (
         <React.Fragment>
@@ -82,153 +83,132 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
               </div>
             </div>
           )}
-          <div className="ProposalCampaignBlock-info">
-            <div className="ProposalCampaignBlock-info-label">Category</div>
-            <div className="ProposalCampaignBlock-info-value">
-              <Icon
-                type={CATEGORY_UI[proposal.category].icon}
-                style={{ color: CATEGORY_UI[proposal.category].color }}
-              />{' '}
-              {CATEGORY_UI[proposal.category].label}
-            </div>
-          </div>
-          {!isFundingOver && (
+          {!isVersionTwo &&
+            !isFundingOver && (
+              <div className="ProposalCampaignBlock-info">
+                <div className="ProposalCampaignBlock-info-label">Deadline</div>
+                <div className="ProposalCampaignBlock-info-value">
+                  {moment(deadline).fromNow()}
+                </div>
+              </div>
+            )}
+          {!isVersionTwo && (
             <div className="ProposalCampaignBlock-info">
-              <div className="ProposalCampaignBlock-info-label">Deadline</div>
+              <div className="ProposalCampaignBlock-info-label">Funding</div>
               <div className="ProposalCampaignBlock-info-value">
-                {moment(deadline).fromNow()}
+                <UnitDisplay value={funded} /> /{' '}
+                <UnitDisplay value={target} symbol="ZEC" />
               </div>
             </div>
           )}
-          <div className="ProposalCampaignBlock-info">
-            <div className="ProposalCampaignBlock-info-label">Funding</div>
-            <div className="ProposalCampaignBlock-info-value">
-              <UnitDisplay value={funded} /> / <UnitDisplay value={target} symbol="ZEC" />
-            </div>
-          </div>
 
-          {bounty && (
-            <div className="ProposalCampaignBlock-bounty">
-              Awarded with <UnitDisplay value={bounty} symbol="ZEC" /> bounty
+          {isVersionTwo && (
+            <div className="ProposalCampaignBlock-info">
+              <div className="ProposalCampaignBlock-info-label">
+                {isAcceptedWithFunding ? 'Funding' : 'Requested Funding'}
+              </div>
+              <div className="ProposalCampaignBlock-info-value">
+                {formatUsd(target.toString(10))}
+                {isAcceptedWithFunding && (
+                  <Tooltip
+                    placement="left"
+                    title="Proposal owners will be paid out in ZEC at market price at payout time"
+                  >
+                    &nbsp; <Icon type="info-circle" />
+                  </Tooltip>
+                )}
+              </div>
             </div>
           )}
 
-          {proposal.contributionMatching > 0 && (
-            <div className="ProposalCampaignBlock-matching">
-              <span>Funds are being matched x{proposal.contributionMatching + 1}</span>
-              <Popover
-                overlayClassName="ProposalCampaignBlock-popover-overlay"
-                placement="left"
-                content={
-                  <>
-                    <b>Matching</b>
-                    <br />
-                    Increase your impact! Contributions to this proposal are being matched
-                    by the Zcash Foundation, up to the target amount.
-                  </>
-                }
+          {bounty &&
+            !isVersionTwo && (
+              <div className="ProposalCampaignBlock-bounty">
+                Awarded with <UnitDisplay value={bounty} symbol="ZEC" /> bounty
+              </div>
+            )}
+
+          {isVersionTwo &&
+            isAcceptedWithFunding && (
+              <div className="ProposalCampaignBlock-with-funding">
+                Funded through &nbsp;
+                <ZFGrantsLogo style={{ height: '1.5rem' }} />
+              </div>
+            )}
+
+          {isVersionTwo &&
+            !isAcceptedWithFunding && (
+              <div className="ProposalCampaignBlock-without-funding">
+                Open for Community Donations
+              </div>
+            )}
+
+          {!isVersionTwo &&
+            proposal.contributionMatching > 0 && (
+              <div className="ProposalCampaignBlock-matching">
+                <span>Funds are being matched x{proposal.contributionMatching + 1}</span>
+                <Popover
+                  overlayClassName="ProposalCampaignBlock-popover-overlay"
+                  placement="left"
+                  content={
+                    <>
+                      <b>Matching</b>
+                      <br />
+                      Increase your impact! Contributions to this proposal are being
+                      matched by the Zcash Foundation, up to the target amount.
+                    </>
+                  }
+                >
+                  <Icon type="question-circle" theme="filled" />
+                </Popover>
+              </div>
+            )}
+
+          {!isVersionTwo &&
+            (isFundingOver ? (
+              <div
+                className={classnames({
+                  ['ProposalCampaignBlock-fundingOver']: true,
+                  ['is-success']: isRaiseGoalReached,
+                })}
               >
-                <Icon type="question-circle" theme="filled" />
-              </Popover>
-            </div>
-          )}
-
-          {isFundingOver ? (
-            <div
-              className={classnames({
-                ['ProposalCampaignBlock-fundingOver']: true,
-                ['is-success']: isRaiseGoalReached,
-              })}
-            >
-              {proposal.stage === PROPOSAL_STAGE.CANCELED ? (
-                <>
-                  <Icon type="close-circle-o" />
-                  <span>Proposal was canceled</span>
-                </>
-              ) : isRaiseGoalReached ? (
-                <>
-                  <Icon type="check-circle-o" />
-                  <span>Proposal has been funded</span>
-                </>
-              ) : (
-                <>
-                  <Icon type="close-circle-o" />
-                  <span>Proposal didn’t get funded</span>
-                </>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="ProposalCampaignBlock-bar">
-                <div
-                  className="ProposalCampaignBlock-bar-inner"
-                  style={{
-                    width: `${percentFunded}%`,
-                  }}
-                />
+                {isCanceled ? (
+                  <>
+                    <Icon type="close-circle-o" />
+                    <span>Proposal was canceled</span>
+                  </>
+                ) : isRaiseGoalReached ? (
+                  <>
+                    <Icon type="check-circle-o" />
+                    <span>Proposal has been funded</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon type="close-circle-o" />
+                    <span>Proposal didn’t get funded</span>
+                  </>
+                )}
               </div>
-
-              <Form layout="vertical" className="ProposalCampaignBlock-contribute">
-                <Form.Item
-                  validateStatus={amountError ? 'error' : undefined}
-                  help={amountError}
-                  style={{ marginBottom: '0.5rem', paddingBottom: 0 }}
-                >
-                  <Input
-                    size="large"
-                    name="amountToRaise"
-                    type="number"
-                    value={amountToRaise}
-                    placeholder="0.5"
-                    min={0}
-                    max={remainingTargetNum}
-                    step={0.1}
-                    onChange={this.handleAmountChange}
-                    addonAfter="ZEC"
-                    disabled={isPreview}
+            ) : (
+              <>
+                <div className="ProposalCampaignBlock-bar">
+                  <div
+                    className="ProposalCampaignBlock-bar-inner"
+                    style={{
+                      width: `${percentFunded}%`,
+                    }}
                   />
-                </Form.Item>
-                {amountToRaise &&
-                  !!authUser && (
-                    <Radio.Group
-                      onChange={this.handleChangePrivate}
-                      value={isPrivate ? 'isPrivate' : 'isNotPrivate'}
-                    >
-                      <Radio value={'isPrivate'}>
-                        Contribute without attribution
-                        <Tooltip title="Other users will not see who made this contribution.">
-                          <Icon type="question-circle" />
-                        </Tooltip>
-                      </Radio>
-                      <Radio value={'isNotPrivate'}>
-                        Attribute contribution publicly
-                        <Tooltip title="Other users will be able to see that you made this contribution.">
-                          <Icon type="question-circle" />
-                        </Tooltip>
-                      </Radio>
-                    </Radio.Group>
-                  )}
-                <Button
-                  onClick={this.openContributionModal}
-                  size="large"
-                  type="primary"
-                  disabled={isDisabled}
-                  block
-                >
-                  Fund this project
-                </Button>
-              </Form>
-            </>
-          )}
+                </div>
+              </>
+            ))}
 
-          <ContributionModal
-            isVisible={isContributing}
-            proposalId={proposal.proposalId}
-            amount={amountToRaise}
-            isAnonymous={!authUser}
-            isPublic={!isPrivate}
-            handleClose={this.closeContributionModal}
-          />
+          {isVersionTwo &&
+            isCanceled && (
+              <div className="ProposalCampaignBlock-fundingOver">
+                <Icon type="close-circle-o" />
+                <span>Proposal was canceled</span>
+              </div>
+            )}
         </React.Fragment>
       );
     } else {
@@ -237,43 +217,24 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
 
     return (
       <div className="ProposalCampaignBlock Proposal-top-side-block">
+        {proposal &&
+          proposal.isVersionTwo &&
+          !proposal.acceptedWithFunding &&
+          proposal.stage === PROPOSAL_STAGE.WIP && (
+            <div>
+              <Alert
+                message="Accepted without funding"
+                description="This proposal has been posted publicly, but isn't being funded by the Zcash Foundation."
+                type="info"
+                showIcon
+              />
+            </div>
+          )}
         <h2 className="Proposal-top-main-block-title">Campaign</h2>
         <div className="Proposal-top-main-block">{content}</div>
       </div>
     );
   }
-
-  private handleAmountChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { value } = event.currentTarget;
-    if (!value) {
-      this.setState({ amountToRaise: '', amountError: null });
-      return;
-    }
-
-    const { target, funded } = this.props.proposal;
-    const remainingTarget = target.sub(funded);
-    const amount = parseFloat(value);
-    let amountError = null;
-
-    if (Number.isNaN(amount)) {
-      // They're entering some garbage, they’ll work it out
-    } else {
-      const remainingTargetNum = parseFloat(fromZat(remainingTarget));
-      amountError = getAmountError(amount, remainingTargetNum);
-    }
-
-    this.setState({ amountToRaise: value, amountError });
-  };
-
-  private handleChangePrivate = (ev: RadioChangeEvent) => {
-    const isPrivate = ev.target.value === 'isPrivate';
-    this.setState({ isPrivate });
-  };
-
-  private openContributionModal = () => this.setState({ isContributing: true });
-  private closeContributionModal = () => this.setState({ isContributing: false });
 }
 
 function mapStateToProps(state: AppState) {

@@ -9,6 +9,8 @@ export interface Comment {
   replies: Comment[];
   reported: boolean;
   hidden: boolean;
+  authedLiked: boolean;
+  likesCount: number;
 }
 
 export interface UserComment {

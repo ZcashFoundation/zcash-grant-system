@@ -3,18 +3,19 @@ import {
   STATUS,
   MILESTONE_STAGE,
   PROPOSAL_ARBITER_STATUS,
-  CreateMilestone,
+  CCRDraft,
+  RFP,
 } from 'types';
-import moment from 'moment';
-import { User } from 'types';
+import { User, CCR } from 'types';
 import {
-  getAmountError,
+  getAmountErrorUsd,
+  getAmountErrorUsdFromString,
   isValidSaplingAddress,
   isValidTAddress,
   isValidSproutAddress,
 } from 'utils/validators';
-import { Zat, toZat } from 'utils/units';
-import { PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
+import { toUsd } from 'utils/units';
+import { PROPOSAL_STAGE, RFP_STATUS } from 'api/constants';
 import {
   ProposalDetail,
   PROPOSAL_DETAIL_INITIAL_STATE,
@@ -24,38 +25,28 @@ interface CreateFormErrors {
   rfpOptIn?: string;
   title?: string;
   brief?: string;
-  category?: string;
   target?: string;
   team?: string[];
   content?: string;
   payoutAddress?: string;
+  tipJarAddress?: string;
   milestones?: string[];
-  deadlineDuration?: string;
 }
 
 export type KeyOfForm = keyof CreateFormErrors;
 export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
-  rfpOptIn: 'RFP KYC',
+  rfpOptIn: 'KYC',
   title: 'Title',
   brief: 'Brief',
-  category: 'Category',
   target: 'Target amount',
   team: 'Team',
   content: 'Details',
   payoutAddress: 'Payout address',
+  tipJarAddress: 'Tip address',
   milestones: 'Milestones',
-  deadlineDuration: 'Funding deadline',
 };
 
-const requiredFields = [
-  'title',
-  'brief',
-  'category',
-  'target',
-  'content',
-  'payoutAddress',
-  'deadlineDuration',
-];
+const requiredFields = ['title', 'brief', 'target', 'content', 'payoutAddress'];
 
 export function getCreateErrors(
   form: Partial<ProposalDraft>,
@@ -69,7 +60,7 @@ export function getCreateErrors(
     milestones,
     target,
     payoutAddress,
-    rfp,
+    tipJarAddress,
     rfpOptIn,
     brief,
   } = form;
@@ -91,7 +82,7 @@ export function getCreateErrors(
   }
 
   // RFP opt-in
-  if (rfp && (rfp.bounty || rfp.matching) && rfpOptIn === null) {
+  if (rfpOptIn === null) {
     errors.rfpOptIn = 'Please accept or decline KYC';
   }
 
@@ -114,7 +105,8 @@ export function getCreateErrors(
   const targetFloat = target ? parseFloat(target) : 0;
   if (target && !Number.isNaN(targetFloat)) {
     const limit = parseFloat(process.env.PROPOSAL_TARGET_MAX as string);
-    const targetErr = getAmountError(targetFloat, limit, 0.001);
+    const targetErr =
+      getAmountErrorUsd(targetFloat, limit) || getAmountErrorUsdFromString(target);
     if (targetErr) {
       errors.target = targetErr;
     }
@@ -131,10 +123,20 @@ export function getCreateErrors(
     }
   }
 
+  // Tip Jar Address
+  if (tipJarAddress && !isValidSaplingAddress(tipJarAddress)) {
+    if (isValidSproutAddress(tipJarAddress)) {
+      errors.tipJarAddress = 'Must be a Sapling address, not a Sprout address';
+    } else if (isValidTAddress(tipJarAddress)) {
+      errors.tipJarAddress = 'Must be a Sapling Z address, not a T address';
+    } else {
+      errors.tipJarAddress = 'That doesn’t look like a valid Sapling address';
+    }
+  }
+
   // Milestones
   if (milestones) {
     let cumulativeMilestonePct = 0;
-    let lastMsEst: CreateMilestone['dateEstimated'] = 0;
     const milestoneErrors = milestones.map((ms, idx) => {
       // check payout first so we collect the cumulativePayout even if other fields are invalid
       if (!ms.payoutPercent) {
@@ -164,22 +166,18 @@ export function getCreateErrors(
         return 'Description can only be 200 characters maximum';
       }
 
-      if (!ms.dateEstimated) {
-        return 'Estimate date is required';
-      } else {
-        // FE validation on milestone estimation
-        if (
-          ms.dateEstimated <
-          moment(Date.now())
-            .startOf('month')
-            .unix()
-        ) {
-          return 'Estimate date should be in the future';
+      if (!ms.immediatePayout) {
+        if (!ms.daysEstimated) {
+          return 'Estimate in days is required';
+        } else if (Number.isNaN(parseInt(ms.daysEstimated, 10))) {
+          return 'Days estimated must be a valid number';
+        } else if (parseInt(ms.daysEstimated, 10) !== parseFloat(ms.daysEstimated)) {
+          return 'Days estimated must be a whole number, no decimals';
+        } else if (parseInt(ms.daysEstimated, 10) <= 0) {
+          return 'Days estimated must be greater than 0';
+        } else if (parseInt(ms.daysEstimated, 10) > 365) {
+          return 'Days estimated must be less than or equal to 365';
         }
-        if (ms.dateEstimated <= lastMsEst) {
-          return 'Estimate date should be later than previous estimate date';
-        }
-        lastMsEst = ms.dateEstimated;
       }
 
       if (
@@ -240,29 +238,60 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     dateCreated: Date.now() / 1000,
     datePublished: Date.now() / 1000,
     dateApproved: Date.now() / 1000,
-    deadlineDuration: 86400 * 60,
-    target: toZat(draft.target),
-    funded: Zat('0'),
+    target: toUsd(draft.target),
+    funded: toUsd('0'),
     contributionMatching: 0,
-    contributionBounty: Zat('0'),
+    contributionBounty: toUsd('0'),
     percentFunded: 0,
     stage: PROPOSAL_STAGE.PREVIEW,
-    category: draft.category || PROPOSAL_CATEGORY.CORE_DEV,
     isStaked: true,
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
     },
+    tipJarAddress: null,
+    tipJarViewKey: null,
+    acceptedWithFunding: false,
+    authedFollows: false,
+    followersCount: 0,
+    authedLiked: false,
+    likesCount: 0,
+    isVersionTwo: true,
     milestones: draft.milestones.map((m, idx) => ({
       id: idx,
       index: idx,
       title: m.title,
       content: m.content,
-      amount: toZat(target * (parseInt(m.payoutPercent, 10) / 100)),
-      dateEstimated: m.dateEstimated,
+      amount: (target * (parseInt(m.payoutPercent, 10) / 100)).toFixed(2),
+      daysEstimated: m.daysEstimated,
       immediatePayout: m.immediatePayout,
       payoutPercent: m.payoutPercent.toString(),
       stage: MILESTONE_STAGE.IDLE,
     })),
     ...PROPOSAL_DETAIL_INITIAL_STATE,
+  };
+}
+
+export function makeRfpPreviewFromCcrDraft(draft: CCRDraft): RFP {
+  const ccr: CCR = {
+    ...draft,
+  };
+  const now = new Date().getTime();
+  const { brief, content, title } = draft;
+
+  return {
+    id: 0,
+    urlId: '',
+    status: RFP_STATUS.LIVE,
+    acceptedProposals: [],
+    bounty: draft.target ? toUsd(draft.target) : null,
+    matching: false,
+    dateOpened: now / 1000,
+    authedLiked: false,
+    likesCount: 0,
+    isVersionTwo: true,
+    ccr,
+    brief,
+    content,
+    title,
   };
 }
