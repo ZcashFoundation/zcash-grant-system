@@ -338,10 +338,10 @@ class CCRPagination(Pagination):
             page: int = 1,
             filters: list = None,
             search: str = None,
-            sort: str = 'PUBLISHED:DESC',
+            sort: str = 'CREATED:DESC',
     ):
         query = query or CCR.query
-        sort = sort or 'PUBLISHED:DESC'
+        sort = sort or 'CREATED:DESC'
 
         # FILTER
         if filters:
