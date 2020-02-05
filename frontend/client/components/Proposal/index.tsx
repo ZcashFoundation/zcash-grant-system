@@ -113,10 +113,14 @@ export class ProposalDetail extends React.Component<Props, State> {
 
     const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
     const isLive = proposal.status === STATUS.LIVE;
+    const isOpenForDiscussion = proposal.status === STATUS.DISCUSSION;
     const milestonesDisabled = proposal.isVersionTwo
       ? !proposal.acceptedWithFunding
       : false;
-    const defaultTab = !milestonesDisabled || !isLive ? 'milestones' : 'discussions';
+    const defaultTab =
+      (!milestonesDisabled || !isLive) && !isOpenForDiscussion
+        ? 'milestones'
+        : 'discussions';
 
     const adminMenu = (
       <Menu>
@@ -143,6 +147,13 @@ export class ProposalDetail extends React.Component<Props, State> {
         ),
         type: 'warning',
       },
+
+      [STATUS.DISCUSSION]: {
+        blurb: <>Your proposal has been made open for public review.</>,
+        type: 'info',
+      },
+
+      //TODO - is the message below necessary? users don't approve proposals anymore
       [STATUS.APPROVED]: {
         blurb: (
           <>
@@ -266,7 +277,11 @@ export class ProposalDetail extends React.Component<Props, State> {
                 <Milestones proposal={proposal} />
               </div>
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Discussion" key="discussions" disabled={!isLive}>
+            <Tabs.TabPane
+              tab="Discussion"
+              key="discussions"
+              disabled={!isLive && !isOpenForDiscussion}
+            >
               <CommentsTab proposalId={proposal.proposalId} />
             </Tabs.TabPane>
             <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>

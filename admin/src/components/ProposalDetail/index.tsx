@@ -177,8 +177,74 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         />
       );
 
-    const renderReview = () =>
+    const renderKycColumn = () =>
+      p.isVersionTwo && (
+        <Col span={8}>
+          <Alert
+            showIcon
+            type={p.rfpOptIn ? 'success' : 'error'}
+            message={p.rfpOptIn ? 'KYC accepted' : 'KYC rejected'}
+            description={
+              <div>
+                {p.rfpOptIn ? (
+                  <p>KYC has been accepted by the proposer.</p>
+                ) : (
+                  <p>KYC has been rejected. Recommend against approving with funding.</p>
+                )}
+              </div>
+            }
+          />
+        </Col>
+      );
+
+    const renderReviewDiscussion = () =>
       p.status === PROPOSAL_STATUS.PENDING && (
+        <>
+          <Row gutter={16}>
+            <Col span={isVersionTwo ? 16 : 24}>
+              <Alert
+                showIcon
+                type="warning"
+                message="Review Discussion"
+                description={
+                  <div>
+                    <p>Please review this proposal and render your judgment.</p>
+                    <Button
+                      className="ProposalDetail-review"
+                      loading={store.proposalDetailApprovingDiscussion}
+                      icon="check"
+                      type="primary"
+                      onClick={() => this.handleApproveDiscussion()}
+                    >
+                      Open for Public Review
+                    </Button>
+                    <Button
+                      className="ProposalDetail-review"
+                      loading={store.proposalDetailApprovingDiscussion}
+                      icon="close"
+                      type="danger"
+                      onClick={() => {
+                        FeedbackModal.open({
+                          title: 'Request changes to this proposal?',
+                          label: 'Please provide a reason:',
+                          okText: 'Request changes',
+                          onOk: this.handleRejectDiscussion,
+                        });
+                      }}
+                    >
+                      Request Changes
+                    </Button>
+                  </div>
+                }
+              />
+            </Col>
+            {renderKycColumn()}
+          </Row>
+        </>
+      );
+
+    const renderReviewProposal = () =>
+      p.status === PROPOSAL_STATUS.DISCUSSION && (
         <>
           <Row gutter={16}>
             <Col span={isVersionTwo ? 16 : 24}>
@@ -191,62 +257,27 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                     <p>Please review this proposal and render your judgment.</p>
                     <Button
                       className="ProposalDetail-review"
-                      loading={store.proposalDetailApproving}
+                      loading={store.proposalDetailAcceptingProposal}
                       icon="check"
                       type="primary"
-                      onClick={() => this.handleApprove(true)}
+                      onClick={() => this.handleAcceptProposal(true)}
                     >
                       Approve With Funding
                     </Button>
                     <Button
                       className="ProposalDetail-review"
-                      loading={store.proposalDetailApproving}
+                      loading={store.proposalDetailAcceptingProposal}
                       icon="check"
                       type="default"
-                      onClick={() => this.handleApprove(false)}
+                      onClick={() => this.handleAcceptProposal(false)}
                     >
                       Approve Without Funding
-                    </Button>
-                    <Button
-                      className="ProposalDetail-review"
-                      loading={store.proposalDetailApproving}
-                      icon="close"
-                      type="danger"
-                      onClick={() => {
-                        FeedbackModal.open({
-                          title: 'Request changes to this proposal?',
-                          label: 'Please provide a reason:',
-                          okText: 'Request changes',
-                          onOk: this.handleReject,
-                        });
-                      }}
-                    >
-                      Request changes
                     </Button>
                   </div>
                 }
               />
             </Col>
-            {p.isVersionTwo && (
-              <Col span={8}>
-                <Alert
-                  showIcon
-                  type={p.rfpOptIn ? 'success' : 'error'}
-                  message={p.rfpOptIn ? 'KYC accepted' : 'KYC rejected'}
-                  description={
-                    <div>
-                      {p.rfpOptIn ? (
-                        <p>KYC has been accepted by the proposer.</p>
-                      ) : (
-                        <p>
-                          KYC has been rejected. Recommend against approving with funding.
-                        </p>
-                      )}
-                    </div>
-                  }
-                />
-              </Col>
-            )}
+            {renderKycColumn()}
           </Row>
         </>
       );
@@ -409,7 +440,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           {/* MAIN */}
           <Col span={18}>
             {renderApproved()}
-            {renderReview()}
+            {renderReviewDiscussion()}
+            {renderReviewProposal()}
             {renderRejected()}
             {renderNominateArbiter()}
             {renderNominatedArbiter()}
@@ -602,13 +634,19 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     this.setState({ showCancelAndRefundPopover: false });
   };
 
-  private handleApprove = (withFunding: boolean) => {
-    store.approveProposal(true, withFunding);
+  private handleApproveDiscussion = async () => {
+    await store.approveDiscussion(true);
+    message.info('Proposal now open for discussion');
   };
 
-  private handleReject = async (reason: string) => {
-    await store.approveProposal(false, false, reason);
+  private handleRejectDiscussion = async (rejectReason: string) => {
+    await store.approveDiscussion(false, rejectReason);
     message.info('Proposal changes requested');
+  };
+
+  private handleAcceptProposal = async (withFunding: boolean) => {
+    await store.acceptProposal(withFunding);
+    message.info(`Proposal accepted ${withFunding ? 'with' : 'without'} funding`);
   };
 
   private handlePaidMilestone = async () => {

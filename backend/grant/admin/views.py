@@ -358,19 +358,33 @@ def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
 
-@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
+@blueprint.route('/proposals/<id>/discussion', methods=['PUT'])
 @body({
-    "isAccepted": fields.Bool(required=True),
-    "withFunding": fields.Bool(required=True),
+    "isOpenForDiscussion": fields.Bool(required=True),
     "rejectReason": fields.Str(required=False, missing=None)
 })
 @admin.admin_auth_required
-def approve_proposal(id, is_accepted, with_funding, reject_reason=None):
+def open_proposal_for_discussion(id, is_open_for_discussion, reject_reason=None):
+    proposal = Proposal.query.get(id)
+    if not proposal:
+        return {"message": "No Proposal found."}, 404
+
+    proposal.approve_discussion(is_open_for_discussion, reject_reason)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
+
+
+@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
+@body({
+    "withFunding": fields.Bool(required=True),
+})
+@admin.admin_auth_required
+def accept_proposal(id, with_funding):
     proposal = Proposal.query.filter_by(id=id).first()
     if proposal:
-        proposal.approve_pending(is_accepted, with_funding, reject_reason)
+        proposal.accept_proposal(with_funding)
 
-        if is_accepted and with_funding:
+        if with_funding:
             Milestone.set_v2_date_estimates(proposal)
 
         db.session.commit()

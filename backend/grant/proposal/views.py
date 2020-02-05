@@ -110,8 +110,8 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    if proposal.status != ProposalStatus.LIVE:
-        return {"message": "Proposal must be live to comment"}, 400
+    if proposal.status != ProposalStatus.LIVE and proposal.status != ProposalStatus.DISCUSSION:
+        return {"message": "Proposal must be live or open for public review to comment"}, 400
 
     # Make sure the parent comment exists
     parent = None

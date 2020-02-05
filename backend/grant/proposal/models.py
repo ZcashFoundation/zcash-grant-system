@@ -465,7 +465,7 @@ class Proposal(db.Model):
         return proposal
 
     @staticmethod
-    def get_by_user(user, statuses=[ProposalStatus.LIVE]):
+    def get_by_user(user, statuses=[ProposalStatus.LIVE, ProposalStatus.DISCUSSION]):
         status_filter = or_(Proposal.status == v for v in statuses)
         return Proposal.query \
             .join(proposal_team) \
@@ -578,40 +578,13 @@ class Proposal(db.Model):
         db.session.add(self)
         db.session.flush()
 
-    # state: status PENDING -> (LIVE || REJECTED)
-    def approve_pending(self, is_approve, with_funding, reject_reason=None):
-        self.validate_publishable()
-        # specific validation
+    # state: status PENDING -> (DISCUSSION || REJECTED)
+    def approve_discussion(self, is_open_for_discussion, reject_reason=None):
         if not self.status == ProposalStatus.PENDING:
-            raise ValidationException(f"Proposal must be pending to approve or reject")
+            raise ValidationException("Proposal must be pending to open for public discussion")
 
-        if is_approve:
-            self.status = ProposalStatus.LIVE
-            self.date_approved = datetime.datetime.now()
-            self.accepted_with_funding = with_funding
-
-            # also update date_published and stage since publish() is no longer called by user
-            self.date_published = datetime.datetime.now()
-            self.stage = ProposalStage.WIP
-
-            if with_funding:
-                self.fully_fund_contibution_bounty()
-            for t in self.team:
-                admin_note = ''
-                if with_funding:
-                    admin_note = 'Congratulations! Your proposal has been accepted with funding from the Zcash Foundation.'
-                else:
-                    admin_note = '''
-                    We've chosen to list your proposal on ZF Grants, but we won't be funding your proposal at this time. 
-                    Your proposal can still receive funding from the community in the form of tips if you have set a tip address for your proposal. 
-                    If you have not yet done so, you can do this from the actions dropdown at your proposal.
-                    '''
-                send_email(t.email_address, 'proposal_approved', {
-                    'user': t,
-                    'proposal': self,
-                    'proposal_url': make_url(f'/proposals/{self.id}'),
-                    'admin_note': admin_note
-                })
+        if is_open_for_discussion:
+            self.status = ProposalStatus.DISCUSSION
         else:
             if not reject_reason:
                 raise ValidationException("Please provide a reason for rejecting the proposal")
@@ -624,6 +597,40 @@ class Proposal(db.Model):
                     'proposal_url': make_url(f'/proposals/{self.id}'),
                     'admin_note': reject_reason
                 })
+
+    # state: status DISCUSSION -> (LIVE)
+    def accept_proposal(self, with_funding):
+        self.validate_publishable()
+        # specific validation
+        if not self.status == ProposalStatus.DISCUSSION:
+            raise ValidationException(f"Proposal must be pending to approve or reject")
+
+        self.status = ProposalStatus.LIVE
+        self.date_approved = datetime.datetime.now()
+        self.accepted_with_funding = with_funding
+
+        # also update date_published and stage since publish() is no longer called by user
+        self.date_published = datetime.datetime.now()
+        self.stage = ProposalStage.WIP
+
+        if with_funding:
+            self.fully_fund_contibution_bounty()
+        for t in self.team:
+            admin_note = ''
+            if with_funding:
+                admin_note = 'Congratulations! Your proposal has been accepted with funding from the Zcash Foundation.'
+            else:
+                admin_note = '''
+                We've chosen to list your proposal on ZF Grants, but we won't be funding your proposal at this time. 
+                Your proposal can still receive funding from the community in the form of tips if you have set a tip address for your proposal. 
+                If you have not yet done so, you can do this from the actions dropdown at your proposal.
+                '''
+            send_email(t.email_address, 'proposal_approved', {
+                'user': t,
+                'proposal': self,
+                'proposal_url': make_url(f'/proposals/{self.id}'),
+                'admin_note': admin_note
+            })
 
     def update_proposal_with_funding(self):
         self.accepted_with_funding = True

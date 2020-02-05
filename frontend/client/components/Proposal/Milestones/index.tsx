@@ -12,6 +12,7 @@ import {
   ProposalMilestone,
   MILESTONE_STAGE,
   PROPOSAL_ARBITER_STATUS,
+  STATUS,
 } from 'types';
 import { PROPOSAL_STAGE } from 'api/constants';
 import UnitDisplay from 'components/UnitDisplay';
@@ -164,9 +165,13 @@ class ProposalMilestones extends React.Component<Props, State> {
       isRejectingPayout,
       isVersionTwo,
       acceptedWithFunding,
+      status,
     } = proposal;
+    const isOpenForDiscussion = status === STATUS.DISCUSSION;
     const milestoneCount = milestones.length;
-    const milestonesDisabled = isVersionTwo ? !acceptedWithFunding : false;
+    const milestonesDisabled = isVersionTwo
+      ? !acceptedWithFunding && !isOpenForDiscussion
+      : false;
 
     // arbiter reject modal
     const rejectModal = (
@@ -337,7 +342,9 @@ interface MilestoneProps extends MSProps {
 const Milestone: React.SFC<MilestoneProps> = p => {
   const estimatedDate = p.dateEstimated
     ? moment(p.dateEstimated * 1000).format('MMMM YYYY')
-    : 'N/A';
+    : p.daysEstimated
+      ? `${p.daysEstimated} days`
+      : 'N/A';
   const reward = p.isVersionTwo ? (
     formatUsd(p.amount as string, true, 2)
   ) : (

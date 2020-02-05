@@ -61,6 +61,7 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
       const isFundingOver = deadline
         ? isRaiseGoalReached || deadline < Date.now() || isFrozen
         : null;
+      const isOpenForDiscussion = proposal.status === STATUS.DISCUSSION;
 
       // Get bounty from RFP. If it exceeds proposal target, show bounty as full amount
       let bounty;
@@ -137,9 +138,17 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             )}
 
           {isVersionTwo &&
-            !isAcceptedWithFunding && (
+            !isAcceptedWithFunding &&
+            !isOpenForDiscussion && (
               <div className="ProposalCampaignBlock-without-funding">
                 Open for Community Donations
+              </div>
+            )}
+
+          {isVersionTwo &&
+            isOpenForDiscussion && (
+              <div className="ProposalCampaignBlock-without-funding">
+                Open for Public Review
               </div>
             )}
 

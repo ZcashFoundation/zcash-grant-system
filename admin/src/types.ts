@@ -74,6 +74,7 @@ export interface ProposalArbiter {
 export enum PROPOSAL_STATUS {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
+  DISCUSSION = 'DISCUSSION',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   LIVE = 'LIVE',

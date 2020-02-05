@@ -26,6 +26,7 @@ CCRStatus = CCRStatusEnum()
 class ProposalStatusEnum(CustomEnum):
     DRAFT = 'DRAFT'
     STAKING = 'STAKING'
+    DISCUSSION = 'DISCUSSION'
     PENDING = 'PENDING'
     APPROVED = 'APPROVED'
     REJECTED = 'REJECTED'
