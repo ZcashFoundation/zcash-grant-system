@@ -165,9 +165,8 @@ class ProposalMilestones extends React.Component<Props, State> {
       isRejectingPayout,
       isVersionTwo,
       acceptedWithFunding,
-      status,
     } = proposal;
-    const isOpenForDiscussion = status === STATUS.DISCUSSION;
+    const isOpenForDiscussion = proposal.status === STATUS.DISCUSSION;
     const milestoneCount = milestones.length;
     const milestonesDisabled = isVersionTwo
       ? !acceptedWithFunding && !isOpenForDiscussion
