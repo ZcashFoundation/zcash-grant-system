@@ -33,6 +33,7 @@ const Profile = loadable(() => import('pages/profile'), opts);
 const Settings = loadable(() => import('pages/settings'), opts);
 const Exception = loadable(() => import('pages/exception'), opts);
 const Tos = loadable(() => import('pages/tos'));
+const ProposalTutorial = loadable(() => import('pages/proposal-tutorial'));
 const About = loadable(() => import('pages/about'), opts);
 const Privacy = loadable(() => import('pages/privacy'), opts);
 const Contact = loadable(() => import('pages/contact'), opts);
@@ -215,6 +216,18 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Guide',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Terms of Service page
+    route: {
+      path: '/proposal-tutorial',
+      component: ProposalTutorial,
+      exact: true,
+    },
+    template: {
+      title: 'Proposal Tutorial',
     },
     onlyLoggedIn: false,
   },
