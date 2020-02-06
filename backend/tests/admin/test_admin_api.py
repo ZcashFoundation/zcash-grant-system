@@ -1,13 +1,14 @@
 import json
-from grant.utils.enums import ProposalStatus
+from grant.utils.enums import ProposalStatus, CCRStatus
 import grant.utils.admin as admin
 from grant.utils import totp_2fa
 from grant.user.models import admin_user_schema
 from grant.proposal.models import proposal_schema, db
+from grant.ccr.models import CCR
 from mock import patch
 
-from ..config import BaseProposalCreatorConfig
-from ..test_data import mock_blockchain_api_requests
+from ..config import BaseProposalCreatorConfig, BaseCCRCreatorConfig
+from ..test_data import mock_blockchain_api_requests, test_ccr
 
 json_checklogin = {
     "isLoggedIn": False,
@@ -338,8 +339,6 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assert404(resp)
         self.assertEqual(resp.json["message"], 'Only live or approved proposals can be modified by this endpoint')
 
-
-
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_reject_proposal(self, mock_get):
         self.login_admin()
@@ -386,3 +385,139 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             })
         )
         self.assert200(resp)
+
+    def test_get_ccrs(self):
+        create_ccr(self)
+
+        # non-admins should fail
+        resp = self.app.get(
+            "/api/v1/admin/ccrs"
+        )
+        self.assert401(resp)
+
+        # admins should be able to retrieve ccrs
+        self.login_admin()
+        resp = self.app.get(
+            "/api/v1/admin/ccrs"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["total"], 1)
+
+    def test_delete_ccr(self):
+        ccr_json = create_ccr(self)
+        ccr_id = ccr_json["ccrId"]
+        fake_id = '11111111111111'
+        self.login_admin()
+
+        # bad CCR id should 404
+        resp = self.app.delete(
+            f"/api/v1/admin/ccrs/{fake_id}"
+        )
+        self.assert404(resp)
+
+        # good CCR id should 200
+        resp = self.app.delete(
+            f"/api/v1/admin/ccrs/{ccr_id}"
+        )
+        self.assert200(resp)
+
+        # ccr should be deleted
+        resp = self.app.get(
+            "/api/v1/admin/ccrs"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["total"], 0)
+
+    def test_get_ccr(self):
+        ccr_json = create_ccr(self)
+        ccr_id = ccr_json["ccrId"]
+        fake_id = '11111111111111'
+        self.login_admin()
+
+        # bad ccr id should 404
+        resp = self.app.get(
+            f"/api/v1/admin/ccrs/{fake_id}"
+        )
+        self.assert404(resp)
+
+        # good ccr id should 200
+        resp = self.app.get(
+            f"/api/v1/admin/ccrs/{ccr_id}"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json, ccr_json)
+
+    def test_approve_ccr(self):
+        ccr1_json = create_ccr(self)
+        ccr1_id = ccr1_json["ccrId"]
+        ccr2_json = create_ccr(self)
+        ccr2_id = ccr2_json["ccrId"]
+        fake_id = '11111111111111'
+        accepted = {"isAccepted": True}
+        rejected = {
+            "isAccepted": False,
+            "rejectReason": "test"
+        }
+
+        submit_ccr(self, ccr1_id)
+        submit_ccr(self, ccr2_id)
+        self.login_admin()
+
+        # bad ccr id should 404
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{fake_id}/accept",
+            data=json.dumps(accepted),
+            content_type='application/json'
+        )
+        self.assert404(resp)
+
+        # good ccr id that's accepted should be live
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr1_id}/accept",
+            data=json.dumps(accepted),
+            content_type='application/json'
+        )
+        self.assertStatus(resp, 201)
+        ccr = CCR.query.get(ccr1_id)
+        self.assertEqual(ccr.status, CCRStatus.LIVE)
+
+        # good ccr id that's rejected should be rejected
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr2_id}/accept",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+        ccr = CCR.query.get(ccr2_id)
+        self.assertEqual(ccr.status, CCRStatus.REJECTED)
+        self.assertEqual(ccr.reject_reason, rejected["rejectReason"])
+
+
+def create_ccr(self):
+    # create CCR draft
+    self.login_default_user()
+    resp = self.app.post(
+        "/api/v1/ccrs/drafts",
+    )
+    ccr_id = resp.json['ccrId']
+    self.assertStatus(resp, 201)
+
+    # save CCR
+    new_ccr = test_ccr.copy()
+    resp = self.app.put(
+        f"/api/v1/ccrs/{ccr_id}",
+        data=json.dumps(new_ccr),
+        content_type='application/json'
+    )
+    self.assertStatus(resp, 200)
+    return resp.json
+
+
+def submit_ccr(self, ccr_id):
+    self.login_default_user()
+    resp = self.app.put(
+        f"/api/v1/ccrs/{ccr_id}/submit_for_approval"
+    )
+    self.assert200(resp)
+    return resp.json
+
