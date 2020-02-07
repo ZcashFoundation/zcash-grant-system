@@ -261,6 +261,20 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     return proposal_schema.dump(g.current_proposal), 200
 
 
+@blueprint.route("/<proposal_id>/resolve", methods=["PUT"])
+@requires_team_member_auth
+def resolve_changes_discussion(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+    if not proposal:
+        return {"message": "No proposal found"}, 404
+
+    proposal.resolve_changes_discussion()
+
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
+
+
 @blueprint.route("/<proposal_id>/tips", methods=["PUT"])
 @requires_team_member_auth
 @body({

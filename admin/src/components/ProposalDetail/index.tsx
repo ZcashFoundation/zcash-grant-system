@@ -244,7 +244,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderReviewProposal = () =>
-      p.status === PROPOSAL_STATUS.DISCUSSION && (
+      p.status === PROPOSAL_STATUS.DISCUSSION &&
+      !p.changesRequestedDiscussion && (
         <>
           <Row gutter={16}>
             <Col span={isVersionTwo ? 16 : 24}>
@@ -260,7 +261,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                       loading={store.proposalDetailAcceptingProposal}
                       icon="check"
                       type="primary"
-                      onClick={() => this.handleAcceptProposal(true)}
+                      onClick={() => this.handleAcceptProposal(true, true)}
                     >
                       Approve With Funding
                     </Button>
@@ -269,9 +270,25 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                       loading={store.proposalDetailAcceptingProposal}
                       icon="check"
                       type="default"
-                      onClick={() => this.handleAcceptProposal(false)}
+                      onClick={() => this.handleAcceptProposal(true, false)}
                     >
                       Approve Without Funding
+                    </Button>
+                    <Button
+                      className="ProposalDetail-review"
+                      loading={store.proposalDetailMarkingChangesAsResolved}
+                      icon="close"
+                      type="danger"
+                      onClick={() => {
+                        FeedbackModal.open({
+                          title: 'Request changes to this proposal?',
+                          label: 'Please provide a reason:',
+                          okText: 'Request changes',
+                          onOk: this.handleRejectProposal,
+                        });
+                      }}
+                    >
+                      Request Changes
                     </Button>
                   </div>
                 }
@@ -297,6 +314,39 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               <b>Reason:</b>
               <br />
               <i>{p.rejectReason}</i>
+            </div>
+          }
+        />
+      );
+
+    const renderChangesRequestedDiscussion = () =>
+      p.status === PROPOSAL_STATUS.DISCUSSION &&
+      p.changesRequestedDiscussion && (
+        <Alert
+          showIcon
+          type="error"
+          message="Changes requested"
+          description={
+            <div>
+              <p>
+                This proposal has changes requested. The team will be able to update their
+                proposal and mark the changes as resolved should they desire to do so.
+              </p>
+              <b>Reason:</b>
+              <br />
+              <i>{p.changesRequestedDiscussionReason}</i>
+              <br />
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  className="ProposalDetail-review"
+                  loading={false}
+                  icon="check"
+                  type="danger"
+                  onClick={this.handleMarkChangesAsResolved}
+                >
+                  Mark Request as Resolved
+                </Button>
+              </div>
             </div>
           }
         />
@@ -443,6 +493,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderReviewDiscussion()}
             {renderReviewProposal()}
             {renderRejected()}
+            {renderChangesRequestedDiscussion()}
             {renderNominateArbiter()}
             {renderNominatedArbiter()}
             {renderMilestoneAccepted()}
@@ -644,9 +695,25 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     message.info('Proposal changes requested');
   };
 
-  private handleAcceptProposal = async (withFunding: boolean) => {
-    await store.acceptProposal(withFunding);
+  private handleAcceptProposal = async (
+    isAccepted: boolean,
+    withFunding: boolean,
+    changesRequestedReason?: string,
+  ) => {
+    await store.acceptProposal(isAccepted, withFunding, changesRequestedReason);
     message.info(`Proposal accepted ${withFunding ? 'with' : 'without'} funding`);
+  };
+
+  private handleRejectProposal = async (changesRequestedReason: string) => {
+    await store.acceptProposal(false, false, changesRequestedReason);
+    message.info(`Proposal changes requested`);
+  };
+
+  private handleMarkChangesAsResolved = async () => {
+    const success = await store.markProposalChangesAsResolved();
+    if (success) {
+      message.info(`Requested changes marked as resolved`);
+    }
   };
 
   private handlePaidMilestone = async () => {

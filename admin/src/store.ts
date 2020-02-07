@@ -130,7 +130,11 @@ async function deleteProposal(id: number) {
   return data;
 }
 
-async function approveDiscussion(id: number, isOpenForDiscussion: boolean, rejectReason?: string) {
+async function approveDiscussion(
+  id: number,
+  isOpenForDiscussion: boolean,
+  rejectReason?: string,
+) {
   const { data } = await api.put(`/admin/proposals/${id}/discussion`, {
     isOpenForDiscussion,
     rejectReason,
@@ -138,10 +142,22 @@ async function approveDiscussion(id: number, isOpenForDiscussion: boolean, rejec
   return data;
 }
 
-async function acceptProposal(id: number, withFunding: boolean) {
+async function acceptProposal(
+  id: number,
+  isAccepted: boolean,
+  withFunding: boolean,
+  changesRequestedReason?: string,
+) {
   const { data } = await api.put(`/admin/proposals/${id}/accept`, {
+    isAccepted,
     withFunding,
+    changesRequestedReason,
   });
+  return data;
+}
+
+async function markProposalChangesAsResolved(id: number) {
+  const { data } = await api.put(`/admin/proposals/${id}/resolve`);
   return data;
 }
 
@@ -314,6 +330,7 @@ const app = store({
   proposalDetail: null as null | Proposal,
   proposalDetailFetching: false,
   proposalDetailApprovingDiscussion: false,
+  proposalDetailMarkingChangesAsResolved: false,
   proposalDetailAcceptingProposal: false,
   proposalDetailMarkingMilestonePaid: false,
   proposalDetailCanceling: false,
@@ -639,7 +656,9 @@ const app = store({
     }
   },
   async acceptProposal(
+    isAccepted: boolean,
     withFunding: boolean,
+    changesRequestedReason?: string,
   ) {
     if (!app.proposalDetail) {
       const m = 'store.acceptProposal(): Expected proposalDetail to be populated!';
@@ -652,7 +671,9 @@ const app = store({
       const { proposalId } = app.proposalDetail;
       const res = await acceptProposal(
         proposalId,
+        isAccepted,
         withFunding,
+        changesRequestedReason,
       );
       app.updateProposalInStore(res);
     } catch (e) {
@@ -661,10 +682,7 @@ const app = store({
     app.proposalDetailAcceptingProposal = false;
   },
 
-  async approveDiscussion(
-    isOpenForDiscussion: boolean,
-    rejectReason?: string,
-  ) {
+  async approveDiscussion(isOpenForDiscussion: boolean, rejectReason?: string) {
     if (!app.proposalDetail) {
       const m = 'store.approveDiscussion(): Expected proposalDetail to be populated!';
       app.generalError.push(m);
@@ -674,16 +692,33 @@ const app = store({
     app.proposalDetailApprovingDiscussion = true;
     try {
       const { proposalId } = app.proposalDetail;
-      const res = await approveDiscussion(
-        proposalId,
-        isOpenForDiscussion,
-        rejectReason,
-      );
+      const res = await approveDiscussion(proposalId, isOpenForDiscussion, rejectReason);
       app.updateProposalInStore(res);
     } catch (e) {
       handleApiError(e);
     }
     app.proposalDetailApprovingDiscussion = false;
+  },
+
+  async markProposalChangesAsResolved() {
+    if (!app.proposalDetail) {
+      const m = 'store.approveDiscussion(): Expected proposalDetail to be populated!';
+      app.generalError.push(m);
+      return;
+    }
+    let success = false
+    app.proposalDetailMarkingChangesAsResolved = true
+    try {
+      const { proposalId } = app.proposalDetail;
+      const res = await markProposalChangesAsResolved(proposalId);
+      app.updateProposalInStore(res);
+      success = true
+    } catch (e) {
+      handleApiError(e);
+      success = false
+    }
+    app.proposalDetailMarkingChangesAsResolved = false
+    return success
   },
 
   async cancelProposal(id: number) {

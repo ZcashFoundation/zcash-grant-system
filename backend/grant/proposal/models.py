@@ -283,6 +283,8 @@ class Proposal(db.Model):
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
     accepted_with_funding = db.Column(db.Boolean(), nullable=True)
+    changes_requested_discussion = db.Column(db.Boolean(), nullable=True)
+    changes_requested_discussion_reason = db.Column(db.String(255), nullable=True)
 
     # Payment info
     target = db.Column(db.String(255), nullable=False)
@@ -578,6 +580,7 @@ class Proposal(db.Model):
         db.session.add(self)
         db.session.flush()
 
+    # approve a proposal moving from PENDING to DISCUSSION status
     # state: status PENDING -> (DISCUSSION || REJECTED)
     def approve_discussion(self, is_open_for_discussion, reject_reason=None):
         if not self.status == ProposalStatus.PENDING:
@@ -597,6 +600,27 @@ class Proposal(db.Model):
                     'proposal_url': make_url(f'/proposals/{self.id}'),
                     'admin_note': reject_reason
                 })
+
+    # request changes for a proposal with a DISCUSSION status
+    def request_changes_discussion(self, reason):
+        if self.status != ProposalStatus.DISCUSSION:
+            raise ValidationException("Proposal does not have a DISCUSSION status")
+        if not reason:
+            raise ValidationException("Please provide a reason for requesting changes")
+
+        self.changes_requested_discussion = True
+        self.changes_requested_discussion_reason = reason
+
+    # mark a request changes as resolve for a proposal with a DISCUSSION status
+    def resolve_changes_discussion(self):
+        if self.status != ProposalStatus.DISCUSSION:
+            raise ValidationException("Proposal does not have a DISCUSSION status")
+
+        if not self.changes_requested_discussion:
+            raise ValidationException("Proposal does not have changes requested")
+
+        self.changes_requested_discussion = False
+        self.changes_requested_discussion_reason = None
 
     # state: status DISCUSSION -> (LIVE)
     def accept_proposal(self, with_funding):
@@ -850,7 +874,9 @@ class ProposalSchema(ma.Schema):
             "authed_liked",
             "likes_count",
             "tip_jar_address",
-            "tip_jar_view_key"
+            "tip_jar_view_key",
+            "changes_requested_discussion",
+            "changes_requested_discussion_reason"
         )
 
     date_created = ma.Method("get_date_created")

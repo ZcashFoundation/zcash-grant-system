@@ -271,6 +271,15 @@ export async function putProposalPublish(
   });
 }
 
+export async function putMarkProposalRequestedChangesAsResolved(
+  proposalId: number,
+): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposalId}/resolve`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
 export async function deleteProposalRFPLink(proposalId: number): Promise<any> {
   return axios.delete(`/api/v1/proposals/${proposalId}/rfp`);
 }

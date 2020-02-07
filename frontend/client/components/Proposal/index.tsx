@@ -9,7 +9,7 @@ import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
 import { STATUS } from 'types';
-import { Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
+import { Tabs, Icon, Dropdown, Menu, Button, Alert, message } from 'antd';
 import { AlertProps } from 'antd/lib/alert';
 import ExceptionPage from 'components/ExceptionPage';
 import HeaderDetails from 'components/HeaderDetails';
@@ -29,6 +29,8 @@ import SocialShare from 'components/SocialShare';
 import Follow from 'components/Follow';
 import Like from 'components/Like';
 import { TipJarProposalSettingsModal } from 'components/TipJar';
+import { TUpdateProposal } from 'modules/proposals/actions';
+import { putMarkProposalRequestedChangesAsResolved } from 'api/api';
 import './index.less';
 
 interface OwnProps {
@@ -45,6 +47,7 @@ interface StateProps {
 
 interface DispatchProps {
   fetchProposal: proposalActions.TFetchProposal;
+  updateProposal: TUpdateProposal;
 }
 
 type Props = StateProps & DispatchProps & OwnProps;
@@ -124,6 +127,12 @@ export class ProposalDetail extends React.Component<Props, State> {
 
     const adminMenu = (
       <Menu>
+        <Menu.Item
+          disabled={isLive || !isOpenForDiscussion}
+          onClick={() => console.log('TODO: Make proposal editable.')}
+        >
+          Edit Proposal
+        </Menu.Item>
         <Menu.Item disabled={!isLive} onClick={this.openTipJarModal}>
           Manage Tipping
         </Menu.Item>
@@ -136,6 +145,34 @@ export class ProposalDetail extends React.Component<Props, State> {
       </Menu>
     );
 
+    const createDiscussionBannerConfig = () => {
+      if (proposal.changesRequestedDiscussionReason) {
+        return {
+          [STATUS.DISCUSSION]: {
+            blurb: (
+              <div>
+                <p>
+                  Your proposal is still open for public review, but it has changes
+                  requested by an administrator:
+                </p>
+                <p style={{ fontStyle: 'italic' }}>
+                  "{proposal.changesRequestedDiscussionReason}"
+                </p>
+                <p>
+                  Edit your proposal through the <strong>Actions</strong> dropdown below.
+                  When you're ready,{' '}
+                  <a onClick={this.handleResolveChangesRequested}>click here</a> to mark
+                  these changes as resolved.
+                </p>
+              </div>
+            ),
+            type: 'error',
+          },
+        };
+      }
+      return {};
+    };
+
     // BANNER
     const statusBanner = {
       [STATUS.PENDING]: {
@@ -146,11 +183,6 @@ export class ProposalDetail extends React.Component<Props, State> {
           </>
         ),
         type: 'warning',
-      },
-
-      [STATUS.DISCUSSION]: {
-        blurb: <>Your proposal has been made open for public review.</>,
-        type: 'info',
       },
 
       // TODO - is the message below necessary? users don't approve proposals anymore
@@ -184,6 +216,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         ),
         type: 'warning',
       },
+      ...createDiscussionBannerConfig(),
     } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
     let banner = statusBanner[proposal.status];
     if (isPreview) {
@@ -216,30 +249,31 @@ export class ProposalDetail extends React.Component<Props, State> {
           <div className="Proposal-top-main">
             <div className="Proposal-top-main-title">
               <h1>{proposal ? proposal.title : <span>&nbsp;</span>}</h1>
-              {isLive && (
-                <div className="Proposal-top-main-title-menu">
-                  {isTrustee && (
-                    <Dropdown
-                      overlay={adminMenu}
-                      trigger={['click']}
-                      placement="bottomRight"
-                    >
-                      <Button>
-                        <span>Actions</span>
-                        <Icon type="down" style={{ marginRight: '-0.25rem' }} />
-                      </Button>
-                    </Dropdown>
-                  )}
-                  <Like
-                    proposal={proposal}
-                    className="Proposal-top-main-title-menu-item"
-                  />
-                  <Follow
-                    proposal={proposal}
-                    className="Proposal-top-main-title-menu-item"
-                  />
-                </div>
-              )}
+              {isLive ||
+                (isOpenForDiscussion && (
+                  <div className="Proposal-top-main-title-menu">
+                    {isTrustee && (
+                      <Dropdown
+                        overlay={adminMenu}
+                        trigger={['click']}
+                        placement="bottomRight"
+                      >
+                        <Button>
+                          <span>Actions</span>
+                          <Icon type="down" style={{ marginRight: '-0.25rem' }} />
+                        </Button>
+                      </Dropdown>
+                    )}
+                    <Like
+                      proposal={proposal}
+                      className="Proposal-top-main-title-menu-item"
+                    />
+                    <Follow
+                      proposal={proposal}
+                      className="Proposal-top-main-title-menu-item"
+                    />
+                  </div>
+                ))}
             </div>
 
             <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
@@ -346,6 +380,16 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   private openCancelModal = () => this.setState({ isCancelOpen: true });
   private closeCancelModal = () => this.setState({ isCancelOpen: false });
+
+  private handleResolveChangesRequested = async () => {
+    const { detail } = this.props;
+    if (!detail) {
+      return;
+    }
+    const { data } = await putMarkProposalRequestedChangesAsResolved(detail.proposalId);
+    this.props.updateProposal(data);
+    message.success('Changes marked as resolved');
+  };
 }
 
 function mapStateToProps(state: AppState, _: OwnProps) {
