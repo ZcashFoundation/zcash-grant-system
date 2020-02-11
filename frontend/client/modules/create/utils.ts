@@ -250,6 +250,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     },
     changesRequestedDiscussion: null,
     changesRequestedDiscussionReason: null,
+    liveDraftId: null,
     tipJarAddress: null,
     tipJarViewKey: null,
     acceptedWithFunding: false,
