@@ -4,6 +4,7 @@ import types, { CreateDraftOptions } from './types';
 import {
   putProposal,
   putProposalSubmitForApproval,
+  putProposalSubmitLiveDraft,
   deleteProposalRFPLink,
 } from 'api/api';
 
@@ -66,6 +67,26 @@ export function submitProposal(form: ProposalDraft) {
     } catch (err) {
       dispatch({
         type: types.SUBMIT_PROPOSAL_REJECTED,
+        payload: err.message || err.toString(),
+        error: true,
+      });
+    }
+  };
+}
+
+export function submitLiveDraft(form: ProposalDraft) {
+  return async (dispatch: Dispatch<any>) => {
+    dispatch({ type: types.SUBMIT_LIVE_DRAFT_PENDING });
+    try {
+      await putProposal(form);
+      const res = await putProposalSubmitLiveDraft(form);
+      dispatch({
+        type: types.SUBMIT_LIVE_DRAFT_FULFILLED,
+        payload: res.data,
+      });
+    } catch (err) {
+      dispatch({
+        type: types.SUBMIT_LIVE_DRAFT_REJECTED,
         payload: err.message || err.toString(),
         error: true,
       });
