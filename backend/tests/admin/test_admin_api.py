@@ -248,7 +248,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.login_admin()
 
         # proposal needs to be PENDING
-        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve
         resp = self.app.put(
@@ -270,7 +270,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.login_admin()
 
         # proposal needs to be PENDING
-        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve
         resp = self.app.put(
@@ -291,8 +291,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_change_proposal_to_accepted_with_funding(self, mock_get):
         self.login_admin()
 
-        # proposal needs to be PENDING
-        self.proposal.status = ProposalStatus.PENDING
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # accept without funding
         resp = self.app.put(
@@ -331,7 +331,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.proposal.version = '2'
 
         # should failed if proposal is not LIVE or APPROVED
-        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.status = ProposalStatus.DISCUSSION
         self.proposal.accepted_with_funding = False
         resp = self.app.put(
             f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
@@ -340,7 +340,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assertEqual(resp.json["message"], 'Only live or approved proposals can be modified by this endpoint')
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_reject_proposal(self, mock_get):
+    def test_reject_proposal_discussion(self, mock_get):
         self.login_admin()
 
         # proposal needs to be PENDING
@@ -348,8 +348,8 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
         # reject
         resp = self.app.put(
-            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
-            data=json.dumps({"isAccepted": False, "withFunding": False, "rejectReason": "Funnzies."})
+            "/api/v1/admin/proposals/{}/discussion".format(self.proposal.id),
+            data=json.dumps({"isOpenForDiscussion": False, "rejectReason": "Funnzies."})
         )
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
