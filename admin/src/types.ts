@@ -73,6 +73,7 @@ export interface ProposalArbiter {
 // NOTE: sync with backend/grant/utils/enums.py ProposalStatus
 export enum PROPOSAL_STATUS {
   DRAFT = 'DRAFT',
+  LIVE_DRAFT = 'LIVE_DRAFT',
   PENDING = 'PENDING',
   DISCUSSION = 'DISCUSSION',
   APPROVED = 'APPROVED',
