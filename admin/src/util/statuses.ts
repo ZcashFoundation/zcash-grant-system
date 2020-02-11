@@ -97,6 +97,12 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     hint: 'Proposal has been approved and is awaiting being published by user.',
   },
   {
+    id: PROPOSAL_STATUS.DISCUSSION,
+    tagDisplay: 'Open for Public Review',
+    tagColor: '#afd500',
+    hint: 'Proposal has been opened for public discussion.',
+  },
+  {
     id: PROPOSAL_STATUS.DELETED,
     tagDisplay: 'Deleted',
     tagColor: '#bebebe',
