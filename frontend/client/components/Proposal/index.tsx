@@ -24,13 +24,16 @@ import ContributorsTab from './Contributors';
 import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
 import classnames from 'classnames';
-import { withRouter } from 'react-router';
+import { withRouter, RouteComponentProps } from 'react-router';
 import SocialShare from 'components/SocialShare';
 import Follow from 'components/Follow';
 import Like from 'components/Like';
 import { TipJarProposalSettingsModal } from 'components/TipJar';
 import { TUpdateProposal } from 'modules/proposals/actions';
-import { putMarkProposalRequestedChangesAsResolved } from 'api/api';
+import {
+  putMarkProposalRequestedChangesAsResolved,
+  postProposalMakeLiveDraft,
+} from 'api/api';
 import './index.less';
 
 interface OwnProps {
@@ -50,7 +53,7 @@ interface DispatchProps {
   updateProposal: TUpdateProposal;
 }
 
-type Props = StateProps & DispatchProps & OwnProps;
+type Props = StateProps & DispatchProps & OwnProps & RouteComponentProps;
 
 interface State {
   isBodyExpanded: boolean;
@@ -129,7 +132,7 @@ export class ProposalDetail extends React.Component<Props, State> {
       <Menu>
         <Menu.Item
           disabled={isLive || !isOpenForDiscussion}
-          onClick={() => console.log('TODO: Make proposal editable.')}
+          onClick={this.handleEditProposal}
         >
           Edit Proposal
         </Menu.Item>
@@ -389,6 +392,23 @@ export class ProposalDetail extends React.Component<Props, State> {
     const { data } = await putMarkProposalRequestedChangesAsResolved(detail.proposalId);
     this.props.updateProposal(data);
     message.success('Changes marked as resolved');
+  };
+
+  private handleEditProposal = async () => {
+    const { detail: proposal } = this.props;
+    if (!proposal) {
+      return;
+    }
+
+    let liveDraftId = proposal.liveDraftId;
+
+    if (!liveDraftId) {
+      const { data: liveDraft } = await postProposalMakeLiveDraft(proposal.proposalId);
+      this.props.updateProposal(liveDraft);
+      liveDraftId = String(liveDraft.proposalId);
+    }
+
+    this.props.history.push({ pathname: `/proposals/${liveDraftId}/edit` });
   };
 }
 
