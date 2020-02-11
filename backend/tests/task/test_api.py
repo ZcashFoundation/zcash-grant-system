@@ -199,8 +199,8 @@ class TestTaskAPI(BaseProposalCreatorConfig):
 
         self.login_admin()
 
-        # proposal needs to be PENDING
-        self.proposal.status = ProposalStatus.PENDING
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve proposal with funding
         resp = self.app.put(
