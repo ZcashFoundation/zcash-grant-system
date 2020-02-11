@@ -393,6 +393,7 @@ def accept_proposal(id, is_accepted, with_funding, changes_requested_reason):
             Milestone.set_v2_date_estimates(proposal)
     else:
         proposal.request_changes_discussion(changes_requested_reason)
+        proposal.live_draft = Proposal.make_live_draft(proposal)
 
     db.session.add(proposal)
     db.session.commit()

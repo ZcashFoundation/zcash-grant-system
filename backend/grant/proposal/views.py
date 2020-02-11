@@ -207,6 +207,22 @@ def make_proposal_draft(rfp_id):
     return proposal_schema.dump(proposal), 201
 
 
+@blueprint.route("/<proposal_id>/draft", methods=["POST"])
+@requires_team_member_auth
+def make_proposal_live_draft(proposal_id):
+    proposal = g.current_proposal
+
+    if proposal.status != ProposalStatus.DISCUSSION:
+        return {"message": "Proposal does not have a DISCUSSION status"}, 404
+
+    if not proposal.live_draft:
+        proposal.live_draft = Proposal.make_live_draft(proposal)
+        db.session.add(proposal)
+        db.session.commit()
+
+    return proposal_schema.dump(proposal.live_draft), 201
+
+
 @blueprint.route("/drafts", methods=["GET"])
 @requires_auth
 def get_proposal_drafts():
@@ -215,6 +231,7 @@ def get_proposal_drafts():
             .filter(or_(
             Proposal.status == ProposalStatus.DRAFT,
             Proposal.status == ProposalStatus.REJECTED,
+            Proposal.status == ProposalStatus.LIVE_DRAFT
         ))
             .join(proposal_team)
             .filter(proposal_team.c.user_id == g.current_user.id)
@@ -241,6 +258,7 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields
     try:
         if g.current_proposal.status not in [ProposalStatus.DRAFT,
+                                             ProposalStatus.LIVE_DRAFT,
                                              ProposalStatus.REJECTED]:
             raise ValidationException(
                f"Proposal with status: {g.current_proposal.status} are not authorized for updates"
@@ -351,6 +369,30 @@ def publish_proposal(proposal_id):
 
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
+
+
+@blueprint.route("/<proposal_id>/publish/live", methods=["PUT"])
+@requires_team_member_auth
+def publish_live_draft(proposal_id):
+    parent_proposal = Proposal.query.get(g.current_proposal.live_draft_parent_id)
+
+    if not parent_proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    # TODO: double check this isn't needed:
+    #
+    # if g.current_user not in proposal.team:
+    #     return {"message": "You are not a team member of this proposal"}
+
+    try:
+        parent_proposal.live_draft.validate_publishable()
+    except ValidationException as e:
+        return {"message": "{}".format(str(e))}, 400
+
+    parent_proposal.consume_live_draft()
+    db.session.commit()
+
+    return proposal_schema.dump(parent_proposal), 200
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["GET"])
