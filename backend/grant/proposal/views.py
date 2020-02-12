@@ -374,6 +374,12 @@ def publish_proposal(proposal_id):
 @blueprint.route("/<proposal_id>/publish/live", methods=["PUT"])
 @requires_team_member_auth
 def publish_live_draft(proposal_id):
+    if g.current_proposal.status != ProposalStatus.LIVE_DRAFT:
+        return {"message": "Proposal is not a live draft"}, 403
+
+    if not g.current_proposal.live_draft_parent_id:
+        return {"message": "No parent proposal found"}, 404
+
     parent_proposal = Proposal.query.get(g.current_proposal.live_draft_parent_id)
 
     if not parent_proposal:
