@@ -3,7 +3,7 @@ from grant.utils.enums import ProposalStatus, CCRStatus
 import grant.utils.admin as admin
 from grant.utils import totp_2fa
 from grant.user.models import admin_user_schema
-from grant.proposal.models import proposal_schema, db
+from grant.proposal.models import proposal_schema, db, Proposal
 from grant.ccr.models import CCR
 from mock import patch
 
@@ -244,10 +244,111 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assertEqual(len(resp.json['items']), 2)
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_accept_proposal_with_funding(self, mock_get):
+    def test_open_proposal_for_discussion_accept(self, mock_get):
+        # an admin should be able to open a proposal for discussion
         self.login_admin()
 
         # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.DISCUSSION)
+
+        proposal = Proposal.query.get(self.proposal.id)
+        self.assertEqual(proposal.status, ProposalStatus.DISCUSSION)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_open_proposal_for_discussion_reject(self, mock_get):
+        # an admin should be able to reject opening a proposal for discussion
+        reject_reason = "this is a test"
+
+        self.login_admin()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # disapprove open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": False, "rejectReason": reject_reason})
+        )
+
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
+        self.assertEqual(resp.json["rejectReason"], reject_reason)
+
+        proposal = Proposal.query.get(self.proposal.id)
+        self.assertEqual(proposal.status, ProposalStatus.REJECTED)
+        self.assertEqual(proposal.reject_reason, reject_reason)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_open_proposal_for_discussion_bad_proposal_id_fail(self, mock_get):
+        # request should fail if a bad proposal id is provided
+        bad_proposal_id = "11111111111111111111"
+        self.login_admin()
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{bad_proposal_id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+        self.assert404(resp)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_open_proposal_for_discussion_not_admin_fail(self, mock_get):
+        # request should fail if user is not an admin
+        self.login_default_user()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+        self.assert401(resp)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_open_proposal_for_discussion_not_pending_fail(self, mock_get):
+        # request should fail if proposal is not in PENDING state
+        self.login_admin()
+
+        self.proposal.status = ProposalStatus.DISCUSSION
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+        self.assert400(resp)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_open_proposal_for_discussion_no_reject_reason_fail(self, mock_get):
+        # denying opening a proposal for discussion should fail if no reason is provided
+        self.login_admin()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # disapprove open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": False})
+        )
+        self.assert400(resp)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def test_accept_proposal_with_funding(self, mock_get):
+        self.login_admin()
+
+        # proposal needs to be DISCUSSION
         self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve
@@ -269,7 +370,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
     def test_accept_proposal_without_funding(self, mock_get):
         self.login_admin()
 
-        # proposal needs to be PENDING
+        # proposal needs to be DISCUSSION
         self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve
@@ -286,6 +387,122 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # milestones should not have estimated dates
         for milestone in resp.json["milestones"]:
             self.assertIsNone(milestone["dateEstimated"])
+
+    def test_accept_proposal_changes_requested(self):
+        # an admin should be able to request changes on a proposal
+        reason = "this is a test"
+        self.login_admin()
+
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
+
+        # approve
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": False, "changesRequestedReason": reason})
+        )
+
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.DISCUSSION)
+        self.assertEqual(resp.json["changesRequestedDiscussion"], True)
+        self.assertEqual(resp.json["changesRequestedDiscussionReason"], reason)
+
+        proposal = Proposal.query.get(self.proposal.id)
+        self.assertEqual(proposal.status, ProposalStatus.DISCUSSION)
+        self.assertEqual(proposal.changes_requested_discussion, True)
+        self.assertEqual(proposal.changes_requested_discussion_reason, reason)
+
+    def test_accept_proposal_changes_requested_no_reason_provided_fail(self):
+        # requesting changes to a proposal without providing a reason should fail
+        self.login_admin()
+
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
+
+        # approve
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": False})
+        )
+
+        self.assert400(resp)
+
+    def test_accept_proposal_changes_requested_not_discussion_fail(self):
+        # requesting changes on a proposal not in DISCUSSION should fail
+        self.login_admin()
+        self.proposal.status = ProposalStatus.PENDING
+
+        # disapprove
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": False, "changesRequestedReason": "test"})
+        )
+
+        self.assert400(resp)
+
+    def test_accept_proposal_not_discussion_fail(self):
+        # accepting a proposal not in DISCUSSION should fail
+        self.login_admin()
+        self.proposal.status = ProposalStatus.PENDING
+
+        # approve
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": True, "withFunding": True})
+        )
+
+        self.assert400(resp)
+
+    def test_resolve_changes_discussion(self):
+        # an admin should be able to resolve discussion changes
+        self.login_admin()
+        self.proposal.status = ProposalStatus.DISCUSSION
+        self.proposal.changes_requested_discussion = True
+        self.proposal.changes_requested_discussion_reason = 'test'
+
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/resolve"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json['changesRequestedDiscussion'], False)
+        self.assertIsNone(resp.json['changesRequestedDiscussionReason'])
+
+    def test_resolve_changes_discussion_wrong_status_fail(self):
+        # resolve should fail if proposal is not in a DISCUSSION state
+        self.login_admin()
+        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.changes_requested_discussion = True
+        self.proposal.changes_requested_discussion_reason = 'test'
+
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/resolve"
+        )
+        self.assert400(resp)
+
+    def test_resolve_changes_discussion_bad_proposal_fail(self):
+        # resolve should fail if bad proposal id is provided
+        self.login_admin()
+        bad_id = '111111111111'
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{bad_id}/resolve"
+        )
+        self.assert404(resp)
+
+    def test_resolve_changes_discussion_no_changes_requested_fail(self):
+        # resolve should fail if changes are not requested on the proposal
+        self.login_admin()
+        self.proposal.status = ProposalStatus.DISCUSSION
+        self.proposal.changes_requested_discussion = False
+        self.proposal.changes_requested_discussion_reason = None
+
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/resolve"
+        )
+        self.assert400(resp)
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
     def test_change_proposal_to_accepted_with_funding(self, mock_get):

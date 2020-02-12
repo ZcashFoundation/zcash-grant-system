@@ -358,14 +358,14 @@ def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
 
-@blueprint.route('/proposals/<id>/discussion', methods=['PUT'])
+@blueprint.route('/proposals/<proposal_id>/discussion', methods=['PUT'])
 @body({
     "isOpenForDiscussion": fields.Bool(required=True),
     "rejectReason": fields.Str(required=False, missing=None)
 })
 @admin.admin_auth_required
-def open_proposal_for_discussion(id, is_open_for_discussion, reject_reason=None):
-    proposal = Proposal.query.get(id)
+def open_proposal_for_discussion(proposal_id, is_open_for_discussion, reject_reason=None):
+    proposal = Proposal.query.get(proposal_id)
     if not proposal:
         return {"message": "No Proposal found."}, 404
 
@@ -399,10 +399,10 @@ def accept_proposal(id, is_accepted, with_funding, changes_requested_reason):
     return proposal_schema.dump(proposal)
 
 
-@blueprint.route('/proposals/<id>/resolve', methods=['PUT'])
+@blueprint.route('/proposals/<proposal_id>/resolve', methods=['PUT'])
 @admin.admin_auth_required
-def resolve_changes_discussion(id):
-    proposal = Proposal.query.get(id)
+def resolve_changes_discussion(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
     if not proposal:
         return {"message": "No proposal found"}, 404
 
