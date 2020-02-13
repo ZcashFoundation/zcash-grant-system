@@ -38,8 +38,6 @@ export default class Profile extends React.Component<OwnProps> {
         ? 'Open for Public Review'
         : 'Open for Contributions';
 
-    // TODO - add open for discussion tag
-
     return (
       <div className="ProfileProposal">
         <div className="ProfileProposal-block">
