@@ -188,7 +188,6 @@ export class ProposalDetail extends React.Component<Props, State> {
         type: 'warning',
       },
 
-      // TODO - is the message below necessary? users don't approve proposals anymore
       [STATUS.APPROVED]: {
         blurb: (
           <>
