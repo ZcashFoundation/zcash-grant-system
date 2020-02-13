@@ -287,9 +287,10 @@ def resolve_changes_discussion(proposal_id):
         return {"message": "No proposal found"}, 404
 
     proposal.resolve_changes_discussion()
-
     db.session.add(proposal)
     db.session.commit()
+
+    proposal.send_admin_email('admin_changes_resolved')
     return proposal_schema.dump(proposal)
 
 
