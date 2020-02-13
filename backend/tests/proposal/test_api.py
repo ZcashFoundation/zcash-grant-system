@@ -247,7 +247,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
             content_type="application/json",
         )
         self.assert404(resp)
-        self.assertEquals(resp.json["message"], "Cannot like a proposal that's not live")
+        self.assertEquals(resp.json["message"], "Cannot like a proposal that's not live or in discussion")
 
         # proposal is live
         self.proposal.status = ProposalStatus.LIVE
