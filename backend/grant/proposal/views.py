@@ -52,7 +52,7 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
-        if proposal.status != ProposalStatus.LIVE:
+        if proposal.status not in [ProposalStatus.LIVE, ProposalStatus.DISCUSSION]:
             if proposal.status == ProposalStatus.DELETED:
                 return {"message": "Proposal was deleted"}, 404
             authed_user = get_authed_user()
@@ -724,8 +724,8 @@ def like_proposal(proposal_id, is_liked):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    if not proposal.status == ProposalStatus.LIVE:
-        return {"message": "Cannot like a proposal that's not live"}, 404
+    if proposal.status not in [ProposalStatus.LIVE, ProposalStatus.DISCUSSION]:
+        return {"message": "Cannot like a proposal that's not live or in discussion"}, 404
 
     proposal.like(user, is_liked)
     db.session.commit()

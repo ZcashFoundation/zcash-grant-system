@@ -139,7 +139,10 @@ export class ProposalDetail extends React.Component<Props, State> {
         <Menu.Item disabled={!isLive} onClick={this.openUpdateModal}>
           Post an Update
         </Menu.Item>
-        <Menu.Item disabled={!isLive} onClick={this.openCancelModal}>
+        <Menu.Item
+          disabled={!(isLive || isOpenForDiscussion)}
+          onClick={this.openCancelModal}
+        >
           Cancel proposal
         </Menu.Item>
       </Menu>
@@ -249,31 +252,30 @@ export class ProposalDetail extends React.Component<Props, State> {
           <div className="Proposal-top-main">
             <div className="Proposal-top-main-title">
               <h1>{proposal ? proposal.title : <span>&nbsp;</span>}</h1>
-              {isLive ||
-                (isOpenForDiscussion && (
-                  <div className="Proposal-top-main-title-menu">
-                    {isTrustee && (
-                      <Dropdown
-                        overlay={adminMenu}
-                        trigger={['click']}
-                        placement="bottomRight"
-                      >
-                        <Button>
-                          <span>Actions</span>
-                          <Icon type="down" style={{ marginRight: '-0.25rem' }} />
-                        </Button>
-                      </Dropdown>
-                    )}
-                    <Like
-                      proposal={proposal}
-                      className="Proposal-top-main-title-menu-item"
-                    />
-                    <Follow
-                      proposal={proposal}
-                      className="Proposal-top-main-title-menu-item"
-                    />
-                  </div>
-                ))}
+              {(isLive || isOpenForDiscussion) && (
+                <div className="Proposal-top-main-title-menu">
+                  {isTrustee && (
+                    <Dropdown
+                      overlay={adminMenu}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button>
+                        <span>Actions</span>
+                        <Icon type="down" style={{ marginRight: '-0.25rem' }} />
+                      </Button>
+                    </Dropdown>
+                  )}
+                  <Like
+                    proposal={proposal}
+                    className="Proposal-top-main-title-menu-item"
+                  />
+                  <Follow
+                    proposal={proposal}
+                    className="Proposal-top-main-title-menu-item"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="Proposal-top-main-block" style={{ flexGrow: 1 }}>
