@@ -4,8 +4,8 @@ import { storiesOf } from '@storybook/react';
 import { ProposalCard } from 'components/Proposals/ProposalCard';
 
 import 'styles/style.less';
-import 'components/Proposal/style.less';
-import 'components/Proposal/Governance/style.less';
+import 'components/Proposal/index.less';
+// import 'components/Proposal/Governance/style.less';
 import { generateProposal } from './props';
 
 const propsNoFunding = generateProposal({

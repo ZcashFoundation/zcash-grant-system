@@ -3,15 +3,20 @@ import { storiesOf } from '@storybook/react';
 import { Provider } from 'react-redux';
 
 import { configureStore } from 'store/configure';
-import { combineInitialState } from 'store/reducers';
+import { combineInitialState as __combineInitialState } from 'store/reducers';
 import Milestones from 'components/Proposal/Milestones';
 import { MILESTONE_STAGE } from 'types';
 const { IDLE, ACCEPTED, PAID, REJECTED } = MILESTONE_STAGE;
 
 import 'styles/style.less';
-import 'components/Proposal/style.less';
-import 'components/Proposal/Governance/style.less';
+import 'components/Proposal/index.less';
+// import 'components/Proposal/Governance/style.less';
 import { generateProposal } from './props';
+
+const combineInitialState = {
+  web3: {},
+  ...__combineInitialState,
+};
 
 const msWaiting = { stage: IDLE };
 const msPaid = { stage: PAID };

@@ -4,8 +4,8 @@ import { storiesOf } from '@storybook/react';
 import { ProposalCampaignBlock } from 'components/Proposal/CampaignBlock';
 
 import 'styles/style.less';
-import 'components/Proposal/style.less';
-import 'components/Proposal/Governance/style.less';
+import 'components/Proposal/index.less';
+// import 'components/Proposal/Governance/style.less';
 import { generateProposal } from './props';
 
 const user = {
