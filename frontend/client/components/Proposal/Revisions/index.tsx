@@ -106,7 +106,7 @@ export class ProposalRevision extends React.Component<Props> {
   };
 
   renderChangeIcon = (change: RevisionChange) => {
-    if (change.type === 'MILESTONE_ADD' || /^.*_SET_.*$/.test(change.type)) {
+    if (change.type === 'MILESTONE_ADD') {
       return <Icon type="plus" />;
     }
 
