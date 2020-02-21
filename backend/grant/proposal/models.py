@@ -1,4 +1,5 @@
 import datetime
+import json
 from typing import Optional
 from decimal import Decimal, ROUND_DOWN
 from functools import reduce
@@ -20,7 +21,8 @@ from grant.utils.enums import (
     Category,
     ContributionStatus,
     ProposalArbiterStatus,
-    MilestoneStage
+    MilestoneStage,
+    ProposalChange
 )
 from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url, make_admin_url, gen_random_id
@@ -229,6 +231,112 @@ class ProposalArbiter(db.Model):
         raise ValidationException('User is not arbiter')
 
 
+class ProposalRevision(db.Model):
+    __tablename__ = "proposal_revision"
+
+    id = db.Column(db.Integer(), primary_key=True)
+    date_created = db.Column(db.DateTime)
+
+    # user who submitted the changes
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    author = db.relationship("User", uselist=False, lazy=True)
+
+    # the proposal these changes are associated with
+    proposal_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
+    proposal = db.relationship("Proposal", foreign_keys=[proposal_id], back_populates="revisions")
+
+    # the archived proposal id associated with these changes
+    proposal_archive_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
+
+    # the archived proposal id associated with the revision before this current one
+    proposal_archive_parent_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=True)
+
+    # the detected changes as a JSON string
+    changes = db.Column(db.Text, nullable=False)
+
+    # the placement of this revision in the total revisions
+    revision_index = db.Column(db.Integer)
+
+    def __init__(self, author, proposal_id: int, proposal_archive_id: int, proposal_archive_parent_id: int, changes: str, revision_index: int):
+        self.id = gen_random_id(ProposalRevision)
+        self.date_created = datetime.datetime.now()
+        self.author = author
+        self.proposal_id = proposal_id
+        self.proposal_archive_id = proposal_archive_id
+        self.proposal_archive_parent_id = proposal_archive_parent_id
+        self.changes = changes
+        self.revision_index = revision_index
+
+    @staticmethod
+    def calculate_milestone_changes(old_milestones, new_milestones):
+        changes = []
+        old_length = len(old_milestones)
+        new_length = len(new_milestones)
+
+        # determine the longer milestone collection so we can enumerate it
+        long_ms = None
+        short_ms = None
+        if old_length >= new_length:
+            long_ms = old_milestones
+            short_ms = new_milestones
+        else:
+            long_ms = new_milestones
+            short_ms = old_milestones
+
+        # detect whether we're adding or removing milestones
+        is_adding = False
+        is_removing = False
+        if old_length > new_length:
+            is_removing = True
+        if new_length > old_length:
+            is_adding = True
+
+        for i, ms in enumerate(long_ms):
+            compare_ms = short_ms[i] if len(short_ms) - 1 >= i else None
+
+            # when compare milestone doesn't exist, the current milestone is either being added or removed
+            if not compare_ms:
+                if is_adding:
+                    changes.append({"type": ProposalChange.MILESTONE_ADD, "milestone_index": i})
+                if is_removing:
+                    changes.append({"type": ProposalChange.MILESTONE_REMOVE, "milestone_index": i})
+                break
+
+            if ms.days_estimated != compare_ms.days_estimated:
+                changes.append({"type": ProposalChange.MILESTONE_EDIT_DAYS, "milestone_index": i})
+
+            if ms.immediate_payout != compare_ms.immediate_payout:
+                changes.append({"type": ProposalChange.MILESTONE_EDIT_IMMEDIATE_PAYOUT, "milestone_index": i})
+
+            if ms.payout_percent != compare_ms.payout_percent:
+                changes.append({"type": ProposalChange.MILESTONE_EDIT_PERCENT, "milestone_index": i})
+
+            if ms.content != compare_ms.content:
+                changes.append({"type": ProposalChange.MILESTONE_EDIT_CONTENT, "milestone_index": i})
+
+        return changes
+
+    @staticmethod
+    def calculate_proposal_changes(old_proposal, new_proposal):
+        proposal_changes = []
+
+        if old_proposal.brief != new_proposal.brief:
+            proposal_changes.append({"type": ProposalChange.PROPOSAL_EDIT_BRIEF})
+
+        if old_proposal.content != new_proposal.content:
+            proposal_changes.append({"type": ProposalChange.PROPOSAL_EDIT_CONTENT})
+
+        if old_proposal.target != new_proposal.target:
+            proposal_changes.append({"type": ProposalChange.PROPOSAL_EDIT_TARGET})
+
+        if old_proposal.title != new_proposal.title:
+            proposal_changes.append({"type": ProposalChange.PROPOSAL_EDIT_TITLE})
+
+        milestone_changes = ProposalRevision.calculate_milestone_changes(old_proposal.milestones, new_proposal.milestones)
+
+        return proposal_changes + milestone_changes
+
+
 def default_proposal_content():
     return """# Applicant background
 
@@ -325,6 +433,8 @@ class Proposal(db.Model):
     )
     live_draft_parent_id = db.Column(db.Integer, ForeignKey('proposal.id'))
     live_draft = db.relationship("Proposal", uselist=False, backref=db.backref('live_draft_parent', remote_side=[id], uselist=False))
+
+    revisions = db.relationship(ProposalRevision, foreign_keys=[ProposalRevision.proposal_id], lazy=True, cascade="all, delete-orphan")
 
     def __init__(
             self,
@@ -874,8 +984,26 @@ class Proposal(db.Model):
         return live_draft_proposal
 
     # port changes made in LIVE_DRAFT proposal to self and delete the draft
-    def consume_live_draft(self):
+    def consume_live_draft(self, author):
         live_draft = self.live_draft
+
+        revision_changes = ProposalRevision.calculate_proposal_changes(self, live_draft)
+
+        if len(revision_changes) == 0:
+            raise ValidationException("Live draft does not appear to have any changes")
+
+        revision_parent = self.revisions[-1] if len(self.revisions) > 0 else None
+        proposal_archive_parent_id = revision_parent.proposal_archive_id if revision_parent else None
+        revision_index = len(self.revisions)
+
+        revision = ProposalRevision(
+            author=author,
+            proposal_id=self.id,
+            proposal_archive_id=live_draft.id,
+            proposal_archive_parent_id=proposal_archive_parent_id,
+            changes=json.dumps(revision_changes),
+            revision_index=revision_index
+        )
 
         self.title = live_draft.title
         self.brief = live_draft.brief
@@ -888,13 +1016,16 @@ class Proposal(db.Model):
         self.invites = live_draft.invites
         self.live_draft = None
 
+        self.revisions.append(revision)
+
         db.session.add(self)
 
         # copy milestones
         Milestone.clone(live_draft, self)
 
-        # delete live draft
-        db.session.delete(live_draft)
+        # archive live draft
+        live_draft.status = ProposalStatus.ARCHIVED
+        db.session.add(live_draft)
 
 
 class ProposalSchema(ma.Schema):
@@ -1033,6 +1164,41 @@ class ProposalUpdateSchema(ma.Schema):
 
 proposal_update_schema = ProposalUpdateSchema()
 proposals_update_schema = ProposalUpdateSchema(many=True)
+
+
+class ProposalRevisionSchema(ma.Schema):
+    class Meta:
+        model = ProposalRevision
+        # Fields to expose
+        fields = (
+            "revision_id",
+            "date_created",
+            "author",
+            "proposal_id",
+            "proposal_archive_id",
+            "proposal_archive_parent_id",
+            "changes",
+            "revision_index"
+        )
+
+    revision_id = ma.Method("get_revision_id")
+    date_created = ma.Method("get_date_created")
+    changes = ma.Method("get_changes")
+
+    author = ma.Nested("UserSchema")
+
+    def get_revision_id(self, obj):
+        return obj.id
+
+    def get_date_created(self, obj):
+        return dt_to_unix(obj.date_created)
+
+    def get_changes(self, obj):
+        return json.loads(obj.changes)
+
+
+proposal_revision_schema = ProposalRevisionSchema()
+proposals_revisions_schema = ProposalRevisionSchema(many=True)
 
 
 class ProposalTeamInviteSchema(ma.Schema):

@@ -36,6 +36,7 @@ from .models import (
     proposal_schema,
     ProposalUpdate,
     proposal_update_schema,
+    proposals_revisions_schema,
     ProposalContribution,
     proposal_contribution_schema,
     proposal_team,
@@ -396,7 +397,7 @@ def publish_live_draft(proposal_id):
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
 
-    parent_proposal.consume_live_draft()
+    parent_proposal.consume_live_draft(g.current_user)
     db.session.commit()
 
     return proposal_schema.dump(parent_proposal), 200
@@ -423,6 +424,20 @@ def get_proposal_update(proposal_id, update_id):
             return {"message": "No update matching id"}
     else:
         return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/revisions", methods=["GET"])
+def get_proposal_revisions(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    if proposal.status in [ProposalStatus.DRAFT, ProposalStatus.REJECTED]:
+        return {"message": "Proposal is not live"}, 400
+
+    dumped_revisions = proposals_revisions_schema.dump(proposal.revisions)
+    return dumped_revisions
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
