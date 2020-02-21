@@ -29,13 +29,7 @@ interface DispatchProps {
 
 type Props = DispatchProps & OwnProps & StateProps;
 
-interface State {}
-
-export class ProposalRevision extends React.Component<Props, State> {
-  state: State = {
-    activeUpdate: null,
-  };
-
+export class ProposalRevision extends React.Component<Props> {
   componentDidMount() {
     if (this.props.proposalId) {
       this.props.fetchProposalRevisions(this.props.proposalId);
@@ -142,16 +136,6 @@ export class ProposalRevision extends React.Component<Props, State> {
         return `${msMsg} added`;
       case REVISION_CHANGE_TYPES.MILESTONE_REMOVE:
         return `${msMsg} removed`;
-      case REVISION_CHANGE_TYPES.MILESTONE_SET_AMOUNT:
-        return `${msMsg} amount set`;
-      case REVISION_CHANGE_TYPES.MILESTONE_SET_DAYS:
-        return `${msMsg} estimated days set`;
-      case REVISION_CHANGE_TYPES.MILESTONE_SET_IMMEDIATE_PAYOUT:
-        return `${msMsg} immediate payout set`;
-      case REVISION_CHANGE_TYPES.MILESTONE_SET_PERCENT:
-        return `${msMsg} payout percent set`;
-      case REVISION_CHANGE_TYPES.MILESTONE_SET_CONTENT:
-        return `${msMsg} content set`;
       case REVISION_CHANGE_TYPES.MILESTONE_EDIT_AMOUNT:
         return `${msMsg} amount edited`;
       case REVISION_CHANGE_TYPES.MILESTONE_EDIT_DAYS:

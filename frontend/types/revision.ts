@@ -14,10 +14,10 @@ export enum REVISION_CHANGE_TYPES {
   MILESTONE_EDIT_CONTENT = 'MILESTONE_EDIT_CONTENT',
 }
 
-export type RevisionChange = {
+export interface RevisionChange {
   type: REVISION_CHANGE_TYPES;
   milestoneIndex?: number;
-};
+}
 
 export interface Revision {
   parentProposalId: string;

@@ -118,9 +118,10 @@ const revision3: Revision = {
 
 const revisions: Revision[] = [revision1, revision2, revision3];
 
+// tslint:disable-next-line
 const stubbed: any = () => {};
 
-storiesOf('RevisionTabNew', module).add('basic', () => (
+storiesOf('RevisionTab', module).add('basic', () => (
   <div style={{ padding: '1rem' }}>
     <ProposalRevision
       proposalId={0}
