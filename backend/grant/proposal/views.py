@@ -399,6 +399,11 @@ def publish_live_draft(proposal_id):
     parent_proposal.consume_live_draft()
     db.session.commit()
 
+    # Send email to all followers
+    parent_proposal.send_follower_email(
+        "followed_proposal_revised", url_suffix="?tab=revisions"
+    )
+
     return proposal_schema.dump(parent_proposal), 200
 
 

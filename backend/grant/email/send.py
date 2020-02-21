@@ -392,6 +392,16 @@ def followed_proposal_update(email_args):
     }
 
 
+def followed_proposal_revised(email_args):
+    p = email_args["proposal"]
+    return {
+        "subject": f"Proposal has been revised for {p.title}",
+        "title": f"Proposal Revised",
+        "preview": f"Followed proposal {p.title} has been revised",
+        "subscription": EmailSubscription.FOLLOWED_PROPOSAL,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -429,7 +439,8 @@ get_info_lookup = {
     'admin_arbiter': admin_arbiter,
     'admin_payout': admin_payout,
     'followed_proposal_milestone': followed_proposal_milestone,
-    'followed_proposal_update': followed_proposal_update
+    'followed_proposal_update': followed_proposal_update,
+    'followed_proposal_revised': followed_proposal_revised
 }
 
 
