@@ -20,6 +20,7 @@ import RFPBlock from './RFPBlock';
 import Milestones from './Milestones';
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
+import RevisionsTab from './Revisions';
 import ContributorsTab from './Contributors';
 import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
@@ -324,6 +325,13 @@ export class ProposalDetail extends React.Component<Props, State> {
             </Tabs.TabPane>
             <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
               <UpdatesTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+            <Tabs.TabPane
+              tab="Revisions"
+              key="revisions"
+              disabled={!isLive && !isOpenForDiscussion}
+            >
+              <RevisionsTab proposalId={proposal.proposalId} />
             </Tabs.TabPane>
             {!proposal.isVersionTwo && (
               <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>

@@ -74,6 +74,10 @@ export function getProposalUpdates(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/updates`);
 }
 
+export function getProposalRevisions(proposalId: number | string) {
+  return axios.get(`/api/v1/proposals/${proposalId}/revisions`);
+}
+
 export function getProposalContributions(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/contributions`);
 }
