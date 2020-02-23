@@ -72,10 +72,18 @@ example_email_args = {
         'proposal_url': 'http://someproposal.com',
         'admin_note': 'This proposal was the hottest stuff our team has seen yet. We look forward to throwing the fat stacks at you.',
     },
+    'proposal_approved_discussion': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+    },
     'proposal_rejected': {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
         'admin_note': 'We think that you’ve asked for too much money for the project you’ve proposed, and for such an inexperienced team. Feel free to change your target amount, or elaborate on why you need so much money, and try applying again.',
+    },
+    'proposal_rejected_discussion': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
     },
     'proposal_contribution': {
         'proposal': proposal,
@@ -174,6 +182,10 @@ example_email_args = {
         'proposal': proposal,
         'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
     },
+    'admin_changes_resolved': {
+        'proposal': proposal,
+        'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
+    },
     'admin_arbiter': {
         'proposal': proposal,
         'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
@@ -188,6 +200,10 @@ example_email_args = {
         "proposal_url": "http://someproposal.com",
     },
     'followed_proposal_update': {
+        "proposal": proposal,
+        "proposal_url": "http://someproposal.com",
+    },
+    'followed_proposal_revised': {
         "proposal": proposal,
         "proposal_url": "http://someproposal.com",
     },

@@ -25,6 +25,7 @@ CCRStatus = CCRStatusEnum()
 
 class ProposalStatusEnum(CustomEnum):
     DRAFT = 'DRAFT'
+    LIVE_DRAFT = 'LIVE_DRAFT'
     STAKING = 'STAKING'
     DISCUSSION = 'DISCUSSION'
     PENDING = 'PENDING'

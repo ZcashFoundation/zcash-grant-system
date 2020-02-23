@@ -103,6 +103,12 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     hint: 'Proposal has been opened for public discussion.',
   },
   {
+    id: PROPOSAL_STATUS.LIVE_DRAFT,
+    tagDisplay: 'Live Draft',
+    tagColor: '#8d8d8d',
+    hint: 'Proposal is an edit that will to be published to another proposal.',
+  },
+  {
     id: PROPOSAL_STATUS.DELETED,
     tagDisplay: 'Deleted',
     tagColor: '#bebebe',
