@@ -287,9 +287,10 @@ def resolve_changes_discussion(proposal_id):
         return {"message": "No proposal found"}, 404
 
     proposal.resolve_changes_discussion()
-
     db.session.add(proposal)
     db.session.commit()
+
+    proposal.send_admin_email('admin_changes_resolved')
     return proposal_schema.dump(proposal)
 
 
@@ -374,6 +375,12 @@ def publish_proposal(proposal_id):
 @blueprint.route("/<proposal_id>/publish/live", methods=["PUT"])
 @requires_team_member_auth
 def publish_live_draft(proposal_id):
+    if g.current_proposal.status != ProposalStatus.LIVE_DRAFT:
+        return {"message": "Proposal is not a live draft"}, 403
+
+    if not g.current_proposal.live_draft_parent_id:
+        return {"message": "No parent proposal found"}, 404
+
     parent_proposal = Proposal.query.get(g.current_proposal.live_draft_parent_id)
 
     if not parent_proposal:
@@ -391,6 +398,11 @@ def publish_live_draft(proposal_id):
 
     parent_proposal.consume_live_draft()
     db.session.commit()
+
+    # Send email to all followers
+    parent_proposal.send_follower_email(
+        "followed_proposal_revised", url_suffix="?tab=revisions"
+    )
 
     return proposal_schema.dump(parent_proposal), 200
 

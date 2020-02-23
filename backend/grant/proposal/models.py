@@ -591,6 +591,12 @@ class Proposal(db.Model):
 
         if is_open_for_discussion:
             self.status = ProposalStatus.DISCUSSION
+            for t in self.team:
+                send_email(t.email_address, 'proposal_approved_discussion', {
+                    'user': t,
+                    'proposal': self,
+                    'proposal_url': make_url(f'/proposals/{self.id}')
+                })
         else:
             if not reject_reason:
                 raise ValidationException("Please provide a reason for rejecting the proposal")
@@ -613,6 +619,13 @@ class Proposal(db.Model):
 
         self.changes_requested_discussion = True
         self.changes_requested_discussion_reason = reason
+        for t in self.team:
+            send_email(t.email_address, 'proposal_rejected_discussion', {
+                'user': t,
+                'proposal': self,
+                'proposal_url': make_url(f'/proposals/{self.id}'),
+                'admin_note': reason
+            })
 
     # mark a request changes as resolve for a proposal with a DISCUSSION status
     def resolve_changes_discussion(self):
