@@ -69,6 +69,9 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   authedLiked: boolean;
   likesCount: number;
   tipJarViewKey: string | null;
+  changesRequestedDiscussion: boolean | null;
+  changesRequestedDiscussionReason: string | null;
+  liveDraftId: string | null;
   isTeamMember?: boolean; // FE derived
   isArbiter?: boolean; // FE derived
 }
@@ -113,8 +116,10 @@ export interface UserProposal {
 // NOTE: sync with backend/grant/proposal/models.py STATUSES
 export enum STATUS {
   DRAFT = 'DRAFT',
+  LIVE_DRAFT = 'LIVE_DRAFT',
   STAKING = 'STAKING',
   PENDING = 'PENDING',
+  DISCUSSION = 'DISCUSSION',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   LIVE = 'LIVE',

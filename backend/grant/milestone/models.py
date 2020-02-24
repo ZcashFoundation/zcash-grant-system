@@ -83,6 +83,26 @@ class Milestone(db.Model):
                 )
                 db.session.add(m)
 
+    # clone milestones from one proposal to another
+    @staticmethod
+    def clone(source_proposal, destination_proposal):
+        # delete any milestones on destination proposal
+        [db.session.delete(ms) for ms in destination_proposal.milestones]
+
+        # copy milestones from source proposal to destination proposal
+        for i, ms in enumerate(source_proposal.milestones):
+            new_ms = Milestone(
+                proposal_id=destination_proposal.id,
+                title=ms.title,
+                content=ms.content,
+                days_estimated=ms.days_estimated,
+                payout_percent=ms.payout_percent,
+                immediate_payout=ms.immediate_payout,
+                index=i
+            )
+            db.session.add(new_ms)
+
+
     #  The purpose of this method is to set the `date_estimated` property on all milestones in a proposal. This works
     #  by figuring out a starting point for each milestone  (the `base_date` below) and adding `days_estimated`.
     #

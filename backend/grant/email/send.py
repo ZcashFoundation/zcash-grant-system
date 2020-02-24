@@ -76,6 +76,15 @@ def proposal_approved(email_args):
     }
 
 
+def proposal_approved_discussion(email_args):
+    return {
+        'subject': 'Your proposal has been opened for discussion',
+        'title': 'Your proposal has been opened for discussion',
+        'preview': '{} is now open for public discussion on ZF Grants.'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
 def ccr_approved(email_args):
     return {
         'subject': 'Your request has been approved!',
@@ -93,6 +102,15 @@ def ccr_rejected(email_args):
 
 
 def proposal_rejected(email_args):
+    return {
+        'subject': 'Your proposal has changes requested',
+        'title': 'Your proposal has changes requested',
+        'preview': '{} has changes requested'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_rejected_discussion(email_args):
     return {
         'subject': 'Your proposal has changes requested',
         'title': 'Your proposal has changes requested',
@@ -326,6 +344,15 @@ def admin_approval_ccr(email_args):
     }
 
 
+def admin_changes_resolved(email_args):
+    return {
+        'subject': f'Changes marked as resolved for {email_args["proposal"].title}',
+        'title': f'Changes Resolved',
+        'preview': f'Team members of proposal {email_args["proposal"].title} have marked requested changes as resolved.',
+        'subscription': EmailSubscription.ADMIN_APPROVAL,
+    }
+
+
 def admin_arbiter(email_args):
     return {
         'subject': f'Arbiter needed for {email_args["proposal"].title}',
@@ -365,6 +392,16 @@ def followed_proposal_update(email_args):
     }
 
 
+def followed_proposal_revised(email_args):
+    p = email_args["proposal"]
+    return {
+        "subject": f"Proposal has been revised for {p.title}",
+        "title": f"Proposal Revised",
+        "preview": f"Followed proposal {p.title} has been revised",
+        "subscription": EmailSubscription.FOLLOWED_PROPOSAL,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -375,7 +412,9 @@ get_info_lookup = {
     'ccr_rejected': ccr_rejected,
     'ccr_approved': ccr_approved,
     'proposal_approved': proposal_approved,
+    'proposal_approved_discussion': proposal_approved_discussion,
     'proposal_rejected': proposal_rejected,
+    'proposal_rejected_discussion': proposal_rejected_discussion,
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
     'proposal_failed': proposal_failed,
@@ -396,10 +435,12 @@ get_info_lookup = {
     'milestone_paid': milestone_paid,
     'admin_approval': admin_approval,
     'admin_approval_ccr': admin_approval_ccr,
+    'admin_changes_resolved': admin_changes_resolved,
     'admin_arbiter': admin_arbiter,
     'admin_payout': admin_payout,
     'followed_proposal_milestone': followed_proposal_milestone,
-    'followed_proposal_update': followed_proposal_update
+    'followed_proposal_update': followed_proposal_update,
+    'followed_proposal_revised': followed_proposal_revised
 }
 
 

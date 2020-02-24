@@ -73,7 +73,9 @@ export interface ProposalArbiter {
 // NOTE: sync with backend/grant/utils/enums.py ProposalStatus
 export enum PROPOSAL_STATUS {
   DRAFT = 'DRAFT',
+  LIVE_DRAFT = 'LIVE_DRAFT',
   PENDING = 'PENDING',
+  DISCUSSION = 'DISCUSSION',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   LIVE = 'LIVE',
@@ -118,6 +120,8 @@ export interface Proposal {
   arbiter: ProposalArbiter;
   acceptedWithFunding: boolean | null;
   isVersionTwo: boolean;
+  changesRequestedDiscussion: boolean | null;
+  changesRequestedDiscussionReason: string | null;
 }
 export interface Comment {
   id: number;

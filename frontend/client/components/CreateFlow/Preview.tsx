@@ -22,9 +22,13 @@ class CreateFlowPreview extends React.Component<Props> {
           user={null}
           proposalId={0}
           fetchProposal={(() => null) as any}
+          updateProposal={(() => null) as any}
           detail={proposal}
           isFetchingDetail={false}
           detailError={null}
+          history={(() => null) as any}
+          location={(() => null) as any}
+          match={(() => null) as any}
           isPreview
         />
       </div>

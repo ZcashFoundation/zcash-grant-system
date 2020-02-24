@@ -262,10 +262,37 @@ export async function putProposalSubmitForApproval(
     });
 }
 
+export async function postProposalMakeLiveDraft(
+  proposalId: number,
+): Promise<{ data: Proposal }> {
+  return axios.post(`/api/v1/proposals/${proposalId}/draft`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
+export async function putProposalSubmitLiveDraft(
+  proposal: ProposalDraft,
+): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish/live`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
 export async function putProposalPublish(
   proposalId: number,
 ): Promise<{ data: Proposal }> {
   return axios.put(`/api/v1/proposals/${proposalId}/publish`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
+export async function putMarkProposalRequestedChangesAsResolved(
+  proposalId: number,
+): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposalId}/resolve`).then(res => {
     res.data = formatProposalFromGet(res.data);
     return res;
   });

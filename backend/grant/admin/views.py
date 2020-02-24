@@ -358,25 +358,59 @@ def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
 
-@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
+@blueprint.route('/proposals/<proposal_id>/discussion', methods=['PUT'])
 @body({
-    "isAccepted": fields.Bool(required=True),
-    "withFunding": fields.Bool(required=True),
+    "isOpenForDiscussion": fields.Bool(required=True),
     "rejectReason": fields.Str(required=False, missing=None)
 })
 @admin.admin_auth_required
-def approve_proposal(id, is_accepted, with_funding, reject_reason=None):
-    proposal = Proposal.query.filter_by(id=id).first()
-    if proposal:
-        proposal.approve_pending(is_accepted, with_funding, reject_reason)
+def open_proposal_for_discussion(proposal_id, is_open_for_discussion, reject_reason=None):
+    proposal = Proposal.query.get(proposal_id)
+    if not proposal:
+        return {"message": "No Proposal found."}, 404
 
-        if is_accepted and with_funding:
+    proposal.approve_discussion(is_open_for_discussion, reject_reason)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
+
+
+@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
+@body({
+    "isAccepted": fields.Bool(required=True),
+    "withFunding": fields.Bool(required=False, missing=None),
+    "changesRequestedReason": fields.Str(required=False, missing=None)
+})
+@admin.admin_auth_required
+def accept_proposal(id, is_accepted, with_funding, changes_requested_reason):
+    proposal = Proposal.query.get(id)
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    if is_accepted:
+        proposal.accept_proposal(with_funding)
+
+        if with_funding:
             Milestone.set_v2_date_estimates(proposal)
+    else:
+        proposal.request_changes_discussion(changes_requested_reason)
 
-        db.session.commit()
-        return proposal_schema.dump(proposal)
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
 
-    return {"message": "No proposal found."}, 404
+
+@blueprint.route('/proposals/<proposal_id>/resolve', methods=['PUT'])
+@admin.admin_auth_required
+def resolve_changes_discussion(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+    if not proposal:
+        return {"message": "No proposal found"}, 404
+
+    proposal.resolve_changes_discussion()
+
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route('/proposals/<id>/accept/fund', methods=['PUT'])

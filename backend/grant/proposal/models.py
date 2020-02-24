@@ -4,11 +4,12 @@ from decimal import Decimal, ROUND_DOWN
 from functools import reduce
 
 from marshmallow import post_dump
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import column_property
 
 from grant.comment.models import Comment
+from grant.milestone.models import Milestone
 from grant.email.send import send_email
 from grant.extensions import ma, db
 from grant.settings import PROPOSAL_STAKING_AMOUNT, PROPOSAL_TARGET_MAX
@@ -283,6 +284,8 @@ class Proposal(db.Model):
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
     accepted_with_funding = db.Column(db.Boolean(), nullable=True)
+    changes_requested_discussion = db.Column(db.Boolean(), nullable=True)
+    changes_requested_discussion_reason = db.Column(db.String(255), nullable=True)
 
     # Payment info
     target = db.Column(db.String(255), nullable=False)
@@ -320,6 +323,8 @@ class Proposal(db.Model):
         .where(proposal_liker.c.proposal_id == id)
         .correlate_except(proposal_liker)
     )
+    live_draft_parent_id = db.Column(db.Integer, ForeignKey('proposal.id'))
+    live_draft = db.relationship("Proposal", uselist=False, backref=db.backref('live_draft_parent', remote_side=[id], uselist=False))
 
     def __init__(
             self,
@@ -465,7 +470,7 @@ class Proposal(db.Model):
         return proposal
 
     @staticmethod
-    def get_by_user(user, statuses=[ProposalStatus.LIVE]):
+    def get_by_user(user, statuses=[ProposalStatus.LIVE, ProposalStatus.DISCUSSION]):
         status_filter = or_(Proposal.status == v for v in statuses)
         return Proposal.query \
             .join(proposal_team) \
@@ -578,39 +583,19 @@ class Proposal(db.Model):
         db.session.add(self)
         db.session.flush()
 
-    # state: status PENDING -> (LIVE || REJECTED)
-    def approve_pending(self, is_approve, with_funding, reject_reason=None):
-        self.validate_publishable()
-        # specific validation
+    # approve a proposal moving from PENDING to DISCUSSION status
+    # state: status PENDING -> (DISCUSSION || REJECTED)
+    def approve_discussion(self, is_open_for_discussion, reject_reason=None):
         if not self.status == ProposalStatus.PENDING:
-            raise ValidationException(f"Proposal must be pending to approve or reject")
+            raise ValidationException("Proposal must be pending to open for public discussion")
 
-        if is_approve:
-            self.status = ProposalStatus.LIVE
-            self.date_approved = datetime.datetime.now()
-            self.accepted_with_funding = with_funding
-
-            # also update date_published and stage since publish() is no longer called by user
-            self.date_published = datetime.datetime.now()
-            self.stage = ProposalStage.WIP
-
-            if with_funding:
-                self.fully_fund_contibution_bounty()
+        if is_open_for_discussion:
+            self.status = ProposalStatus.DISCUSSION
             for t in self.team:
-                admin_note = ''
-                if with_funding:
-                    admin_note = 'Congratulations! Your proposal has been accepted with funding from the Zcash Foundation.'
-                else:
-                    admin_note = '''
-                    We've chosen to list your proposal on ZF Grants, but we won't be funding your proposal at this time. 
-                    Your proposal can still receive funding from the community in the form of tips if you have set a tip address for your proposal. 
-                    If you have not yet done so, you can do this from the actions dropdown at your proposal.
-                    '''
-                send_email(t.email_address, 'proposal_approved', {
+                send_email(t.email_address, 'proposal_approved_discussion', {
                     'user': t,
                     'proposal': self,
-                    'proposal_url': make_url(f'/proposals/{self.id}'),
-                    'admin_note': admin_note
+                    'proposal_url': make_url(f'/proposals/{self.id}')
                 })
         else:
             if not reject_reason:
@@ -624,6 +609,68 @@ class Proposal(db.Model):
                     'proposal_url': make_url(f'/proposals/{self.id}'),
                     'admin_note': reject_reason
                 })
+
+    # request changes for a proposal with a DISCUSSION status
+    def request_changes_discussion(self, reason):
+        if self.status != ProposalStatus.DISCUSSION:
+            raise ValidationException("Proposal does not have a DISCUSSION status")
+        if not reason:
+            raise ValidationException("Please provide a reason for requesting changes")
+
+        self.changes_requested_discussion = True
+        self.changes_requested_discussion_reason = reason
+        for t in self.team:
+            send_email(t.email_address, 'proposal_rejected_discussion', {
+                'user': t,
+                'proposal': self,
+                'proposal_url': make_url(f'/proposals/{self.id}'),
+                'admin_note': reason
+            })
+
+    # mark a request changes as resolve for a proposal with a DISCUSSION status
+    def resolve_changes_discussion(self):
+        if self.status != ProposalStatus.DISCUSSION:
+            raise ValidationException("Proposal does not have a DISCUSSION status")
+
+        if not self.changes_requested_discussion:
+            raise ValidationException("Proposal does not have changes requested")
+
+        self.changes_requested_discussion = False
+        self.changes_requested_discussion_reason = None
+
+    # state: status DISCUSSION -> (LIVE)
+    def accept_proposal(self, with_funding):
+        self.validate_publishable()
+        # specific validation
+        if not self.status == ProposalStatus.DISCUSSION:
+            raise ValidationException(f"Proposal must have a DISCUSSION status to approve or reject")
+
+        self.status = ProposalStatus.LIVE
+        self.date_approved = datetime.datetime.now()
+        self.accepted_with_funding = with_funding
+
+        # also update date_published and stage since publish() is no longer called by user
+        self.date_published = datetime.datetime.now()
+        self.stage = ProposalStage.WIP
+
+        if with_funding:
+            self.fully_fund_contibution_bounty()
+        for t in self.team:
+            admin_note = ''
+            if with_funding:
+                admin_note = 'Congratulations! Your proposal has been accepted with funding from the Zcash Foundation.'
+            else:
+                admin_note = '''
+                We've chosen to list your proposal on ZF Grants, but we won't be funding your proposal at this time. 
+                Your proposal can still receive funding from the community in the form of tips if you have set a tip address for your proposal. 
+                If you have not yet done so, you can do this from the actions dropdown at your proposal.
+                '''
+            send_email(t.email_address, 'proposal_approved', {
+                'user': t,
+                'proposal': self,
+                'proposal_url': make_url(f'/proposals/{self.id}'),
+                'admin_note': admin_note
+            })
 
     def update_proposal_with_funding(self):
         self.accepted_with_funding = True
@@ -803,6 +850,52 @@ class Proposal(db.Model):
         else:
             return self.tip_jar_view_key
 
+    # make a LIVE_DRAFT proposal by copying the relevant fields from an existing proposal
+    @staticmethod
+    def make_live_draft(proposal):
+        live_draft_proposal = Proposal.create(
+            title=proposal.title,
+            brief=proposal.brief,
+            content=proposal.content,
+            target=proposal.target,
+            payout_address=proposal.payout_address,
+            status=ProposalStatus.LIVE_DRAFT
+        )
+        live_draft_proposal.tip_jar_address = proposal.tip_jar_address
+        live_draft_proposal.changes_requested_discussion_reason = proposal.changes_requested_discussion_reason
+        live_draft_proposal.rfp_opt_in = proposal.rfp_opt_in
+        live_draft_proposal.team = proposal.team
+        live_draft_proposal.invites = proposal.invites
+
+        db.session.add(live_draft_proposal)
+
+        Milestone.clone(proposal, live_draft_proposal)
+
+        return live_draft_proposal
+
+    # port changes made in LIVE_DRAFT proposal to self and delete the draft
+    def consume_live_draft(self):
+        live_draft = self.live_draft
+
+        self.title = live_draft.title
+        self.brief = live_draft.brief
+        self.content = live_draft.content
+        self.target = live_draft.target
+        self.payout_address = live_draft.payout_address
+        self.tip_jar_address = live_draft.tip_jar_address
+        self.rfp_opt_in = live_draft.rfp_opt_in
+        self.team = live_draft.team
+        self.invites = live_draft.invites
+        self.live_draft = None
+
+        db.session.add(self)
+
+        # copy milestones
+        Milestone.clone(live_draft, self)
+
+        # delete live draft
+        db.session.delete(live_draft)
+
 
 class ProposalSchema(ma.Schema):
     class Meta:
@@ -843,7 +936,10 @@ class ProposalSchema(ma.Schema):
             "authed_liked",
             "likes_count",
             "tip_jar_address",
-            "tip_jar_view_key"
+            "tip_jar_view_key",
+            "changes_requested_discussion",
+            "changes_requested_discussion_reason",
+            "live_draft_id"
         )
 
     date_created = ma.Method("get_date_created")
@@ -852,6 +948,7 @@ class ProposalSchema(ma.Schema):
     proposal_id = ma.Method("get_proposal_id")
     is_version_two = ma.Method("get_is_version_two")
     tip_jar_view_key = ma.Method("get_tip_jar_view_key")
+    live_draft_id = ma.Method("get_live_draft_id")
 
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
@@ -878,6 +975,10 @@ class ProposalSchema(ma.Schema):
 
     def get_tip_jar_view_key(self, obj):
         return obj.get_tip_jar_view_key
+
+    def get_live_draft_id(self, obj):
+        return obj.live_draft.id if obj.live_draft else None
+
 
 proposal_schema = ProposalSchema()
 proposals_schema = ProposalSchema(many=True)

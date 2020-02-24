@@ -71,10 +71,10 @@ class TestMilestoneMethods(BaseUserConfig):
         self.assert200(resp)
 
         proposal = Proposal.query.get(proposal_id)
-        proposal.status = ProposalStatus.PENDING
+        proposal.status = ProposalStatus.DISCUSSION
 
         # accept with funding
-        proposal.approve_pending(True, True)
+        proposal.accept_proposal(True)
         Milestone.set_v2_date_estimates(proposal)
 
         db.session.add(proposal)
