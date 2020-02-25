@@ -300,7 +300,7 @@ class ProposalRevision(db.Model):
                     changes.append({"type": ProposalChange.MILESTONE_ADD, "milestone_index": i})
                 if is_removing:
                     changes.append({"type": ProposalChange.MILESTONE_REMOVE, "milestone_index": i})
-                break
+                continue
 
             if ms.days_estimated != compare_ms.days_estimated:
                 changes.append({"type": ProposalChange.MILESTONE_EDIT_DAYS, "milestone_index": i})
@@ -313,6 +313,9 @@ class ProposalRevision(db.Model):
 
             if ms.content != compare_ms.content:
                 changes.append({"type": ProposalChange.MILESTONE_EDIT_CONTENT, "milestone_index": i})
+
+            if ms.title != compare_ms.title:
+                changes.append({"type": ProposalChange.MILESTONE_EDIT_TITLE, "milestone_index": i})
 
         return changes
 

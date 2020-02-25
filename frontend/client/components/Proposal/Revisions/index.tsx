@@ -146,6 +146,8 @@ export class ProposalRevision extends React.Component<Props> {
         return `${msMsg} payout percent edited`;
       case REVISION_CHANGE_TYPES.MILESTONE_EDIT_CONTENT:
         return `${msMsg} content edited`;
+      case REVISION_CHANGE_TYPES.MILESTONE_EDIT_TITLE:
+        return `${msMsg} title edited`;
       default:
         return '';
     }

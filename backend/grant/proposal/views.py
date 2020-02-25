@@ -436,7 +436,13 @@ def get_proposal_revisions(proposal_id):
     if proposal.status in [ProposalStatus.DRAFT, ProposalStatus.REJECTED]:
         return {"message": "Proposal is not live"}, 400
 
-    dumped_revisions = proposals_revisions_schema.dump(proposal.revisions)
+    def sort_by_revision_index(r):
+        return r.revision_index
+
+    revisions = proposal.revisions
+    revisions.sort(key=sort_by_revision_index)
+
+    dumped_revisions = proposals_revisions_schema.dump(revisions)
     return dumped_revisions
 
 
