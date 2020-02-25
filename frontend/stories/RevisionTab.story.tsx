@@ -92,33 +92,36 @@ const revision3Changes: RevisionChange[] = [
 ];
 
 const revision1: Revision = {
+  revisionId: '0',
+  revisionIndex: 0,
   author: fakeUser,
   dateCreated: oneWeekAgo / 1000,
   changes: revision1Changes,
-  parentProposalId: '0',
-  revisionId: '0',
-  revisionIndex: 0,
-  parentRevisionId: '0',
+  proposalArchiveId: '0',
+  proposalArchiveParentId: '0',
+  proposalId: '0',
 };
 
 const revision2: Revision = {
   author: fakeUser,
   dateCreated: twoDaysAgo / 1000,
   changes: revision2Changes,
-  parentProposalId: '0',
   revisionId: '0',
   revisionIndex: 1,
-  parentRevisionId: '0',
+  proposalArchiveId: '0',
+  proposalArchiveParentId: '0',
+  proposalId: '0',
 };
 
 const revision3: Revision = {
   author: fakeUser,
   dateCreated: oneHourAgo / 1000,
   changes: revision3Changes,
-  parentProposalId: '0',
   revisionId: '0',
   revisionIndex: 2,
-  parentRevisionId: '0',
+  proposalArchiveId: '0',
+  proposalArchiveParentId: '0',
+  proposalId: '0',
 };
 
 const revisions: Revision[] = [revision1, revision2, revision3];
