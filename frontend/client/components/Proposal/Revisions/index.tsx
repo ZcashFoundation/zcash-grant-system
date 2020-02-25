@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import Placeholder from 'components/Placeholder';
@@ -52,7 +53,7 @@ export class ProposalRevision extends React.Component<Props> {
       content = <Placeholder title="Something went wrong" subtitle={revisionsError} />;
     } else if (revisions) {
       if (revisions.length) {
-        content = revisions.map(revision => (
+        content = revisions.map((revision, index) => (
           <div key={revision.revisionId} className="ProposalRevision-revision">
             <h3 className="ProposalRevision-revision-title">
               {moment(revision.dateCreated * 1000).format('MMMM Do, YYYY')}
@@ -64,7 +65,14 @@ export class ProposalRevision extends React.Component<Props> {
               {this.renderRevisionBody(revision)}
             </div>
             <div className="ProposalRevision-revision-controls">
-              <a className="ProposalRevision-revision-controls-button">View archived</a>
+              {revisions.length !== index + 1 && (
+                <Link
+                  to={`/proposals/${revision.proposalArchiveId}/archive`}
+                  className="ProposalRevision-revision-controls-button"
+                >
+                  View archived
+                </Link>
+              )}
             </div>
           </div>
         ));

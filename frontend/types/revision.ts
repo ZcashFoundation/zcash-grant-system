@@ -21,11 +21,12 @@ export interface RevisionChange {
 }
 
 export interface Revision {
-  parentProposalId: string;
-  parentRevisionId: string;
   revisionId: string;
-  revisionIndex: number;
-  changes: RevisionChange[];
   dateCreated: number;
   author: User;
+  proposalId: string;
+  proposalArchiveId: string;
+  proposalArchiveParentId: string;
+  changes: RevisionChange[];
+  revisionIndex: number;
 }

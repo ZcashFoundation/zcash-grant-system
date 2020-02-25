@@ -226,10 +226,17 @@ export class ProposalDetail extends React.Component<Props, State> {
     } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
     let banner = statusBanner[proposal.status];
     if (isPreview) {
-      banner = {
-        blurb: 'This is a preview of your proposal. It has not yet been published.',
-        type: 'info',
-      };
+      if (proposal.status === STATUS.ARCHIVED) {
+        banner = {
+          blurb: 'This is an archived proposal revision.',
+          type: 'info',
+        };
+      } else {
+        banner = {
+          blurb: 'This is a preview of your proposal. It has not yet been published.',
+          type: 'info',
+        };
+      }
     }
 
     return (

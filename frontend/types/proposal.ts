@@ -129,6 +129,7 @@ export interface UserProposal {
 export enum STATUS {
   DRAFT = 'DRAFT',
   LIVE_DRAFT = 'LIVE_DRAFT',
+  ARCHIVED = 'ARCHIVED',
   STAKING = 'STAKING',
   PENDING = 'PENDING',
   DISCUSSION = 'DISCUSSION',
