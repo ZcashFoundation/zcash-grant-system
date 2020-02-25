@@ -48,6 +48,7 @@ const fmtDateFromNow = (n: undefined | number) => (n && moment(n * 1000).fromNow
 
 interface OwnProps {
   proposal: ProposalDetail;
+  isPreview?: boolean;
 }
 
 interface DispatchProps {
@@ -154,7 +155,7 @@ class ProposalMilestones extends React.Component<Props, State> {
   }
 
   render() {
-    const { proposal, requestPayout, acceptPayout, rejectPayout } = this.props;
+    const { proposal, requestPayout, acceptPayout, rejectPayout, isPreview } = this.props;
     const { rejectReason, showRejectModal } = this.state;
     if (!proposal) {
       return <Loader />;
@@ -169,7 +170,7 @@ class ProposalMilestones extends React.Component<Props, State> {
     const isOpenForDiscussion = proposal.status === STATUS.DISCUSSION;
     const milestoneCount = milestones.length;
     const milestonesDisabled = isVersionTwo
-      ? !acceptedWithFunding && !isOpenForDiscussion
+      ? !acceptedWithFunding && !isOpenForDiscussion && !isPreview
       : false;
 
     // arbiter reject modal

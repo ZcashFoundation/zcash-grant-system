@@ -313,7 +313,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           <LinkableTabs scrollToTabs defaultActiveKey={defaultTab}>
             <Tabs.TabPane tab="Milestones" key="milestones">
               <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
-                <Milestones proposal={proposal} />
+                <Milestones proposal={proposal} isPreview={isPreview} />
               </div>
             </Tabs.TabPane>
             <Tabs.TabPane
