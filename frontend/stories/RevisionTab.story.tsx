@@ -7,6 +7,7 @@ import { Revision, RevisionChange, REVISION_CHANGE_TYPES } from 'types';
 const {
   MILESTONE_ADD,
   MILESTONE_REMOVE,
+  MILESTONE_EDIT_TITLE,
   MILESTONE_EDIT_AMOUNT,
   MILESTONE_EDIT_CONTENT,
   MILESTONE_EDIT_DAYS,
@@ -36,6 +37,10 @@ const fakeUser: any = {
 const revision1Changes: RevisionChange[] = [
   {
     type: PROPOSAL_EDIT_TITLE,
+  },
+  {
+    type: MILESTONE_EDIT_TITLE,
+    milestoneIndex: 2,
   },
   {
     type: MILESTONE_EDIT_DAYS,
