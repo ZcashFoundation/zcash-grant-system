@@ -153,7 +153,7 @@ export class ProposalDetail extends React.Component<Props, State> {
     );
 
     const createDiscussionBannerConfig = () => {
-      if (proposal.changesRequestedDiscussionReason) {
+      if (proposal.isTeamMember && proposal.changesRequestedDiscussionReason) {
         return {
           [STATUS.DISCUSSION]: {
             blurb: (

@@ -203,4 +203,8 @@ example_email_args = {
         "proposal": proposal,
         "proposal_url": "http://someproposal.com",
     },
+    'followed_proposal_revised': {
+        "proposal": proposal,
+        "proposal_url": "http://someproposal.com",
+    },
 }

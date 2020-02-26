@@ -51,10 +51,11 @@ export default [
     title: 'Proposal changes requested',
     description: 'Sent when an admin requests changes for your submitted proposal',
   },
-    {
+  {
     id: 'proposal_rejected_discussion',
     title: 'Proposal changes requested',
-    description: 'Sent when an admin requests changes for a proposal open for public discussion',
+    description:
+      'Sent when an admin requests changes for a proposal open for public discussion',
   },
   {
     id: 'proposal_contribution',
@@ -175,5 +176,10 @@ export default [
     id: 'followed_proposal_update',
     title: 'Followed Proposal Update',
     description: 'Sent to followers of a proposal when it has a new update',
+  },
+  {
+    id: 'followed_proposal_revised',
+    title: 'Followed Proposal Revised',
+    description: 'Sent to followers of a proposal when a revision has been made',
   },
 ] as Email[];
