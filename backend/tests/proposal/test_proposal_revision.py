@@ -224,12 +224,3 @@ class TestProposalMethods(BaseProposalCreatorConfig):
         self.validate_changes(changes, ProposalChange.MILESTONE_EDIT_PERCENT, 1)
         self.validate_changes(changes, ProposalChange.MILESTONE_ADD, 2)
         self.validate_changes(changes, ProposalChange.MILESTONE_ADD, 3)
-
-
-
-
-
-
-
-
-

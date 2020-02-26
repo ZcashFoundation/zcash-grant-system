@@ -497,7 +497,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.assert404(resp)
 
     @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_1_get_proposal_revisions(self, mock_get):
+    def get_proposal_revisions(self, mock_get):
         # user should be able to publish live draft of a proposal
         self.login_default_user()
         self.proposal.status = ProposalStatus.DISCUSSION
