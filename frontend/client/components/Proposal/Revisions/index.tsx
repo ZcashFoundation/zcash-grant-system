@@ -90,20 +90,14 @@ export class ProposalRevision extends React.Component<Props> {
   }
 
   renderRevisionBody = (revision: Revision) => {
-    // TODO: move inline styles to less
     return (
       <div>
         {revision.changes.map((change, index) => (
           <div
             key={`${revision.revisionId}-${index}`}
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              flexGrow: 1,
-              paddingBottom: '0.1rem',
-            }}
+            className="ProposalRevision-revision-body-list"
           >
-            <div style={{ opacity: 0.5, paddingRight: '1rem' }}>
+            <div className="ProposalRevision-revision-body-list-icon">
               {this.renderChangeIcon(change)}
             </div>
             <div>{this.renderChangeMsg(change)}</div>
