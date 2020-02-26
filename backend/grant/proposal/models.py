@@ -248,22 +248,18 @@ class ProposalRevision(db.Model):
     # the archived proposal id associated with these changes
     proposal_archive_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=False)
 
-    # the archived proposal id associated with the revision before this current one
-    proposal_archive_parent_id = db.Column(db.Integer, db.ForeignKey("proposal.id"), nullable=True)
-
     # the detected changes as a JSON string
     changes = db.Column(db.Text, nullable=False)
 
     # the placement of this revision in the total revisions
     revision_index = db.Column(db.Integer)
 
-    def __init__(self, author, proposal_id: int, proposal_archive_id: int, proposal_archive_parent_id: int, changes: str, revision_index: int):
+    def __init__(self, author, proposal_id: int, proposal_archive_id: int, changes: str, revision_index: int):
         self.id = gen_random_id(ProposalRevision)
         self.date_created = datetime.datetime.now()
         self.author = author
         self.proposal_id = proposal_id
         self.proposal_archive_id = proposal_archive_id
-        self.proposal_archive_parent_id = proposal_archive_parent_id
         self.changes = changes
         self.revision_index = revision_index
 
@@ -995,15 +991,12 @@ class Proposal(db.Model):
         if len(revision_changes) == 0:
             raise ValidationException("Live draft does not appear to have any changes")
 
-        revision_parent = self.revisions[-1] if len(self.revisions) > 0 else None
-        proposal_archive_parent_id = revision_parent.proposal_archive_id if revision_parent else None
         revision_index = len(self.revisions)
 
         revision = ProposalRevision(
             author=author,
             proposal_id=self.id,
             proposal_archive_id=live_draft.id,
-            proposal_archive_parent_id=proposal_archive_parent_id,
             changes=json.dumps(revision_changes),
             revision_index=revision_index
         )
@@ -1179,7 +1172,6 @@ class ProposalRevisionSchema(ma.Schema):
             "author",
             "proposal_id",
             "proposal_archive_id",
-            "proposal_archive_parent_id",
             "changes",
             "revision_index"
         )

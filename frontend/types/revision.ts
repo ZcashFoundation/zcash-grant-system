@@ -26,7 +26,6 @@ export interface Revision {
   author: User;
   proposalId: string;
   proposalArchiveId: string;
-  proposalArchiveParentId: string;
   changes: RevisionChange[];
   revisionIndex: number;
 }

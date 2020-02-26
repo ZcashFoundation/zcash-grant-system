@@ -98,7 +98,6 @@ const revision1: Revision = {
   dateCreated: oneWeekAgo / 1000,
   changes: revision1Changes,
   proposalArchiveId: '0',
-  proposalArchiveParentId: '0',
   proposalId: '0',
 };
 
@@ -109,7 +108,6 @@ const revision2: Revision = {
   revisionId: '0',
   revisionIndex: 1,
   proposalArchiveId: '0',
-  proposalArchiveParentId: '0',
   proposalId: '0',
 };
 
@@ -120,7 +118,6 @@ const revision3: Revision = {
   revisionId: '0',
   revisionIndex: 2,
   proposalArchiveId: '0',
-  proposalArchiveParentId: '0',
   proposalId: '0',
 };
 

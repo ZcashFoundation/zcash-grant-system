@@ -466,7 +466,6 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.assertEqual(revision.author, self.user)
         self.assertEqual(revision.proposal, self.proposal)
         self.assertEqual(revision.proposal_archive_id, draft_id)
-        self.assertIsNone(revision.proposal_archive_parent_id)
         self.assertGreater(len(revision.changes), 0)
         self.assertEqual(revision.revision_index, 0)
 
@@ -564,13 +563,11 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         # check revision 1 data
         self.assertEqual(revision1["proposalId"], self.proposal.id)
         self.assertEqual(revision1["proposalArchiveId"], draft1_id)
-        self.assertIsNone(revision1["proposalArchiveParentId"])
         self.assertGreater(len(revision1["changes"]), 0)
         self.assertEqual(revision1["revisionIndex"], 0)
 
         # check revision 2 data
         self.assertEqual(revision2["proposalId"], self.proposal.id)
         self.assertEqual(revision2["proposalArchiveId"], draft2_id)
-        self.assertEqual(revision2["proposalArchiveParentId"], draft1_id)
         self.assertGreater(len(revision2["changes"]), 0)
         self.assertEqual(revision2["revisionIndex"], 1)
