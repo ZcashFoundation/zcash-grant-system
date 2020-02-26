@@ -4,7 +4,7 @@ import Exception from 'components/ExceptionPage';
 import Loader from 'components/Loader';
 import { makeProposalPreviewFromArchived } from 'modules/create/utils';
 import { STATUS, Proposal } from 'types';
-import { getProposal } from 'api/api';
+import { getArchivedProposal } from 'api/api';
 import './index.less';
 
 interface Props {
@@ -29,7 +29,7 @@ export class ArchivedProposal extends React.Component<Props, State> {
     if (!proposal || proposal.proposalId !== proposalId) {
       this.setState({ loading: true, errorCode: undefined });
       try {
-        const { data } = await getProposal(proposalId);
+        const { data } = await getArchivedProposal(proposalId);
         this.setState({ proposal: data });
       } catch (e) {
         this.setState({ errorCode: '404' });

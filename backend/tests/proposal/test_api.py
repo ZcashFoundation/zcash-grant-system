@@ -167,6 +167,27 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert403(resp)
 
+    def test_get_archived_proposal(self):
+        self.login_default_user()
+
+        bad_id = '111111111111'
+        resp = self.app.get(
+            f"/api/v1/proposals/{bad_id}/archive"
+        )
+        self.assert404(resp)
+
+        resp = self.app.get(
+            f"/api/v1/proposals/{self.proposal.id}/archive"
+        )
+        self.assert401(resp)
+
+        self.proposal.status = ProposalStatus.ARCHIVED
+        resp = self.app.get(
+            f"/api/v1/proposals/{self.proposal.id}/archive"
+        )
+        self.assert200(resp)
+        self.assertEqual(self.proposal.id, resp.json["proposalId"])
+
     # /
     def test_get_proposals(self):
         self.proposal.status = ProposalStatus.LIVE

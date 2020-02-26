@@ -53,6 +53,8 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
+        if proposal.status == ProposalStatus.ARCHIVED:
+            return {"message": "Proposal has been archived"}, 401
         if proposal.status not in [ProposalStatus.LIVE, ProposalStatus.DISCUSSION]:
             if proposal.status == ProposalStatus.DELETED:
                 return {"message": "Proposal was deleted"}, 404
@@ -63,6 +65,19 @@ def get_proposal(proposal_id):
         return proposal_schema.dump(proposal)
     else:
         return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/archive", methods=["GET"])
+def get_archived_proposal(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    if proposal.status != ProposalStatus.ARCHIVED:
+        return {"message": "Proposal is not archived"}, 401
+
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
@@ -167,8 +182,7 @@ def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     query = Proposal.query.filter(or_(
             Proposal.status == ProposalStatus.LIVE,
-            Proposal.status == ProposalStatus.DISCUSSION,
-            Proposal.status == ProposalStatus.ARCHIVED
+            Proposal.status == ProposalStatus.DISCUSSION
          )) \
         .filter(Proposal.stage != ProposalStage.CANCELED) \
         .filter(Proposal.stage != ProposalStage.FAILED)
