@@ -36,6 +36,7 @@ from .models import (
     proposal_schema,
     ProposalUpdate,
     proposal_update_schema,
+    proposals_revisions_schema,
     ProposalContribution,
     proposal_contribution_schema,
     proposal_team,
@@ -52,7 +53,9 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
-        if proposal.status != ProposalStatus.LIVE:
+        if proposal.status == ProposalStatus.ARCHIVED:
+            return {"message": "Proposal has been archived"}, 401
+        if proposal.status not in [ProposalStatus.LIVE, ProposalStatus.DISCUSSION]:
             if proposal.status == ProposalStatus.DELETED:
                 return {"message": "Proposal was deleted"}, 404
             authed_user = get_authed_user()
@@ -62,6 +65,19 @@ def get_proposal(proposal_id):
         return proposal_schema.dump(proposal)
     else:
         return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/archive", methods=["GET"])
+def get_archived_proposal(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    if proposal.status != ProposalStatus.ARCHIVED:
+        return {"message": "Proposal is not archived"}, 401
+
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
@@ -110,8 +126,8 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    if proposal.status != ProposalStatus.LIVE:
-        return {"message": "Proposal must be live to comment"}, 400
+    if proposal.status != ProposalStatus.LIVE and proposal.status != ProposalStatus.DISCUSSION:
+        return {"message": "Proposal must be live or open for public review to comment"}, 400
 
     # Make sure the parent comment exists
     parent = None
@@ -164,7 +180,10 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 @query(paginated_fields)
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
-    query = Proposal.query.filter_by(status=ProposalStatus.LIVE) \
+    query = Proposal.query.filter(or_(
+            Proposal.status == ProposalStatus.LIVE,
+            Proposal.status == ProposalStatus.DISCUSSION
+         )) \
         .filter(Proposal.stage != ProposalStage.CANCELED) \
         .filter(Proposal.stage != ProposalStage.FAILED)
     page = pagination.proposal(
@@ -207,6 +226,22 @@ def make_proposal_draft(rfp_id):
     return proposal_schema.dump(proposal), 201
 
 
+@blueprint.route("/<proposal_id>/draft", methods=["POST"])
+@requires_team_member_auth
+def make_proposal_live_draft(proposal_id):
+    proposal = g.current_proposal
+
+    if proposal.status != ProposalStatus.DISCUSSION:
+        return {"message": "Proposal does not have a DISCUSSION status"}, 404
+
+    if not proposal.live_draft:
+        proposal.live_draft = Proposal.make_live_draft(proposal)
+        db.session.add(proposal)
+        db.session.commit()
+
+    return proposal_schema.dump(proposal.live_draft), 201
+
+
 @blueprint.route("/drafts", methods=["GET"])
 @requires_auth
 def get_proposal_drafts():
@@ -215,6 +250,7 @@ def get_proposal_drafts():
             .filter(or_(
             Proposal.status == ProposalStatus.DRAFT,
             Proposal.status == ProposalStatus.REJECTED,
+            Proposal.status == ProposalStatus.LIVE_DRAFT
         ))
             .join(proposal_team)
             .filter(proposal_team.c.user_id == g.current_user.id)
@@ -241,6 +277,7 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Update the base proposal fields
     try:
         if g.current_proposal.status not in [ProposalStatus.DRAFT,
+                                             ProposalStatus.LIVE_DRAFT,
                                              ProposalStatus.REJECTED]:
             raise ValidationException(
                f"Proposal with status: {g.current_proposal.status} are not authorized for updates"
@@ -259,6 +296,21 @@ def update_proposal(milestones, proposal_id, rfp_opt_in, **kwargs):
     # Commit
     db.session.commit()
     return proposal_schema.dump(g.current_proposal), 200
+
+
+@blueprint.route("/<proposal_id>/resolve", methods=["PUT"])
+@requires_team_member_auth
+def resolve_changes_discussion(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+    if not proposal:
+        return {"message": "No proposal found"}, 404
+
+    proposal.resolve_changes_discussion()
+    db.session.add(proposal)
+    db.session.commit()
+
+    proposal.send_admin_email('admin_changes_resolved')
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route("/<proposal_id>/tips", methods=["PUT"])
@@ -339,6 +391,41 @@ def publish_proposal(proposal_id):
     return proposal_schema.dump(g.current_proposal), 200
 
 
+@blueprint.route("/<proposal_id>/publish/live", methods=["PUT"])
+@requires_team_member_auth
+def publish_live_draft(proposal_id):
+    if g.current_proposal.status != ProposalStatus.LIVE_DRAFT:
+        return {"message": "Proposal is not a live draft"}, 403
+
+    if not g.current_proposal.live_draft_parent_id:
+        return {"message": "No parent proposal found"}, 404
+
+    parent_proposal = Proposal.query.get(g.current_proposal.live_draft_parent_id)
+
+    if not parent_proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    # TODO: double check this isn't needed:
+    #
+    # if g.current_user not in proposal.team:
+    #     return {"message": "You are not a team member of this proposal"}
+
+    try:
+        parent_proposal.live_draft.validate_publishable()
+    except ValidationException as e:
+        return {"message": "{}".format(str(e))}, 400
+
+    parent_proposal.consume_live_draft(g.current_user)
+    db.session.commit()
+
+    # Send email to all followers
+    parent_proposal.send_follower_email(
+        "followed_proposal_revised", url_suffix="?tab=revisions"
+    )
+
+    return proposal_schema.dump(parent_proposal), 200
+
+
 @blueprint.route("/<proposal_id>/updates", methods=["GET"])
 def get_proposal_updates(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
@@ -360,6 +447,26 @@ def get_proposal_update(proposal_id, update_id):
             return {"message": "No update matching id"}
     else:
         return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/revisions", methods=["GET"])
+def get_proposal_revisions(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    if proposal.status in [ProposalStatus.DRAFT, ProposalStatus.REJECTED]:
+        return {"message": "Proposal is not live"}, 400
+
+    def sort_by_revision_index(r):
+        return r.revision_index
+
+    revisions = proposal.revisions
+    revisions.sort(key=sort_by_revision_index)
+
+    dumped_revisions = proposals_revisions_schema.dump(revisions)
+    return dumped_revisions
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])
@@ -710,8 +817,8 @@ def like_proposal(proposal_id, is_liked):
     if not proposal:
         return {"message": "No proposal matching id"}, 404
 
-    if not proposal.status == ProposalStatus.LIVE:
-        return {"message": "Cannot like a proposal that's not live"}, 404
+    if proposal.status not in [ProposalStatus.LIVE, ProposalStatus.DISCUSSION]:
+        return {"message": "Cannot like a proposal that's not live or in discussion"}, 404
 
     proposal.like(user, is_liked)
     db.session.commit()

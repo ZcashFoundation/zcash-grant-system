@@ -113,7 +113,7 @@ class Proposals extends React.Component<Props, State> {
                   The Zcash Foundation accepts proposals from community members to improve
                   the Zcash ecosystem. Proposals are either funded by the Zcash Foundation
                   directly, or are opened for community donations should they be approved
-                  by the Zcash Foundation."
+                  by the Zcash Foundation.
                 </p>
               </div>
             </div>

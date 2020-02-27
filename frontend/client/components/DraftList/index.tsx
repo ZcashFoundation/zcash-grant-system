@@ -91,8 +91,17 @@ class DraftList extends React.Component<Props, State> {
   }
 
   render() {
-    const { drafts, isCreatingDraft, isFetchingDrafts, isVerified } = this.props;
+    const {
+      drafts: allDrafts,
+      isCreatingDraft,
+      isFetchingDrafts,
+      isVerified,
+    } = this.props;
     const { deletingId } = this.state;
+
+    const drafts = allDrafts
+      ? allDrafts.filter(draft => draft.status !== STATUS.LIVE_DRAFT)
+      : allDrafts;
 
     if (!isVerified) {
       return (

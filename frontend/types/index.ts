@@ -10,3 +10,4 @@ export * from './email';
 export * from './rfp';
 export * from './pagination';
 export * from './ccr';
+export * from './revision';

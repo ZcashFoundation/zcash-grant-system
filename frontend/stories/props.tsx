@@ -165,6 +165,9 @@ export function generateProposal({
     followersCount: 0,
     authedLiked: false,
     likesCount: 0,
+    changesRequestedDiscussion: null,
+    changesRequestedDiscussionReason: null,
+    liveDraftId: null,
     tipJarAddress: null,
     tipJarViewKey: null,
     arbiter: {

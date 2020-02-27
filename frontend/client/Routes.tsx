@@ -25,6 +25,8 @@ const RequestEdit = loadable(() => import('pages/request-edit'), opts);
 const ProposalEdit = loadable(() => import('pages/proposal-edit'), opts);
 const Proposals = loadable(() => import('pages/proposals'), opts);
 const Proposal = loadable(() => import('pages/proposal'), opts);
+const Archived = loadable(() => import('pages/archived'), opts);
+const Guide = loadable(() => import('pages/guide'), opts);
 const Ccr = loadable(() => import('pages/ccr'), opts);
 const Auth = loadable(() => import('pages/auth'));
 const SignOut = loadable(() => import('pages/sign-out'), opts);
@@ -32,6 +34,7 @@ const Profile = loadable(() => import('pages/profile'), opts);
 const Settings = loadable(() => import('pages/settings'), opts);
 const Exception = loadable(() => import('pages/exception'), opts);
 const Tos = loadable(() => import('pages/tos'));
+const ProposalTutorial = loadable(() => import('pages/proposal-tutorial'));
 const About = loadable(() => import('pages/about'), opts);
 const Privacy = loadable(() => import('pages/privacy'), opts);
 const Contact = loadable(() => import('pages/contact'), opts);
@@ -139,6 +142,16 @@ const routeConfigs: RouteConfig[] = [
     onlyLoggedIn: true,
   },
   {
+    // Proposal archive page
+    route: {
+      path: '/proposals/:id/archive',
+      component: Archived,
+    },
+    template: {
+      title: 'Archived',
+    },
+  },
+  {
     // Proposal detail page
     route: {
       path: '/proposals/:id',
@@ -202,6 +215,30 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'Terms of Service',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Terms of Service page
+    route: {
+      path: '/guide',
+      component: Guide,
+      exact: true,
+    },
+    template: {
+      title: 'Guide',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Terms of Service page
+    route: {
+      path: '/proposal-tutorial',
+      component: ProposalTutorial,
+      exact: true,
+    },
+    template: {
+      title: 'Proposal Tutorial',
     },
     onlyLoggedIn: false,
   },

@@ -159,7 +159,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
           validateStatus={errors.target ? 'error' : undefined}
           help={
             errors.target ||
-            'You will be paid out in ZEC at market price at payout time. This cannot be changed once your proposal starts'
+            'You will be paid out in ZEC based in USD market price at payout time. This cannot be changed once your proposal starts'
           }
         >
           <Input

@@ -1,6 +1,13 @@
 import { Zat, Usd } from 'utils/units';
 import { PROPOSAL_STAGE } from 'api/constants';
-import { CreateMilestone, Update, User, Comment, ContributionWithUser } from 'types';
+import {
+  CreateMilestone,
+  Update,
+  Revision,
+  User,
+  Comment,
+  ContributionWithUser,
+} from 'types';
 import { ProposalMilestone } from './milestone';
 import { RFP } from './rfp';
 
@@ -69,6 +76,9 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   authedLiked: boolean;
   likesCount: number;
   tipJarViewKey: string | null;
+  changesRequestedDiscussion: boolean | null;
+  changesRequestedDiscussionReason: string | null;
+  liveDraftId: string | null;
   isTeamMember?: boolean; // FE derived
   isArbiter?: boolean; // FE derived
 }
@@ -86,6 +96,11 @@ export interface ProposalComments {
 export interface ProposalUpdates {
   proposalId: Proposal['proposalId'];
   updates: Update[];
+}
+
+export interface ProposalRevisions {
+  proposalId: Proposal['proposalId'];
+  revisions: Revision[];
 }
 
 export interface ProposalContributions {
@@ -113,8 +128,11 @@ export interface UserProposal {
 // NOTE: sync with backend/grant/proposal/models.py STATUSES
 export enum STATUS {
   DRAFT = 'DRAFT',
+  LIVE_DRAFT = 'LIVE_DRAFT',
+  ARCHIVED = 'ARCHIVED',
   STAKING = 'STAKING',
   PENDING = 'PENDING',
+  DISCUSSION = 'DISCUSSION',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   LIVE = 'LIVE',

@@ -25,6 +25,10 @@ export interface CreateState {
   isSubmitting: boolean;
   submitError: string | null;
 
+  submittedLiveDraft: Proposal | null;
+  isSubmittingLiveDraft: boolean;
+  submitErrorLiveDraft: string | null;
+
   publishedProposal: Proposal | null;
   isPublishing: boolean;
   publishError: string | null;
@@ -56,6 +60,10 @@ export const INITIAL_STATE: CreateState = {
   submittedProposal: null,
   isSubmitting: false,
   submitError: null,
+
+  submittedLiveDraft: null,
+  isSubmittingLiveDraft: false,
+  submitErrorLiveDraft: null,
 
   publishedProposal: null,
   isPublishing: false,
@@ -195,6 +203,26 @@ export default function createReducer(
         ...state,
         submitError: action.payload,
         isSubmitting: false,
+      };
+
+    case types.SUBMIT_LIVE_DRAFT_PENDING:
+      return {
+        ...state,
+        submittedLiveDraft: null,
+        isSubmittingLiveDraft: true,
+        submitErrorLiveDraft: null,
+      };
+    case types.SUBMIT_LIVE_DRAFT_FULFILLED:
+      return {
+        ...state,
+        submittedLiveDraft: action.payload,
+        isSubmittingLiveDraft: false,
+      };
+    case types.SUBMIT_LIVE_DRAFT_REJECTED:
+      return {
+        ...state,
+        submitErrorLiveDraft: action.payload,
+        isSubmittingLiveDraft: false,
       };
 
     case types.UNLINK_PROPOSAL_RFP_PENDING:
