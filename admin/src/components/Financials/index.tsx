@@ -182,10 +182,10 @@ class Financials extends React.Component<Props, State> {
                   />
                 )}
                 data={[
-                  { x: 'Quarter 1', y: parseFloat(quarterData.q1) },
-                  { x: 'Quarter 2', y: parseFloat(quarterData.q2) },
-                  { x: 'Quarter 3', y: parseFloat(quarterData.q3) },
-                  { x: 'Quarter 4', y: parseFloat(quarterData.q3) },
+                  { x: 'Q1', y: parseFloat(quarterData.q1) },
+                  { x: 'Q2', y: parseFloat(quarterData.q2) },
+                  { x: 'Q3', y: parseFloat(quarterData.q3) },
+                  { x: 'Q4', y: parseFloat(quarterData.q3) },
                 ]}
                 valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
                 height={180}
