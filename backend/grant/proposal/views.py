@@ -415,13 +415,14 @@ def publish_live_draft(proposal_id):
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
 
-    parent_proposal.consume_live_draft(g.current_user)
+    had_revisions = parent_proposal.consume_live_draft(g.current_user)
     db.session.commit()
 
-    # Send email to all followers
-    parent_proposal.send_follower_email(
-        "followed_proposal_revised", url_suffix="?tab=revisions"
-    )
+    # Send email to all followers if revisions were detected
+    if had_revisions:
+        parent_proposal.send_follower_email(
+            "followed_proposal_revised", url_suffix="?tab=revisions"
+        )
 
     return proposal_schema.dump(parent_proposal), 200
 
