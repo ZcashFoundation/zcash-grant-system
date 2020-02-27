@@ -167,6 +167,27 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert403(resp)
 
+    def test_get_archived_proposal(self):
+        self.login_default_user()
+
+        bad_id = '111111111111'
+        resp = self.app.get(
+            f"/api/v1/proposals/{bad_id}/archive"
+        )
+        self.assert404(resp)
+
+        resp = self.app.get(
+            f"/api/v1/proposals/{self.proposal.id}/archive"
+        )
+        self.assert401(resp)
+
+        self.proposal.status = ProposalStatus.ARCHIVED
+        resp = self.app.get(
+            f"/api/v1/proposals/{self.proposal.id}/archive"
+        )
+        self.assert200(resp)
+        self.assertEqual(self.proposal.id, resp.json["proposalId"])
+
     # /
     def test_get_proposals(self):
         self.proposal.status = ProposalStatus.LIVE
@@ -392,6 +413,9 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.login_default_user()
         self.proposal.status = ProposalStatus.DISCUSSION
 
+        # double check to make sure there are no proposal revisions
+        self.assertEqual(len(self.proposal.revisions), 0)
+
         # create live draft
         draft_resp = self.app.post(
             f"/api/v1/proposals/{self.proposal.id}/draft"
@@ -429,10 +453,22 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.assertEqual(proposal.title, new_draft_title)
         self.assertEqual(proposal.milestones[0].title, new_milestone_title)
 
-        # check the draft has been destroyed
+        # check the draft has been archived
         self.assertIsNone(proposal.live_draft)
         old_live_draft = Proposal.query.get(draft_id)
-        self.assertIsNone(old_live_draft)
+        self.assertEqual(old_live_draft.status, ProposalStatus.ARCHIVED)
+
+        # check the proposal revision was added
+        self.assertEqual(len(self.proposal.revisions), 1)
+
+        # check the proposal revision was created correctly
+        revision = self.proposal.revisions[0]
+        self.assertEqual(revision.author, self.user)
+        self.assertEqual(revision.proposal, self.proposal)
+        self.assertEqual(revision.proposal_archive_id, draft_id)
+        self.assertGreater(len(revision.changes), 0)
+        self.assertEqual(revision.revision_index, 0)
+
 
     def test_publish_live_draft_bad_status_fail(self):
         # publishing a live draft without a LIVE_DRAFT status should fail
@@ -459,3 +495,79 @@ class TestProposalAPI(BaseProposalCreatorConfig):
             f"/api/v1/proposals/{self.proposal.id}/publish/live"
         )
         self.assert404(resp)
+
+    @patch('requests.get', side_effect=mock_blockchain_api_requests)
+    def get_proposal_revisions(self, mock_get):
+        # user should be able to publish live draft of a proposal
+        self.login_default_user()
+        self.proposal.status = ProposalStatus.DISCUSSION
+
+        # double check to make sure there are no proposal revisions
+        self.assertEqual(len(self.proposal.revisions), 0)
+
+        # create live draft
+        draft1_resp = self.app.post(
+            f"/api/v1/proposals/{self.proposal.id}/draft"
+        )
+
+        self.assertStatus(draft1_resp, 201)
+        draft1 = Proposal.query.get(draft1_resp.json['proposalId'])
+        draft1_id = draft1.id
+
+        # set new title and save
+        draft1.title = 'draft 1 title'
+        db.session.add(draft1)
+        db.session.commit()
+
+        # publish live draft1
+        resp = self.app.put(
+            f"/api/v1/proposals/{draft1_id}/publish/live"
+        )
+        self.assert200(resp)
+
+        # make sure proposal revision was created as expected
+        self.assertEqual(len(self.proposal.revisions), 1)
+
+        # create second live draft
+        draft2_resp = self.app.post(
+            f"/api/v1/proposals/{self.proposal.id}/draft"
+        )
+        self.assertStatus(draft2_resp, 201)
+        draft2 = Proposal.query.get(draft2_resp.json['proposalId'])
+        draft2_id = draft2.id
+
+        # set new title and save
+        draft2.title = 'draft 2 title'
+        db.session.add(draft2)
+        db.session.commit()
+
+        # publish live draft2
+        resp = self.app.put(
+            f"/api/v1/proposals/{draft2_id}/publish/live"
+        )
+        self.assert200(resp)
+
+        # make sure proposal revision was created as expected
+        self.assertEqual(len(self.proposal.revisions), 2)
+
+        # finally, call the revisions API and make sure it returns the two revisions as expected
+        revisions_resp = self.app.get(
+            f"/api/v1/proposals/{self.proposal.id}/revisions"
+        )
+        revisions = revisions_resp.json
+        self.assertEqual(len(revisions), 2)
+
+        revision1 = revisions[0]
+        revision2 = revisions[1]
+
+        # check revision 1 data
+        self.assertEqual(revision1["proposalId"], self.proposal.id)
+        self.assertEqual(revision1["proposalArchiveId"], draft1_id)
+        self.assertGreater(len(revision1["changes"]), 0)
+        self.assertEqual(revision1["revisionIndex"], 0)
+
+        # check revision 2 data
+        self.assertEqual(revision2["proposalId"], self.proposal.id)
+        self.assertEqual(revision2["proposalArchiveId"], draft2_id)
+        self.assertGreater(len(revision2["changes"]), 0)
+        self.assertEqual(revision2["revisionIndex"], 1)

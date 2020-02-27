@@ -20,6 +20,7 @@ import RFPBlock from './RFPBlock';
 import Milestones from './Milestones';
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
+import RevisionsTab from './Revisions';
 import ContributorsTab from './Contributors';
 import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
@@ -225,10 +226,17 @@ export class ProposalDetail extends React.Component<Props, State> {
     } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
     let banner = statusBanner[proposal.status];
     if (isPreview) {
-      banner = {
-        blurb: 'This is a preview of your proposal. It has not yet been published.',
-        type: 'info',
-      };
+      if (proposal.status === STATUS.ARCHIVED) {
+        banner = {
+          blurb: 'This is an archived proposal revision.',
+          type: 'info',
+        };
+      } else {
+        banner = {
+          blurb: 'This is a preview of your proposal. It has not yet been published.',
+          type: 'info',
+        };
+      }
     }
 
     return (
@@ -312,7 +320,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           <LinkableTabs scrollToTabs defaultActiveKey={defaultTab}>
             <Tabs.TabPane tab="Milestones" key="milestones">
               <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
-                <Milestones proposal={proposal} />
+                <Milestones proposal={proposal} isPreview={isPreview} />
               </div>
             </Tabs.TabPane>
             <Tabs.TabPane
@@ -324,6 +332,13 @@ export class ProposalDetail extends React.Component<Props, State> {
             </Tabs.TabPane>
             <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
               <UpdatesTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+            <Tabs.TabPane
+              tab="Revisions"
+              key="revisions"
+              disabled={!isLive && !isOpenForDiscussion}
+            >
+              <RevisionsTab proposalId={proposal.proposalId} />
             </Tabs.TabPane>
             {!proposal.isVersionTwo && (
               <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>

@@ -36,6 +36,7 @@ from .models import (
     proposal_schema,
     ProposalUpdate,
     proposal_update_schema,
+    proposals_revisions_schema,
     ProposalContribution,
     proposal_contribution_schema,
     proposal_team,
@@ -52,6 +53,8 @@ blueprint = Blueprint("proposal", __name__, url_prefix="/api/v1/proposals")
 def get_proposal(proposal_id):
     proposal = Proposal.query.filter_by(id=proposal_id).first()
     if proposal:
+        if proposal.status == ProposalStatus.ARCHIVED:
+            return {"message": "Proposal has been archived"}, 401
         if proposal.status not in [ProposalStatus.LIVE, ProposalStatus.DISCUSSION]:
             if proposal.status == ProposalStatus.DELETED:
                 return {"message": "Proposal was deleted"}, 404
@@ -62,6 +65,19 @@ def get_proposal(proposal_id):
         return proposal_schema.dump(proposal)
     else:
         return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/archive", methods=["GET"])
+def get_archived_proposal(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    if proposal.status != ProposalStatus.ARCHIVED:
+        return {"message": "Proposal is not archived"}, 401
+
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route("/<proposal_id>/comments", methods=["GET"])
@@ -164,7 +180,10 @@ def post_proposal_comments(proposal_id, comment, parent_comment_id):
 @query(paginated_fields)
 def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
-    query = Proposal.query.filter(or_(Proposal.status == ProposalStatus.LIVE, Proposal.status == ProposalStatus.DISCUSSION)) \
+    query = Proposal.query.filter(or_(
+            Proposal.status == ProposalStatus.LIVE,
+            Proposal.status == ProposalStatus.DISCUSSION
+         )) \
         .filter(Proposal.stage != ProposalStage.CANCELED) \
         .filter(Proposal.stage != ProposalStage.FAILED)
     page = pagination.proposal(
@@ -396,7 +415,7 @@ def publish_live_draft(proposal_id):
     except ValidationException as e:
         return {"message": "{}".format(str(e))}, 400
 
-    parent_proposal.consume_live_draft()
+    parent_proposal.consume_live_draft(g.current_user)
     db.session.commit()
 
     # Send email to all followers
@@ -428,6 +447,26 @@ def get_proposal_update(proposal_id, update_id):
             return {"message": "No update matching id"}
     else:
         return {"message": "No proposal matching id"}, 404
+
+
+@blueprint.route("/<proposal_id>/revisions", methods=["GET"])
+def get_proposal_revisions(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal matching id"}, 404
+
+    if proposal.status in [ProposalStatus.DRAFT, ProposalStatus.REJECTED]:
+        return {"message": "Proposal is not live"}, 400
+
+    def sort_by_revision_index(r):
+        return r.revision_index
+
+    revisions = proposal.revisions
+    revisions.sort(key=sort_by_revision_index)
+
+    dumped_revisions = proposals_revisions_schema.dump(revisions)
+    return dumped_revisions
 
 
 @blueprint.route("/<proposal_id>/updates", methods=["POST"])

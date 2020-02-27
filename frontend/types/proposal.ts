@@ -1,6 +1,13 @@
 import { Zat, Usd } from 'utils/units';
 import { PROPOSAL_STAGE } from 'api/constants';
-import { CreateMilestone, Update, User, Comment, ContributionWithUser } from 'types';
+import {
+  CreateMilestone,
+  Update,
+  Revision,
+  User,
+  Comment,
+  ContributionWithUser,
+} from 'types';
 import { ProposalMilestone } from './milestone';
 import { RFP } from './rfp';
 
@@ -91,6 +98,11 @@ export interface ProposalUpdates {
   updates: Update[];
 }
 
+export interface ProposalRevisions {
+  proposalId: Proposal['proposalId'];
+  revisions: Revision[];
+}
+
 export interface ProposalContributions {
   proposalId: Proposal['proposalId'];
   top: ContributionWithUser[];
@@ -117,6 +129,7 @@ export interface UserProposal {
 export enum STATUS {
   DRAFT = 'DRAFT',
   LIVE_DRAFT = 'LIVE_DRAFT',
+  ARCHIVED = 'ARCHIVED',
   STAKING = 'STAKING',
   PENDING = 'PENDING',
   DISCUSSION = 'DISCUSSION',

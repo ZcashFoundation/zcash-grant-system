@@ -44,6 +44,15 @@ export function getProposal(proposalId: number | string): Promise<{ data: Propos
   });
 }
 
+export function getArchivedProposal(
+  proposalId: number | string,
+): Promise<{ data: Proposal }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/archive`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
 export function followProposal(proposalId: number, isFollow: boolean) {
   return axios.put(`/api/v1/proposals/${proposalId}/follow`, { isFollow });
 }
@@ -72,6 +81,10 @@ export function reportProposalComment(proposalId: number, commentId: number) {
 
 export function getProposalUpdates(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/updates`);
+}
+
+export function getProposalRevisions(proposalId: number | string) {
+  return axios.get(`/api/v1/proposals/${proposalId}/revisions`);
 }
 
 export function getProposalContributions(proposalId: number | string) {
