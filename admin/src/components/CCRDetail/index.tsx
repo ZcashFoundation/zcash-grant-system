@@ -73,8 +73,8 @@ class CCRDetailNaked extends React.Component<Props, State> {
               <Button
                 className="CCRDetail-review"
                 loading={store.ccrDetailApproving}
-                icon="close"
-                type="danger"
+                icon="warning"
+                type="default"
                 onClick={() => {
                   FeedbackModal.open({
                     title: 'Request changes for this Request?',
@@ -85,6 +85,22 @@ class CCRDetailNaked extends React.Component<Props, State> {
                 }}
               >
                 Request changes
+              </Button>
+              <Button
+                className="CCRDetail-review"
+                loading={store.ccrDetailRejectingPermanently}
+                icon="close"
+                type="danger"
+                onClick={() => {
+                  FeedbackModal.open({
+                    title: 'Reject this CCR permanently?',
+                    label: 'Please provide a reason:',
+                    okText: 'Reject Permanently',
+                    onOk: this.handleRejectPermanently,
+                  });
+                }}
+              >
+                Reject Permanently
               </Button>
             </div>
           }
@@ -185,7 +201,6 @@ class CCRDetailNaked extends React.Component<Props, State> {
                 <Link to={`/users/${c.author.userid}`}>{c.author.displayName}</Link>
               </div>
             </Card>
-
           </Col>
         </Row>
       </div>
@@ -214,6 +229,11 @@ class CCRDetailNaked extends React.Component<Props, State> {
   private handleReject = async (reason: string) => {
     await store.approveCCR(false, reason);
     message.info('CCR changes requested');
+  };
+
+  private handleRejectPermanently = async (rejectReason: string) => {
+    await store.rejectPermanentlyCcr(rejectReason);
+    message.info('CCR rejected permanently');
   };
 }
 

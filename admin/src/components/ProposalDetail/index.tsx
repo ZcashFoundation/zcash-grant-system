@@ -221,8 +221,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                     <Button
                       className="ProposalDetail-review"
                       loading={store.proposalDetailApprovingDiscussion}
-                      icon="close"
-                      type="danger"
+                      icon="warning"
+                      type="default"
                       onClick={() => {
                         FeedbackModal.open({
                           title: 'Request changes to this proposal?',
@@ -233,6 +233,22 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                       }}
                     >
                       Request Changes
+                    </Button>
+                    <Button
+                      className="ProposalDetail-review"
+                      loading={store.proposalDetailRejectingPermanently}
+                      icon="close"
+                      type="danger"
+                      onClick={() => {
+                        FeedbackModal.open({
+                          title: 'Reject this proposal permanently?',
+                          label: 'Please provide a reason:',
+                          okText: 'Reject Permanently',
+                          onOk: this.handleRejectPermanently,
+                        });
+                      }}
+                    >
+                      Reject Permanently
                     </Button>
                   </div>
                 }
@@ -693,6 +709,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
   private handleRejectDiscussion = async (rejectReason: string) => {
     await store.approveDiscussion(false, rejectReason);
     message.info('Proposal changes requested');
+  };
+
+  private handleRejectPermanently = async (rejectReason: string) => {
+    await store.rejectPermanentlyProposal(rejectReason);
+    message.info('Proposal rejected permanently');
   };
 
   private handleAcceptProposal = async (
