@@ -2,7 +2,13 @@ import React from 'react';
 import { Select, Radio, Card } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import { SelectValue } from 'antd/lib/select';
-import { PROPOSAL_SORT, SORT_LABELS, PROPOSAL_STAGE, STAGE_UI } from 'api/constants';
+import {
+  PROPOSAL_SORT,
+  SORT_LABELS,
+  PROPOSAL_STAGE,
+  STAGE_UI,
+  CUSTOM_FILTERS,
+} from 'api/constants';
 import { typedKeys } from 'utils/ts';
 import { ProposalPage } from 'types';
 
@@ -16,6 +22,8 @@ interface Props {
 export default class ProposalFilters extends React.Component<Props> {
   render() {
     const { sort, filters } = this.props;
+
+    const combinedFilters = [...filters.stage, ...filters.custom];
 
     return (
       <div>
@@ -32,18 +40,17 @@ export default class ProposalFilters extends React.Component<Props> {
         <div style={{ marginBottom: '1rem' }} />
 
         <Card title="Filter" extra={<a onClick={this.resetFilters}>Reset</a>}>
-          <h3>Proposal stage</h3>
           <div style={{ marginBottom: '0.25rem' }}>
             <Radio
               value="ALL"
               name="stage"
-              checked={filters.stage.length === 0}
+              checked={combinedFilters.length === 0}
               onChange={this.handleStageChange}
             >
               All
             </Radio>
           </div>
-          {typedKeys(PROPOSAL_STAGE)
+          {typedKeys(STAGE_UI)
             .filter(
               s =>
                 ![
@@ -58,7 +65,7 @@ export default class ProposalFilters extends React.Component<Props> {
                 <Radio
                   value={s}
                   name="stage"
-                  checked={filters.stage.includes(s as PROPOSAL_STAGE)}
+                  checked={combinedFilters.includes(s)}
                   onChange={this.handleStageChange}
                 >
                   {STAGE_UI[s].label}
@@ -71,13 +78,22 @@ export default class ProposalFilters extends React.Component<Props> {
   }
 
   private handleStageChange = (ev: RadioChangeEvent) => {
-    let stage = [] as PROPOSAL_STAGE[];
-    if (ev.target.value !== 'ALL') {
-      stage = [ev.target.value as PROPOSAL_STAGE];
+    let stage: PROPOSAL_STAGE[] = [];
+    let custom: CUSTOM_FILTERS[] = [];
+    const { value } = ev.target;
+    if (value !== 'ALL') {
+      if (Object.values(PROPOSAL_STAGE).includes(value)) {
+        stage = [value];
+      }
+
+      if (Object.values(CUSTOM_FILTERS).includes(value)) {
+        custom = [value];
+      }
     }
     this.props.handleChangeFilters({
       ...this.props.filters,
       stage,
+      custom,
     });
   };
 
@@ -92,6 +108,7 @@ export default class ProposalFilters extends React.Component<Props> {
     this.props.handleChangeFilters({
       category: [],
       stage: [],
+      custom: [],
     });
   };
 }
