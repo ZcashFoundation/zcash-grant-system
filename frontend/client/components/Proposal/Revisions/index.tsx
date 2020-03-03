@@ -66,7 +66,7 @@ export class ProposalRevision extends React.Component<Props> {
               {this.renderRevisionBody(revision)}
             </div>
             <div className="ProposalRevision-revision-controls">
-              {revisions.length !== index + 1 && (
+              {index !== 0 && (
                 <Link
                   to={`/proposals/${revision.proposalArchiveId}/archive`}
                   className="ProposalRevision-revision-controls-button"
