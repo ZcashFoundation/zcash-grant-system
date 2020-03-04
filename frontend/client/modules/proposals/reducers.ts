@@ -68,6 +68,7 @@ export const INITIAL_STATE: ProposalState = {
     filters: {
       category: [],
       stage: [],
+      custom: [],
     },
     items: [],
     hasFetched: false,

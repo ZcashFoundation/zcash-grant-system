@@ -59,18 +59,38 @@ export enum PROPOSAL_STAGE {
   CANCELED = 'CANCELED',
 }
 
+export enum CUSTOM_FILTERS {
+  STATUS_DISCUSSION = 'STATUS_DISCUSSION',
+  ACCEPTED_WITH_FUNDING = 'ACCEPTED_WITH_FUNDING',
+  ACCEPTED_WITHOUT_FUNDING = 'ACCEPTED_WITHOUT_FUNDING',
+}
+
 interface StageUI {
   label: string;
   color: string;
 }
 
-export const STAGE_UI: { [key in PROPOSAL_STAGE]: StageUI } = {
+export type PROPOSAL_FILTERS = PROPOSAL_STAGE | CUSTOM_FILTERS;
+
+export const STAGE_UI: { [key in PROPOSAL_FILTERS]: StageUI } = {
   PREVIEW: {
     label: 'Preview',
     color: '#8e44ad',
   },
+  STATUS_DISCUSSION: {
+    label: 'Open for Public Review',
+    color: '#8e44ad',
+  },
   FUNDING_REQUIRED: {
     label: 'Funding required',
+    color: '#8e44ad',
+  },
+  ACCEPTED_WITH_FUNDING: {
+    label: 'Funded by ZF',
+    color: '#8e44ad',
+  },
+  ACCEPTED_WITHOUT_FUNDING: {
+    label: 'Not Funded by ZF',
     color: '#8e44ad',
   },
   WIP: {
