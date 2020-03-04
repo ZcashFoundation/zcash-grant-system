@@ -1,5 +1,10 @@
 import { Proposal } from './proposal';
-import { PROPOSAL_SORT, PROPOSAL_CATEGORY, PROPOSAL_STAGE } from 'api/constants';
+import {
+  PROPOSAL_SORT,
+  PROPOSAL_CATEGORY,
+  PROPOSAL_STAGE,
+  CUSTOM_FILTERS,
+} from 'api/constants';
 
 export interface Page {
   page: number;
@@ -29,6 +34,7 @@ export interface ProposalPage extends Omit<Page, 'filters' | 'sort'> {
   filters: {
     stage: PROPOSAL_STAGE[];
     category: PROPOSAL_CATEGORY[];
+    custom: CUSTOM_FILTERS[];
   };
 }
 

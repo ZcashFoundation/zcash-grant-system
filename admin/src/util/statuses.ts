@@ -87,6 +87,13 @@ export const CCR_STATUSES: Array<StatusSoT<CCR_STATUS>> = [
     hint:
       'Admin has requested changes for this Request. User may adjust it and resubmit for approval.',
   },
+  {
+    id: CCR_STATUS.REJECTED_PERMANENTLY,
+    tagDisplay: 'Rejected Permanently',
+    tagColor: '#eb4118',
+    hint:
+      'Admin has rejected this CCR permanently. It cannot be resubmitted for approval.',
+  },
 ];
 
 export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
@@ -107,12 +114,6 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     tagDisplay: 'Live Draft',
     tagColor: '#8d8d8d',
     hint: 'Proposal is an edit that will to be published to another proposal.',
-  },
-  {
-    id: PROPOSAL_STATUS.ARCHIVED,
-    tagDisplay: 'Archived Revision',
-    tagColor: '#8d8d8d',
-    hint: 'Proposal is a revision of another proposal and has been archived.',
   },
   {
     id: PROPOSAL_STATUS.DELETED,
@@ -144,6 +145,13 @@ export const PROPOSAL_STATUSES: Array<StatusSoT<PROPOSAL_STATUS>> = [
     tagColor: '#eb4118',
     hint:
       'Admin has requested changes for this proposal. User may adjust it and resubmit for approval.',
+  },
+  {
+    id: PROPOSAL_STATUS.REJECTED_PERMANENTLY,
+    tagDisplay: 'Rejected Permanently',
+    tagColor: '#eb4118',
+    hint:
+      'Admin has rejected this proposal permanently. It cannot be resubmitted for approval.',
   },
   {
     id: PROPOSAL_STATUS.STAKING,

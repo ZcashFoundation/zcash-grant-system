@@ -156,6 +156,16 @@ async function acceptProposal(
   return data;
 }
 
+async function rejectPermanentlyProposal(
+  id: number,
+  rejectReason: string,
+) {
+  const { data } = await api.put(`/admin/proposals/${id}/reject_permanently`, {
+    rejectReason,
+  });
+  return data;
+}
+
 async function markProposalChangesAsResolved(id: number) {
   const { data } = await api.put(`/admin/proposals/${id}/resolve`);
   return data;
@@ -207,6 +217,14 @@ async function approveCCR(id: number, isAccepted: boolean, rejectReason?: string
   return data;
 }
 
+async function rejectPermanentlyCcr(id: number, rejectReason: string) {
+  const { data } = await api.put(`/admin/ccrs/${id}/reject_permanently`, {
+    rejectReason,
+  });
+  return data;
+}
+
+
 async function fetchCCRs(params: Partial<PageQuery>) {
   const { data } = await api.get(`/admin/ccrs`, { params });
   return data;
@@ -255,6 +273,14 @@ async function editContribution(id: number, args: ContributionArgs) {
   return data;
 }
 
+type QuarterData = {
+  q1: string
+  q2: string
+  q3: string
+  q4: string
+  yearTotal: string
+}
+
 // STORE
 const app = store({
   /*** DATA ***/
@@ -284,22 +310,13 @@ const app = store({
       matching: '0',
       bounty: '0',
     },
-    contributions: {
-      total: '0',
-      gross: '0',
-      staking: '0',
-      funding: '0',
-      funded: '0',
-      refunding: '0',
-      refunded: '0',
-      donations: '0',
-    },
     payouts: {
       total: '0',
       due: '0',
       paid: '0',
       future: '0',
     },
+    payoutsByQuarter: {} as { [type: string]: QuarterData }
   },
 
   users: {
@@ -337,6 +354,7 @@ const app = store({
   proposalDetailUpdating: false,
   proposalDetailUpdated: false,
   proposalDetailChangingToAcceptedWithFunding: false,
+  proposalDetailRejectingPermanently: false,
 
   ccrs: {
     page: createDefaultPageData<CCR>('CREATED:DESC'),
@@ -354,6 +372,7 @@ const app = store({
   ccrDetailUpdating: false,
   ccrDetailUpdated: false,
   ccrDetailChangingToAcceptedWithFunding: false,
+  ccrDetailRejectingPermanently: false,
   ccrCreatedRFPId: null,
 
   comments: {
@@ -602,6 +621,24 @@ const app = store({
     app.ccrDetailApproving = false;
   },
 
+  async rejectPermanentlyCcr(rejectReason: string) {
+    if (!app.ccrDetail) {
+      const m = 'store.rejectPermanentlyCcr(): Expected ccrDetail to be populated!';
+      app.generalError.push(m);
+      console.error(m);
+      return;
+    }
+    app.ccrDetailRejectingPermanently = true;
+    try {
+      const { ccrId } = app.ccrDetail;
+      await rejectPermanentlyCcr(ccrId, rejectReason);
+      await app.fetchCCRDetail(ccrId)
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.ccrDetailRejectingPermanently = false;
+  },
+
   // Proposals
 
   async fetchProposals() {
@@ -698,6 +735,24 @@ const app = store({
       handleApiError(e);
     }
     app.proposalDetailApprovingDiscussion = false;
+  },
+
+  async rejectPermanentlyProposal(rejectReason: string) {
+    if (!app.proposalDetail) {
+      const m = 'store.rejectPermanentlyProposal(): Expected proposalDetail to be populated!';
+      app.generalError.push(m);
+      console.error(m);
+      return;
+    }
+    app.proposalDetailRejectingPermanently = true;
+    try {
+      const { proposalId } = app.proposalDetail;
+      const res = await rejectPermanentlyProposal(proposalId, rejectReason);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailRejectingPermanently = false;
   },
 
   async markProposalChangesAsResolved() {
