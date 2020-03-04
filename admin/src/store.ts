@@ -273,6 +273,14 @@ async function editContribution(id: number, args: ContributionArgs) {
   return data;
 }
 
+type QuarterData = {
+  q1: string
+  q2: string
+  q3: string
+  q4: string
+  yearTotal: string
+}
+
 // STORE
 const app = store({
   /*** DATA ***/
@@ -302,22 +310,13 @@ const app = store({
       matching: '0',
       bounty: '0',
     },
-    contributions: {
-      total: '0',
-      gross: '0',
-      staking: '0',
-      funding: '0',
-      funded: '0',
-      refunding: '0',
-      refunded: '0',
-      donations: '0',
-    },
     payouts: {
       total: '0',
       due: '0',
       paid: '0',
       future: '0',
     },
+    payoutsByQuarter: {} as { [type: string]: QuarterData }
   },
 
   users: {
