@@ -334,7 +334,7 @@ def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.proposal(
         schema=proposals_schema,
-        query=Proposal.query,
+        query=Proposal.query.filter(Proposal.status.notin_([ProposalStatus.ARCHIVED])),
         page=page,
         filters=filters_workaround,
         search=search,
