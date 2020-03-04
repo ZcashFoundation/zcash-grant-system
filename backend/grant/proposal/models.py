@@ -985,11 +985,18 @@ class Proposal(db.Model):
     # port changes made in LIVE_DRAFT proposal to self and delete the draft
     def consume_live_draft(self, author):
         live_draft = self.live_draft
-
         revision_changes = ProposalRevision.calculate_proposal_changes(self, live_draft)
 
         if len(revision_changes) == 0:
-            raise ValidationException("Live draft does not appear to have any changes")
+            if live_draft.rfp_opt_in == self.rfp_opt_in:
+                raise ValidationException("Live draft does not appear to have any changes")
+            else:
+                # cover special case where ONLY kyc selection has changed without any publishable revision changes
+                self.rfp_opt_in = live_draft.rfp_opt_in
+                self.live_draft = None
+                db.session.add(self)
+                db.session.delete(live_draft)
+                return False
 
         revision_index = len(self.revisions)
 
@@ -1022,6 +1029,7 @@ class Proposal(db.Model):
         # archive live draft
         live_draft.status = ProposalStatus.ARCHIVED
         db.session.add(live_draft)
+        return True
 
 
 class ProposalSchema(ma.Schema):

@@ -53,6 +53,7 @@ export class ProposalRevision extends React.Component<Props> {
       content = <Placeholder title="Something went wrong" subtitle={revisionsError} />;
     } else if (revisions) {
       if (revisions.length) {
+        revisions.reverse();
         content = revisions.map((revision, index) => (
           <div key={revision.revisionId} className="ProposalRevision-revision">
             <h3 className="ProposalRevision-revision-title">
@@ -65,7 +66,7 @@ export class ProposalRevision extends React.Component<Props> {
               {this.renderRevisionBody(revision)}
             </div>
             <div className="ProposalRevision-revision-controls">
-              {revisions.length !== index + 1 && (
+              {index !== 0 && (
                 <Link
                   to={`/proposals/${revision.proposalArchiveId}/archive`}
                   className="ProposalRevision-revision-controls-button"
