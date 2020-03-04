@@ -212,6 +212,16 @@ export class ProposalDetail extends React.Component<Props, State> {
         ),
         type: 'error',
       },
+      [STATUS.REJECTED_PERMANENTLY]: {
+        blurb: (
+          <>
+            Your proposal has has been rejected permanently and is only visible to the
+            team. Visit your <Link to="/profile?tab=pending">profile's pending tab</Link>{' '}
+            for more information.
+          </>
+        ),
+        type: 'error',
+      },
       [STATUS.STAKING]: {
         blurb: (
           <>

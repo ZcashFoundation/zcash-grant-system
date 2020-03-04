@@ -572,6 +572,48 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
         self.assertEqual(resp.json["rejectReason"], "Funnzies.")
 
+    def test_reject_permanently_proposal(self):
+        rejected = {
+            "rejectReason": "test"
+        }
+        self.login_admin()
+
+        # no reject reason should 400
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/reject_permanently",
+            content_type='application/json'
+        )
+        self.assert400(resp)
+
+        # bad proposal id should 404
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/111111111/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert404(resp)
+
+        # bad status should 401
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert401(resp)
+
+        self.proposal.status = ProposalStatus.PENDING
+
+        # should go through
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+
+        self.assertEqual(resp.json["status"], ProposalStatus.REJECTED_PERMANENTLY)
+        self.assertEqual(resp.json["rejectReason"], rejected["rejectReason"])
+
     @patch('grant.email.send.send_email')
     def test_nominate_arbiter(self, mock_send_email):
         mock_send_email.return_value.ok = True
@@ -708,6 +750,50 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         ccr = CCR.query.get(ccr2_id)
         self.assertEqual(ccr.status, CCRStatus.REJECTED)
         self.assertEqual(ccr.reject_reason, rejected["rejectReason"])
+
+    def test_reject_permanently_ccr(self):
+        ccr_json = create_ccr(self)
+        ccr_id = ccr_json["ccrId"]
+        rejected = {
+            "rejectReason": "test"
+        }
+        self.login_admin()
+
+        # no reject reason should 400
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr_id}/reject_permanently",
+            content_type='application/json'
+        )
+        self.assert400(resp)
+
+        # bad ccr id should 404
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/111111111/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert404(resp)
+
+        # bad status should 401
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr_id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert401(resp)
+
+        submit_ccr(self, ccr_id)
+
+        # should go through
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr_id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+
+        self.assertEqual(resp.json["status"], CCRStatus.REJECTED_PERMANENTLY)
+        self.assertEqual(resp.json["rejectReason"], rejected["rejectReason"])
 
 
 def create_ccr(self):

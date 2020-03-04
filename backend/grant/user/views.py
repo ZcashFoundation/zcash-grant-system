@@ -20,7 +20,7 @@ from grant.proposal.models import (
     user_proposal_arbiters_schema
 )
 from grant.proposal.models import ProposalContribution
-from grant.utils.enums import ProposalStatus, ContributionStatus
+from grant.utils.enums import ProposalStatus, ContributionStatus, CCRStatus
 from grant.utils.exceptions import ValidationException
 from grant.utils.requests import validate_blockchain_get
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
@@ -87,14 +87,15 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
                 ProposalStatus.PENDING,
                 ProposalStatus.APPROVED,
                 ProposalStatus.REJECTED,
+                ProposalStatus.REJECTED_PERMANENTLY,
             ])
             pending_proposals_dump = user_proposals_schema.dump(pending_proposals)
             result["pendingProposals"] = pending_proposals_dump
             pending_ccrs = CCR.get_by_user(user, [
-                ProposalStatus.STAKING,
-                ProposalStatus.PENDING,
-                ProposalStatus.APPROVED,
-                ProposalStatus.REJECTED,
+                CCRStatus.PENDING,
+                CCRStatus.APPROVED,
+                CCRStatus.REJECTED,
+                CCRStatus.REJECTED_PERMANENTLY,
             ])
             pending_ccrs_dump = ccrs_schema.dump(pending_ccrs)
             result["pendingRequests"] = pending_ccrs_dump

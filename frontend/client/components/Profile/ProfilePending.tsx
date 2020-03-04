@@ -46,12 +46,23 @@ class ProfilePending extends React.Component<Props, State> {
       },
       [STATUS.REJECTED]: {
         color: 'red',
-        tag: 'Changes requested',
+        tag: 'Changes Requested',
         blurb: (
           <>
             <div>This proposal has changes requested:</div>
             <q>{rejectReason}</q>
             <div>You may edit this proposal and re-submit it for approval.</div>
+          </>
+        ),
+      },
+      [STATUS.REJECTED_PERMANENTLY]: {
+        color: 'red',
+        tag: 'Rejected Permanently',
+        blurb: (
+          <>
+            <div>This proposal has been rejected permanently:</div>
+            <q>{rejectReason}</q>
+            <div>You may not re-submit it for approval.</div>
           </>
         ),
       },

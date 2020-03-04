@@ -40,7 +40,7 @@ class CCRFlowPreview extends React.Component<Props, State> {
         const { data } = await getCCR(id);
         this.setState({ ccr: data });
       } catch (e) {
-        this.setState({ error: e.message || e.toString()})
+        this.setState({ error: e.message || e.toString() });
       }
       this.setState({ loading: false });
     }
@@ -60,7 +60,12 @@ class CCRFlowPreview extends React.Component<Props, State> {
     if (error) {
       return (
         <div className="CCRPreview-banner">
-          <Alert type={'error'} message={`An error occurred while fetching request: ${error}`} showIcon={false} banner />
+          <Alert
+            type={'error'}
+            message={`An error occurred while fetching request: ${error}`}
+            showIcon={false}
+            banner
+          />
         </div>
       );
     }
@@ -95,6 +100,15 @@ class CCRFlowPreview extends React.Component<Props, State> {
           <>
             Your request has changes requested. Visit your profile's pending tab for more
             information.
+          </>
+        ),
+        type: 'error',
+      },
+      [CCRSTATUS.REJECTED_PERMANENTLY]: {
+        blurb: (
+          <>
+            Your request has been rejected permanently. Visit your profile's pending tab
+            for more information.
           </>
         ),
         type: 'error',
