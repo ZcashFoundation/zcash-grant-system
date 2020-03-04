@@ -351,6 +351,7 @@ def delete_proposal(proposal_id):
     deleteable_statuses = [
         ProposalStatus.DRAFT,
         ProposalStatus.PENDING,
+        ProposalStatus.REJECTED_PERMANENTLY,
         ProposalStatus.APPROVED,
         ProposalStatus.REJECTED,
         ProposalStatus.STAKING,

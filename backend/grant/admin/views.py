@@ -399,6 +399,34 @@ def accept_proposal(id, is_accepted, with_funding, changes_requested_reason):
     return proposal_schema.dump(proposal)
 
 
+@blueprint.route('/proposals/<proposal_id>/reject_permanently', methods=['PUT'])
+@body({
+    "rejectReason": fields.Str(required=True, missing=None)
+})
+@admin.admin_auth_required
+def reject_permanently_proposal(proposal_id, reject_reason):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    reject_permanently_statuses = [
+        ProposalStatus.REJECTED,
+        ProposalStatus.PENDING
+    ]
+
+    if proposal.status not in reject_permanently_statuses:
+        return {"message": "Proposal status is not REJECTED or PENDING."}, 401
+
+    proposal.status = ProposalStatus.REJECTED_PERMANENTLY
+    proposal.reject_reason = reject_reason
+
+    db.session.add(proposal)
+    db.session.commit()
+
+    return proposal_schema.dump(proposal)
+
+
 @blueprint.route('/proposals/<proposal_id>/resolve', methods=['PUT'])
 @admin.admin_auth_required
 def resolve_changes_discussion(proposal_id):
@@ -568,6 +596,34 @@ def approve_ccr(ccr_id, is_accepted, reject_reason=None):
             return ccr_schema.dump(ccr)
 
     return {"message": "No CCR found."}, 404
+
+
+@blueprint.route('/ccrs/<ccr_id>/reject_permanently', methods=['PUT'])
+@body({
+    "rejectReason": fields.Str(required=True, missing=None)
+})
+@admin.admin_auth_required
+def reject_permanently_ccr(ccr_id, reject_reason):
+    ccr = CCR.query.get(ccr_id)
+
+    if not ccr:
+        return {"message": "No CCR found."}, 404
+
+    reject_permanently_statuses = [
+        CCRStatus.REJECTED,
+        CCRStatus.PENDING
+    ]
+
+    if ccr.status not in reject_permanently_statuses:
+        return {"message": "CCR status is not REJECTED or PENDING."}, 401
+
+    ccr.status = CCRStatus.REJECTED_PERMANENTLY
+    ccr.reject_reason = reject_reason
+
+    db.session.add(ccr)
+    db.session.commit()
+
+    return ccr_schema.dump(ccr)
 
 
 # Requests for Proposal
