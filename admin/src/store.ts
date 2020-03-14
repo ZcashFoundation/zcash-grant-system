@@ -156,10 +156,7 @@ async function acceptProposal(
   return data;
 }
 
-async function rejectPermanentlyProposal(
-  id: number,
-  rejectReason: string,
-) {
+async function rejectPermanentlyProposal(id: number, rejectReason: string) {
   const { data } = await api.put(`/admin/proposals/${id}/reject_permanently`, {
     rejectReason,
   });
@@ -224,7 +221,6 @@ async function rejectPermanentlyCcr(id: number, rejectReason: string) {
   return data;
 }
 
-
 async function fetchCCRs(params: Partial<PageQuery>) {
   const { data } = await api.get(`/admin/ccrs`, { params });
   return data;
@@ -273,12 +269,12 @@ async function editContribution(id: number, args: ContributionArgs) {
   return data;
 }
 
-type QuarterData = {
-  q1: string
-  q2: string
-  q3: string
-  q4: string
-  yearTotal: string
+interface QuarterData {
+  q1: string;
+  q2: string;
+  q3: string;
+  q4: string;
+  yearTotal: string;
 }
 
 // STORE
@@ -316,7 +312,7 @@ const app = store({
       paid: '0',
       future: '0',
     },
-    payoutsByQuarter: {} as { [type: string]: QuarterData }
+    payoutsByQuarter: {} as { [type: string]: QuarterData },
   },
 
   users: {
@@ -632,7 +628,7 @@ const app = store({
     try {
       const { ccrId } = app.ccrDetail;
       await rejectPermanentlyCcr(ccrId, rejectReason);
-      await app.fetchCCRDetail(ccrId)
+      await app.fetchCCRDetail(ccrId);
     } catch (e) {
       handleApiError(e);
     }
@@ -739,7 +735,8 @@ const app = store({
 
   async rejectPermanentlyProposal(rejectReason: string) {
     if (!app.proposalDetail) {
-      const m = 'store.rejectPermanentlyProposal(): Expected proposalDetail to be populated!';
+      const m =
+        'store.rejectPermanentlyProposal(): Expected proposalDetail to be populated!';
       app.generalError.push(m);
       console.error(m);
       return;
@@ -761,19 +758,19 @@ const app = store({
       app.generalError.push(m);
       return;
     }
-    let success = false
-    app.proposalDetailMarkingChangesAsResolved = true
+    let success = false;
+    app.proposalDetailMarkingChangesAsResolved = true;
     try {
       const { proposalId } = app.proposalDetail;
       const res = await markProposalChangesAsResolved(proposalId);
       app.updateProposalInStore(res);
-      success = true
+      success = true;
     } catch (e) {
       handleApiError(e);
-      success = false
+      success = false;
     }
-    app.proposalDetailMarkingChangesAsResolved = false
-    return success
+    app.proposalDetailMarkingChangesAsResolved = false;
+    return success;
   },
 
   async cancelProposal(id: number) {
