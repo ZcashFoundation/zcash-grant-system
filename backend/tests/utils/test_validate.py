@@ -18,8 +18,10 @@ good_addresses = [
 ]
 
 bad_addresses = [
+    None,
     False,
     3,
+    "",
     "cs15el0hzs4w60ggfy6kq4p3zttjrl00mfq7yxfwsjqpz9d7hptdtkltzlcqar994jg2ju3j9k85zk",
     "zs15el0hzs4w60ggfy6kq4p3zttjrl00mfq7yxfwsjqpz9ddhptdtkltzlcqar994jg2ju3j9k85zz",
     "zs15xh8vjmlnqknztlgs7s8cu9wlj4r0d0m7hpyjwkjehalhlgwhfkvqnp8ycdpvhzfwywnc9r7yqs",
