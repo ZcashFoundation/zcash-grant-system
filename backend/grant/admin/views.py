@@ -424,6 +424,14 @@ def reject_permanently_proposal(proposal_id, reject_reason):
     db.session.add(proposal)
     db.session.commit()
 
+    for user in proposal.team:
+        send_email(user.email_address, 'proposal_rejected_permanently', {
+            'user': user,
+            'proposal': proposal,
+            'proposal_url': make_url(f'/proposals/{proposal.id}'),
+            'admin_note': reject_reason,
+        })
+
     return proposal_schema.dump(proposal)
 
 

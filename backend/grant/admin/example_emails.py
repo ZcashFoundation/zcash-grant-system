@@ -94,6 +94,15 @@ example_email_args = {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
     },
+    'proposal_rejected_permanently': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+        'profile_rejected_url': 'http://someproposal.com/profile?tab=rejected',
+    },
+    'proposal_arbiter_assigned': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com'
+    },
     'ccr_approved': {
         'ccr': ccr,
         'ccr_url': 'http://someproposal.com',

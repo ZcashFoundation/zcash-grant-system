@@ -4,6 +4,8 @@ from flask import Blueprint, g, current_app
 from marshmallow import fields
 from validate_email import validate_email
 from webargs import validate
+from grant.email.send import send_email
+from grant.utils.misc import make_url
 
 import grant.utils.auth as auth
 from grant.comment.models import Comment, user_comments_schema
@@ -416,6 +418,14 @@ def set_user_arbiter(user_id, proposal_id, is_accept):
 
         if is_accept:
             proposal.arbiter.accept_nomination(g.current_user.id)
+
+            for user in proposal.team:
+                send_email(user.email_address, 'proposal_arbiter_assigned', {
+                    'user': user,
+                    'proposal': proposal,
+                    'proposal_url': make_url(f'/proposals/{proposal.id}')
+                })
+
             return {"message": "Accepted nomination"}, 200
         else:
             proposal.arbiter.reject_nomination(g.current_user.id)
