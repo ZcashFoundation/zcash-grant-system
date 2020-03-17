@@ -107,7 +107,8 @@ class CCRFlowPreview extends React.Component<Props, State> {
       [CCRSTATUS.REJECTED_PERMANENTLY]: {
         blurb: (
           <>
-            Your request has been rejected permanently. Visit your profile's pending tab
+            Your proposal has has been rejected permanently and is only visible to the
+            team. Visit your <Link to="/profile?tab=rejected">profile's rejected tab</Link>{' '}
             for more information.
           </>
         ),
