@@ -251,7 +251,7 @@ export function postProposalDraft(rfpId?: number): Promise<{ data: ProposalDraft
   return axios.post('/api/v1/proposals/drafts', { rfpId });
 }
 
-export function deleteProposalDraft(proposalId: number): Promise<any> {
+export function deleteProposal(proposalId: number): Promise<any> {
   return axios.delete(`/api/v1/proposals/${proposalId}`);
 }
 

@@ -5,7 +5,7 @@ import {
   postProposalDraft,
   getProposalDrafts,
   putProposal,
-  deleteProposalDraft,
+  deleteProposal,
   getProposal,
 } from 'api/api';
 import { getDrafts, getDraftById, getFormState } from './selectors';
@@ -104,7 +104,7 @@ export function* handleFetchAndCreateDrafts(
 
 export function* handleDeleteDraft(action: ReturnType<typeof deleteDraft>): SagaIterator {
   try {
-    yield call(deleteProposalDraft, action.payload);
+    yield call(deleteProposal, action.payload);
     put({ type: types.DELETE_DRAFT_FULFILLED });
   } catch (err) {
     yield put({

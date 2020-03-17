@@ -159,7 +159,7 @@ export default (state = INITIAL_STATE, action: any) => {
       });
     // proposal delete
     case types.USER_DELETE_PROPOSAL_FULFILLED:
-      return removePendingProposal(state, payload.userId, payload.proposalId);
+      return removeProposal(state, payload.userId, payload.proposalId);
     // proposal publish
     case types.USER_PUBLISH_PROPOSAL_FULFILLED:
       return updatePublishedProposal(state, payload.userId, payload.proposal);
@@ -184,7 +184,7 @@ function updateUserState(
   };
 }
 
-function removePendingProposal(
+function removeProposal(
   state: UsersState,
   userId: string | number,
   proposalId: number,
@@ -192,8 +192,12 @@ function removePendingProposal(
   const pendingProposals = state.map[userId].pendingProposals.filter(
     p => p.proposalId !== proposalId,
   );
+  const rejectedPermanentlyProposals = state.map[
+    userId
+  ].rejectedPermanentlyProposals.filter(p => p.proposalId !== proposalId);
   const userUpdates = {
     pendingProposals,
+    rejectedPermanentlyProposals,
   };
   return updateUserState(state, userId, userUpdates);
 }
@@ -203,11 +207,11 @@ function updatePublishedProposal(
   userId: string | number,
   proposal: UserProposal,
 ) {
-  const withoutPending = removePendingProposal(state, userId, proposal.proposalId);
+  const withoutProposal = removeProposal(state, userId, proposal.proposalId);
   const userUpdates = {
     proposals: [proposal, ...state.map[userId].proposals],
   };
-  return updateUserState(withoutPending, userId, userUpdates);
+  return updateUserState(withoutProposal, userId, userUpdates);
 }
 
 function updateTeamInvite(

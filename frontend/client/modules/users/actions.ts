@@ -6,7 +6,7 @@ import {
   fetchUserInvites as apiFetchUserInvites,
   putInviteResponse,
   deleteProposalContribution,
-  deleteProposalDraft,
+  deleteProposal,
   putProposalPublish,
   deleteCCR,
 } from 'api/api';
@@ -113,7 +113,7 @@ export function deletePendingProposal(userId: number, proposalId: number) {
   return async (dispatch: Dispatch<any>) => {
     await dispatch({
       type: types.USER_DELETE_PROPOSAL,
-      payload: deleteProposalDraft(proposalId).then(_ => ({ userId, proposalId })),
+      payload: deleteProposal(proposalId).then(_ => ({ userId, proposalId })),
     });
   };
 }
