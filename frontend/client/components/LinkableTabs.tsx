@@ -7,7 +7,7 @@ import { TabsProps } from 'antd/lib/tabs';
 
 interface OwnProps extends TabsProps {
   scrollToTabs?: boolean;
-  ignoredKeys?: string[]
+  ignoredKeys?: string[];
 }
 
 type Props = OwnProps & RouteComponentProps;
@@ -20,9 +20,10 @@ class LinkableTabs extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    let { defaultActiveKey, ignoredKeys } = props;
+    let { defaultActiveKey } = props;
+    const { ignoredKeys } = props;
     const tab = this.getTabFromUrl(props.location);
-    const shouldSkip = tab && ignoredKeys && ignoredKeys.includes(tab)
+    const shouldSkip = tab && ignoredKeys && ignoredKeys.includes(tab);
 
     if (tab && !shouldSkip) {
       defaultActiveKey = tab;
