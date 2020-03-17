@@ -14,6 +14,7 @@ from .subscription_settings import EmailSubscription, is_subscribed
 default_template_args = {
     'home_url': make_url('/'),
     'account_url': make_url('/profile'),
+    'profile_rejected_url': make_url('/profile?tab=rejected'),
     'email_settings_url': make_url('/profile/settings?tab=emails'),
     'unsubscribe_url': make_url('/profile/settings?tab=emails'),
 }
@@ -98,6 +99,16 @@ def ccr_rejected(email_args):
         'subject': 'Your request has changes requested',
         'title': 'Your request has changes requested',
         'preview': '{} has changes requested'.format(email_args['ccr'].title),
+    }
+
+
+def ccr_rejected_permanently(email_args):
+    print('email args', email_args)
+
+    return {
+        'subject': 'Your request has been rejected permanently',
+        'title': 'Your request has been rejected permanently',
+        'preview': f'{email_args["ccr"].title} has changes requested',
     }
 
 
@@ -409,8 +420,9 @@ get_info_lookup = {
     'change_email': change_email_info,
     'change_email_old': change_email_old_info,
     'change_password': change_password_info,
-    'ccr_rejected': ccr_rejected,
     'ccr_approved': ccr_approved,
+    'ccr_rejected': ccr_rejected,
+    'ccr_rejected_permanently': ccr_rejected_permanently,
     'proposal_approved': proposal_approved,
     'proposal_approved_discussion': proposal_approved_discussion,
     'proposal_rejected': proposal_rejected,
