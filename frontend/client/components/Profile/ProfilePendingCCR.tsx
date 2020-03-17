@@ -48,22 +48,9 @@ class ProfilePendingCCR extends React.Component<Props, State> {
           </>
         ),
       },
-      [STATUS.REJECTED_PERMANENTLY]: {
-        color: 'red',
-        tag: 'Rejected Permanently',
-        blurb: (
-          <>
-            <div>
-              This request has been rejected permanently for the following reason:
-            </div>
-            <q>{rejectReason}</q>
-            <div>You may not re-submit this request for approval.</div>
-          </>
-        ),
-      },
       [STATUS.PENDING]: {
         color: 'purple',
-        tag: 'Pending Request',
+        tag: 'Pending',
         blurb: (
           <div>
             You will receive an email when this request has completed the review process.
