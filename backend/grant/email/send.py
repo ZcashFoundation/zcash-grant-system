@@ -108,7 +108,7 @@ def ccr_rejected_permanently(email_args):
     return {
         'subject': 'Your request has been rejected permanently',
         'title': 'Your request has been rejected permanently',
-        'preview': f'{email_args["ccr"].title} has changes requested',
+        'preview': f'{email_args["ccr"].title} has been rejected permanently',
     }
 
 
