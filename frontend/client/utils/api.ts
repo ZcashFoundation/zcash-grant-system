@@ -35,6 +35,9 @@ export function formatUserFromGet(user: UserState) {
   if (user.pendingProposals) {
     user.pendingProposals = user.pendingProposals.map(bnUserProp);
   }
+  if (user.rejectedPermanentlyProposals) {
+    user.rejectedPermanentlyProposals = user.rejectedPermanentlyProposals.map(bnUserProp);
+  }
   if (user.arbitrated) {
     user.arbitrated = user.arbitrated.map(a => {
       a.proposal = bnUserProp(a.proposal);

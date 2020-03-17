@@ -109,6 +109,7 @@ export function getUser(address: string): Promise<{ data: User }> {
         withFunded: true,
         withPending: true,
         withArbitrated: true,
+        withRejectedPermanently: true
       },
     })
     .then(res => {

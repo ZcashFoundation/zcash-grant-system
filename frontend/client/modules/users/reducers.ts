@@ -23,6 +23,8 @@ export interface UserState extends User {
   updateError: string | null;
   pendingProposals: UserProposal[];
   pendingRequests: UserCCR[];
+  rejectedPermanentlyProposals: UserProposal[];
+  rejectedPermanentlyRequests: UserCCR[];
   arbitrated: UserProposalArbiter[];
   proposals: UserProposal[];
   requests: UserCCR[];
@@ -57,6 +59,8 @@ export const INITIAL_USER_STATE: UserState = {
   updateError: null,
   pendingProposals: [],
   pendingRequests: [],
+  rejectedPermanentlyProposals: [],
+  rejectedPermanentlyRequests: [],
   arbitrated: [],
   proposals: [],
   requests: [],
