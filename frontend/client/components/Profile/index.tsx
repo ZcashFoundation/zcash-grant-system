@@ -273,7 +273,7 @@ class Profile extends React.Component<Props, State> {
               </Tabs.TabPane>
             )}
             {isAuthedUser &&
-              !!rejectedPermanentlyCount && (
+              !noneRejectedPermanently && (
                 <Tabs.TabPane
                   tab={TabTitle('Rejected', rejectedPermanentlyCount)}
                   key="rejected"
