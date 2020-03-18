@@ -104,6 +104,9 @@ export function* handleInitializeForm(
   action: ReturnType<typeof initializeForm>,
 ): SagaIterator {
   try {
+    yield put(fetchCCRDrafts());
+    yield take([types.FETCH_CCR_DRAFTS_FULFILLED]);
+    
     const ccrId = action.payload;
     let draft: Yielded<typeof getDraftById> = yield select(getDraftById, ccrId);
     if (!draft) {
