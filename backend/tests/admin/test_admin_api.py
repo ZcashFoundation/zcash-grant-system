@@ -243,8 +243,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # 2 proposals created by BaseProposalCreatorConfig
         self.assertEqual(len(resp.json['items']), 2)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_open_proposal_for_discussion_accept(self, mock_get):
+    def test_open_proposal_for_discussion_accept(self):
         # an admin should be able to open a proposal for discussion
         self.login_admin()
 
@@ -263,8 +262,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         proposal = Proposal.query.get(self.proposal.id)
         self.assertEqual(proposal.status, ProposalStatus.DISCUSSION)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_open_proposal_for_discussion_reject(self, mock_get):
+    def test_open_proposal_for_discussion_reject(self):
         # an admin should be able to reject opening a proposal for discussion
         reject_reason = "this is a test"
 
@@ -287,8 +285,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assertEqual(proposal.status, ProposalStatus.REJECTED)
         self.assertEqual(proposal.reject_reason, reject_reason)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_open_proposal_for_discussion_bad_proposal_id_fail(self, mock_get):
+    def test_open_proposal_for_discussion_bad_proposal_id_fail(self):
         # request should fail if a bad proposal id is provided
         bad_proposal_id = "11111111111111111111"
         self.login_admin()
@@ -300,8 +297,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         self.assert404(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_open_proposal_for_discussion_not_admin_fail(self, mock_get):
+    def test_open_proposal_for_discussion_not_admin_fail(self):
         # request should fail if user is not an admin
         self.login_default_user()
 
@@ -315,8 +311,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         self.assert401(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_open_proposal_for_discussion_not_pending_fail(self, mock_get):
+    def test_open_proposal_for_discussion_not_pending_fail(self):
         # request should fail if proposal is not in PENDING state
         self.login_admin()
 
@@ -329,8 +324,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         self.assert400(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_open_proposal_for_discussion_no_reject_reason_fail(self, mock_get):
+    def test_open_proposal_for_discussion_no_reject_reason_fail(self):
         # denying opening a proposal for discussion should fail if no reason is provided
         self.login_admin()
 
@@ -344,8 +338,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         self.assert400(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_accept_proposal_with_funding(self, mock_get):
+    def test_accept_proposal_with_funding(self):
         self.login_admin()
 
         # proposal needs to be DISCUSSION
@@ -366,8 +359,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         for milestone in resp.json["milestones"]:
             self.assertIsNotNone(milestone["dateEstimated"])
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_accept_proposal_without_funding(self, mock_get):
+    def test_accept_proposal_without_funding(self):
         self.login_admin()
 
         # proposal needs to be DISCUSSION
@@ -504,8 +496,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         )
         self.assert400(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_change_proposal_to_accepted_with_funding(self, mock_get):
+    def test_change_proposal_to_accepted_with_funding(self):
         self.login_admin()
 
         # proposal needs to be DISCUSSION
@@ -556,8 +547,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assert404(resp)
         self.assertEqual(resp.json["message"], 'Only live or approved proposals can be modified by this endpoint')
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_reject_proposal_discussion(self, mock_get):
+    def test_reject_proposal_discussion(self):
         self.login_admin()
 
         # proposal needs to be PENDING
