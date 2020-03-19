@@ -130,6 +130,24 @@ def proposal_rejected_discussion(email_args):
     }
 
 
+def proposal_rejected_permanently(email_args):
+    return {
+        'subject': 'Your proposal has been rejected permanently',
+        'title': 'Your proposal has been rejected permanently',
+        'preview': '{} has changes requested'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_arbiter_assigned(email_args):
+    return {
+        'subject': 'Your proposal has an arbiter assigned',
+        'title': 'Your proposal has an arbiter assigned',
+        'preview': '{} has an arbiter assigned'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
 def proposal_contribution(email_args):
     if email_args['contribution'].private:
         email_args['contributor'] = None
@@ -427,6 +445,8 @@ get_info_lookup = {
     'proposal_approved_discussion': proposal_approved_discussion,
     'proposal_rejected': proposal_rejected,
     'proposal_rejected_discussion': proposal_rejected_discussion,
+    'proposal_rejected_permanently': proposal_rejected_permanently,
+    'proposal_arbiter_assigned': proposal_arbiter_assigned,
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
     'proposal_failed': proposal_failed,

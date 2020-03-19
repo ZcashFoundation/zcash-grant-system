@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Icon, Form, Input, Button, Popconfirm, message } from 'antd';
-import { User, TeamInvite, ProposalDraft } from 'types';
+import { User, TeamInvite, ProposalDraft, STATUS } from 'types';
 import TeamMemberComponent from './TeamMember';
 import { postProposalInvite, deleteProposalInvite } from 'api/api';
 import { isValidEmail } from 'utils/validators';
@@ -16,6 +16,7 @@ interface State {
 
 interface StateProps {
   authUser: AppState['auth']['user'];
+  form: ProposalDraft;
 }
 
 interface OwnProps {
@@ -56,6 +57,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
     const maxedOut = invites.length >= MAX_TEAM_SIZE - 1;
     const inviteDisabled = !!inviteError || !address || maxedOut;
     const pendingInvites = invites.filter(inv => inv.accepted === null);
+    const isEdit = this.props.form.status === STATUS.LIVE_DRAFT;
 
     return (
       <div className="TeamForm">
@@ -81,7 +83,11 @@ class CreateFlowTeam extends React.Component<Props, State> {
           </div>
         )}
         <div className="TeamForm-add">
-          <h3 className="TeamForm-add-title">Add an optional team member</h3>
+          <h3 className="TeamForm-add-title">
+            {!isEdit
+              ? 'Add an optional team member'
+              : 'Your team will be locked in unless you choose to edit the proposal again'}
+          </h3>
           <Form className="TeamForm-add-form" onSubmit={this.handleAddSubmit}>
             <Form.Item
               className="TeamForm-add-form-field"
@@ -89,7 +95,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
               help={
                 inviteError ||
                 (maxedOut && 'You’ve invited the maximum number of teammates') ||
-                'They will be notified and will have to accept the invitation before being added'
+                'They will be notified immediately and will have to accept the invitation before being added'
               }
             >
               <Input
@@ -154,6 +160,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
 
 const withConnect = connect<StateProps, {}, {}, AppState>(state => ({
   authUser: state.auth.user,
+  form: state.create.form as ProposalDraft,
 }));
 
 export default withConnect(CreateFlowTeam);

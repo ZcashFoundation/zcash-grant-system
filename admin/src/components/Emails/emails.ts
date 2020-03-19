@@ -52,6 +52,16 @@ export default [
     description: 'Sent when an admin requests changes for your submitted proposal',
   },
   {
+    id: 'proposal_rejected_permanently',
+    title: 'Proposal rejected permanently',
+    description: 'Sent when an admin rejects a proposal permanently',
+  },
+  {
+    id: 'proposal_arbiter_assigned',
+    title: 'Proposal arbiter assigned',
+    description: 'Sent when a nominated arbiter accepts',
+  },
+  {
     id: 'ccr_approved',
     title: 'Request has been approved',
     description: 'Sent when an admin approves a submitted CCR',
