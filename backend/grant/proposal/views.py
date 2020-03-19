@@ -42,6 +42,7 @@ from .models import (
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
+    proposal_team_invites_schema,
     proposal_proposal_contributions_schema,
     db,
 )
@@ -503,6 +504,11 @@ def post_proposal_update(proposal_id, title, content):
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
 
+
+@blueprint.route("/<proposal_id>/invites", methods=["GET"])
+@requires_team_member_auth
+def get_proposal_team_invites(proposal_id):
+    return proposal_team_invites_schema.dump(g.current_proposal.invites)
 
 @blueprint.route("/<proposal_id>/invite", methods=["POST"])
 @limiter.limit("30/day;10/minute")

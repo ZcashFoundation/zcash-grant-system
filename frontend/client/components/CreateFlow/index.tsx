@@ -21,6 +21,7 @@ import { createActions } from 'modules/create';
 import { ProposalDraft } from 'types';
 import { getCreateErrors } from 'modules/create/utils';
 import ls from 'local-storage';
+import { getProposalInvites } from 'api/api';
 
 import { AppState } from 'store/reducers';
 
@@ -337,7 +338,15 @@ class CreateFlow extends React.Component<Props, State> {
     }
   };
 
-  private openPublishWarning = () => {
+  private openPublishWarning = async () => {
+    if (this.props.form) {
+      try {
+        const { data: invites } = await getProposalInvites(this.props.form.proposalId);
+        this.updateForm({ invites });
+        // tslint:disable-next-line:no-empty
+      } catch {}
+    }
+
     this.setState({ isShowingSubmitWarning: true });
   };
 
