@@ -7,13 +7,11 @@ import Info from 'components/Info';
 import { formatUsd } from '../../util/formatters';
 import './index.less';
 
-interface Props {}
-
 interface State {
   selectedYear: string;
 }
 
-class Financials extends React.Component<Props, State> {
+class Financials extends React.Component<{}, State> {
   state: State = {
     selectedYear: '',
   };

@@ -64,7 +64,7 @@ class CCRFlowBasics extends React.Component<Props, State> {
         >
           <Input.TextArea
             name="brief"
-            placeholder="An elevator-pitch version of your request, max 140 chars"
+            placeholder="An elevator-pitch version of your request, max 140 chars. Please no page breaks"
             value={brief}
             onChange={this.handleInputChange}
             rows={3}

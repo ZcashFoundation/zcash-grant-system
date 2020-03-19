@@ -45,7 +45,7 @@ test_proposal = {
     "milestones": milestones,
     "category": Category.ACCESSIBILITY,
     "target": "12345",
-    "payoutAddress": "123",
+    "payoutAddress": "zs15el0hzs4w60ggfy6kq4p3zttjrl00mfq7yxfwsjqpz9d7hptdtkltzlcqar994jg2ju3j9k85zk",
     "deadlineDuration": 100
 }
 

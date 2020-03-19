@@ -25,7 +25,7 @@ from grant.utils.auth import (
     get_authed_user,
     internal_webhook
 )
-from grant.utils.requests import validate_blockchain_get
+from grant.utils.validate import is_z_address_valid
 from grant.utils.enums import Category
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, RFPStatus
 from grant.utils.exceptions import ValidationException
@@ -320,11 +320,11 @@ def resolve_changes_discussion(proposal_id):
     "viewKey": fields.Str(required=False, missing=None)
 })
 def update_proposal_tip_jar(proposal_id, address, view_key):
+    if address is not None and address is not '' and not is_z_address_valid(address):
+        return {"message": "Tip address is not a valid z address"}, 400
     if address is not None:
-        if address is not '':
-            validate_blockchain_get('/validate/address', {'address': address})
-
         g.current_proposal.tip_jar_address = address
+
     if view_key is not None:
         g.current_proposal.tip_jar_view_key = view_key
 

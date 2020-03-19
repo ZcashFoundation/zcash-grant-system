@@ -5,7 +5,7 @@ from mock import patch
 from ..test_data import mock_blockchain_api_requests
 
 address_json = {
-    "address": "valid_address"
+    "address": "zs15el0hzs4w60ggfy6kq4p3zttjrl00mfq7yxfwsjqpz9d7hptdtkltzlcqar994jg2ju3j9k85zk"
 }
 
 view_key_json = {
@@ -15,8 +15,7 @@ view_key_json = {
 
 class TestProposalInviteAPI(BaseProposalCreatorConfig):
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_set_proposal_tip_address(self, mock_get):
+    def test_set_proposal_tip_address(self):
         self.login_default_user()
         res = self.app.put(
             f"/api/v1/proposals/{self.proposal.id}/tips",
@@ -27,8 +26,7 @@ class TestProposalInviteAPI(BaseProposalCreatorConfig):
         proposal = Proposal.query.get(self.proposal.id)
         self.assertEqual(proposal.tip_jar_address, address_json["address"])
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_set_proposal_tip_view_key(self, mock_get):
+    def test_set_proposal_tip_view_key(self):
         self.login_default_user()
         res = self.app.put(
             f"/api/v1/proposals/{self.proposal.id}/tips",
