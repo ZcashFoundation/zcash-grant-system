@@ -28,6 +28,7 @@ from grant.utils.exceptions import ValidationException
 from grant.utils.misc import dt_to_unix, make_url, make_admin_url, gen_random_id
 from grant.utils.requests import blockchain_get
 from grant.utils.stubs import anonymous_user
+from grant.utils.validate import is_z_address_valid
 
 proposal_team = db.Table(
     'proposal_team', db.Model.metadata,
@@ -521,24 +522,13 @@ class Proposal(db.Model):
         if self.deadline_duration > 7776000:
             raise ValidationException("Deadline duration cannot be more than 90 days")
 
-        # Check with node that the payout address is kosher
-        try:
-            res = blockchain_get('/validate/address', {'address': self.payout_address})
-        except:
-            raise ValidationException(
-                "Could not validate your payout address due to an internal server error, please try again later")
-        if not res['valid']:
-            raise ValidationException("Payout address is not a valid Zcash address")
-
-        if self.tip_jar_address:
-            # Check with node that the tip jar address is kosher
-            try:
-                res = blockchain_get('/validate/address', {'address': self.tip_jar_address})
-            except:
-                raise ValidationException(
-                    "Could not validate your tipping address due to an internal server error, please try again later")
-            if not res['valid']:
-                raise ValidationException("Tipping address is not a valid Zcash address")
+        # Validate payout address
+        if not is_z_address_valid(self.payout_address):
+            raise ValidationException("Payout address is not a valid z address")
+        
+        # Validate tip jar address
+        if self.tip_jar_address and not is_z_address_valid(self.tip_jar_address):
+            raise ValidationException("Tip address is not a valid z address")
 
         # Then run through regular validation
         Proposal.simple_validate(vars(self))
