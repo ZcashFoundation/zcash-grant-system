@@ -623,6 +623,12 @@ def reject_permanently_ccr(ccr_id, reject_reason):
     db.session.add(ccr)
     db.session.commit()
 
+    send_email(ccr.author.email_address, 'ccr_rejected_permanently', {
+        'user': ccr.author,
+        'ccr': ccr,
+        'admin_note': reject_reason,
+    })
+
     return ccr_schema.dump(ccr)
 
 

@@ -35,8 +35,17 @@ class FakeUpdate(object):
     proposal_id = 123
 
 
+class FakeCCR(object):
+    id = 123
+    title = 'Example CCR'
+    brief = 'This is an example CCR'
+    content = 'Example example example example'
+    target = "100"
+
+
 user = FakeUser()
 proposal = FakeProposal()
+ccr = FakeCCR()
 milestone = FakeMilestone()
 contribution = FakeContribution()
 update = FakeUpdate()
@@ -84,6 +93,22 @@ example_email_args = {
     'proposal_rejected_discussion': {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
+    },
+    'ccr_approved': {
+        'ccr': ccr,
+        'ccr_url': 'http://someproposal.com',
+        'admin_note': 'This proposal was the hottest stuff our team has seen yet. Great work.',
+    },
+    'ccr_rejected': {
+        'ccr': ccr,
+        'ccr_url': 'http://someproposal.com',
+        'admin_note': 'We don\'t really think this is needed right now by the ecosystem. Feel free to elaborate and submit again',
+    },
+    'ccr_rejected_permanently': {
+        'ccr': ccr,
+        'ccr_url': 'http://someproposal.com',
+        'profile_rejected_url': 'http://someproposal.com/profile?tab=rejected',
+        'admin_note': 'We don\'t really think this will ever be needed by the ecosystem.',
     },
     'proposal_contribution': {
         'proposal': proposal,
