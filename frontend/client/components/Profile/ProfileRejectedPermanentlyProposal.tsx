@@ -1,7 +1,7 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popconfirm, message, Tag } from 'antd';
-import { UserProposal, STATUS } from 'types';
+import { UserProposal } from 'types';
 import { deletePendingProposal } from 'modules/users/actions';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
@@ -23,79 +23,32 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
   isDeleting: boolean;
-  isPublishing: boolean;
 }
 
 class ProfilePending extends React.Component<Props, State> {
   state: State = {
     isDeleting: false,
-    isPublishing: false,
   };
 
   render() {
     const { status, title, proposalId, rejectReason } = this.props.proposal;
-    const { isDeleting, isPublishing } = this.state;
+    const { isDeleting } = this.state;
 
-    const isDisableActions = isDeleting || isPublishing;
-
-    const st = {
-      [STATUS.APPROVED]: {
-        color: 'green',
-        tag: 'Approved',
-        blurb: <div>You may publish this proposal when you are ready.</div>,
-      },
-      [STATUS.REJECTED]: {
-        color: 'red',
-        tag: 'Changes Requested',
-        blurb: (
-          <>
-            <div>This proposal has changes requested:</div>
-            <q>{rejectReason}</q>
-            <div>You may edit this proposal and re-submit it for approval.</div>
-          </>
-        ),
-      },
-      [STATUS.STAKING]: {
-        color: 'purple',
-        tag: 'Staking',
-        blurb: (
-          <div>
-            Awaiting staking contribution, you will receive an email when staking has been
-            confirmed. If you staked this proposal you may check its status under the
-            "funded" tab.
-          </div>
-        ),
-      },
-      [STATUS.PENDING]: {
-        color: 'orange',
-        tag: 'Pending',
-        blurb: (
-          <div>
-            You will receive an email when this proposal has completed the review process.
-          </div>
-        ),
-      },
-    } as { [key in STATUS]: { color: string; tag: string; blurb: ReactNode } };
+    const isDisableActions = isDeleting
 
     return (
       <div className="ProfilePending">
         <div className="ProfilePending-block">
           <Link to={`/proposals/${proposalId}`} className="ProfilePending-title">
-            {title} <Tag color={st[status].color}>{st[status].tag}</Tag>
+            {title} <Tag color="red">{'Rejected Permanently'}</Tag>
           </Link>
           <div className={`ProfilePending-status is-${status.toLowerCase()}`}>
-            {st[status].blurb}
+            <div>This proposal has been rejected permanently:</div>
+            <q>{rejectReason}</q>
+            <div>You may not re-submit it for approval.</div>
           </div>
         </div>
         <div className="ProfilePending-block is-actions">
-          {STATUS.REJECTED === status && (
-            <Link to={`/proposals/${proposalId}/edit`}>
-              <Button disabled={isDisableActions} type="primary">
-                Edit
-              </Button>
-            </Link>
-          )}
-
           <Popconfirm
             key="delete"
             title="Are you sure?"

@@ -14,6 +14,7 @@ from .subscription_settings import EmailSubscription, is_subscribed
 default_template_args = {
     'home_url': make_url('/'),
     'account_url': make_url('/profile'),
+    'profile_rejected_url': make_url('/profile?tab=rejected'),
     'email_settings_url': make_url('/profile/settings?tab=emails'),
     'unsubscribe_url': make_url('/profile/settings?tab=emails'),
 }
@@ -101,6 +102,16 @@ def ccr_rejected(email_args):
     }
 
 
+def ccr_rejected_permanently(email_args):
+    print('email args', email_args)
+
+    return {
+        'subject': 'Your request has been rejected permanently',
+        'title': 'Your request has been rejected permanently',
+        'preview': f'{email_args["ccr"].title} has been rejected permanently',
+    }
+
+
 def proposal_rejected(email_args):
     return {
         'subject': 'Your proposal has changes requested',
@@ -115,6 +126,24 @@ def proposal_rejected_discussion(email_args):
         'subject': 'Your proposal has changes requested',
         'title': 'Your proposal has changes requested',
         'preview': '{} has changes requested'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_rejected_permanently(email_args):
+    return {
+        'subject': 'Your proposal has been rejected permanently',
+        'title': 'Your proposal has been rejected permanently',
+        'preview': '{} has changes requested'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_arbiter_assigned(email_args):
+    return {
+        'subject': 'Your proposal has an arbiter assigned',
+        'title': 'Your proposal has an arbiter assigned',
+        'preview': '{} has an arbiter assigned'.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 
@@ -409,12 +438,15 @@ get_info_lookup = {
     'change_email': change_email_info,
     'change_email_old': change_email_old_info,
     'change_password': change_password_info,
-    'ccr_rejected': ccr_rejected,
     'ccr_approved': ccr_approved,
+    'ccr_rejected': ccr_rejected,
+    'ccr_rejected_permanently': ccr_rejected_permanently,
     'proposal_approved': proposal_approved,
     'proposal_approved_discussion': proposal_approved_discussion,
     'proposal_rejected': proposal_rejected,
     'proposal_rejected_discussion': proposal_rejected_discussion,
+    'proposal_rejected_permanently': proposal_rejected_permanently,
+    'proposal_arbiter_assigned': proposal_arbiter_assigned,
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
     'proposal_failed': proposal_failed,

@@ -62,8 +62,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         )
         self.assert401(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_update_live_proposal_fails(self, mock_get):
+    def test_update_live_proposal_fails(self):
         self.login_default_user()
         self.proposal.status = ProposalStatus.APPROVED
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
@@ -121,46 +120,40 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         self.assert404(resp)
 
     # /submit_for_approval
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_proposal_draft_submit_for_approval(self, mock_get):
+    def test_proposal_draft_submit_for_approval(self):
         self.login_default_user()
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert200(resp)
         self.assertEqual(resp.json['status'], ProposalStatus.PENDING)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_no_auth_proposal_draft_submit_for_approval(self, mock_get):
+    def test_no_auth_proposal_draft_submit_for_approval(self):
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert401(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_invalid_proposal_draft_submit_for_approval(self, mock_get):
+    def test_invalid_proposal_draft_submit_for_approval(self):
         self.login_default_user()
         resp = self.app.put("/api/v1/proposals/12345/submit_for_approval")
         self.assert404(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_invalid_status_proposal_draft_submit_for_approval(self, mock_get):
+    def test_invalid_status_proposal_draft_submit_for_approval(self):
         self.login_default_user()
         self.proposal.status = ProposalStatus.PENDING  # should be ProposalStatus.DRAFT
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert400(resp)
 
-    @patch('requests.get', side_effect=mock_invalid_address)
-    def test_invalid_address_proposal_draft_submit_for_approval(self, mock_get):
+    def test_invalid_address_proposal_draft_submit_for_approval(self):
         self.login_default_user()
+        self.proposal.payout_address = 'invalid'
         resp = self.app.put("/api/v1/proposals/{}/submit_for_approval".format(self.proposal.id))
         self.assert400(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_invalid_status_proposal_publish_proposal(self, mock_get):
+    def test_invalid_status_proposal_publish_proposal(self):
         self.login_default_user()
         self.proposal.status = ProposalStatus.PENDING  # should be ProposalStatus.APPROVED
         resp = self.app.put("/api/v1/proposals/{}/publish".format(self.proposal.id))
         self.assert400(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_not_verified_email_address_publish_proposal(self, mock_get):
+    def test_not_verified_email_address_publish_proposal(self):
         self.login_default_user()
         self.mark_user_not_verified()
         self.proposal.status = "DRAFT"
@@ -407,8 +400,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         )
         self.assert404(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_publish_live_draft(self, mock_get):
+    def test_publish_live_draft(self):
         # user should be able to publish live draft of a proposal
         self.login_default_user()
         self.proposal.status = ProposalStatus.DISCUSSION
@@ -496,8 +488,7 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         )
         self.assert404(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def get_proposal_revisions(self, mock_get):
+    def get_proposal_revisions(self):
         # user should be able to publish live draft of a proposal
         self.login_default_user()
         self.proposal.status = ProposalStatus.DISCUSSION

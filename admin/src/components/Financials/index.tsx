@@ -7,13 +7,11 @@ import Info from 'components/Info';
 import { formatUsd } from '../../util/formatters';
 import './index.less';
 
-interface Props {}
-
 interface State {
   selectedYear: string;
 }
 
-class Financials extends React.Component<Props, State> {
+class Financials extends React.Component<{}, State> {
   state: State = {
     selectedYear: '',
   };
@@ -51,45 +49,17 @@ class Financials extends React.Component<Props, State> {
       <div className="Financials">
         <Row gutter={16}>
           <Col lg={8} md={12} sm={24}>
-            <Card
-              size="small"
-              title={
-                <Info
-                  content={
-                    <>
-                      <p>
-                        Matching and bounty obligations for active and completed
-                        proposals.
-                      </p>
-                      <b>matching</b> - total matching amount pleged
-                      <br />
-                      <b>bounties</b> - total bounty amount pledged
-                      <br />
-                    </>
-                  }
-                >
-                  Grants
-                </Info>
-              }
-            >
-              <Charts.Pie
-                hasLegend
-                title="Grants"
-                subTitle="Total"
-                total={() => (
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: '$ ' + formatUsd(grants.total, false, 2),
-                    }}
-                  />
-                )}
-                data={[
-                  { x: 'bounties', y: parseFloat(grants.bounty) },
-                  { x: 'matching', y: parseFloat(grants.matching) },
-                ]}
-                valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
-                height={180}
-              />
+            <Card size="small" title={'Grants'}>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+              >
+                <div>Bounties Total</div>
+                <div style={{ fontSize: '2rem' }}>{`$ ${formatUsd(
+                  grants.total,
+                  false,
+                  2,
+                )}`}</div>
+              </div>
             </Card>
           </Col>
 
@@ -123,7 +93,7 @@ class Financials extends React.Component<Props, State> {
                 total={() => (
                   <span
                     dangerouslySetInnerHTML={{
-                      __html: '$ ' + formatUsd(grants.total, false, 2),
+                      __html: '$ ' + formatUsd(grants.total, false),
                     }}
                   />
                 )}
@@ -132,7 +102,11 @@ class Financials extends React.Component<Props, State> {
                   { x: 'future', y: parseFloat(payouts.future) },
                   { x: 'paid', y: parseFloat(payouts.paid) },
                 ]}
-                valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
+                valueFormat={val => (
+                  <span
+                    dangerouslySetInnerHTML={{ __html: `${formatUsd(val, false, 2)}` }}
+                  />
+                )}
                 height={180}
               />
             </Card>

@@ -25,7 +25,7 @@ from grant.utils.auth import (
     get_authed_user,
     internal_webhook
 )
-from grant.utils.requests import validate_blockchain_get
+from grant.utils.validate import is_z_address_valid
 from grant.utils.enums import Category
 from grant.utils.enums import ProposalStatus, ProposalStage, ContributionStatus, RFPStatus
 from grant.utils.exceptions import ValidationException
@@ -42,6 +42,7 @@ from .models import (
     proposal_team,
     ProposalTeamInvite,
     proposal_team_invite_schema,
+    proposal_team_invites_schema,
     proposal_proposal_contributions_schema,
     db,
 )
@@ -320,11 +321,11 @@ def resolve_changes_discussion(proposal_id):
     "viewKey": fields.Str(required=False, missing=None)
 })
 def update_proposal_tip_jar(proposal_id, address, view_key):
+    if address is not None and address is not '' and not is_z_address_valid(address):
+        return {"message": "Tip address is not a valid z address"}, 400
     if address is not None:
-        if address is not '':
-            validate_blockchain_get('/validate/address', {'address': address})
-
         g.current_proposal.tip_jar_address = address
+
     if view_key is not None:
         g.current_proposal.tip_jar_view_key = view_key
 
@@ -503,6 +504,11 @@ def post_proposal_update(proposal_id, title, content):
     dumped_update = proposal_update_schema.dump(update)
     return dumped_update, 201
 
+
+@blueprint.route("/<proposal_id>/invites", methods=["GET"])
+@requires_team_member_auth
+def get_proposal_team_invites(proposal_id):
+    return proposal_team_invites_schema.dump(g.current_proposal.invites)
 
 @blueprint.route("/<proposal_id>/invite", methods=["POST"])
 @limiter.limit("30/day;10/minute")

@@ -1,7 +1,7 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popconfirm, message, Tag } from 'antd';
-import { CCRSTATUS, STATUS, UserCCR } from 'types';
+import { UserCCR } from 'types';
 import { deletePendingRequest, fetchUser } from 'modules/users/actions';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
@@ -36,48 +36,20 @@ class ProfilePendingCCR extends React.Component<Props, State> {
     const { isDeleting } = this.state;
 
     const isDisableActions = isDeleting;
-    const st = {
-      [STATUS.REJECTED]: {
-        color: 'red',
-        tag: 'Changes Requested',
-        blurb: (
-          <>
-            <div>This request has changes requested for the following reason:</div>
-            <q>{rejectReason}</q>
-            <div>You may edit this request and re-submit it for approval.</div>
-          </>
-        ),
-      },
-      [STATUS.PENDING]: {
-        color: 'purple',
-        tag: 'Pending',
-        blurb: (
-          <div>
-            You will receive an email when this request has completed the review process.
-          </div>
-        ),
-      },
-    } as { [key in STATUS]: { color: string; tag: string; blurb: ReactNode } };
 
     return (
       <div className="ProfilePending">
         <div className="ProfilePending-block">
           <Link to={`/ccrs/${ccrId}`} className="ProfilePending-title">
-            {title} <Tag color={st[status].color}>{st[status].tag}</Tag>
+            {title} <Tag color={'red'}>{'Changes Requested'}</Tag>
           </Link>
           <div className={`ProfilePending-status is-${status.toLowerCase()}`}>
-            {st[status].blurb}
+            <div>This request has been rejected permanently:</div>
+            <q>{rejectReason}</q>
+            <div>You may not re-submit it for approval.</div>
           </div>
         </div>
         <div className="ProfilePending-block is-actions">
-          {CCRSTATUS.REJECTED === status && (
-            <Link to={`/ccrs/${ccrId}/edit`}>
-              <Button disabled={isDisableActions} type="primary">
-                Edit
-              </Button>
-            </Link>
-          )}
-
           <Popconfirm
             key="delete"
             title="Are you sure?"

@@ -109,6 +109,7 @@ export function getUser(address: string): Promise<{ data: User }> {
         withFunded: true,
         withPending: true,
         withArbitrated: true,
+        withRejectedPermanently: true
       },
     })
     .then(res => {
@@ -250,7 +251,7 @@ export function postProposalDraft(rfpId?: number): Promise<{ data: ProposalDraft
   return axios.post('/api/v1/proposals/drafts', { rfpId });
 }
 
-export function deleteProposalDraft(proposalId: number): Promise<any> {
+export function deleteProposal(proposalId: number): Promise<any> {
   return axios.delete(`/api/v1/proposals/${proposalId}`);
 }
 
@@ -348,6 +349,12 @@ export async function rejectProposalPayout(
       res.data = formatProposalFromGet(res.data);
       return res;
     });
+}
+
+export function getProposalInvites(
+  proposalId: number
+): Promise<{ data: TeamInvite[] }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/invites`);
 }
 
 export function postProposalInvite(

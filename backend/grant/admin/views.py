@@ -158,19 +158,19 @@ def stats():
         .filter(Milestone.stage == MilestoneStage.ACCEPTED) \
         .scalar()
     # Count contributions on proposals that didn't get funded for users who have specified a refund address
-    contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
-        .filter(ProposalContribution.refund_tx_id == None) \
-        .filter(ProposalContribution.staking == False) \
-        .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
-        .join(Proposal) \
-        .filter(or_(
-        Proposal.stage == ProposalStage.FAILED,
-        Proposal.stage == ProposalStage.CANCELED,
-    )) \
-        .join(ProposalContribution.user) \
-        .join(UserSettings) \
-        .filter(UserSettings.refund_address != None) \
-        .scalar()
+    # contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
+    #     .filter(ProposalContribution.refund_tx_id == None) \
+    #     .filter(ProposalContribution.staking == False) \
+    #     .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
+    #     .join(Proposal) \
+    #     .filter(or_(
+    #     Proposal.stage == ProposalStage.FAILED,
+    #     Proposal.stage == ProposalStage.CANCELED,
+    # )) \
+    #     .join(ProposalContribution.user) \
+    #     .join(UserSettings) \
+    #     .filter(UserSettings.refund_address != None) \
+    #     .scalar()
     return {
         "userCount": user_count,
         "ccrPendingCount": ccr_pending_count,
@@ -178,7 +178,7 @@ def stats():
         "proposalPendingCount": proposal_pending_count,
         "proposalNoArbiterCount": proposal_no_arbiter_count,
         "proposalMilestonePayoutsCount": proposal_milestone_payouts_count,
-        "contributionRefundableCount": contribution_refundable_count,
+        "contributionRefundableCount": 0,
     }
 
 
@@ -424,6 +424,14 @@ def reject_permanently_proposal(proposal_id, reject_reason):
     db.session.add(proposal)
     db.session.commit()
 
+    for user in proposal.team:
+        send_email(user.email_address, 'proposal_rejected_permanently', {
+            'user': user,
+            'proposal': proposal,
+            'proposal_url': make_url(f'/proposals/{proposal.id}'),
+            'admin_note': reject_reason,
+        })
+
     return proposal_schema.dump(proposal)
 
 
@@ -622,6 +630,12 @@ def reject_permanently_ccr(ccr_id, reject_reason):
 
     db.session.add(ccr)
     db.session.commit()
+
+    send_email(ccr.author.email_address, 'ccr_rejected_permanently', {
+        'user': ccr.author,
+        'ccr': ccr,
+        'admin_note': reject_reason,
+    })
 
     return ccr_schema.dump(ccr)
 
