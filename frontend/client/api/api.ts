@@ -351,6 +351,12 @@ export async function rejectProposalPayout(
     });
 }
 
+export function getProposalInvites(
+  proposalId: number
+): Promise<{ data: TeamInvite[] }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/invites`);
+}
+
 export function postProposalInvite(
   proposalId: number,
   address: string,

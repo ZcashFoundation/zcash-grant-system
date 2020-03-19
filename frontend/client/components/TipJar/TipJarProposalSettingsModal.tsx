@@ -68,9 +68,9 @@ class TipJarProposalSettingsModalBase extends React.Component<Props, State> {
   render() {
     const {
       address,
-      viewKey,
+      // viewKey,
       setAddress,
-      setViewKey,
+      // setViewKey,
       isSavingAddress,
       isSavingViewKey,
     } = this.state;
@@ -87,14 +87,14 @@ class TipJarProposalSettingsModalBase extends React.Component<Props, State> {
     }
 
     const addressHasChanged = address !== setAddress;
-    const viewKeyHasChanged = viewKey !== setViewKey;
+    // const viewKeyHasChanged = viewKey !== setViewKey;
 
     const addressInputDisabled = isSavingAddress;
-    const viewKeyInputDisabled = isSavingViewKey || !setAddress;
+    const viewKeyInputDisabled = true // isSavingViewKey || !setAddress;
 
     const addressButtonDisabled =
       !addressHasChanged || isSavingAddress || !addressIsValid;
-    const viewKeyButtonDisabled = !viewKeyHasChanged || isSavingViewKey || !setAddress;
+    const viewKeyButtonDisabled = true // !viewKeyHasChanged || isSavingViewKey || !setAddress;
 
     const content = (
       <>
@@ -126,9 +126,9 @@ class TipJarProposalSettingsModalBase extends React.Component<Props, State> {
         <Divider style={{ margin: '2.5rem 0' }} />
 
         <Form layout="vertical" onSubmit={this.handleTipJarViewKeySubmit}>
-          <Form.Item label="Tip View Key">
+          <Form.Item label="Tip View Key (coming soon)">
             <Input
-              value={viewKey || ''}
+              value={''} // {viewKey || ''}
               placeholder="A view key for your tip jar address (optional)"
               onChange={this.handleTipJarViewKeyChange}
               disabled={viewKeyInputDisabled}

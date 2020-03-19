@@ -1,0 +1,5 @@
+Your proposal {{ args.proposal.title }} has an arbiter assigned.
+
+Visit your proposal to see more:
+
+{{ args.proposal_url }}
