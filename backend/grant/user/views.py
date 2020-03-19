@@ -52,10 +52,11 @@ def get_me():
     "withFunded": fields.Bool(required=False, missing=None),
     "withPending": fields.Bool(required=False, missing=None),
     "withArbitrated": fields.Bool(required=False, missing=None),
-    "withRequests": fields.Bool(required=False, missing=None)
+    "withRequests": fields.Bool(required=False, missing=None),
+    "withRejectedPermanently": fields.Bool(required=False, missing=None)
 
 })
-def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated, with_requests):
+def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated, with_requests, with_rejected_permanently):
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
@@ -87,7 +88,6 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
                 ProposalStatus.PENDING,
                 ProposalStatus.APPROVED,
                 ProposalStatus.REJECTED,
-                ProposalStatus.REJECTED_PERMANENTLY,
             ])
             pending_proposals_dump = user_proposals_schema.dump(pending_proposals)
             result["pendingProposals"] = pending_proposals_dump
@@ -95,12 +95,21 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
                 CCRStatus.PENDING,
                 CCRStatus.APPROVED,
                 CCRStatus.REJECTED,
-                CCRStatus.REJECTED_PERMANENTLY,
             ])
             pending_ccrs_dump = ccrs_schema.dump(pending_ccrs)
             result["pendingRequests"] = pending_ccrs_dump
         if with_arbitrated and is_self:
             result["arbitrated"] = user_proposal_arbiters_schema.dump(user.arbiter_proposals)
+        if with_rejected_permanently and is_self:
+            rejected_proposals = Proposal.get_by_user(user, [
+                ProposalStatus.REJECTED_PERMANENTLY
+            ])
+            result["rejectedPermanentlyProposals"] = user_proposals_schema.dump(rejected_proposals)
+
+            rejected_ccrs = CCR.get_by_user(user, [
+                CCRStatus.REJECTED_PERMANENTLY,
+            ])
+            result["rejectedPermanentlyRequests"] = ccrs_schema.dump(rejected_ccrs)
 
         return result
     else:
