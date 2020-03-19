@@ -89,7 +89,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
               help={
                 inviteError ||
                 (maxedOut && 'You’ve invited the maximum number of teammates') ||
-                'They will be notified and will have to accept the invitation before being added'
+                'They will be notified immediately and will have to accept the invitation before being added'
               }
             >
               <Input
