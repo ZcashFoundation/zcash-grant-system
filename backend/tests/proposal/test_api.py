@@ -413,8 +413,6 @@ class TestProposalAPI(BaseProposalCreatorConfig):
             f"/api/v1/proposals/{self.proposal.id}/draft"
         )
 
-        print('draft', draft_resp.json, '\n\n')
-
         # check the two proposals have been related correctly
         self.assertStatus(draft_resp, 201)
         self.assertNotEqual(draft_resp.json['proposalId'], self.proposal.id)
