@@ -1,5 +1,7 @@
 import React from 'react';
 import { Select, Radio, Card } from 'antd';
+import qs from 'query-string';
+import { withRouter, RouteComponentProps } from 'react-router';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import { SelectValue } from 'antd/lib/select';
 import {
@@ -12,14 +14,39 @@ import {
 import { typedKeys } from 'utils/ts';
 import { ProposalPage } from 'types';
 
-interface Props {
+interface OwnProps {
   sort: ProposalPage['sort'];
   filters: ProposalPage['filters'];
   handleChangeSort(sort: ProposalPage['sort']): void;
   handleChangeFilters(filters: ProposalPage['filters']): void;
 }
 
-export default class ProposalFilters extends React.Component<Props> {
+type Props = OwnProps & RouteComponentProps<any>;
+
+class ProposalFilters extends React.Component<Props> {
+  componentDidMount() {
+    const urlFilter = this.getFilterFromUrl(this.props.location);
+
+    if (!urlFilter) return;
+
+    const filterMap: { [key: string]: string } = {
+      with_funding: 'ACCEPTED_WITH_FUNDING',
+      without_funding: 'ACCEPTED_WITHOUT_FUNDING',
+      public_review: 'STATUS_DISCUSSION',
+      in_progress: 'WIP',
+      completed: 'COMPLETED',
+    };
+    const translatedFilter = filterMap[urlFilter.toLowerCase()];
+
+    if (!translatedFilter) return;
+
+    const activeFilter = this.getActiveFilter();
+
+    if (translatedFilter !== activeFilter) {
+      this.handleStageChange({ target: { value: translatedFilter } } as RadioChangeEvent);
+    }
+  }
+
   render() {
     const { sort, filters } = this.props;
 
@@ -75,6 +102,20 @@ export default class ProposalFilters extends React.Component<Props> {
     );
   }
 
+  private getFilterFromUrl(
+    location: RouteComponentProps['location'],
+  ): string | undefined {
+    const args = qs.parse(location.search);
+    return args.filter;
+  }
+
+  private getActiveFilter(): string {
+    const { filters } = this.props;
+    const combinedFilters = [...filters.stage, ...filters.custom];
+
+    return combinedFilters.length ? combinedFilters[0].toUpperCase() : 'ALL';
+  }
+
   private handleStageChange = (ev: RadioChangeEvent) => {
     let stage: PROPOSAL_STAGE[] = [];
     let custom: CUSTOM_FILTERS[] = [];
@@ -110,3 +151,5 @@ export default class ProposalFilters extends React.Component<Props> {
     });
   };
 }
+
+export default withRouter(ProposalFilters);
