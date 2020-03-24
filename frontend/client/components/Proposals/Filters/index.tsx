@@ -43,19 +43,21 @@ class ProposalFilters extends React.Component<Props> {
 
     if (!urlFilter) return;
 
-    const urlFilterUpper = urlFilter.toUpperCase();
+    const filterMap: { [key: string]: string } = {
+      with_funding: 'ACCEPTED_WITH_FUNDING',
+      without_funding: 'ACCEPTED_WITHOUT_FUNDING',
+      public_review: 'STATUS_DISCUSSION',
+      in_progress: 'WIP',
+      completed: 'COMPLETED',
+    };
+    const translatedFilter = filterMap[urlFilter.toLowerCase()];
+
+    if (!translatedFilter) return;
+
     const activeFilter = this.getActiveFilter();
-    const filtersWhitelist = [
-      ...Object.values(PROPOSAL_STAGE),
-      ...Object.values(CUSTOM_FILTERS),
-    ];
 
-    if (!filtersWhitelist.includes(urlFilterUpper as any)) {
-      return;
-    }
-
-    if (urlFilterUpper !== activeFilter) {
-      this.handleStageChange({ target: { value: urlFilterUpper } } as RadioChangeEvent);
+    if (translatedFilter !== activeFilter) {
+      this.handleStageChange({ target: { value: translatedFilter } } as RadioChangeEvent);
     }
   }
 
