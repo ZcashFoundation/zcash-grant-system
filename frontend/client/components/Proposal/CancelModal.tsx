@@ -19,7 +19,7 @@ export default class CancelModal extends React.Component<Props> {
 
     return (
       <Modal
-        title={<>Cancel proposal</>}
+        title={<>Cancel Proposal</>}
         visible={isVisible}
         okText="OK"
         cancelText="Cancel"

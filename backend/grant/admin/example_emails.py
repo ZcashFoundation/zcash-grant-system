@@ -98,6 +98,7 @@ example_email_args = {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
         'profile_rejected_url': 'http://someproposal.com/profile?tab=rejected',
+        'admin_note': 'We don\'t really think this is needed right now by the ecosystem. Feel free to elaborate and submit again',
     },
     'proposal_arbiter_assigned': {
         'proposal': proposal,

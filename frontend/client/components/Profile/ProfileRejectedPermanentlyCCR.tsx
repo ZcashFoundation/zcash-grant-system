@@ -41,7 +41,7 @@ class ProfilePendingCCR extends React.Component<Props, State> {
       <div className="ProfilePending">
         <div className="ProfilePending-block">
           <Link to={`/ccrs/${ccrId}`} className="ProfilePending-title">
-            {title} <Tag color={'red'}>{'Changes Requested'}</Tag>
+            {title} <Tag color={'red'}>{'Rejected Permanently'}</Tag>
           </Link>
           <div className={`ProfilePending-status is-${status.toLowerCase()}`}>
             <div>This request has been rejected permanently:</div>

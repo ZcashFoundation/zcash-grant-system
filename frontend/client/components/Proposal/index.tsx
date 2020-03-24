@@ -147,7 +147,7 @@ export class ProposalDetail extends React.Component<Props, State> {
           disabled={!(isLive || isOpenForDiscussion)}
           onClick={this.openCancelModal}
         >
-          Cancel proposal
+          Cancel Proposal
         </Menu.Item>
       </Menu>
     );
