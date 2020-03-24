@@ -988,6 +988,23 @@ class Proposal(db.Model):
                 db.session.delete(live_draft)
                 return False
 
+        # if this is the first revision, create a base revision that's a snapshot of the original proposal
+        if len(self.revisions) == 0:
+            base_draft = self.make_live_draft(self)
+            base_draft.status = ProposalStatus.ARCHIVED
+            base_draft.invites = []
+
+            db.session.add(base_draft)
+
+            base_revision = ProposalRevision(
+                author=author,
+                proposal_id=self.id,
+                proposal_archive_id=base_draft.id,
+                changes=json.dumps([]),
+                revision_index=0
+            )
+            self.revisions.append(base_revision)
+
         revision_index = len(self.revisions)
 
         revision = ProposalRevision(
