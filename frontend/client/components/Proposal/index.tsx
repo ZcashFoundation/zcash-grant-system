@@ -216,8 +216,9 @@ export class ProposalDetail extends React.Component<Props, State> {
         blurb: (
           <>
             Your proposal has has been rejected permanently and is only visible to the
-            team. Visit your <Link to="/profile?tab=rejected">profile's rejected tab</Link>{' '}
-            for more information.
+            team. Visit your{' '}
+            <Link to="/profile?tab=rejected">profile's rejected tab</Link> for more
+            information.
           </>
         ),
         type: 'error',
@@ -258,14 +259,14 @@ export class ProposalDetail extends React.Component<Props, State> {
           </div>
         )}
         <div className="Proposal-top">
-          {isLive && (
+          {(isLive || isOpenForDiscussion) && (
             <div className="Proposal-top-social">
               <SocialShare
                 url={(typeof window !== 'undefined' && window.location.href) || ''}
-                title={`${proposal.title} needs funding on Grant-io!`}
+                title={`${proposal.title} needs your feedback on ZF Grants!`}
                 text={`${
                   proposal.title
-                } needs funding on ZF Grants! Come help make this proposal a reality by funding it.`}
+                } needs your feedback on ZF Grants! Come check it out.`}
               />
             </div>
           )}
