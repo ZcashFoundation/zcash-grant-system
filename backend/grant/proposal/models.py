@@ -1144,6 +1144,7 @@ user_fields = [
     "date_approved",
     "date_published",
     "reject_reason",
+    "changes_requested_discussion_reason",
     "team",
     "accepted_with_funding",
     "is_version_two",
