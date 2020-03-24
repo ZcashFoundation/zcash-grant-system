@@ -1,5 +1,7 @@
 import React from 'react';
 import { Select, Radio, Card } from 'antd';
+import qs from 'query-string';
+import { withRouter, RouteComponentProps } from 'react-router';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import { SelectValue } from 'antd/lib/select';
 import {
@@ -12,14 +14,51 @@ import {
 import { typedKeys } from 'utils/ts';
 import { ProposalPage } from 'types';
 
-interface Props {
+interface OwnProps {
   sort: ProposalPage['sort'];
   filters: ProposalPage['filters'];
   handleChangeSort(sort: ProposalPage['sort']): void;
   handleChangeFilters(filters: ProposalPage['filters']): void;
 }
 
-export default class ProposalFilters extends React.Component<Props> {
+type Props = OwnProps & RouteComponentProps<any>;
+
+class ProposalFilters extends React.Component<Props> {
+  private getFilterFromUrl(
+    location: RouteComponentProps['location'],
+  ): string | undefined {
+    const args = qs.parse(location.search);
+    return args.filter;
+  }
+
+  private getActiveFilter(): string {
+    const { filters } = this.props;
+    const combinedFilters = [...filters.stage, ...filters.custom];
+
+    return combinedFilters.length ? combinedFilters[0].toUpperCase() : 'ALL';
+  }
+
+  componentDidMount() {
+    const urlFilter = this.getFilterFromUrl(this.props.location);
+
+    if (!urlFilter) return;
+
+    const urlFilterUpper = urlFilter.toUpperCase();
+    const activeFilter = this.getActiveFilter();
+    const filtersWhitelist = [
+      ...Object.values(PROPOSAL_STAGE),
+      ...Object.values(CUSTOM_FILTERS),
+    ];
+
+    if (!filtersWhitelist.includes(urlFilterUpper as any)) {
+      return;
+    }
+
+    if (urlFilterUpper !== activeFilter) {
+      this.handleStageChange({ target: { value: urlFilterUpper } } as RadioChangeEvent);
+    }
+  }
+
   render() {
     const { sort, filters } = this.props;
 
@@ -112,3 +151,5 @@ export default class ProposalFilters extends React.Component<Props> {
     });
   };
 }
+
+export default withRouter(ProposalFilters);
