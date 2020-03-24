@@ -121,6 +121,7 @@ export interface UserProposal {
   datePublished: number;
   team: User[];
   rejectReason: string;
+  changesRequestedDiscussionReason: string | null;
   acceptedWithFunding: boolean | null;
   isVersionTwo: boolean;
 }

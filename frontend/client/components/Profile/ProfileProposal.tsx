@@ -23,20 +23,27 @@ export default class Profile extends React.Component<OwnProps> {
       isVersionTwo,
       acceptedWithFunding,
       status,
+      changesRequestedDiscussionReason 
     } = this.props.proposal;
-
-    const isOpenForDiscussion = status === STATUS.DISCUSSION;
 
     // pulled from `variables.less`
     const infoColor = '#1890ff';
     const secondaryColor = '#2D2A26';
 
-    const tagColor = acceptedWithFunding ? secondaryColor : infoColor;
-    const tagMessage = acceptedWithFunding
-      ? 'Funded by ZF'
-      : isOpenForDiscussion
-        ? 'Open for Public Review'
-        : 'Open for Contributions';
+    const isOpenForDiscussion = status === STATUS.DISCUSSION;
+    const discussionColor = changesRequestedDiscussionReason ? 'red' : infoColor
+    const discussionTag = changesRequestedDiscussionReason ? 'Changes Requested' : 'Open for Public Review'
+
+    let tagColor = infoColor
+    let tagMessage = 'Open for Contributions'
+
+    if (acceptedWithFunding) {
+      tagColor = secondaryColor
+      tagMessage = 'Funded by ZF'
+    } else if (isOpenForDiscussion) {
+      tagColor = discussionColor
+      tagMessage = discussionTag
+    }
 
     return (
       <div className="ProfileProposal">
