@@ -413,6 +413,8 @@ class TestProposalAPI(BaseProposalCreatorConfig):
             f"/api/v1/proposals/{self.proposal.id}/draft"
         )
 
+        print('draft', draft_resp.json, '\n\n')
+
         # check the two proposals have been related correctly
         self.assertStatus(draft_resp, 201)
         self.assertNotEqual(draft_resp.json['proposalId'], self.proposal.id)
@@ -453,22 +455,25 @@ class TestProposalAPI(BaseProposalCreatorConfig):
         # check the proposal revision and base snapshot was added
         self.assertEqual(len(self.proposal.revisions), 2)
 
+        def find_revision_with_index(revisions, index):
+            return next((r for r in revisions if r.revision_index == index), None)
+
         # check the base snapshot was created correctly
-        base_revision = self.proposal.revisions[0]
+        base_revision = find_revision_with_index(self.proposal.revisions, 0)
+        self.assertEqual(base_revision.revision_index, 0)
         self.assertEqual(base_revision.author, self.user)
         self.assertEqual(base_revision.proposal, self.proposal)
         self.assertIsNotNone(base_revision.proposal_archive_id)
         self.assertNotEqual(base_revision.proposal_archive_id, draft_id)
         self.assertEqual(len(json.loads(base_revision.changes)), 0)
-        self.assertEqual(base_revision.revision_index, 0)
 
         # check the proposal revision was created correctly
-        revision = self.proposal.revisions[1]
+        revision = find_revision_with_index(proposal.revisions, 1)
+        self.assertEqual(revision.revision_index, 1)
         self.assertEqual(revision.author, self.user)
         self.assertEqual(revision.proposal, self.proposal)
         self.assertEqual(revision.proposal_archive_id, draft_id)
         self.assertEqual(len(json.loads(revision.changes)), 2)
-        self.assertEqual(revision.revision_index, 1)
 
     def test_publish_live_draft_bad_status_fail(self):
         # publishing a live draft without a LIVE_DRAFT status should fail
