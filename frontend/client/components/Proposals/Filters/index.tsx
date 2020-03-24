@@ -24,20 +24,6 @@ interface OwnProps {
 type Props = OwnProps & RouteComponentProps<any>;
 
 class ProposalFilters extends React.Component<Props> {
-  private getFilterFromUrl(
-    location: RouteComponentProps['location'],
-  ): string | undefined {
-    const args = qs.parse(location.search);
-    return args.filter;
-  }
-
-  private getActiveFilter(): string {
-    const { filters } = this.props;
-    const combinedFilters = [...filters.stage, ...filters.custom];
-
-    return combinedFilters.length ? combinedFilters[0].toUpperCase() : 'ALL';
-  }
-
   componentDidMount() {
     const urlFilter = this.getFilterFromUrl(this.props.location);
 
@@ -116,6 +102,20 @@ class ProposalFilters extends React.Component<Props> {
         </Card>
       </div>
     );
+  }
+
+  private getFilterFromUrl(
+    location: RouteComponentProps['location'],
+  ): string | undefined {
+    const args = qs.parse(location.search);
+    return args.filter;
+  }
+
+  private getActiveFilter(): string {
+    const { filters } = this.props;
+    const combinedFilters = [...filters.stage, ...filters.custom];
+
+    return combinedFilters.length ? combinedFilters[0].toUpperCase() : 'ALL';
   }
 
   private handleStageChange = (ev: RadioChangeEvent) => {
