@@ -27,18 +27,6 @@ export default class ProposalFilters extends React.Component<Props> {
 
     return (
       <div>
-        <Card title="Sort">
-          <Select onChange={this.handleChangeSort} value={sort} style={{ width: '100%' }}>
-            {typedKeys(PROPOSAL_SORT).map(s => (
-              <Select.Option key={s} value={s}>
-                {SORT_LABELS[s]}
-              </Select.Option>
-            ))}
-          </Select>
-        </Card>
-
-        <div style={{ marginBottom: '1rem' }} />
-
         <Card title="Filter" extra={<a onClick={this.resetFilters}>Reset</a>}>
           <div style={{ marginBottom: '0.25rem' }}>
             <Radio
@@ -72,6 +60,16 @@ export default class ProposalFilters extends React.Component<Props> {
                 </Radio>
               </div>
             ))}
+        </Card>
+        <div style={{ marginBottom: '1rem' }} />
+        <Card title="Sort">
+          <Select onChange={this.handleChangeSort} value={sort} style={{ width: '100%' }}>
+            {typedKeys(PROPOSAL_SORT).map(s => (
+              <Select.Option key={s} value={s}>
+                {SORT_LABELS[s]}
+              </Select.Option>
+            ))}
+          </Select>
         </Card>
       </div>
     );
