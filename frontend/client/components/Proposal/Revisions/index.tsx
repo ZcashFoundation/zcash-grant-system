@@ -52,29 +52,45 @@ export class ProposalRevision extends React.Component<Props> {
     } else if (revisionsError) {
       content = <Placeholder title="Something went wrong" subtitle={revisionsError} />;
     } else if (revisions) {
-      if (revisions.length) {
+      if (revisions.length >= 2) {
         revisions.reverse();
         content = revisions.map((revision, index) => (
           <div key={revision.revisionId} className="ProposalRevision-revision">
-            <h3 className="ProposalRevision-revision-title">
-              {moment(revision.dateCreated * 1000).format('MMMM Do, YYYY')}
-            </h3>
-            <div className="ProposalRevision-revision-date">
-              {`Revision ${revision.revisionIndex + 1}`}
-            </div>
-            <div className="ProposalRevision-revision-body">
-              {this.renderRevisionBody(revision)}
-            </div>
-            <div className="ProposalRevision-revision-controls">
-              {index !== 0 && (
-                <Link
-                  to={`/proposals/${revision.proposalArchiveId}/archive`}
-                  className="ProposalRevision-revision-controls-button"
-                >
-                  View archived
-                </Link>
-              )}
-            </div>
+            {index === revisions.length - 1 ? (
+              <>
+                <h3 className="ProposalRevision-revision-title">Original Proposal</h3>
+                <div className="ProposalRevision-revision-controls">
+                  <Link
+                    to={`/proposals/${revision.proposalArchiveId}/archive`}
+                    className="ProposalRevision-revision-controls-button"
+                  >
+                    View archived
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="ProposalRevision-revision-title">
+                  {moment(revision.dateCreated * 1000).format('MMMM Do, YYYY')}
+                </h3>
+                <div className="ProposalRevision-revision-date">
+                  {`Revision ${revision.revisionIndex}`}
+                </div>
+                <div className="ProposalRevision-revision-body">
+                  {this.renderRevisionBody(revision)}
+                </div>
+                <div className="ProposalRevision-revision-controls">
+                  {index !== 0 && (
+                    <Link
+                      to={`/proposals/${revision.proposalArchiveId}/archive`}
+                      className="ProposalRevision-revision-controls-button"
+                    >
+                      View archived
+                    </Link>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         ));
       } else {

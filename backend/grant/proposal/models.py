@@ -964,7 +964,6 @@ class Proposal(db.Model):
         live_draft_proposal.changes_requested_discussion_reason = proposal.changes_requested_discussion_reason
         live_draft_proposal.rfp_opt_in = proposal.rfp_opt_in
         live_draft_proposal.team = proposal.team
-        live_draft_proposal.invites = proposal.invites
 
         db.session.add(live_draft_proposal)
 
@@ -978,15 +977,39 @@ class Proposal(db.Model):
         revision_changes = ProposalRevision.calculate_proposal_changes(self, live_draft)
 
         if len(revision_changes) == 0:
-            if live_draft.rfp_opt_in == self.rfp_opt_in:
+            if live_draft.rfp_opt_in == self.rfp_opt_in \
+                    and live_draft.payout_address == self.payout_address \
+                    and live_draft.tip_jar_address == self.tip_jar_address \
+                    and live_draft.team == self.team:
+
                 raise ValidationException("Live draft does not appear to have any changes")
             else:
-                # cover special case where ONLY kyc selection has changed without any publishable revision changes
+                # cover special cases where properties not tracked in revisions have changed:
                 self.rfp_opt_in = live_draft.rfp_opt_in
+                self.payout_address = live_draft.payout_address
+                self.tip_jar_address = live_draft.tip_jar_address
+                self.team = live_draft.team
                 self.live_draft = None
                 db.session.add(self)
                 db.session.delete(live_draft)
                 return False
+
+        # if this is the first revision, create a base revision that's a snapshot of the original proposal
+        if len(self.revisions) == 0:
+            base_draft = self.make_live_draft(self)
+            base_draft.status = ProposalStatus.ARCHIVED
+            base_draft.invites = []
+
+            db.session.add(base_draft)
+
+            base_revision = ProposalRevision(
+                author=author,
+                proposal_id=self.id,
+                proposal_archive_id=base_draft.id,
+                changes=json.dumps([]),
+                revision_index=0
+            )
+            self.revisions.append(base_revision)
 
         revision_index = len(self.revisions)
 
@@ -1006,7 +1029,7 @@ class Proposal(db.Model):
         self.tip_jar_address = live_draft.tip_jar_address
         self.rfp_opt_in = live_draft.rfp_opt_in
         self.team = live_draft.team
-        self.invites = live_draft.invites
+        self.invites = []
         self.live_draft = None
 
         self.revisions.append(revision)
@@ -1018,6 +1041,7 @@ class Proposal(db.Model):
 
         # archive live draft
         live_draft.status = ProposalStatus.ARCHIVED
+        live_draft.invites = []
         db.session.add(live_draft)
         return True
 
@@ -1120,6 +1144,7 @@ user_fields = [
     "date_approved",
     "date_published",
     "reject_reason",
+    "changes_requested_discussion_reason",
     "team",
     "accepted_with_funding",
     "is_version_two",
