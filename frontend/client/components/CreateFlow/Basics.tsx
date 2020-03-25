@@ -146,7 +146,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
         >
           <Input.TextArea
             name="brief"
-            placeholder="An elevator-pitch version of your proposal, max 140 chars. Please no page breaks"
+            placeholder="A one-liner elevator-pitch version of your proposal, max 140 chars."
             value={brief}
             onChange={this.handleInputChange}
             rows={3}

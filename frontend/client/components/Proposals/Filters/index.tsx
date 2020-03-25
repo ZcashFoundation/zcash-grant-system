@@ -23,21 +23,28 @@ interface OwnProps {
 
 type Props = OwnProps & RouteComponentProps<any>;
 
+const filterToActual: { [key: string]: string } = {
+  with_funding: 'ACCEPTED_WITH_FUNDING',
+  without_funding: 'ACCEPTED_WITHOUT_FUNDING',
+  public_review: 'STATUS_DISCUSSION',
+  in_progress: 'WIP',
+  completed: 'COMPLETED',
+};
+
+const actualToFilter: { [key: string]: string } = {
+  ACCEPTED_WITH_FUNDING: 'with_funding',
+  ACCEPTED_WITHOUT_FUNDING: 'without_funding',
+  STATUS_DISCUSSION: 'public_review',
+  WIP: 'in_progress',
+  COMPLETED: 'completed',
+};
+
 class ProposalFilters extends React.Component<Props> {
   componentDidMount() {
     const urlFilter = this.getFilterFromUrl(this.props.location);
-
     if (!urlFilter) return;
 
-    const filterMap: { [key: string]: string } = {
-      with_funding: 'ACCEPTED_WITH_FUNDING',
-      without_funding: 'ACCEPTED_WITHOUT_FUNDING',
-      public_review: 'STATUS_DISCUSSION',
-      in_progress: 'WIP',
-      completed: 'COMPLETED',
-    };
-    const translatedFilter = filterMap[urlFilter.toLowerCase()];
-
+    const translatedFilter = filterToActual[urlFilter.toLowerCase()];
     if (!translatedFilter) return;
 
     const activeFilter = this.getActiveFilter();
@@ -127,6 +134,16 @@ class ProposalFilters extends React.Component<Props> {
 
       if (Object.values(CUSTOM_FILTERS).includes(value)) {
         custom = [value];
+      }
+
+      const targetFilter = actualToFilter[value];
+      if (targetFilter) {
+        this.props.history.push(`/proposals/?filter=${targetFilter}`);
+      }
+    } else {
+      // if a filter is set, remove it
+      if (this.props.location.pathname === '/proposals/') {
+        this.props.history.push('/proposals');
       }
     }
     this.props.handleChangeFilters({

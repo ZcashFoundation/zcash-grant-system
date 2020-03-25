@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Popconfirm, message, Tag } from 'antd';
+import { Button, Popconfirm, message } from 'antd';
 import { UserCCR } from 'types';
 import { deletePendingRequest, fetchUser } from 'modules/users/actions';
 import { connect } from 'react-redux';
@@ -41,7 +41,7 @@ class ProfilePendingCCR extends React.Component<Props, State> {
       <div className="ProfilePending">
         <div className="ProfilePending-block">
           <Link to={`/ccrs/${ccrId}`} className="ProfilePending-title">
-            {title} <Tag color={'red'}>{'Rejected Permanently'}</Tag>
+            {title}
           </Link>
           <div className={`ProfilePending-status is-${status.toLowerCase()}`}>
             <div>This request has been rejected permanently:</div>

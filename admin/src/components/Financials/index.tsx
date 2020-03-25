@@ -104,7 +104,7 @@ class Financials extends React.Component<{}, State> {
                 ]}
                 valueFormat={val => (
                   <span
-                    dangerouslySetInnerHTML={{ __html: `${formatUsd(val, false, 2)}` }}
+                    dangerouslySetInnerHTML={{ __html: `${formatUsd(val, true, 2)}` }}
                   />
                 )}
                 height={180}
