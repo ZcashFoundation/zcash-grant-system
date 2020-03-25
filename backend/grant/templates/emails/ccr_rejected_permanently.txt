@@ -1,9 +1,9 @@
-Your request has been rejected permanently. Visit your profile to delete this request:
+Your request won't be accepted. Visit your profile to delete this request:
 
 {{ args.profile_rejected_url }}
 
 {% if args.admin_note %}
-A note from the admin team was attached to your rejection:
+A note from the admin team was attached:
 
 > {{ args.admin_note }}
 {% endif %}

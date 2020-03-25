@@ -127,7 +127,17 @@ class Profile extends React.Component<Props, State> {
 
     const renderTabMsg = (msg: string) =>
       isAuthedUser && (
-        <div style={{ textAlign: 'center', paddingBottom: '1rem', opacity: 0.9 }}>
+        <div
+          style={{
+            textAlign: 'center',
+            paddingBottom: '1rem',
+            opacity: 1,
+            textTransform: 'uppercase',
+            fontSize: '0.5rem',
+            letterSpacing: '0.05em',
+            marginTop: '-0.4rem',
+          }}
+        >
           <strong>{msg}</strong>
         </div>
       );
@@ -278,7 +288,7 @@ class Profile extends React.Component<Props, State> {
                   tab={TabTitle('Rejected', rejectedPermanentlyCount)}
                   key="rejected"
                 >
-                {renderTabMsg(privateMsg)}
+                  {renderTabMsg(privateMsg)}
                   <div>
                     <ProfileRejectedPermanentlyList
                       proposals={rejectedPermanentlyProposals}

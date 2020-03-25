@@ -103,12 +103,10 @@ def ccr_rejected(email_args):
 
 
 def ccr_rejected_permanently(email_args):
-    print('email args', email_args)
-
     return {
-        'subject': 'Your request has been rejected permanently',
-        'title': 'Your request has been rejected permanently',
-        'preview': f'{email_args["ccr"].title} has been rejected permanently',
+        'subject': 'Your request won\'t be accepted',
+        'title': 'Your request won\'t be accepted',
+        'preview': f'{email_args["ccr"].title} won\'t be accepted',
     }
 
 
@@ -132,8 +130,8 @@ def proposal_rejected_discussion(email_args):
 
 def proposal_rejected_permanently(email_args):
     return {
-        'subject': 'Your proposal has been rejected permanently',
-        'title': 'Your proposal has been rejected permanently',
+        'subject': 'Your proposal won\'t be accepted',
+        'title': 'Your proposal won\'t be accepted',
         'preview': '{} has changes requested'.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
@@ -141,9 +139,9 @@ def proposal_rejected_permanently(email_args):
 
 def proposal_arbiter_assigned(email_args):
     return {
-        'subject': 'Your proposal has an arbiter assigned',
-        'title': 'Your proposal has an arbiter assigned',
-        'preview': '{} has an arbiter assigned'.format(email_args['proposal'].title),
+        'subject': 'Your proposal is ready for payout requests',
+        'title': 'Your proposal is ready for payout requests',
+        'preview': '{} is ready for payout '.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 
