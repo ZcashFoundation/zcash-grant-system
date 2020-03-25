@@ -11,6 +11,7 @@ from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
+
 from grant import (
     commands,
     proposal,
@@ -44,6 +45,8 @@ class JSONResponse(Response):
 
 
 def create_app(config_objects=["grant.settings"]):
+    from grant.patches import patch_werkzeug_set_samesite
+    patch_werkzeug_set_samesite()
     app = Flask(__name__.split(".")[0])
     app.response_class = JSONResponse
 
