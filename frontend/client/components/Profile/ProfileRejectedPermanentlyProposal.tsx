@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Popconfirm, message, Tag } from 'antd';
+import { Button, Popconfirm, message } from 'antd';
 import { UserProposal } from 'types';
 import { deletePendingProposal } from 'modules/users/actions';
 import { connect } from 'react-redux';
@@ -34,13 +34,13 @@ class ProfilePending extends React.Component<Props, State> {
     const { status, title, proposalId, rejectReason } = this.props.proposal;
     const { isDeleting } = this.state;
 
-    const isDisableActions = isDeleting
+    const isDisableActions = isDeleting;
 
     return (
       <div className="ProfilePending">
         <div className="ProfilePending-block">
           <Link to={`/proposals/${proposalId}`} className="ProfilePending-title">
-            {title} <Tag color="red">{'Rejected Permanently'}</Tag>
+            {title}
           </Link>
           <div className={`ProfilePending-status is-${status.toLowerCase()}`}>
             <div>This proposal has been rejected permanently:</div>
