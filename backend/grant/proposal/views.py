@@ -508,7 +508,12 @@ def post_proposal_update(proposal_id, title, content):
 @blueprint.route("/<proposal_id>/invites", methods=["GET"])
 @requires_team_member_auth
 def get_proposal_team_invites(proposal_id):
-    return proposal_team_invites_schema.dump(g.current_proposal.invites)
+    proposal_dump = proposal_schema.dump(g.current_proposal)
+    return {
+        "team": proposal_dump["team"],
+        "invites": proposal_dump["invites"]
+    }
+
 
 @blueprint.route("/<proposal_id>/invite", methods=["POST"])
 @limiter.limit("30/day;10/minute")
