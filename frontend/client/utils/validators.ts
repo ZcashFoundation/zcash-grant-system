@@ -31,12 +31,9 @@ export function getAmountErrorUsd(amount: number, max: number = Infinity, min?: 
   return null;
 }
 
-
 // Covers the edge case where whole decimals (eg. 100.00) is valid in getAmountErrorUsd
 export function getAmountErrorUsdFromString(amount: string) {
-  return amount.indexOf('.') !== -1
-    ? 'Amount must be a whole number'
-    : null
+  return amount.indexOf('.') !== -1 ? 'Amount must be a whole number' : null;
 }
 
 export function getAmountErrorFromString(amount: string, max?: number, min?: number) {
@@ -71,6 +68,9 @@ export function isValidSproutAddress(address: string): boolean {
 }
 
 export function isValidSaplingAddress(address: string): boolean {
+  if (address.substring(0, 3) !== 'zs1') {
+    return false;
+  }
   if (/^z(s)?(reg)?(testsapling)?[a-zA-Z0-9]{76}$/.test(address)) {
     return true;
   }
