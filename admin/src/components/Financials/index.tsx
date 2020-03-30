@@ -161,7 +161,11 @@ class Financials extends React.Component<{}, State> {
                   { x: 'Q3', y: parseFloat(quarterData.q3) },
                   { x: 'Q4', y: parseFloat(quarterData.q3) },
                 ]}
-                valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
+                valueFormat={val => (
+                  <span
+                    dangerouslySetInnerHTML={{ __html: `${formatUsd(val, true, 2)}` }}
+                  />
+                )}
                 height={180}
               />
             </Card>

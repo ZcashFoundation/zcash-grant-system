@@ -109,7 +109,7 @@ export function getUser(address: string): Promise<{ data: User }> {
         withFunded: true,
         withPending: true,
         withArbitrated: true,
-        withRejectedPermanently: true
+        withRejectedPermanently: true,
       },
     })
     .then(res => {
@@ -352,8 +352,8 @@ export async function rejectProposalPayout(
 }
 
 export function getProposalInvites(
-  proposalId: number
-): Promise<{ data: TeamInvite[] }> {
+  proposalId: number,
+): Promise<{ data: { invites: TeamInvite[], team: User[] } }> {
   return axios.get(`/api/v1/proposals/${proposalId}/invites`);
 }
 

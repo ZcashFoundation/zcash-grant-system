@@ -336,7 +336,7 @@ def milestone_accept(email_args):
     return {
         'subject': f'Payout approved for {p.title} - {ms.title}!',
         'title': f'Milestone payout approved',
-        'preview': f'The payout of {a} ZEC for milestone {ms.title} has been approved.',
+        'preview': f'The payout of ${a} in ZEC for milestone {ms.title} has been approved.',
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL,
     }
 
@@ -348,7 +348,7 @@ def milestone_paid(email_args):
     return {
         'subject': f'{p.title} - {ms.title} has been paid!',
         'title': f'Milestone paid',
-        'preview': f'The milestone {ms.title} payout of {a} ZEC has been paid!',
+        'preview': f'The milestone {ms.title} payout of ${a} in ZEC has been paid!',
         'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
     }
 

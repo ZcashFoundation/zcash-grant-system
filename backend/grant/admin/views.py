@@ -430,6 +430,7 @@ def reject_permanently_proposal(proposal_id, reject_reason):
             'proposal': proposal,
             'proposal_url': make_url(f'/proposals/{proposal.id}'),
             'admin_note': reject_reason,
+            'profile_rejected_url': make_url('/profile?tab=rejected'),
         })
 
     return proposal_schema.dump(proposal)
@@ -635,6 +636,7 @@ def reject_permanently_ccr(ccr_id, reject_reason):
         'user': ccr.author,
         'ccr': ccr,
         'admin_note': reject_reason,
+        'profile_rejected_url': make_url('/profile?tab=rejected')
     })
 
     return ccr_schema.dump(ccr)

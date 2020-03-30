@@ -6,6 +6,7 @@ import qs from 'query-string';
 import { withRouter, RouteComponentProps } from 'react-router';
 import { History } from 'history';
 import { debounce } from 'underscore';
+import { isEqual } from 'lodash';
 import Basics from './Basics';
 import Team from './Team';
 import Details from './Details';
@@ -127,11 +128,15 @@ interface State {
   isSubmitting: boolean;
   isExplaining: boolean;
   isExample: boolean;
+  isPolling: boolean;
 }
+
+const TEAM_CHANGE_POLL_INTERVAL = 5000;
 
 class CreateFlow extends React.Component<Props, State> {
   private historyUnlisten: () => void;
   private debouncedUpdateForm: (form: Partial<ProposalDraft>) => void;
+  private pollInterval: ReturnType<typeof setInterval> | undefined;
 
   constructor(props: Props) {
     super(props);
@@ -150,14 +155,26 @@ class CreateFlow extends React.Component<Props, State> {
       isExample: false,
       isShowingSubmitWarning: false,
       isExplaining: !noExplain,
+      isPolling: false,
     };
     this.debouncedUpdateForm = debounce(this.updateForm, 800);
     this.historyUnlisten = this.props.history.listen(this.handlePop);
   }
 
+  componentWillMount() {
+    if (!this.pollInterval) {
+      this.pollInterval = setInterval(this.pollForTeamChanges, TEAM_CHANGE_POLL_INTERVAL);
+    }
+  }
+
   componentWillUnmount() {
     if (this.historyUnlisten) {
       this.historyUnlisten();
+    }
+
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = undefined;
     }
   }
 
@@ -339,14 +356,6 @@ class CreateFlow extends React.Component<Props, State> {
   };
 
   private openPublishWarning = async () => {
-    if (this.props.form) {
-      try {
-        const { data: invites } = await getProposalInvites(this.props.form.proposalId);
-        this.updateForm({ invites });
-        // tslint:disable-next-line:no-empty
-      } catch {}
-    }
-
     this.setState({ isShowingSubmitWarning: true });
   };
 
@@ -366,6 +375,26 @@ class CreateFlow extends React.Component<Props, State> {
         step: CREATE_STEP.REVIEW,
       });
     }, 50);
+  };
+
+  private pollForTeamChanges = async () => {
+    const { form } = this.props;
+
+    if (this.state.isPolling) return;
+    if (form) {
+      this.setState({ isPolling: true });
+      try {
+        const {
+          data: { invites, team },
+        } = await getProposalInvites(form.proposalId);
+
+        if (!isEqual(form.invites, invites) || !isEqual(form.team, team)) {
+          this.updateForm({ invites, team });
+        }
+        // tslint:disable-next-line:no-empty
+      } catch {}
+      this.setState({ isPolling: false });
+    }
   };
 }
 
