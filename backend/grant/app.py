@@ -21,7 +21,6 @@ from grant import (
     milestone,
     admin,
     email,
-    blockchain,
     task,
     rfp,
     e2e,
@@ -154,7 +153,6 @@ def register_blueprints(app):
     app.register_blueprint(milestone.views.blueprint)
     app.register_blueprint(admin.views.blueprint)
     app.register_blueprint(email.views.blueprint)
-    app.register_blueprint(blockchain.views.blueprint)
     app.register_blueprint(task.views.blueprint)
     app.register_blueprint(rfp.views.blueprint)
     app.register_blueprint(home.views.blueprint)
