@@ -1,6 +1,11 @@
 @import '~styles/variables.less';
 
 .ProposalCard {
+  &-title {
+    display: flex;
+    justify-content: space-between;
+  }
+
   &-ribbon {
     position: absolute;
     top: 0;
@@ -93,6 +98,8 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 1.157rem;
+      margin-top: 1.157rem;
 
       small {
         opacity: 0.6;
