@@ -430,12 +430,18 @@ export class ProposalDetail extends React.Component<Props, State> {
     let liveDraftId = proposal.liveDraftId;
 
     if (!liveDraftId) {
-      const { data: liveDraft } = await postProposalMakeLiveDraft(proposal.proposalId);
-      this.props.updateProposal(liveDraft);
-      liveDraftId = String(liveDraft.proposalId);
+      try {
+        const { data: liveDraft } = await postProposalMakeLiveDraft(proposal.proposalId);
+        this.props.updateProposal(liveDraft);
+        liveDraftId = String(liveDraft.proposalId);
+      } catch {
+        message.error('Edit request failed');
+      }
     }
 
-    this.props.history.push({ pathname: `/proposals/${liveDraftId}/edit` });
+    if (liveDraftId) {
+      this.props.history.push({ pathname: `/proposals/${liveDraftId}/edit` });
+    }
   };
 }
 

@@ -973,6 +973,9 @@ class Proposal(db.Model):
 
     # port changes made in LIVE_DRAFT proposal to self and delete the draft
     def consume_live_draft(self, author):
+        if self.status != ProposalStatus.DISCUSSION:
+            raise ValidationException("Proposal is not open for public review")
+
         live_draft = self.live_draft
         revision_changes = ProposalRevision.calculate_proposal_changes(self, live_draft)
 
