@@ -1,9 +1,9 @@
-Your proposal won't be accepted. Visit your profile to delete this proposal:
+Your proposal has been rejected. Visit your profile to delete this proposal:
 
 {{ args.profile_rejected_url }}
 
 {% if args.admin_note %}
-A note from the admin team was attached:
+A note from the Zcash Foundation:
 
 > {{ args.admin_note }}
 {% endif %}

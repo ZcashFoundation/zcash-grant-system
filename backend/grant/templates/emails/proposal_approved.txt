@@ -1,8 +1,8 @@
-Your proposal has been reviewed by the Zcash Foundation and is now listed on ZF Grants!
+Congratulations, your proposal has been funded by the Zcash Foundation! Once an arbiter is selected by the Foundation, you'll be able to request payouts according to your grant's milestone schedule.
 
 
 {% if args.admin_note %}
-A note from the admin team was attached to your approval:
+A note from the Zcash Foundation:
 
 > {{ args.admin_note }}
 {% endif %}

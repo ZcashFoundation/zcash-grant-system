@@ -2,7 +2,7 @@ Your proposal has changes requested. You're free to modify it
 and try submitting again.
 
 {% if args.admin_note %}
-A note from the admin team was attached to your rejection:
+A note from the Zcash Foundation:
 
 > {{ args.admin_note }}
 {% endif %}
