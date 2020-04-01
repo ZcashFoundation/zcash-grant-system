@@ -49,21 +49,6 @@ class Financials extends React.Component<{}, State> {
       <div className="Financials">
         <Row gutter={16}>
           <Col lg={8} md={12} sm={24}>
-            <Card size="small" title={'Grants'}>
-              <div
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-              >
-                <div>Bounties Total</div>
-                <div style={{ fontSize: '2rem' }}>{`$ ${formatUsd(
-                  grants.total,
-                  false,
-                  2,
-                )}`}</div>
-              </div>
-            </Card>
-          </Col>
-
-          <Col lg={8} md={12} sm={24}>
             <Card
               size="small"
               title={
