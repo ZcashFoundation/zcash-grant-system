@@ -302,6 +302,9 @@ def set_arbiter(proposal_id, user_id):
     if proposal.is_failed:
         return {"message": "Cannot set arbiter on failed proposal"}, 400
 
+    if proposal.version == '2' and not proposal.accepted_with_funding:
+        return {"message": "Cannot set arbiter, proposal has not been accepted with funding"}, 400
+
     user = User.query.filter(User.id == user_id).first()
     if not user:
         return {"message": "User not found"}, 404
