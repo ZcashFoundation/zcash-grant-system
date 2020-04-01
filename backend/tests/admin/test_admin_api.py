@@ -609,6 +609,9 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         mock_send_email.return_value.ok = True
         self.login_admin()
 
+        self.proposal.status = ProposalStatus.LIVE
+        self.proposal.accepted_with_funding = True
+
         # nominate arbiter
         resp = self.app.put(
             "/api/v1/admin/arbiters",
