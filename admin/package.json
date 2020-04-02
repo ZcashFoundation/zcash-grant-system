@@ -107,7 +107,10 @@
     "webpack-cli": "^3.1.0",
     "webpack-dev-server": "3.2.1",
     "webpack-hot-middleware": "^2.24.0",
-    "xss": "^1.0.3"
+    "xss": "^1.0.3",
+    "acorn": "^6.4.1",
+    "minimist": "^1.2.2",
+    "kind-of": "^6.0.3"
   },
   "devDependencies": {
     "@types/bn.js": "4.11.1",

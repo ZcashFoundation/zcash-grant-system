@@ -173,7 +173,10 @@
     "webpack-stats-plugin": "^0.2.1",
     "winston": "^3.1.0",
     "write-file-webpack-plugin": "^4.4.0",
-    "xss": "1.0.3"
+    "xss": "1.0.3",
+    "acorn": "^6.4.1",
+    "minimist": "^1.2.2",
+    "kind-of": "^6.0.3"
   },
   "devDependencies": {
     "@storybook/react": "4.0.0-alpha.22",
