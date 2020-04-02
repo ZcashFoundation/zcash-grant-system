@@ -76,6 +76,11 @@ example_email_args = {
         'recover_url': 'http://somerecoverurl.com',
         'contact_url': 'http://somecontacturl.com',
     },
+    'proposal_approved_without_funding': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+        'admin_note': "We've opened up your proposal for community donations.",
+    },
     'proposal_approved': {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
