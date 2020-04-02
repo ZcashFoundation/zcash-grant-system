@@ -42,6 +42,11 @@ export default [
     description: 'Sent when an admin approves your submitted proposal',
   },
   {
+    id: 'proposal_approved_without_funding',
+    title: 'Proposal approved without funding',
+    description: 'Sent when an admin approves your submitted proposal',
+  },
+  {
     id: 'proposal_approved_discussion',
     title: 'Proposal approved for public discussion',
     description: 'Sent when an admin approves a proposal for public discussion',
