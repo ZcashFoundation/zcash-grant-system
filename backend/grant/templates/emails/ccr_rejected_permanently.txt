@@ -1,0 +1,9 @@
+Your request has been rejected. Your request won't be publicly visible on ZF Grants. Visit your profile to delete this request:
+
+{{ args.profile_rejected_url }}
+
+{% if args.admin_note %}
+A note from the Zcash Foundation:
+
+> {{ args.admin_note }}
+{% endif %}

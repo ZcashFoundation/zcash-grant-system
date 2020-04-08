@@ -14,6 +14,7 @@ from .subscription_settings import EmailSubscription, is_subscribed
 default_template_args = {
     'home_url': make_url('/'),
     'account_url': make_url('/profile'),
+    'profile_rejected_url': make_url('/profile?tab=rejected'),
     'email_settings_url': make_url('/profile/settings?tab=emails'),
     'unsubscribe_url': make_url('/profile/settings?tab=emails'),
 }
@@ -69,34 +70,90 @@ def change_password_info(email_args):
 
 def proposal_approved(email_args):
     return {
-        'subject': 'Your proposal has been reviewed',
-        'title': 'Your proposal has been reviewed',
-        'preview': '{} is now live on ZF Grants.'.format(email_args['proposal'].title),
+        'subject': "Your proposal '{}' has been funded".format(email_args['proposal'].title),
+        'title': "Your proposal '{}' has been funded".format(email_args['proposal'].title),
+        'preview': "Your proposal '{}' has been funded".format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_approved_without_funding(email_args):
+    return {
+        'subject': "Your proposal '{}' has been listed on ZF Grants for community donations".format(
+            email_args['proposal'].title),
+        'title': "Your proposal '{}' has been listed on ZF Grants for community donations".format(
+            email_args['proposal'].title),
+        'preview': "Your proposal '{}' has been listed on ZF Grants for community donations".format(
+            email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_approved_discussion(email_args):
+    return {
+        'subject': "Your proposal '{}' has been approved for public discussion".format(email_args['proposal'].title),
+        'title': "Your proposal '{}' has been approved for public discussion".format(email_args['proposal'].title),
+        'preview': '{} is now open for public discussion on ZF Grants.'.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 
 
 def ccr_approved(email_args):
     return {
-        'subject': 'Your request has been approved!',
-        'title': 'Your request has been approved',
+        'subject': "Your request '{}' has been approved!".format(email_args['ccr'].title),
+        'title': "Your request '{}' has been approved!".format(email_args['ccr'].title),
         'preview': '{} will soon be live on ZF Grants!'.format(email_args['ccr'].title),
     }
 
 
 def ccr_rejected(email_args):
     return {
-        'subject': 'Your request has changes requested',
-        'title': 'Your request has changes requested',
+        'subject': "Your request '{}' has changes requested".format(email_args['ccr'].title),
+        'title': "Your request '{}' has changes requested".format(email_args['ccr'].title),
         'preview': '{} has changes requested'.format(email_args['ccr'].title),
+    }
+
+
+def ccr_rejected_permanently(email_args):
+    return {
+        'subject': "Your request '{}' has been rejected".format(email_args['ccr'].title),
+        'title': "Your request '{}' has been rejected".format(email_args['ccr'].title),
+        'preview': f'{email_args["ccr"].title} won\'t be accepted',
     }
 
 
 def proposal_rejected(email_args):
     return {
-        'subject': 'Your proposal has changes requested',
-        'title': 'Your proposal has changes requested',
+        'subject': "Your proposal '{}' has changes requested".format(email_args['proposal'].title),
+        'title': "Your proposal '{}' has changes requested".format(email_args['proposal'].title),
         'preview': '{} has changes requested'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_rejected_discussion(email_args):
+    return {
+        'subject': "Your proposal '{}' has changes requested".format(email_args['proposal'].title),
+        'title': "Your proposal '{}' has changes requested".format(email_args['proposal'].title),
+        'preview': '{} has changes requested'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_rejected_permanently(email_args):
+    return {
+        'subject': "Your proposal '{}' has been rejected".format(email_args['proposal'].title),
+        'title': "Your proposal '{}' has been rejected".format(email_args['proposal'].title),
+        'preview': '{} has been rejected'.format(email_args['proposal'].title),
+        'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
+    }
+
+
+def proposal_arbiter_assigned(email_args):
+    return {
+        'subject': "Your proposal '{}' is ready for payout requests".format(email_args['proposal'].title),
+        'title': "Your proposal '{}' is ready for payout requests".format(email_args['proposal'].title),
+        'preview': '{} is ready for payout '.format(email_args['proposal'].title),
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL
     }
 
@@ -118,7 +175,8 @@ def proposal_contribution(email_args):
 
 def proposal_comment(email_args):
     return {
-        'subject': 'New comment from {}'.format(email_args['author'].display_name),
+        'subject': "New comment from {} to your proposal '{}'".format(email_args['author'].display_name,
+                                                                      email_args['proposal'].title),
         'title': 'You got a comment',
         'preview': '{} has added a comment to your proposal {}'.format(
             email_args['author'].display_name,
@@ -130,8 +188,8 @@ def proposal_comment(email_args):
 
 def proposal_failed(email_args):
     return {
-        'subject': 'Your proposal failed to get funding',
-        'title': 'Proposal failed',
+        'subject': "Your proposal '{}' failed to get funding".format(email_args['proposal'].title),
+        'title': "Your proposal '{}' failed to get funding".format(email_args['proposal'].title),
         'preview': 'Your proposal entitled {} failed to get enough funding by the deadline'.format(
             email_args['proposal'].title,
         ),
@@ -143,7 +201,7 @@ def proposal_canceled(email_args):
     return {
         'subject': 'Your proposal has been canceled',
         'title': 'Proposal canceled',
-        'preview': 'Your proposal entitled {} has been canceled, and your contributors will be refunded'.format(
+        'preview': 'Your proposal entitled {} has been canceled'.format(
             email_args['proposal'].title,
         ),
     }
@@ -291,7 +349,7 @@ def milestone_accept(email_args):
     return {
         'subject': f'Payout approved for {p.title} - {ms.title}!',
         'title': f'Milestone payout approved',
-        'preview': f'The payout of {a} ZEC for milestone {ms.title} has been approved.',
+        'preview': f'The payout of ${a} in ZEC for milestone {ms.title} has been approved.',
         'subscription': EmailSubscription.MY_PROPOSAL_APPROVAL,
     }
 
@@ -303,7 +361,7 @@ def milestone_paid(email_args):
     return {
         'subject': f'{p.title} - {ms.title} has been paid!',
         'title': f'Milestone paid',
-        'preview': f'The milestone {ms.title} payout of {a} ZEC has been paid!',
+        'preview': f'The milestone {ms.title} payout of ${a} in ZEC has been paid!',
         'subscription': EmailSubscription.MY_PROPOSAL_FUNDED,
     }
 
@@ -323,6 +381,15 @@ def admin_approval_ccr(email_args):
         'title': f'CCR Review',
         'preview': f'{email_args["ccr"].title} needs review, as an admin you can help.',
         'subscription': EmailSubscription.ADMIN_APPROVAL_CCR,
+    }
+
+
+def admin_changes_resolved(email_args):
+    return {
+        'subject': f'Changes marked as resolved for {email_args["proposal"].title}',
+        'title': f'Changes Resolved',
+        'preview': f'Team members of proposal {email_args["proposal"].title} have marked requested changes as resolved.',
+        'subscription': EmailSubscription.ADMIN_APPROVAL,
     }
 
 
@@ -365,6 +432,16 @@ def followed_proposal_update(email_args):
     }
 
 
+def followed_proposal_revised(email_args):
+    p = email_args["proposal"]
+    return {
+        "subject": f"Proposal '{p.title}' has been revised.",
+        "title": f"Proposal Revised",
+        "preview": f"Followed proposal {p.title} has been revised",
+        "subscription": EmailSubscription.FOLLOWED_PROPOSAL,
+    }
+
+
 get_info_lookup = {
     'signup': signup_info,
     'team_invite': team_invite_info,
@@ -372,10 +449,16 @@ get_info_lookup = {
     'change_email': change_email_info,
     'change_email_old': change_email_old_info,
     'change_password': change_password_info,
-    'ccr_rejected': ccr_rejected,
     'ccr_approved': ccr_approved,
+    'ccr_rejected': ccr_rejected,
+    'ccr_rejected_permanently': ccr_rejected_permanently,
+    'proposal_approved_without_funding': proposal_approved_without_funding,
     'proposal_approved': proposal_approved,
+    'proposal_approved_discussion': proposal_approved_discussion,
     'proposal_rejected': proposal_rejected,
+    'proposal_rejected_discussion': proposal_rejected_discussion,
+    'proposal_rejected_permanently': proposal_rejected_permanently,
+    'proposal_arbiter_assigned': proposal_arbiter_assigned,
     'proposal_contribution': proposal_contribution,
     'proposal_comment': proposal_comment,
     'proposal_failed': proposal_failed,
@@ -396,10 +479,12 @@ get_info_lookup = {
     'milestone_paid': milestone_paid,
     'admin_approval': admin_approval,
     'admin_approval_ccr': admin_approval_ccr,
+    'admin_changes_resolved': admin_changes_resolved,
     'admin_arbiter': admin_arbiter,
     'admin_payout': admin_payout,
     'followed_proposal_milestone': followed_proposal_milestone,
-    'followed_proposal_update': followed_proposal_update
+    'followed_proposal_update': followed_proposal_update,
+    'followed_proposal_revised': followed_proposal_revised
 }
 
 

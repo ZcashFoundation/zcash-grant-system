@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popconfirm, message, Tag } from 'antd';
 import { CCRSTATUS, STATUS, UserCCR } from 'types';
-import { deletePendingRequest } from 'modules/users/actions';
+import { deletePendingRequest, fetchUser } from 'modules/users/actions';
 import { connect } from 'react-redux';
 import { AppState } from 'store/reducers';
 import './ProfilePending.less';
@@ -17,6 +17,7 @@ interface StateProps {
 
 interface DispatchProps {
   deletePendingRequest: typeof deletePendingRequest;
+  fetchUser: typeof fetchUser;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -35,7 +36,6 @@ class ProfilePendingCCR extends React.Component<Props, State> {
     const { isDeleting } = this.state;
 
     const isDisableActions = isDeleting;
-
     const st = {
       [STATUS.REJECTED]: {
         color: 'red',
@@ -50,7 +50,7 @@ class ProfilePendingCCR extends React.Component<Props, State> {
       },
       [STATUS.PENDING]: {
         color: 'purple',
-        tag: 'Pending Request',
+        tag: 'Pending',
         blurb: (
           <div>
             You will receive an email when this request has completed the review process.
@@ -102,6 +102,7 @@ class ProfilePendingCCR extends React.Component<Props, State> {
     try {
       await this.props.deletePendingRequest(user.userid, ccrId);
       message.success('Request deleted.');
+      await this.props.fetchUser(String(user.userid));
     } catch (e) {
       message.error(e.message || e.toString());
     }
@@ -115,5 +116,6 @@ export default connect<StateProps, DispatchProps, OwnProps, AppState>(
   }),
   {
     deletePendingRequest,
+    fetchUser,
   },
 )(ProfilePendingCCR);

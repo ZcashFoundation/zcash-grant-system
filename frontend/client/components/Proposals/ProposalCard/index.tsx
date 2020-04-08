@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { Redirect } from 'react-router-dom';
 import classnames from 'classnames';
-import { Progress } from 'antd';
-import { Proposal } from 'types';
+import { Progress, Tag } from 'antd';
+import { Proposal, STATUS } from 'types';
 import Card from 'components/Card';
 import UserAvatar from 'components/UserAvatar';
 import UnitDisplay from 'components/UnitDisplay';
@@ -27,10 +27,58 @@ export class ProposalCard extends React.Component<Proposal> {
       isVersionTwo,
       funded,
       percentFunded,
+      acceptedWithFunding,
+      status,
     } = this.props;
 
+    // pulled from `variables.less`
+    const infoColor = '#1890ff';
+    const secondaryColor = '#2D2A26';
+
+    let tagColor = '';
+    let tagMessage = '';
+
+    if (isVersionTwo && status === STATUS.DISCUSSION) {
+      tagColor = infoColor;
+      tagMessage = 'Open for Public Review';
+    }
+
+    if (isVersionTwo && status === STATUS.LIVE) {
+      if (acceptedWithFunding) {
+        tagColor = secondaryColor;
+        tagMessage = 'Funded by ZF';
+      } else {
+        tagColor = infoColor;
+        tagMessage = 'Not Funded';
+      }
+    }
+
+    const tagStyle: CSSProperties = {
+      marginRight: 0,
+      lineHeight: '1.25rem',
+      height: '1.35rem',
+      fontSize: '0.75rem',
+      ...(!tagMessage ? { opacity: 0 } : {}),
+    };
+
+    const cardTitle = (
+      <div className="ProposalCard-title">
+        <div>{title}</div>
+
+        <div className="ProposalCard-team-avatars">
+          {[...team].reverse().map((u, idx) => (
+            <UserAvatar
+              key={idx}
+              className={`ProposalCard-team-avatars-avatar${isVersionTwo ? '' : '-v1'}`}
+              user={u}
+            />
+          ))}
+        </div>
+      </div>
+    );
+
     return (
-      <Card className="ProposalCard" to={`/proposals/${proposalUrlId}`} title={title}>
+      <Card className="ProposalCard" to={`/proposals/${proposalUrlId}`} title={cardTitle}>
         {contributionMatching > 0 && (
           <div className="ProposalCard-ribbon">
             <span>
@@ -76,15 +124,11 @@ export class ProposalCard extends React.Component<Proposal> {
             {team[0].displayName}{' '}
             {team.length > 1 && <small>+{team.length - 1} other</small>}
           </div>
-          <div className="ProposalCard-team-avatars">
-            {[...team].reverse().map((u, idx) => (
-              <UserAvatar
-                key={idx}
-                className={`ProposalCard-team-avatars-avatar${isVersionTwo ? '' : '-v1'}`}
-                user={u}
-              />
-            ))}
-          </div>
+          {isVersionTwo && (
+            <Tag color={tagColor} style={tagStyle}>
+              {tagMessage}
+            </Tag>
+          )}
         </div>
         <div className="ProposalCard-address">{proposalAddress}</div>
         <Card.Info proposal={this.props} time={(datePublished || dateCreated) * 1000} />

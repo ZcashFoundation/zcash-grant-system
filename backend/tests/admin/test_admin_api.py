@@ -1,13 +1,14 @@
 import json
-from grant.utils.enums import ProposalStatus
+from grant.utils.enums import ProposalStatus, CCRStatus
 import grant.utils.admin as admin
 from grant.utils import totp_2fa
 from grant.user.models import admin_user_schema
-from grant.proposal.models import proposal_schema, db
+from grant.proposal.models import proposal_schema, db, Proposal
+from grant.ccr.models import CCR
 from mock import patch
 
-from ..config import BaseProposalCreatorConfig
-from ..test_data import mock_blockchain_api_requests
+from ..config import BaseProposalCreatorConfig, BaseCCRCreatorConfig
+from ..test_data import mock_blockchain_api_requests, test_ccr
 
 json_checklogin = {
     "isLoggedIn": False,
@@ -242,12 +243,106 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         # 2 proposals created by BaseProposalCreatorConfig
         self.assertEqual(len(resp.json['items']), 2)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_accept_proposal_with_funding(self, mock_get):
+    def test_open_proposal_for_discussion_accept(self):
+        # an admin should be able to open a proposal for discussion
         self.login_admin()
 
         # proposal needs to be PENDING
         self.proposal.status = ProposalStatus.PENDING
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.DISCUSSION)
+
+        proposal = Proposal.query.get(self.proposal.id)
+        self.assertEqual(proposal.status, ProposalStatus.DISCUSSION)
+
+    def test_open_proposal_for_discussion_reject(self):
+        # an admin should be able to reject opening a proposal for discussion
+        reject_reason = "this is a test"
+
+        self.login_admin()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # disapprove open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": False, "rejectReason": reject_reason})
+        )
+
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
+        self.assertEqual(resp.json["rejectReason"], reject_reason)
+
+        proposal = Proposal.query.get(self.proposal.id)
+        self.assertEqual(proposal.status, ProposalStatus.REJECTED)
+        self.assertEqual(proposal.reject_reason, reject_reason)
+
+    def test_open_proposal_for_discussion_bad_proposal_id_fail(self):
+        # request should fail if a bad proposal id is provided
+        bad_proposal_id = "11111111111111111111"
+        self.login_admin()
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{bad_proposal_id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+        self.assert404(resp)
+
+    def test_open_proposal_for_discussion_not_admin_fail(self):
+        # request should fail if user is not an admin
+        self.login_default_user()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+        self.assert401(resp)
+
+    def test_open_proposal_for_discussion_not_pending_fail(self):
+        # request should fail if proposal is not in PENDING state
+        self.login_admin()
+
+        self.proposal.status = ProposalStatus.DISCUSSION
+
+        # approve open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": True})
+        )
+        self.assert400(resp)
+
+    def test_open_proposal_for_discussion_no_reject_reason_fail(self):
+        # denying opening a proposal for discussion should fail if no reason is provided
+        self.login_admin()
+
+        # proposal needs to be PENDING
+        self.proposal.status = ProposalStatus.PENDING
+
+        # disapprove open for discussion
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/discussion",
+            data=json.dumps({"isOpenForDiscussion": False})
+        )
+        self.assert400(resp)
+
+    def test_accept_proposal_with_funding(self):
+        self.login_admin()
+
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve
         resp = self.app.put(
@@ -264,12 +359,11 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         for milestone in resp.json["milestones"]:
             self.assertIsNotNone(milestone["dateEstimated"])
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_accept_proposal_without_funding(self, mock_get):
+    def test_accept_proposal_without_funding(self):
         self.login_admin()
 
-        # proposal needs to be PENDING
-        self.proposal.status = ProposalStatus.PENDING
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve
         resp = self.app.put(
@@ -286,12 +380,127 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         for milestone in resp.json["milestones"]:
             self.assertIsNone(milestone["dateEstimated"])
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_change_proposal_to_accepted_with_funding(self, mock_get):
+    def test_accept_proposal_changes_requested(self):
+        # an admin should be able to request changes on a proposal
+        reason = "this is a test"
         self.login_admin()
 
-        # proposal needs to be PENDING
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
+
+        # approve
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": False, "changesRequestedReason": reason})
+        )
+
+        self.assert200(resp)
+        self.assertEqual(resp.json["status"], ProposalStatus.DISCUSSION)
+        self.assertEqual(resp.json["changesRequestedDiscussion"], True)
+        self.assertEqual(resp.json["changesRequestedDiscussionReason"], reason)
+
+        proposal = Proposal.query.get(self.proposal.id)
+        self.assertEqual(proposal.status, ProposalStatus.DISCUSSION)
+        self.assertEqual(proposal.changes_requested_discussion, True)
+        self.assertEqual(proposal.changes_requested_discussion_reason, reason)
+
+    def test_accept_proposal_changes_requested_no_reason_provided_fail(self):
+        # requesting changes to a proposal without providing a reason should fail
+        self.login_admin()
+
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
+
+        # approve
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": False})
+        )
+
+        self.assert400(resp)
+
+    def test_accept_proposal_changes_requested_not_discussion_fail(self):
+        # requesting changes on a proposal not in DISCUSSION should fail
+        self.login_admin()
         self.proposal.status = ProposalStatus.PENDING
+
+        # disapprove
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": False, "changesRequestedReason": "test"})
+        )
+
+        self.assert400(resp)
+
+    def test_accept_proposal_not_discussion_fail(self):
+        # accepting a proposal not in DISCUSSION should fail
+        self.login_admin()
+        self.proposal.status = ProposalStatus.PENDING
+
+        # approve
+        resp = self.app.put(
+            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
+            data=json.dumps({"isAccepted": True, "withFunding": True})
+        )
+
+        self.assert400(resp)
+
+    def test_resolve_changes_discussion(self):
+        # an admin should be able to resolve discussion changes
+        self.login_admin()
+        self.proposal.status = ProposalStatus.DISCUSSION
+        self.proposal.changes_requested_discussion = True
+        self.proposal.changes_requested_discussion_reason = 'test'
+
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/resolve"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json['changesRequestedDiscussion'], False)
+        self.assertIsNone(resp.json['changesRequestedDiscussionReason'])
+
+    def test_resolve_changes_discussion_wrong_status_fail(self):
+        # resolve should fail if proposal is not in a DISCUSSION state
+        self.login_admin()
+        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.changes_requested_discussion = True
+        self.proposal.changes_requested_discussion_reason = 'test'
+
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/resolve"
+        )
+        self.assert400(resp)
+
+    def test_resolve_changes_discussion_bad_proposal_fail(self):
+        # resolve should fail if bad proposal id is provided
+        self.login_admin()
+        bad_id = '111111111111'
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{bad_id}/resolve"
+        )
+        self.assert404(resp)
+
+    def test_resolve_changes_discussion_no_changes_requested_fail(self):
+        # resolve should fail if changes are not requested on the proposal
+        self.login_admin()
+        self.proposal.status = ProposalStatus.DISCUSSION
+        self.proposal.changes_requested_discussion = False
+        self.proposal.changes_requested_discussion_reason = None
+
+        # resolve changes
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/resolve"
+        )
+        self.assert400(resp)
+
+    def test_change_proposal_to_accepted_with_funding(self):
+        self.login_admin()
+
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # accept without funding
         resp = self.app.put(
@@ -330,7 +539,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.proposal.version = '2'
 
         # should failed if proposal is not LIVE or APPROVED
-        self.proposal.status = ProposalStatus.PENDING
+        self.proposal.status = ProposalStatus.DISCUSSION
         self.proposal.accepted_with_funding = False
         resp = self.app.put(
             f"/api/v1/admin/proposals/{self.proposal.id}/accept/fund"
@@ -338,10 +547,7 @@ class TestAdminAPI(BaseProposalCreatorConfig):
         self.assert404(resp)
         self.assertEqual(resp.json["message"], 'Only live or approved proposals can be modified by this endpoint')
 
-
-
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_reject_proposal(self, mock_get):
+    def test_reject_proposal_discussion(self):
         self.login_admin()
 
         # proposal needs to be PENDING
@@ -349,17 +555,62 @@ class TestAdminAPI(BaseProposalCreatorConfig):
 
         # reject
         resp = self.app.put(
-            "/api/v1/admin/proposals/{}/accept".format(self.proposal.id),
-            data=json.dumps({"isAccepted": False, "withFunding": False, "rejectReason": "Funnzies."})
+            "/api/v1/admin/proposals/{}/discussion".format(self.proposal.id),
+            data=json.dumps({"isOpenForDiscussion": False, "rejectReason": "Funnzies."})
         )
         self.assert200(resp)
         self.assertEqual(resp.json["status"], ProposalStatus.REJECTED)
         self.assertEqual(resp.json["rejectReason"], "Funnzies.")
 
+    def test_reject_permanently_proposal(self):
+        rejected = {
+            "rejectReason": "test"
+        }
+        self.login_admin()
+
+        # no reject reason should 400
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/reject_permanently",
+            content_type='application/json'
+        )
+        self.assert400(resp)
+
+        # bad proposal id should 404
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/111111111/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert404(resp)
+
+        # bad status should 401
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert401(resp)
+
+        self.proposal.status = ProposalStatus.PENDING
+
+        # should go through
+        resp = self.app.put(
+            f"/api/v1/admin/proposals/{self.proposal.id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+
+        self.assertEqual(resp.json["status"], ProposalStatus.REJECTED_PERMANENTLY)
+        self.assertEqual(resp.json["rejectReason"], rejected["rejectReason"])
+
     @patch('grant.email.send.send_email')
     def test_nominate_arbiter(self, mock_send_email):
         mock_send_email.return_value.ok = True
         self.login_admin()
+
+        self.proposal.status = ProposalStatus.LIVE
+        self.proposal.accepted_with_funding = True
 
         # nominate arbiter
         resp = self.app.put(
@@ -386,3 +637,183 @@ class TestAdminAPI(BaseProposalCreatorConfig):
             })
         )
         self.assert200(resp)
+
+    def test_get_ccrs(self):
+        create_ccr(self)
+
+        # non-admins should fail
+        resp = self.app.get(
+            "/api/v1/admin/ccrs"
+        )
+        self.assert401(resp)
+
+        # admins should be able to retrieve ccrs
+        self.login_admin()
+        resp = self.app.get(
+            "/api/v1/admin/ccrs"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["total"], 1)
+
+    def test_delete_ccr(self):
+        ccr_json = create_ccr(self)
+        ccr_id = ccr_json["ccrId"]
+        fake_id = '11111111111111'
+        self.login_admin()
+
+        # bad CCR id should 404
+        resp = self.app.delete(
+            f"/api/v1/admin/ccrs/{fake_id}"
+        )
+        self.assert404(resp)
+
+        # good CCR id should 200
+        resp = self.app.delete(
+            f"/api/v1/admin/ccrs/{ccr_id}"
+        )
+        self.assert200(resp)
+
+        # ccr should be deleted
+        resp = self.app.get(
+            "/api/v1/admin/ccrs"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["total"], 0)
+
+    def test_get_ccr(self):
+        ccr_json = create_ccr(self)
+        ccr_id = ccr_json["ccrId"]
+        fake_id = '11111111111111'
+        self.login_admin()
+
+        # bad ccr id should 404
+        resp = self.app.get(
+            f"/api/v1/admin/ccrs/{fake_id}"
+        )
+        self.assert404(resp)
+
+        # good ccr id should 200
+        resp = self.app.get(
+            f"/api/v1/admin/ccrs/{ccr_id}"
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json, ccr_json)
+
+    def test_approve_ccr(self):
+        ccr1_json = create_ccr(self)
+        ccr1_id = ccr1_json["ccrId"]
+        ccr2_json = create_ccr(self)
+        ccr2_id = ccr2_json["ccrId"]
+        fake_id = '11111111111111'
+        accepted = {"isAccepted": True}
+        rejected = {
+            "isAccepted": False,
+            "rejectReason": "test"
+        }
+
+        submit_ccr(self, ccr1_id)
+        submit_ccr(self, ccr2_id)
+        self.login_admin()
+
+        # bad ccr id should 404
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{fake_id}/accept",
+            data=json.dumps(accepted),
+            content_type='application/json'
+        )
+        self.assert404(resp)
+
+        # good ccr id that's accepted should be live
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr1_id}/accept",
+            data=json.dumps(accepted),
+            content_type='application/json'
+        )
+        self.assertStatus(resp, 201)
+        ccr = CCR.query.get(ccr1_id)
+        self.assertEqual(ccr.status, CCRStatus.LIVE)
+
+        # good ccr id that's rejected should be rejected
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr2_id}/accept",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+        ccr = CCR.query.get(ccr2_id)
+        self.assertEqual(ccr.status, CCRStatus.REJECTED)
+        self.assertEqual(ccr.reject_reason, rejected["rejectReason"])
+
+    def test_reject_permanently_ccr(self):
+        ccr_json = create_ccr(self)
+        ccr_id = ccr_json["ccrId"]
+        rejected = {
+            "rejectReason": "test"
+        }
+        self.login_admin()
+
+        # no reject reason should 400
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr_id}/reject_permanently",
+            content_type='application/json'
+        )
+        self.assert400(resp)
+
+        # bad ccr id should 404
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/111111111/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert404(resp)
+
+        # bad status should 401
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr_id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert401(resp)
+
+        submit_ccr(self, ccr_id)
+
+        # should go through
+        resp = self.app.put(
+            f"/api/v1/admin/ccrs/{ccr_id}/reject_permanently",
+            data=json.dumps(rejected),
+            content_type='application/json'
+        )
+        self.assert200(resp)
+
+        self.assertEqual(resp.json["status"], CCRStatus.REJECTED_PERMANENTLY)
+        self.assertEqual(resp.json["rejectReason"], rejected["rejectReason"])
+
+
+def create_ccr(self):
+    # create CCR draft
+    self.login_default_user()
+    resp = self.app.post(
+        "/api/v1/ccrs/drafts",
+    )
+    ccr_id = resp.json['ccrId']
+    self.assertStatus(resp, 201)
+
+    # save CCR
+    new_ccr = test_ccr.copy()
+    resp = self.app.put(
+        f"/api/v1/ccrs/{ccr_id}",
+        data=json.dumps(new_ccr),
+        content_type='application/json'
+    )
+    self.assertStatus(resp, 200)
+    return resp.json
+
+
+def submit_ccr(self, ccr_id):
+    self.login_default_user()
+    resp = self.app.put(
+        f"/api/v1/ccrs/{ccr_id}/submit_for_approval"
+    )
+    self.assert200(resp)
+    return resp.json
+

@@ -1,0 +1,5 @@
+Team members of proposal {{ args.proposal.title }} have marked requested changes as resolved.
+
+As an admin you can help out by reviewing it.
+
+Visit the proposal and review: {{ args.proposal_url }}

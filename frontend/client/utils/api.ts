@@ -11,6 +11,7 @@ import {
 import { UserState } from 'modules/users/reducers';
 import { AppState } from 'store/reducers';
 import { toZat, toUsd } from './units';
+import { CUSTOM_FILTERS } from 'api/constants';
 
 export function formatUserForPost(user: User) {
   return {
@@ -33,6 +34,9 @@ export function formatUserFromGet(user: UserState) {
   };
   if (user.pendingProposals) {
     user.pendingProposals = user.pendingProposals.map(bnUserProp);
+  }
+  if (user.rejectedPermanentlyProposals) {
+    user.rejectedPermanentlyProposals = user.rejectedPermanentlyProposals.map(bnUserProp);
   }
   if (user.arbitrated) {
     user.arbitrated = user.arbitrated.map(a => {
@@ -60,6 +64,7 @@ export function formatProposalPageParamsForGet(params: ProposalPageParams): Page
     filters: [
       ...params.filters.category.map(c => 'CAT_' + c),
       ...params.filters.stage.map(s => 'STAGE_' + s),
+      ...params.filters.custom,
     ],
   } as PageParams;
 }
@@ -71,6 +76,7 @@ export function formatProposalPageFromGet(page: any): ProposalPage {
   page.filters = {
     category: swf('CAT_', page.filters),
     stage: swf('STAGE_', page.filters),
+    custom: page.filters.filter((f: string) => Object.keys(CUSTOM_FILTERS).includes(f)),
   };
   // reverse map
   const serverSortToClient = Object.entries(proposalsSortMap).find(
@@ -168,7 +174,7 @@ export function extractIdFromSlug(slug: string) {
 export function massageSerializedState(state: AppState) {
   // proposal detail
   if (state.proposal.detail) {
-    const { isVersionTwo } = state.proposal.detail
+    const { isVersionTwo } = state.proposal.detail;
     const base = isVersionTwo ? 10 : 16;
 
     state.proposal.detail.target = new BN(
@@ -183,9 +189,7 @@ export function massageSerializedState(state: AppState) {
       .contributionBounty as any) as string);
     state.proposal.detail.milestones = state.proposal.detail.milestones.map(m => ({
       ...m,
-      amount: isVersionTwo
-        ? m.amount
-        : new BN((m.amount as any) as string, 16),
+      amount: isVersionTwo ? m.amount : new BN((m.amount as any) as string, 16),
     }));
     if (state.proposal.detail.rfp && state.proposal.detail.rfp.bounty) {
       state.proposal.detail.rfp.bounty = new BN(
@@ -204,9 +208,7 @@ export function massageSerializedState(state: AppState) {
       contributionBounty: new BN((p.contributionMatching as any) as string, base),
       milestones: p.milestones.map(m => ({
         ...m,
-        amount: p.isVersionTwo
-          ? m.amount
-          : new BN((m.amount as any) as string, 16),
+        amount: p.isVersionTwo ? m.amount : new BN((m.amount as any) as string, 16),
       })),
     };
   });

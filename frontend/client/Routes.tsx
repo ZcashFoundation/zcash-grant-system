@@ -25,6 +25,7 @@ const RequestEdit = loadable(() => import('pages/request-edit'), opts);
 const ProposalEdit = loadable(() => import('pages/proposal-edit'), opts);
 const Proposals = loadable(() => import('pages/proposals'), opts);
 const Proposal = loadable(() => import('pages/proposal'), opts);
+const Archived = loadable(() => import('pages/archived'), opts);
 const Guide = loadable(() => import('pages/guide'), opts);
 const Ccr = loadable(() => import('pages/ccr'), opts);
 const Auth = loadable(() => import('pages/auth'));
@@ -139,6 +140,16 @@ const routeConfigs: RouteConfig[] = [
       hideFooter: true,
     },
     onlyLoggedIn: true,
+  },
+  {
+    // Proposal archive page
+    route: {
+      path: '/proposals/:id/archive',
+      component: Archived,
+    },
+    template: {
+      title: 'Archived',
+    },
   },
   {
     // Proposal detail page

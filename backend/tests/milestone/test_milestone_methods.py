@@ -49,7 +49,7 @@ test_proposal = {
     "milestones": test_milestones,
     "category": Category.ACCESSIBILITY,
     "target": "12345",
-    "payoutAddress": "123",
+    "payoutAddress": "zs15el0hzs4w60ggfy6kq4p3zttjrl00mfq7yxfwsjqpz9d7hptdtkltzlcqar994jg2ju3j9k85zk",
 }
 
 
@@ -71,10 +71,10 @@ class TestMilestoneMethods(BaseUserConfig):
         self.assert200(resp)
 
         proposal = Proposal.query.get(proposal_id)
-        proposal.status = ProposalStatus.PENDING
+        proposal.status = ProposalStatus.DISCUSSION
 
         # accept with funding
-        proposal.approve_pending(True, True)
+        proposal.accept_proposal(True)
         Milestone.set_v2_date_estimates(proposal)
 
         db.session.add(proposal)
@@ -83,8 +83,7 @@ class TestMilestoneMethods(BaseUserConfig):
         print(proposal_schema.dump(proposal))
         return proposal
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_set_v2_date_estimates(self, mock_get):
+    def test_set_v2_date_estimates(self):
         proposal_data = test_proposal.copy()
         proposal = self.init_proposal(proposal_data)
         total_days_estimated = 0
@@ -112,8 +111,7 @@ class TestMilestoneMethods(BaseUserConfig):
         tasks = Task.query.filter_by(job_type=MilestoneDeadline.JOB_TYPE).all()
         self.assertEqual(len(tasks), 1)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_set_v2_date_estimates_immediate_payout(self, mock_get):
+    def test_set_v2_date_estimates_immediate_payout(self):
         proposal_data = test_proposal.copy()
         proposal_data["milestones"][0]["immediate_payout"] = True
 
@@ -123,8 +121,7 @@ class TestMilestoneMethods(BaseUserConfig):
         # ensure MilestoneDeadline task not created when immediate payout is set
         self.assertEqual(len(tasks), 0)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_set_v2_date_estimates_deadline_recalculation(self, mock_get):
+    def test_set_v2_date_estimates_deadline_recalculation(self):
         proposal_data = test_proposal.copy()
         proposal = self.init_proposal(proposal_data)
 

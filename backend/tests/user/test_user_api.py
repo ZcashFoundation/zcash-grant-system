@@ -386,9 +386,8 @@ class TestUserAPI(BaseUserConfig):
         )
         self.assert400(resp)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_put_user_settings_tip_jar_address(self, mock_get):
-        address = "address"
+    def test_put_user_settings_tip_jar_address(self):
+        address = "zs15el0hzs4w60ggfy6kq4p3zttjrl00mfq7yxfwsjqpz9d7hptdtkltzlcqar994jg2ju3j9k85zk"
 
         self.login_default_user()
         resp = self.app.put(
@@ -401,8 +400,7 @@ class TestUserAPI(BaseUserConfig):
         user = User.query.get(self.user.id)
         self.assertEqual(user.settings.tip_jar_address, address)
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_put_user_settings_tip_jar_view_key(self, mock_get):
+    def test_put_user_settings_tip_jar_view_key(self):
         view_key = "view_key"
 
         self.login_default_user()

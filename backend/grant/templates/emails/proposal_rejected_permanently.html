@@ -1,0 +1,13 @@
+<p style="margin: 0;">
+    Your proposal has been rejected.
+    <a href="{{ args.profile_rejected_url }}" >Visit your profile</a> to delete this proposal.
+</p>
+
+{% if args.admin_note %}
+<p style="margin: 20px 0 0;">
+    A note from the Zcash Foundation:
+</p>
+<p style="margin: 10px 0; padding: 20px; background: #F8F8F8;">
+    “{{ args.admin_note }}”
+</p>
+{% endif %}

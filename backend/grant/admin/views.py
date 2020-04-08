@@ -158,19 +158,19 @@ def stats():
         .filter(Milestone.stage == MilestoneStage.ACCEPTED) \
         .scalar()
     # Count contributions on proposals that didn't get funded for users who have specified a refund address
-    contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
-        .filter(ProposalContribution.refund_tx_id == None) \
-        .filter(ProposalContribution.staking == False) \
-        .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
-        .join(Proposal) \
-        .filter(or_(
-        Proposal.stage == ProposalStage.FAILED,
-        Proposal.stage == ProposalStage.CANCELED,
-    )) \
-        .join(ProposalContribution.user) \
-        .join(UserSettings) \
-        .filter(UserSettings.refund_address != None) \
-        .scalar()
+    # contribution_refundable_count = db.session.query(func.count(ProposalContribution.id)) \
+    #     .filter(ProposalContribution.refund_tx_id == None) \
+    #     .filter(ProposalContribution.staking == False) \
+    #     .filter(ProposalContribution.status == ContributionStatus.CONFIRMED) \
+    #     .join(Proposal) \
+    #     .filter(or_(
+    #     Proposal.stage == ProposalStage.FAILED,
+    #     Proposal.stage == ProposalStage.CANCELED,
+    # )) \
+    #     .join(ProposalContribution.user) \
+    #     .join(UserSettings) \
+    #     .filter(UserSettings.refund_address != None) \
+    #     .scalar()
     return {
         "userCount": user_count,
         "ccrPendingCount": ccr_pending_count,
@@ -178,7 +178,7 @@ def stats():
         "proposalPendingCount": proposal_pending_count,
         "proposalNoArbiterCount": proposal_no_arbiter_count,
         "proposalMilestonePayoutsCount": proposal_milestone_payouts_count,
-        "contributionRefundableCount": contribution_refundable_count,
+        "contributionRefundableCount": 0,
     }
 
 
@@ -302,6 +302,9 @@ def set_arbiter(proposal_id, user_id):
     if proposal.is_failed:
         return {"message": "Cannot set arbiter on failed proposal"}, 400
 
+    if proposal.version == '2' and not proposal.accepted_with_funding:
+        return {"message": "Cannot set arbiter, proposal has not been accepted with funding"}, 400
+
     user = User.query.filter(User.id == user_id).first()
     if not user:
         return {"message": "User not found"}, 404
@@ -334,7 +337,7 @@ def get_proposals(page, filters, search, sort):
     filters_workaround = request.args.getlist('filters[]')
     page = pagination.proposal(
         schema=proposals_schema,
-        query=Proposal.query,
+        query=Proposal.query.filter(Proposal.status.notin_([ProposalStatus.ARCHIVED])),
         page=page,
         filters=filters_workaround,
         search=search,
@@ -358,25 +361,96 @@ def delete_proposal(id):
     return {"message": "Not implemented."}, 400
 
 
-@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
+@blueprint.route('/proposals/<proposal_id>/discussion', methods=['PUT'])
 @body({
-    "isAccepted": fields.Bool(required=True),
-    "withFunding": fields.Bool(required=True),
+    "isOpenForDiscussion": fields.Bool(required=True),
     "rejectReason": fields.Str(required=False, missing=None)
 })
 @admin.admin_auth_required
-def approve_proposal(id, is_accepted, with_funding, reject_reason=None):
-    proposal = Proposal.query.filter_by(id=id).first()
-    if proposal:
-        proposal.approve_pending(is_accepted, with_funding, reject_reason)
+def open_proposal_for_discussion(proposal_id, is_open_for_discussion, reject_reason=None):
+    proposal = Proposal.query.get(proposal_id)
+    if not proposal:
+        return {"message": "No Proposal found."}, 404
 
-        if is_accepted and with_funding:
+    proposal.approve_discussion(is_open_for_discussion, reject_reason)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
+
+
+@blueprint.route('/proposals/<id>/accept', methods=['PUT'])
+@body({
+    "isAccepted": fields.Bool(required=True),
+    "withFunding": fields.Bool(required=False, missing=None),
+    "changesRequestedReason": fields.Str(required=False, missing=None)
+})
+@admin.admin_auth_required
+def accept_proposal(id, is_accepted, with_funding, changes_requested_reason):
+    proposal = Proposal.query.get(id)
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    if is_accepted:
+        proposal.accept_proposal(with_funding)
+
+        if with_funding:
             Milestone.set_v2_date_estimates(proposal)
+    else:
+        proposal.request_changes_discussion(changes_requested_reason)
 
-        db.session.commit()
-        return proposal_schema.dump(proposal)
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
 
-    return {"message": "No proposal found."}, 404
+
+@blueprint.route('/proposals/<proposal_id>/reject_permanently', methods=['PUT'])
+@body({
+    "rejectReason": fields.Str(required=True, missing=None)
+})
+@admin.admin_auth_required
+def reject_permanently_proposal(proposal_id, reject_reason):
+    proposal = Proposal.query.get(proposal_id)
+
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    reject_permanently_statuses = [
+        ProposalStatus.REJECTED,
+        ProposalStatus.PENDING
+    ]
+
+    if proposal.status not in reject_permanently_statuses:
+        return {"message": "Proposal status is not REJECTED or PENDING."}, 401
+
+    proposal.status = ProposalStatus.REJECTED_PERMANENTLY
+    proposal.reject_reason = reject_reason
+
+    db.session.add(proposal)
+    db.session.commit()
+
+    for user in proposal.team:
+        send_email(user.email_address, 'proposal_rejected_permanently', {
+            'user': user,
+            'proposal': proposal,
+            'proposal_url': make_url(f'/proposals/{proposal.id}'),
+            'admin_note': reject_reason,
+            'profile_rejected_url': make_url('/profile?tab=rejected'),
+        })
+
+    return proposal_schema.dump(proposal)
+
+
+@blueprint.route('/proposals/<proposal_id>/resolve', methods=['PUT'])
+@admin.admin_auth_required
+def resolve_changes_discussion(proposal_id):
+    proposal = Proposal.query.get(proposal_id)
+    if not proposal:
+        return {"message": "No proposal found"}, 404
+
+    proposal.resolve_changes_discussion()
+
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
 
 
 @blueprint.route('/proposals/<id>/accept/fund', methods=['PUT'])
@@ -534,6 +608,41 @@ def approve_ccr(ccr_id, is_accepted, reject_reason=None):
             return ccr_schema.dump(ccr)
 
     return {"message": "No CCR found."}, 404
+
+
+@blueprint.route('/ccrs/<ccr_id>/reject_permanently', methods=['PUT'])
+@body({
+    "rejectReason": fields.Str(required=True, missing=None)
+})
+@admin.admin_auth_required
+def reject_permanently_ccr(ccr_id, reject_reason):
+    ccr = CCR.query.get(ccr_id)
+
+    if not ccr:
+        return {"message": "No CCR found."}, 404
+
+    reject_permanently_statuses = [
+        CCRStatus.REJECTED,
+        CCRStatus.PENDING
+    ]
+
+    if ccr.status not in reject_permanently_statuses:
+        return {"message": "CCR status is not REJECTED or PENDING."}, 401
+
+    ccr.status = CCRStatus.REJECTED_PERMANENTLY
+    ccr.reject_reason = reject_reason
+
+    db.session.add(ccr)
+    db.session.commit()
+
+    send_email(ccr.author.email_address, 'ccr_rejected_permanently', {
+        'user': ccr.author,
+        'ccr': ccr,
+        'admin_note': reject_reason,
+        'profile_rejected_url': make_url('/profile?tab=rejected')
+    })
+
+    return ccr_schema.dump(ccr)
 
 
 # Requests for Proposal
@@ -809,56 +918,84 @@ def financials():
             SELECT SUM(TO_NUMBER(ms.payout_percent, '999')/100 * TO_NUMBER(p.target, '999999.99999999'))
                 FROM milestone as ms
                 INNER JOIN proposal as p ON ms.proposal_id = p.id
-                WHERE {where}
+                WHERE p.version = '2' AND {where}
         '''
 
     def ex(sql: str):
         res = db.engine.execute(text(sql))
         return [row[0] if row[0] else Decimal(0) for row in res][0].normalize()
 
-    contributions = {
-        'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
-        'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
-        'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
-        'funded': str(
-            ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
-        # should have a refund_address
-        'refunding': str(ex(sql_pc_p(
-            '''
-            pc.status = 'CONFIRMED' AND 
-            pc.staking = FALSE AND 
-            pc.refund_tx_id IS NULL AND 
-            p.stage IN ('CANCELED', 'FAILED') AND
-            us.refund_address IS NOT NULL
-            '''
-        ))),
-        # here we don't care about current refund_address of user, just that there has been a refund_tx_id
-        'refunded': str(ex(sql_pc_p(
-            '''
-            pc.status = 'CONFIRMED' AND 
-            pc.staking = FALSE AND 
-            pc.refund_tx_id IS NOT NULL AND 
-            p.stage IN ('CANCELED', 'FAILED')
-            '''
-        ))),
-        # if there is no user, or the user hasn't any refund_address
-        'donations': str(ex(sql_pc_p(
-            '''
-            pc.status = 'CONFIRMED' AND 
-            pc.staking = FALSE AND 
-            pc.refund_tx_id IS NULL AND 
-            (pc.user_id IS NULL OR us.refund_address IS NULL) AND 
-            p.stage IN ('CANCELED', 'FAILED')
-            '''
-        ))),
-        'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
-    }
+    def gen_quarter_date_range(year, quarter):
+        if quarter == 1:
+            return f"{year}-1-1", f"{year}-3-31"
+        if quarter == 2:
+            return f"{year}-4-1", f"{year}-6-30"
+        if quarter == 3:
+            return f"{year}-7-1", f"{year}-9-30"
+        if quarter == 4:
+            return f"{year}-10-1", f"{year}-12-31"
+
+    # contributions = {
+    #     'total': str(ex(sql_pc("status = 'CONFIRMED' AND staking = FALSE"))),
+    #     'staking': str(ex(sql_pc("status = 'CONFIRMED' AND staking = TRUE"))),
+    #     'funding': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage = 'FUNDING_REQUIRED'"))),
+    #     'funded': str(
+    #         ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.staking = FALSE AND p.stage in ('WIP', 'COMPLETED')"))),
+    #     # should have a refund_address
+    #     'refunding': str(ex(sql_pc_p(
+    #         '''
+    #         pc.status = 'CONFIRMED' AND
+    #         pc.staking = FALSE AND
+    #         pc.refund_tx_id IS NULL AND
+    #         p.stage IN ('CANCELED', 'FAILED') AND
+    #         us.refund_address IS NOT NULL
+    #         '''
+    #     ))),
+    #     # here we don't care about current refund_address of user, just that there has been a refund_tx_id
+    #     'refunded': str(ex(sql_pc_p(
+    #         '''
+    #         pc.status = 'CONFIRMED' AND
+    #         pc.staking = FALSE AND
+    #         pc.refund_tx_id IS NOT NULL AND
+    #         p.stage IN ('CANCELED', 'FAILED')
+    #         '''
+    #     ))),
+    #     # if there is no user, or the user hasn't any refund_address
+    #     'donations': str(ex(sql_pc_p(
+    #         '''
+    #         pc.status = 'CONFIRMED' AND
+    #         pc.staking = FALSE AND
+    #         pc.refund_tx_id IS NULL AND
+    #         (pc.user_id IS NULL OR us.refund_address IS NULL) AND
+    #         p.stage IN ('CANCELED', 'FAILED')
+    #         '''
+    #     ))),
+    #     'gross': str(ex(sql_pc_p("pc.status = 'CONFIRMED' AND pc.refund_tx_id IS NULL"))),
+    # }
 
     po_due = ex(sql_ms("ms.stage = 'ACCEPTED'"))  # payments accepted but not yet marked as paid
     po_paid = ex(sql_ms("ms.stage = 'PAID'"))  # will catch paid ms from all proposals regardless of status/stage
     # expected payments
     po_future = ex(sql_ms("ms.stage IN ('IDLE', 'REJECTED', 'REQUESTED') AND p.stage IN ('WIP', 'COMPLETED')"))
     po_total = po_due + po_paid + po_future
+
+    now = datetime.now()
+    start_year = 2019
+    end_year = now.year
+
+    payouts_by_quarter = {}
+
+    for year in range(start_year, end_year + 1):
+        payouts_by_quarter[f"{year}"] = {}
+        year_total = 0
+
+        for quarter in range(1, 5):
+            begin, end = gen_quarter_date_range(year, quarter)
+            payouts = ex(sql_ms(f"ms.stage = 'PAID' AND (ms.date_paid BETWEEN '{begin}' AND '{end}')"))
+            payouts_by_quarter[f"{year}"][f"q{quarter}"] = str(payouts)
+            year_total += payouts
+
+        payouts_by_quarter[f"{year}"]["year_total"] = str(year_total)
 
     payouts = {
         'total': str(po_total),
@@ -876,7 +1013,7 @@ def financials():
     def add_str_dec(a: str, b: str):
         return str((Decimal(a) + Decimal(b)).quantize(Decimal('0.001'), rounding=ROUND_HALF_DOWN))
 
-    proposals = Proposal.query.all()
+    proposals = Proposal.query.filter_by(version='2')
 
     for p in proposals:
         # CANCELED proposals excluded, though they could have had milestones paid out with grant funds
@@ -899,7 +1036,6 @@ def financials():
 
     return {
         'grants': grants,
-        'contributions': contributions,
         'payouts': payouts,
-        'net': str(Decimal(contributions['gross']) - Decimal(payouts['paid']))
+        'payouts_by_quarter': payouts_by_quarter
     }

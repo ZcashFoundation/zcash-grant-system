@@ -4,6 +4,7 @@ import {
   getProposal,
   getProposalComments,
   getProposalUpdates,
+  getProposalRevisions,
   reportProposalComment as apiReportProposalComment,
   getProposalContributions,
   postProposalComment as apiPostProposalComment,
@@ -166,6 +167,18 @@ export function fetchProposalUpdates(proposalId: Proposal['proposalId']) {
       payload: getProposalUpdates(proposalId).then(res => ({
         proposalId,
         updates: res.data,
+      })),
+    });
+  };
+}
+
+export function fetchProposalRevisions(proposalId: Proposal['proposalId']) {
+  return (dispatch: Dispatch<any>) => {
+    dispatch({
+      type: types.PROPOSAL_REVISIONS,
+      payload: getProposalRevisions(proposalId).then(res => ({
+        proposalId,
+        revisions: res.data,
       })),
     });
   };

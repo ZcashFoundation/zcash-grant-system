@@ -1,0 +1,10 @@
+Your proposal has been approved for public discussion and community feedback on ZF Grants. The Zcash Foundation reviews open grant applications on an ongoing basis, and may request additional revisions based on open feedback before making a final funding determination.
+
+
+{% if args.admin_note %}
+A note from the Zcash Foundation:
+
+> {{ args.admin_note }}
+{% endif %}
+
+{{ args.proposal_url }}

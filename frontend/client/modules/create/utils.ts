@@ -5,6 +5,7 @@ import {
   PROPOSAL_ARBITER_STATUS,
   CCRDraft,
   RFP,
+  Proposal,
 } from 'types';
 import { User, CCR } from 'types';
 import {
@@ -248,6 +249,9 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
     },
+    changesRequestedDiscussion: null,
+    changesRequestedDiscussionReason: null,
+    liveDraftId: null,
     tipJarAddress: null,
     tipJarViewKey: null,
     acceptedWithFunding: false,
@@ -293,5 +297,12 @@ export function makeRfpPreviewFromCcrDraft(draft: CCRDraft): RFP {
     brief,
     content,
     title,
+  };
+}
+
+export function makeProposalPreviewFromArchived(proposal: Proposal): ProposalDetail {
+  return {
+    ...proposal,
+    ...PROPOSAL_DETAIL_INITIAL_STATE,
   };
 }

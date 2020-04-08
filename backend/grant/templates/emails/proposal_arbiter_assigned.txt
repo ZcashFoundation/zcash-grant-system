@@ -1,0 +1,5 @@
+Your proposal {{ args.proposal.title }} is ready for payout requests.
+
+Visit your proposal to see more:
+
+{{ args.proposal_url }}

@@ -67,6 +67,7 @@ def delete_ccr(ccr_id):
         CCRStatus.PENDING,
         CCRStatus.APPROVED,
         CCRStatus.REJECTED,
+        CCRStatus.REJECTED_PERMANENTLY
     ]
     status = g.current_ccr.status
     if status not in deleteable_statuses:

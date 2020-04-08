@@ -48,8 +48,13 @@ export default class TipJarViewKey extends React.Component<Props, State> {
   render() {
     const { isSaving, tipJarViewKey, tipJarViewKeySet } = this.state;
     const { isFetching, errorFetching, userSettings } = this.props;
+
+    // @ts-ignore
     const viewKeyChanged = tipJarViewKey !== tipJarViewKeySet;
     const viewKeyDisabled = !(userSettings && userSettings.tipJarAddress);
+
+    const viewKeyButtonDisabled = true
+      // tipJarViewKey === null || isSaving || !!status || errorFetching || !viewKeyChanged;
 
     // TODO: add view key validation
 
@@ -64,9 +69,9 @@ export default class TipJarViewKey extends React.Component<Props, State> {
 
     return (
       <Form className="RefundAddress" layout="vertical" onSubmit={this.handleSubmit}>
-        <Form.Item label="Tip view key">
+        <Form.Item label="Tip view key (coming soon)">
           <Input
-            value={tipJarViewKey || ''}
+            value={''} // {tipJarViewKey || ''}
             placeholder="A view key for your tip address (optional)"
             onChange={this.handleChange}
             disabled={viewKeyDisabled || isFetching || isSaving || errorFetching}
@@ -77,13 +82,7 @@ export default class TipJarViewKey extends React.Component<Props, State> {
           type="primary"
           htmlType="submit"
           size="large"
-          disabled={
-            tipJarViewKey === null ||
-            isSaving ||
-            !!status ||
-            errorFetching ||
-            !viewKeyChanged
-          }
+          disabled={viewKeyButtonDisabled}
           loading={isSaving}
           block
         >

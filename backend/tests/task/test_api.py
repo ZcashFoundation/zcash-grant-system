@@ -181,8 +181,7 @@ class TestTaskAPI(BaseProposalCreatorConfig):
 
     @patch('grant.task.jobs.send_email')
     @patch('grant.task.views.datetime')
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def test_milestone_deadline(self, mock_get, mock_datetime, mock_send_email):
+    def test_milestone_deadline(self, mock_datetime, mock_send_email):
         tasks = Task.query.filter_by(completed=False).all()
         self.assertEqual(len(tasks), 0)
 
@@ -199,8 +198,8 @@ class TestTaskAPI(BaseProposalCreatorConfig):
 
         self.login_admin()
 
-        # proposal needs to be PENDING
-        self.proposal.status = ProposalStatus.PENDING
+        # proposal needs to be DISCUSSION
+        self.proposal.status = ProposalStatus.DISCUSSION
 
         # approve proposal with funding
         resp = self.app.put(

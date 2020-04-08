@@ -174,8 +174,7 @@ class BaseProposalCreatorConfig(BaseUserConfig):
         proposal_reminder = ProposalReminder(self.proposal.id)
         proposal_reminder.make_task()
 
-    @patch('requests.get', side_effect=mock_blockchain_api_requests)
-    def stake_proposal(self, mock_get):
+    def stake_proposal(self):
         # 1. submit
         self.proposal.submit_for_approval()
         # 2. get staking contribution

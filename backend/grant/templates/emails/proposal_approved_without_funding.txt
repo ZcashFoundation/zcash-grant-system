@@ -1,0 +1,10 @@
+Your proposal has been reviewed by the Zcash Foundation and is now listed on ZF Grants!
+
+
+{% if args.admin_note %}
+A note from the Zcash Foundation:
+
+> {{ args.admin_note }}
+{% endif %}
+
+{{ args.proposal_url }}
