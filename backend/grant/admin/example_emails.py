@@ -35,8 +35,17 @@ class FakeUpdate(object):
     proposal_id = 123
 
 
+class FakeCCR(object):
+    id = 123
+    title = 'Example CCR'
+    brief = 'This is an example CCR'
+    content = 'Example example example example'
+    target = "100"
+
+
 user = FakeUser()
 proposal = FakeProposal()
+ccr = FakeCCR()
 milestone = FakeMilestone()
 contribution = FakeContribution()
 update = FakeUpdate()
@@ -67,15 +76,54 @@ example_email_args = {
         'recover_url': 'http://somerecoverurl.com',
         'contact_url': 'http://somecontacturl.com',
     },
+    'proposal_approved_without_funding': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+        'admin_note': "We've opened up your proposal for community donations.",
+    },
     'proposal_approved': {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
         'admin_note': 'This proposal was the hottest stuff our team has seen yet. We look forward to throwing the fat stacks at you.',
     },
+    'proposal_approved_discussion': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+    },
     'proposal_rejected': {
         'proposal': proposal,
         'proposal_url': 'http://someproposal.com',
         'admin_note': 'We think that you’ve asked for too much money for the project you’ve proposed, and for such an inexperienced team. Feel free to change your target amount, or elaborate on why you need so much money, and try applying again.',
+    },
+    'proposal_rejected_discussion': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+    },
+    'proposal_rejected_permanently': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com',
+        'profile_rejected_url': 'http://someproposal.com/profile?tab=rejected',
+        'admin_note': 'We don\'t really think this is needed right now by the ecosystem. Feel free to elaborate and submit again',
+    },
+    'proposal_arbiter_assigned': {
+        'proposal': proposal,
+        'proposal_url': 'http://someproposal.com'
+    },
+    'ccr_approved': {
+        'ccr': ccr,
+        'ccr_url': 'http://someproposal.com',
+        'admin_note': 'This proposal was the hottest stuff our team has seen yet. Great work.',
+    },
+    'ccr_rejected': {
+        'ccr': ccr,
+        'ccr_url': 'http://someproposal.com',
+        'admin_note': 'We don\'t really think this is needed right now by the ecosystem. Feel free to elaborate and submit again',
+    },
+    'ccr_rejected_permanently': {
+        'ccr': ccr,
+        'ccr_url': 'http://someproposal.com',
+        'profile_rejected_url': 'http://someproposal.com/profile?tab=rejected',
+        'admin_note': 'We don\'t really think this will ever be needed by the ecosystem.',
     },
     'proposal_contribution': {
         'proposal': proposal,
@@ -174,6 +222,10 @@ example_email_args = {
         'proposal': proposal,
         'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
     },
+    'admin_changes_resolved': {
+        'proposal': proposal,
+        'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
+    },
     'admin_arbiter': {
         'proposal': proposal,
         'proposal_url': 'https://grants-admin.zfnd.org/proposals/999',
@@ -188,6 +240,10 @@ example_email_args = {
         "proposal_url": "http://someproposal.com",
     },
     'followed_proposal_update': {
+        "proposal": proposal,
+        "proposal_url": "http://someproposal.com",
+    },
+    'followed_proposal_revised': {
         "proposal": proposal,
         "proposal_url": "http://someproposal.com",
     },

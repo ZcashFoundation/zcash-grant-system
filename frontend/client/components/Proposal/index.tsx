@@ -9,7 +9,7 @@ import { proposalActions } from 'modules/proposals';
 import { bindActionCreators, Dispatch } from 'redux';
 import { AppState } from 'store/reducers';
 import { STATUS } from 'types';
-import { Tabs, Icon, Dropdown, Menu, Button, Alert } from 'antd';
+import { Tabs, Icon, Dropdown, Menu, Button, Alert, message } from 'antd';
 import { AlertProps } from 'antd/lib/alert';
 import ExceptionPage from 'components/ExceptionPage';
 import HeaderDetails from 'components/HeaderDetails';
@@ -20,15 +20,21 @@ import RFPBlock from './RFPBlock';
 import Milestones from './Milestones';
 import CommentsTab from './Comments';
 import UpdatesTab from './Updates';
+import RevisionsTab from './Revisions';
 import ContributorsTab from './Contributors';
 import UpdateModal from './UpdateModal';
 import CancelModal from './CancelModal';
 import classnames from 'classnames';
-import { withRouter } from 'react-router';
+import { withRouter, RouteComponentProps } from 'react-router';
 import SocialShare from 'components/SocialShare';
 import Follow from 'components/Follow';
 import Like from 'components/Like';
 import { TipJarProposalSettingsModal } from 'components/TipJar';
+import { TUpdateProposal } from 'modules/proposals/actions';
+import {
+  putMarkProposalRequestedChangesAsResolved,
+  postProposalMakeLiveDraft,
+} from 'api/api';
 import './index.less';
 
 interface OwnProps {
@@ -45,9 +51,10 @@ interface StateProps {
 
 interface DispatchProps {
   fetchProposal: proposalActions.TFetchProposal;
+  updateProposal: TUpdateProposal;
 }
 
-type Props = StateProps & DispatchProps & OwnProps;
+type Props = StateProps & DispatchProps & OwnProps & RouteComponentProps;
 
 interface State {
   isBodyExpanded: boolean;
@@ -113,24 +120,65 @@ export class ProposalDetail extends React.Component<Props, State> {
 
     const isTrustee = !!proposal.team.find(tm => tm.userid === (user && user.userid));
     const isLive = proposal.status === STATUS.LIVE;
+    const isOpenForDiscussion = proposal.status === STATUS.DISCUSSION;
     const milestonesDisabled = proposal.isVersionTwo
       ? !proposal.acceptedWithFunding
       : false;
-    const defaultTab = !milestonesDisabled || !isLive ? 'milestones' : 'discussions';
+    const defaultTab =
+      (!milestonesDisabled || !isLive) && !isOpenForDiscussion
+        ? 'milestones'
+        : 'discussions';
 
     const adminMenu = (
       <Menu>
+        <Menu.Item
+          disabled={isLive || !isOpenForDiscussion}
+          onClick={this.handleEditProposal}
+        >
+          Edit Proposal
+        </Menu.Item>
         <Menu.Item disabled={!isLive} onClick={this.openTipJarModal}>
           Manage Tipping
         </Menu.Item>
         <Menu.Item disabled={!isLive} onClick={this.openUpdateModal}>
           Post an Update
         </Menu.Item>
-        <Menu.Item disabled={!isLive} onClick={this.openCancelModal}>
-          Cancel proposal
+        <Menu.Item
+          disabled={!(isLive || isOpenForDiscussion)}
+          onClick={this.openCancelModal}
+        >
+          Cancel Proposal
         </Menu.Item>
       </Menu>
     );
+
+    const createDiscussionBannerConfig = () => {
+      if (proposal.isTeamMember && proposal.changesRequestedDiscussionReason) {
+        return {
+          [STATUS.DISCUSSION]: {
+            blurb: (
+              <div>
+                <p>
+                  Your proposal is still open for public review, but it has changes
+                  requested by an administrator:
+                </p>
+                <p style={{ fontStyle: 'italic' }}>
+                  "{proposal.changesRequestedDiscussionReason}"
+                </p>
+                <p>
+                  Edit your proposal through the <strong>Actions</strong> dropdown below.
+                  When you're ready,{' '}
+                  <a onClick={this.handleResolveChangesRequested}>click here</a> to mark
+                  these changes as resolved.
+                </p>
+              </div>
+            ),
+            type: 'error',
+          },
+        };
+      }
+      return {};
+    };
 
     // BANNER
     const statusBanner = {
@@ -143,6 +191,7 @@ export class ProposalDetail extends React.Component<Props, State> {
         ),
         type: 'warning',
       },
+
       [STATUS.APPROVED]: {
         blurb: (
           <>
@@ -163,6 +212,17 @@ export class ProposalDetail extends React.Component<Props, State> {
         ),
         type: 'error',
       },
+      [STATUS.REJECTED_PERMANENTLY]: {
+        blurb: (
+          <>
+            Your proposal has has been rejected permanently and is only visible to the
+            team. Visit your{' '}
+            <Link to="/profile?tab=rejected">profile's rejected tab</Link> for more
+            information.
+          </>
+        ),
+        type: 'error',
+      },
       [STATUS.STAKING]: {
         blurb: (
           <>
@@ -173,13 +233,21 @@ export class ProposalDetail extends React.Component<Props, State> {
         ),
         type: 'warning',
       },
+      ...createDiscussionBannerConfig(),
     } as { [key in STATUS]: { blurb: ReactNode; type: AlertProps['type'] } };
     let banner = statusBanner[proposal.status];
     if (isPreview) {
-      banner = {
-        blurb: 'This is a preview of your proposal. It has not yet been published.',
-        type: 'info',
-      };
+      if (proposal.status === STATUS.ARCHIVED) {
+        banner = {
+          blurb: 'This is an archived proposal revision.',
+          type: 'info',
+        };
+      } else {
+        banner = {
+          blurb: 'This is a preview of your proposal. It has not yet been published.',
+          type: 'info',
+        };
+      }
     }
 
     return (
@@ -191,21 +259,21 @@ export class ProposalDetail extends React.Component<Props, State> {
           </div>
         )}
         <div className="Proposal-top">
-          {isLive && (
+          {(isLive || isOpenForDiscussion) && (
             <div className="Proposal-top-social">
               <SocialShare
                 url={(typeof window !== 'undefined' && window.location.href) || ''}
-                title={`${proposal.title} needs funding on Grant-io!`}
+                title={`${proposal.title} needs your feedback on ZF Grants!`}
                 text={`${
                   proposal.title
-                } needs funding on ZF Grants! Come help make this proposal a reality by funding it.`}
+                } needs your feedback on ZF Grants! Come check it out.`}
               />
             </div>
           )}
           <div className="Proposal-top-main">
             <div className="Proposal-top-main-title">
               <h1>{proposal ? proposal.title : <span>&nbsp;</span>}</h1>
-              {isLive && (
+              {(isLive || isOpenForDiscussion) && (
                 <div className="Proposal-top-main-title-menu">
                   {isTrustee && (
                     <Dropdown
@@ -263,14 +331,25 @@ export class ProposalDetail extends React.Component<Props, State> {
           <LinkableTabs scrollToTabs defaultActiveKey={defaultTab}>
             <Tabs.TabPane tab="Milestones" key="milestones">
               <div style={{ marginTop: '1.5rem', padding: '0 2rem' }}>
-                <Milestones proposal={proposal} />
+                <Milestones proposal={proposal} isPreview={isPreview} />
               </div>
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Discussion" key="discussions" disabled={!isLive}>
+            <Tabs.TabPane
+              tab="Discussion"
+              key="discussions"
+              disabled={!isLive && !isOpenForDiscussion}
+            >
               <CommentsTab proposalId={proposal.proposalId} />
             </Tabs.TabPane>
             <Tabs.TabPane tab="Updates" key="updates" disabled={!isLive}>
               <UpdatesTab proposalId={proposal.proposalId} />
+            </Tabs.TabPane>
+            <Tabs.TabPane
+              tab="Revisions"
+              key="revisions"
+              disabled={!isLive && !isOpenForDiscussion}
+            >
+              <RevisionsTab proposalId={proposal.proposalId} />
             </Tabs.TabPane>
             {!proposal.isVersionTwo && (
               <Tabs.TabPane tab="Contributors" key="contributors" disabled={!isLive}>
@@ -331,6 +410,39 @@ export class ProposalDetail extends React.Component<Props, State> {
 
   private openCancelModal = () => this.setState({ isCancelOpen: true });
   private closeCancelModal = () => this.setState({ isCancelOpen: false });
+
+  private handleResolveChangesRequested = async () => {
+    const { detail } = this.props;
+    if (!detail) {
+      return;
+    }
+    const { data } = await putMarkProposalRequestedChangesAsResolved(detail.proposalId);
+    this.props.updateProposal(data);
+    message.success('Changes marked as resolved');
+  };
+
+  private handleEditProposal = async () => {
+    const { detail: proposal } = this.props;
+    if (!proposal) {
+      return;
+    }
+
+    let liveDraftId = proposal.liveDraftId;
+
+    if (!liveDraftId) {
+      try {
+        const { data: liveDraft } = await postProposalMakeLiveDraft(proposal.proposalId);
+        this.props.updateProposal(liveDraft);
+        liveDraftId = String(liveDraft.proposalId);
+      } catch {
+        message.error('Edit request failed');
+      }
+    }
+
+    if (liveDraftId) {
+      this.props.history.push({ pathname: `/proposals/${liveDraftId}/edit` });
+    }
+  };
 }
 
 function mapStateToProps(state: AppState, _: OwnProps) {

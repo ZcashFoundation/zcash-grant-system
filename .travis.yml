@@ -18,12 +18,3 @@ matrix:
       install: pip install -r requirements/dev.txt
       script:
         - flask test
-    # Blockchain
-    - language: node_js
-      node_js: 8.13.0
-      before_install:
-        - cd blockchain
-      install: yarn
-      script:
-        - yarn run test
-        - yarn run build

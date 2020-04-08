@@ -46,7 +46,7 @@ class ProfilePending extends React.Component<Props, State> {
       },
       [STATUS.REJECTED]: {
         color: 'red',
-        tag: 'Changes requested',
+        tag: 'Changes Requested',
         blurb: (
           <>
             <div>This proposal has changes requested:</div>
@@ -81,7 +81,7 @@ class ProfilePending extends React.Component<Props, State> {
       <div className="ProfilePending">
         <div className="ProfilePending-block">
           <Link to={`/proposals/${proposalId}`} className="ProfilePending-title">
-            {title} <Tag color={st[status].color}>{st[status].tag} Proposal</Tag>
+            {title} <Tag color={st[status].color}>{st[status].tag}</Tag>
           </Link>
           <div className={`ProfilePending-status is-${status.toLowerCase()}`}>
             {st[status].blurb}
@@ -122,8 +122,8 @@ class ProfilePending extends React.Component<Props, State> {
       message.success('Proposal deleted.');
     } catch (e) {
       message.error(e.message || e.toString());
-      this.setState({ isDeleting: false });
     }
+    this.setState({ isDeleting: false });
   };
 }
 

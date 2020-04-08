@@ -4,6 +4,7 @@ import { pendingMoreablePage, fulfilledMoreablePage } from 'utils/helpers';
 import {
   Proposal,
   ProposalUpdates,
+  ProposalRevisions,
   Comment,
   ProposalContributions,
   LoadableProposalPage,
@@ -32,6 +33,10 @@ export interface ProposalState {
   proposalUpdates: { [id: string]: ProposalUpdates };
   updatesError: null | string;
   isFetchingUpdates: boolean;
+
+  proposalRevisions: { [id: string]: ProposalRevisions };
+  revisionsError: null | string;
+  isFetchingRevisions: boolean;
 
   proposalContributions: { [id: string]: ProposalContributions };
   fetchContributionsError: null | string;
@@ -63,6 +68,7 @@ export const INITIAL_STATE: ProposalState = {
     filters: {
       category: [],
       stage: [],
+      custom: [],
     },
     items: [],
     hasFetched: false,
@@ -95,6 +101,10 @@ export const INITIAL_STATE: ProposalState = {
   updatesError: null,
   isFetchingUpdates: false,
 
+  proposalRevisions: {},
+  revisionsError: null,
+  isFetchingRevisions: false,
+
   proposalContributions: {},
   fetchContributionsError: null,
   isFetchingContributions: false,
@@ -114,6 +124,17 @@ function addUpdates(state: ProposalState, payload: ProposalUpdates) {
       [payload.proposalId]: payload,
     },
     isFetchingUpdates: false,
+  };
+}
+
+function addRevisions(state: ProposalState, payload: ProposalRevisions) {
+  return {
+    ...state,
+    proposalRevisions: {
+      ...state.proposalRevisions,
+      [payload.proposalId]: payload,
+    },
+    isFetchingRevisions: false,
   };
 }
 
@@ -391,6 +412,21 @@ export default (state = INITIAL_STATE, action: any) => {
         ...state,
         updatesError: (payload && payload.message) || payload.toString(),
         isFetchingUpdates: false,
+      };
+
+    case types.PROPOSAL_REVISIONS_PENDING:
+      return {
+        ...state,
+        revisionsError: null,
+        isFetchingRevisions: true,
+      };
+    case types.PROPOSAL_REVISIONS_FULFILLED:
+      return addRevisions(state, payload);
+    case types.PROPOSAL_REVISIONS_REJECTED:
+      return {
+        ...state,
+        revisionsError: (payload && payload.message) || payload.toString(),
+        isFetchingRevisions: false,
       };
 
     case types.PROPOSAL_CONTRIBUTIONS_PENDING:

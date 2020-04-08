@@ -11,6 +11,7 @@ from flask_security import SQLAlchemyUserDatastore
 from flask_sslify import SSLify
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
+
 from grant import (
     commands,
     proposal,
@@ -20,7 +21,6 @@ from grant import (
     milestone,
     admin,
     email,
-    blockchain,
     task,
     rfp,
     e2e,
@@ -44,6 +44,8 @@ class JSONResponse(Response):
 
 
 def create_app(config_objects=["grant.settings"]):
+    from grant.patches import patch_werkzeug_set_samesite
+    patch_werkzeug_set_samesite()
     app = Flask(__name__.split(".")[0])
     app.response_class = JSONResponse
 
@@ -151,7 +153,6 @@ def register_blueprints(app):
     app.register_blueprint(milestone.views.blueprint)
     app.register_blueprint(admin.views.blueprint)
     app.register_blueprint(email.views.blueprint)
-    app.register_blueprint(blockchain.views.blueprint)
     app.register_blueprint(task.views.blueprint)
     app.register_blueprint(rfp.views.blueprint)
     app.register_blueprint(home.views.blueprint)

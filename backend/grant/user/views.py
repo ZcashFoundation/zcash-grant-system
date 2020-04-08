@@ -4,6 +4,8 @@ from flask import Blueprint, g, current_app
 from marshmallow import fields
 from validate_email import validate_email
 from webargs import validate
+from grant.email.send import send_email
+from grant.utils.misc import make_url
 
 import grant.utils.auth as auth
 from grant.comment.models import Comment, user_comments_schema
@@ -20,9 +22,8 @@ from grant.proposal.models import (
     user_proposal_arbiters_schema
 )
 from grant.proposal.models import ProposalContribution
-from grant.utils.enums import ProposalStatus, ContributionStatus
+from grant.utils.enums import ProposalStatus, ContributionStatus, CCRStatus
 from grant.utils.exceptions import ValidationException
-from grant.utils.requests import validate_blockchain_get
 from grant.utils.social import verify_social, get_social_login_url, VerifySocialException
 from grant.utils.upload import remove_avatar, sign_avatar_upload, AvatarException
 from .models import (
@@ -34,6 +35,7 @@ from .models import (
     user_settings_schema,
     db
 )
+from grant.utils.validate import is_z_address_valid
 
 blueprint = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -52,10 +54,11 @@ def get_me():
     "withFunded": fields.Bool(required=False, missing=None),
     "withPending": fields.Bool(required=False, missing=None),
     "withArbitrated": fields.Bool(required=False, missing=None),
-    "withRequests": fields.Bool(required=False, missing=None)
+    "withRequests": fields.Bool(required=False, missing=None),
+    "withRejectedPermanently": fields.Bool(required=False, missing=None)
 
 })
-def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated, with_requests):
+def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, with_arbitrated, with_requests, with_rejected_permanently):
     user = User.get_by_id(user_id)
     if user:
         result = user_schema.dump(user)
@@ -91,15 +94,24 @@ def get_user(user_id, with_proposals, with_comments, with_funded, with_pending, 
             pending_proposals_dump = user_proposals_schema.dump(pending_proposals)
             result["pendingProposals"] = pending_proposals_dump
             pending_ccrs = CCR.get_by_user(user, [
-                ProposalStatus.STAKING,
-                ProposalStatus.PENDING,
-                ProposalStatus.APPROVED,
-                ProposalStatus.REJECTED,
+                CCRStatus.PENDING,
+                CCRStatus.APPROVED,
+                CCRStatus.REJECTED,
             ])
             pending_ccrs_dump = ccrs_schema.dump(pending_ccrs)
             result["pendingRequests"] = pending_ccrs_dump
         if with_arbitrated and is_self:
             result["arbitrated"] = user_proposal_arbiters_schema.dump(user.arbiter_proposals)
+        if with_rejected_permanently and is_self:
+            rejected_proposals = Proposal.get_by_user(user, [
+                ProposalStatus.REJECTED_PERMANENTLY
+            ])
+            result["rejectedPermanentlyProposals"] = user_proposals_schema.dump(rejected_proposals)
+
+            rejected_ccrs = CCR.get_by_user(user, [
+                CCRStatus.REJECTED_PERMANENTLY,
+            ])
+            result["rejectedPermanentlyRequests"] = ccrs_schema.dump(rejected_ccrs)
 
         return result
     else:
@@ -363,8 +375,7 @@ def get_user_settings(user_id):
 @auth.requires_same_user_auth
 @body({
     "emailSubscriptions": fields.Dict(required=False, missing=None),
-    "refundAddress": fields.Str(required=False, missing=None,
-                                validate=lambda r: validate_blockchain_get('/validate/address', {'address': r})),
+    "refundAddress": fields.Str(required=False, missing=None),
     "tipJarAddress": fields.Str(required=False, missing=None),
     "tipJarViewKey": fields.Str(required=False, missing=None)  # TODO: add viewkey validation here
 })
@@ -376,16 +387,18 @@ def set_user_settings(user_id, email_subscriptions, refund_address, tip_jar_addr
         except ValidationException as e:
             return {"message": str(e)}, 400
 
+    if refund_address is not None and refund_address != '' and not is_z_address_valid(refund_address):
+        return {"message": "Refund address is not a valid z address"}, 400
     if refund_address == '' and g.current_user.settings.refund_address:
         return {"message": "Refund address cannot be unset, only changed"}, 400
     if refund_address:
         g.current_user.settings.refund_address = refund_address
 
+    if tip_jar_address is not None and tip_jar_address is not '' and not is_z_address_valid(tip_jar_address):
+        return {"message": "Tip address is not a valid z address"}, 400
     if tip_jar_address is not None:
-        if tip_jar_address is not '':
-            validate_blockchain_get('/validate/address', {'address': tip_jar_address})
-
         g.current_user.settings.tip_jar_address = tip_jar_address
+
     if tip_jar_view_key is not None:
         g.current_user.settings.tip_jar_view_key = tip_jar_view_key
 
@@ -406,6 +419,14 @@ def set_user_arbiter(user_id, proposal_id, is_accept):
 
         if is_accept:
             proposal.arbiter.accept_nomination(g.current_user.id)
+
+            for user in proposal.team:
+                send_email(user.email_address, 'proposal_arbiter_assigned', {
+                    'user': user,
+                    'proposal': proposal,
+                    'proposal_url': make_url(f'/proposals/{proposal.id}')
+                })
+
             return {"message": "Accepted nomination"}, 200
         else:
             proposal.arbiter.reject_nomination(g.current_user.id)

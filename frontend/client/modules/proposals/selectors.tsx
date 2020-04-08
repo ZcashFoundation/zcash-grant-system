@@ -2,6 +2,7 @@ import { AppState } from 'store/reducers';
 import {
   Proposal,
   ProposalUpdates,
+  ProposalRevisions,
   ProposalContributions,
   ProposalPageParams,
   PageParams,
@@ -29,6 +30,30 @@ export function getIsFetchingUpdates(state: AppState) {
 
 export function getUpdatesError(state: AppState) {
   return state.proposal.updatesError;
+}
+
+export function getProposalRevisions(
+  state: AppState,
+  proposalId: Proposal['proposalId'],
+): ProposalRevisions['revisions'] | null {
+  const pr = state.proposal.proposalRevisions[proposalId];
+  return pr ? pr.revisions : null;
+}
+
+export function getProposalRevisionCount(
+  state: AppState,
+  proposalId: Proposal['proposalId'],
+): number | null {
+  const pr = state.proposal.proposalRevisions[proposalId];
+  return pr ? pr.revisions.length : null;
+}
+
+export function getIsFetchingRevisions(state: AppState) {
+  return state.proposal.isFetchingRevisions;
+}
+
+export function getRevisionsError(state: AppState) {
+  return state.proposal.revisionsError;
 }
 
 export function getProposalContributions(

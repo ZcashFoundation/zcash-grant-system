@@ -15,6 +15,7 @@ import HeaderDetails from 'components/HeaderDetails';
 import ProfileUser from './ProfileUser';
 import ProfileEdit from './ProfileEdit';
 import ProfilePendingList from './ProfilePendingList';
+import ProfileRejectedPermanentlyList from './ProfileRejectedPermanentlyList';
 import ProfileProposal from './ProfileProposal';
 import ProfileContribution from './ProfileContribution';
 import ProfileComment from './ProfileComment';
@@ -93,6 +94,8 @@ class Profile extends React.Component<Props, State> {
       proposals,
       pendingProposals,
       pendingRequests,
+      rejectedPermanentlyProposals,
+      rejectedPermanentlyRequests,
       requests,
       contributions,
       comments,
@@ -109,6 +112,35 @@ class Profile extends React.Component<Props, State> {
     const noneCommented = comments.length === 0;
     const noneArbitrated = arbitrated.length === 0;
     const noneInvites = user.hasFetchedInvites && invites.length === 0;
+    const rejectedPermanentlyCount =
+      rejectedPermanentlyProposals.length + rejectedPermanentlyRequests.length;
+    const noneRejectedPermanently = rejectedPermanentlyCount === 0;
+
+    // do not allow a tab to be linked to if it won't be visible in the ui
+    const skippedTabs = [
+      ...(noneFunded ? ['funded'] : []),
+      ...(noneRejectedPermanently ? ['rejected'] : []),
+    ];
+
+    const privateMsg = 'Note: This tab is private to your account';
+    const publicMsg = 'Note: This tab is public to ZF Grants';
+
+    const renderTabMsg = (msg: string) =>
+      isAuthedUser && (
+        <div
+          style={{
+            textAlign: 'center',
+            paddingBottom: '1rem',
+            opacity: 1,
+            textTransform: 'uppercase',
+            fontSize: '0.5rem',
+            letterSpacing: '0.05em',
+            marginTop: '-0.4rem',
+          }}
+        >
+          <strong>{msg}</strong>
+        </div>
+      );
 
     return (
       <div className="Profile">
@@ -130,7 +162,10 @@ class Profile extends React.Component<Props, State> {
           />
         </Switch>
         <div className="Profile-tabs">
-          <LinkableTabs defaultActiveKey={(isAuthedUser && 'pending') || 'created'}>
+          <LinkableTabs
+            ignoredKeys={skippedTabs}
+            defaultActiveKey={(isAuthedUser && 'pending') || 'created'}
+          >
             {isAuthedUser && (
               <Tabs.TabPane
                 tab={TabTitle(
@@ -139,6 +174,7 @@ class Profile extends React.Component<Props, State> {
                 )}
                 key="pending"
               >
+                {renderTabMsg(privateMsg)}
                 <div>
                   {noProposalsPending &&
                     noRequestsPending && (
@@ -159,6 +195,7 @@ class Profile extends React.Component<Props, State> {
               tab={TabTitle('Created', proposals.length + requests.length)}
               key="created"
             >
+              {renderTabMsg(publicMsg)}
               <div>
                 {noProposalsCreated &&
                   noRequestsCreated && (
@@ -176,26 +213,23 @@ class Profile extends React.Component<Props, State> {
                 ))}
               </div>
             </Tabs.TabPane>
-            <Tabs.TabPane tab={TabTitle('Funded', contributions.length)} key="funded">
-              <div>
-                {noneFunded && (
-                  <Placeholder
-                    loading={isLoading}
-                    title="No proposals funded"
-                    subtitle="There have not been any proposals funded."
-                  />
-                )}
-                {contributions.map(c => (
-                  <ProfileContribution
-                    key={c.id}
-                    userId={user.userid}
-                    contribution={c}
-                    showSendInstructions={this.openContributionModal}
-                  />
-                ))}
-              </div>
-            </Tabs.TabPane>
+            {!noneFunded && (
+              <Tabs.TabPane tab={TabTitle('Funded', contributions.length)} key="funded">
+                {renderTabMsg(publicMsg)}
+                <div>
+                  {contributions.map(c => (
+                    <ProfileContribution
+                      key={c.id}
+                      userId={user.userid}
+                      contribution={c}
+                      showSendInstructions={this.openContributionModal}
+                    />
+                  ))}
+                </div>
+              </Tabs.TabPane>
+            )}
             <Tabs.TabPane tab={TabTitle('Comments', comments.length)} key="comments">
+              {renderTabMsg(publicMsg)}
               <div>
                 {noneCommented && (
                   <Placeholder
@@ -215,6 +249,7 @@ class Profile extends React.Component<Props, State> {
                 key="invites"
                 disabled={!user.hasFetchedInvites}
               >
+                {renderTabMsg(privateMsg)}
                 <div>
                   {noneInvites && (
                     <Placeholder
@@ -234,6 +269,7 @@ class Profile extends React.Component<Props, State> {
                 tab={TabTitle('Arbitrations', arbitrated.length)}
                 key="arbitrations"
               >
+                {renderTabMsg(privateMsg)}
                 {noneArbitrated && (
                   <Placeholder
                     loading={isLoading}
@@ -246,6 +282,21 @@ class Profile extends React.Component<Props, State> {
                 ))}
               </Tabs.TabPane>
             )}
+            {isAuthedUser &&
+              !noneRejectedPermanently && (
+                <Tabs.TabPane
+                  tab={TabTitle('Rejected', rejectedPermanentlyCount)}
+                  key="rejected"
+                >
+                  {renderTabMsg(privateMsg)}
+                  <div>
+                    <ProfileRejectedPermanentlyList
+                      proposals={rejectedPermanentlyProposals}
+                      requests={rejectedPermanentlyRequests}
+                    />
+                  </div>
+                </Tabs.TabPane>
+              )}
           </LinkableTabs>
         </div>
 

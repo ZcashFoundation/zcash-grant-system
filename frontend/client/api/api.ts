@@ -44,6 +44,15 @@ export function getProposal(proposalId: number | string): Promise<{ data: Propos
   });
 }
 
+export function getArchivedProposal(
+  proposalId: number | string,
+): Promise<{ data: Proposal }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/archive`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
 export function followProposal(proposalId: number, isFollow: boolean) {
   return axios.put(`/api/v1/proposals/${proposalId}/follow`, { isFollow });
 }
@@ -74,6 +83,10 @@ export function getProposalUpdates(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/updates`);
 }
 
+export function getProposalRevisions(proposalId: number | string) {
+  return axios.get(`/api/v1/proposals/${proposalId}/revisions`);
+}
+
 export function getProposalContributions(proposalId: number | string) {
   return axios.get(`/api/v1/proposals/${proposalId}/contributions`);
 }
@@ -96,6 +109,7 @@ export function getUser(address: string): Promise<{ data: User }> {
         withFunded: true,
         withPending: true,
         withArbitrated: true,
+        withRejectedPermanently: true,
       },
     })
     .then(res => {
@@ -237,7 +251,7 @@ export function postProposalDraft(rfpId?: number): Promise<{ data: ProposalDraft
   return axios.post('/api/v1/proposals/drafts', { rfpId });
 }
 
-export function deleteProposalDraft(proposalId: number): Promise<any> {
+export function deleteProposal(proposalId: number): Promise<any> {
   return axios.delete(`/api/v1/proposals/${proposalId}`);
 }
 
@@ -262,10 +276,37 @@ export async function putProposalSubmitForApproval(
     });
 }
 
+export async function postProposalMakeLiveDraft(
+  proposalId: number,
+): Promise<{ data: Proposal }> {
+  return axios.post(`/api/v1/proposals/${proposalId}/draft`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
+export async function putProposalSubmitLiveDraft(
+  proposal: ProposalDraft,
+): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposal.proposalId}/publish/live`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
 export async function putProposalPublish(
   proposalId: number,
 ): Promise<{ data: Proposal }> {
   return axios.put(`/api/v1/proposals/${proposalId}/publish`).then(res => {
+    res.data = formatProposalFromGet(res.data);
+    return res;
+  });
+}
+
+export async function putMarkProposalRequestedChangesAsResolved(
+  proposalId: number,
+): Promise<{ data: Proposal }> {
+  return axios.put(`/api/v1/proposals/${proposalId}/resolve`).then(res => {
     res.data = formatProposalFromGet(res.data);
     return res;
   });
@@ -308,6 +349,12 @@ export async function rejectProposalPayout(
       res.data = formatProposalFromGet(res.data);
       return res;
     });
+}
+
+export function getProposalInvites(
+  proposalId: number,
+): Promise<{ data: { invites: TeamInvite[], team: User[] } }> {
+  return axios.get(`/api/v1/proposals/${proposalId}/invites`);
 }
 
 export function postProposalInvite(

@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Icon, Form, Input, Button, Popconfirm, message } from 'antd';
-import { User, TeamInvite, ProposalDraft } from 'types';
+import { ProposalDraft, STATUS } from 'types';
 import TeamMemberComponent from './TeamMember';
 import { postProposalInvite, deleteProposalInvite } from 'api/api';
 import { isValidEmail } from 'utils/validators';
@@ -9,13 +9,12 @@ import { AppState } from 'store/reducers';
 import './Team.less';
 
 interface State {
-  team: User[];
-  invites: TeamInvite[];
   address: string;
 }
 
 interface StateProps {
   authUser: AppState['auth']['user'];
+  form: ProposalDraft;
 }
 
 interface OwnProps {
@@ -28,8 +27,6 @@ type Props = OwnProps & StateProps;
 
 const MAX_TEAM_SIZE = 6;
 const DEFAULT_STATE: State = {
-  team: [],
-  invites: [],
   address: '',
 };
 
@@ -40,22 +37,31 @@ class CreateFlowTeam extends React.Component<Props, State> {
       ...DEFAULT_STATE,
       ...(props.initialState || {}),
     };
+  }
 
+  componentWillMount() {
+    const {
+      form: { team },
+      authUser,
+      updateForm,
+    } = this.props;
     // Auth'd user is always first member of a team
-    if (props.authUser && !this.state.team.length) {
-      this.state.team[0] = {
-        ...props.authUser,
-      };
+    if (authUser && !team.length) {
+      updateForm({
+        team: [{ ...authUser }],
+      });
     }
   }
 
   render() {
-    const { team, invites, address } = this.state;
+    const { address } = this.state;
+    const { team, invites } = this.props.form;
     const inviteError =
       address && !isValidEmail(address) && 'That doesn’t look like a valid email address';
     const maxedOut = invites.length >= MAX_TEAM_SIZE - 1;
     const inviteDisabled = !!inviteError || !address || maxedOut;
     const pendingInvites = invites.filter(inv => inv.accepted === null);
+    const isEdit = this.props.form.status === STATUS.LIVE_DRAFT;
 
     return (
       <div className="TeamForm">
@@ -81,7 +87,11 @@ class CreateFlowTeam extends React.Component<Props, State> {
           </div>
         )}
         <div className="TeamForm-add">
-          <h3 className="TeamForm-add-title">Add an optional team member</h3>
+          <h3 className="TeamForm-add-title">
+            {!isEdit
+              ? 'Add an optional team member'
+              : 'Your team will be locked in unless you choose to edit the proposal again'}
+          </h3>
           <Form className="TeamForm-add-form" onSubmit={this.handleAddSubmit}>
             <Form.Item
               className="TeamForm-add-form-field"
@@ -89,7 +99,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
               help={
                 inviteError ||
                 (maxedOut && 'You’ve invited the maximum number of teammates') ||
-                'They will be notified and will have to accept the invitation before being added'
+                'They will be notified immediately and will have to accept the invitation before being added'
               }
             >
               <Input
@@ -125,9 +135,8 @@ class CreateFlowTeam extends React.Component<Props, State> {
     ev.preventDefault();
     postProposalInvite(this.props.proposalId, this.state.address)
       .then(res => {
-        const invites = [...this.state.invites, res.data];
+        const invites = [...this.props.form.invites, res.data];
         this.setState({
-          invites,
           address: '',
         });
         this.props.updateForm({ invites });
@@ -141,8 +150,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
   private removeInvitation = (invId: number) => {
     deleteProposalInvite(this.props.proposalId, invId)
       .then(() => {
-        const invites = this.state.invites.filter(inv => inv.id !== invId);
-        this.setState({ invites });
+        const invites = this.props.form.invites.filter(inv => inv.id !== invId);
         this.props.updateForm({ invites });
       })
       .catch((err: Error) => {
@@ -154,6 +162,7 @@ class CreateFlowTeam extends React.Component<Props, State> {
 
 const withConnect = connect<StateProps, {}, {}, AppState>(state => ({
   authUser: state.auth.user,
+  form: state.create.form as ProposalDraft,
 }));
 
 export default withConnect(CreateFlowTeam);

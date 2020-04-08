@@ -1,95 +1,53 @@
 import React from 'react';
-import { Spin, Card, Row, Col } from 'antd';
+import { Spin, Card, Row, Col, Dropdown, Button, Icon, Menu } from 'antd';
 import { Charts } from 'ant-design-pro';
 import { view } from 'react-easy-state';
 import store from '../../store';
 import Info from 'components/Info';
+import { formatUsd } from '../../util/formatters';
 import './index.less';
 
-class Financials extends React.Component {
-  componentDidMount() {
-    store.fetchFinancials();
+interface State {
+  selectedYear: string;
+}
+
+class Financials extends React.Component<{}, State> {
+  state: State = {
+    selectedYear: '',
+  };
+
+  async componentDidMount() {
+    await store.fetchFinancials();
+
+    const years = Object.keys(store.financials.payoutsByQuarter);
+    const selectedYear = years[years.length - 1];
+
+    this.setState({
+      selectedYear,
+    });
   }
 
   render() {
-    const { contributions, grants, payouts } = store.financials;
-    if (!store.financialsFetched) {
+    const { selectedYear } = this.state;
+    const { grants, payouts, payoutsByQuarter } = store.financials;
+    if (!store.financialsFetched || !selectedYear) {
       return <Spin tip="Loading financials..." />;
     }
+
+    const years = Object.keys(store.financials.payoutsByQuarter);
+    const quarterData = payoutsByQuarter[this.state.selectedYear];
+
+    const payoutsByQuarterMenu = (
+      <Menu onClick={e => this.setState({ selectedYear: e.key })}>
+        {years.map(year => (
+          <Menu.Item key={year}>{year}</Menu.Item>
+        ))}
+      </Menu>
+    );
 
     return (
       <div className="Financials">
         <Row gutter={16}>
-          <Col lg={8} md={12} sm={24}>
-            <Card size="small" title="Contributions">
-              <Charts.Pie
-                hasLegend
-                title="Contributions"
-                subTitle="Total"
-                total={() => (
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: 'ⓩ ' + contributions.total,
-                    }}
-                  />
-                )}
-                data={[
-                  { x: 'funded', y: parseFloat(contributions.funded) },
-                  { x: 'funding', y: parseFloat(contributions.funding) },
-                  { x: 'refunding', y: parseFloat(contributions.refunding) },
-                  { x: 'refunded', y: parseFloat(contributions.refunded) },
-                  { x: 'donation', y: parseFloat(contributions.donations) },
-                  { x: 'staking', y: parseFloat(contributions.staking) },
-                ]}
-                valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
-                height={180}
-              />
-            </Card>
-          </Col>
-
-          <Col lg={8} md={12} sm={24}>
-            <Card
-              size="small"
-              title={
-                <Info
-                  content={
-                    <>
-                      <p>
-                        Matching and bounty obligations for active and completed
-                        proposals.
-                      </p>
-                      <b>matching</b> - total matching amount pleged
-                      <br />
-                      <b>bounties</b> - total bounty amount pledged
-                      <br />
-                    </>
-                  }
-                >
-                  Grants
-                </Info>
-              }
-            >
-              <Charts.Pie
-                hasLegend
-                title="Grants"
-                subTitle="Total"
-                total={() => (
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: 'ⓩ ' + grants.total,
-                    }}
-                  />
-                )}
-                data={[
-                  { x: 'bounties', y: parseFloat(grants.bounty) },
-                  { x: 'matching', y: parseFloat(grants.matching) },
-                ]}
-                valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
-                height={180}
-              />
-            </Card>
-          </Col>
-
           <Col lg={8} md={12} sm={24}>
             <Card
               size="small"
@@ -120,7 +78,7 @@ class Financials extends React.Component {
                 total={() => (
                   <span
                     dangerouslySetInnerHTML={{
-                      __html: 'ⓩ ' + payouts.total,
+                      __html: '$ ' + formatUsd(grants.total, false),
                     }}
                   />
                 )}
@@ -129,7 +87,70 @@ class Financials extends React.Component {
                   { x: 'future', y: parseFloat(payouts.future) },
                   { x: 'paid', y: parseFloat(payouts.paid) },
                 ]}
-                valueFormat={val => <span dangerouslySetInnerHTML={{ __html: val }} />}
+                valueFormat={val => (
+                  <span
+                    dangerouslySetInnerHTML={{ __html: `${formatUsd(val, true, 2)}` }}
+                  />
+                )}
+                height={180}
+              />
+            </Card>
+          </Col>
+
+          <Col lg={8} md={12} sm={24}>
+            <Card
+              size="small"
+              title={
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Info
+                    content={
+                      <>
+                        <p>
+                          Milestone payouts broken down by quarter. Use the dropdown to
+                          select a different year.
+                        </p>
+                      </>
+                    }
+                  >
+                    Payouts by Quarter
+                  </Info>
+                  <Dropdown overlay={payoutsByQuarterMenu} trigger={['click']}>
+                    <Button>
+                      {this.state.selectedYear} <Icon type="down" />
+                    </Button>
+                  </Dropdown>
+                </div>
+              }
+            >
+              <Charts.Pie
+                hasLegend
+                title="Contributions"
+                subTitle="Total"
+                total={() => (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: '$ ' + formatUsd(quarterData.yearTotal, false, 2),
+                    }}
+                  />
+                )}
+                data={[
+                  { x: 'Q1', y: parseFloat(quarterData.q1) },
+                  { x: 'Q2', y: parseFloat(quarterData.q2) },
+                  { x: 'Q3', y: parseFloat(quarterData.q3) },
+                  { x: 'Q4', y: parseFloat(quarterData.q3) },
+                ]}
+                valueFormat={val => (
+                  <span
+                    dangerouslySetInnerHTML={{ __html: `${formatUsd(val, true, 2)}` }}
+                  />
+                )}
                 height={180}
               />
             </Card>

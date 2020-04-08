@@ -29,20 +29,6 @@ def blockchain_get(path, params=None):
         raise e
 
 
-def validate_blockchain_get(path, params=None):
-    if path == '/validate/address' and params and params['address'] and params['address'][0] == 't':
-        raise ValidationException('T addresses are not allowed')
-
-    try:
-        res = blockchain_get(path, params)
-    except Exception:
-        raise ValidationException('Unable to validate zcash address right now, try again later')
-    if not res.get('valid'):
-        raise ValidationException('Invalid Zcash address')
-
-    return True
-
-
 def blockchain_post(path, data=None):
     if E2E_TESTING:
         return blockchain_rest_e2e(path, data)

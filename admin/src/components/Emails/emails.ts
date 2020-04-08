@@ -42,9 +42,50 @@ export default [
     description: 'Sent when an admin approves your submitted proposal',
   },
   {
+    id: 'proposal_approved_without_funding',
+    title: 'Proposal approved without funding',
+    description: 'Sent when an admin approves your submitted proposal',
+  },
+  {
+    id: 'proposal_approved_discussion',
+    title: 'Proposal approved for public discussion',
+    description: 'Sent when an admin approves a proposal for public discussion',
+  },
+  {
     id: 'proposal_rejected',
     title: 'Proposal changes requested',
     description: 'Sent when an admin requests changes for your submitted proposal',
+  },
+  {
+    id: 'proposal_rejected_permanently',
+    title: 'Proposal rejected permanently',
+    description: 'Sent when an admin rejects a proposal permanently',
+  },
+  {
+    id: 'proposal_arbiter_assigned',
+    title: 'Proposal arbiter assigned',
+    description: 'Sent when a nominated arbiter accepts',
+  },
+  {
+    id: 'ccr_approved',
+    title: 'Request has been approved',
+    description: 'Sent when an admin approves a submitted CCR',
+  },
+  {
+    id: 'ccr_rejected',
+    title: 'Request has changes requested',
+    description: 'Sent when an admin requests changes for a CCR',
+  },
+  {
+    id: 'ccr_rejected_permanently',
+    title: 'Request rejected permanently',
+    description: 'Sent when an admin rejects a CCR permanently',
+  },
+  {
+    id: 'proposal_rejected_discussion',
+    title: 'Proposal changes requested',
+    description:
+      'Sent when an admin requests changes for a proposal open for public discussion',
   },
   {
     id: 'proposal_contribution',
@@ -141,6 +182,11 @@ export default [
     description: 'Sent when proposal is ready for review',
   },
   {
+    id: 'admin_changes_resolved',
+    title: 'Admin Requested Changes Resolved',
+    description: 'Sent when proposal team has marked requested changes as resolved',
+  },
+  {
     id: 'admin_arbiter',
     title: 'Admin Arbiter',
     description: 'Sent when proposal is ready to have an arbiter nominated',
@@ -160,5 +206,10 @@ export default [
     id: 'followed_proposal_update',
     title: 'Followed Proposal Update',
     description: 'Sent to followers of a proposal when it has a new update',
+  },
+  {
+    id: 'followed_proposal_revised',
+    title: 'Followed Proposal Revised',
+    description: 'Sent to followers of a proposal when a revision has been made',
   },
 ] as Email[];

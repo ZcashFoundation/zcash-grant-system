@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Alert } from 'antd';
 import { getCreateWarnings } from 'modules/create/utils';
-import { ProposalDraft } from 'types';
+import { ProposalDraft, STATUS } from 'types';
 import './SubmitWarningModal.less';
 
 interface Props {
@@ -15,6 +15,7 @@ export default class SubmitWarningModal extends React.Component<Props> {
   render() {
     const { proposal, isVisible, handleClose, handleSubmit } = this.props;
     const warnings = proposal ? getCreateWarnings(proposal) : [];
+    const isLiveDraft = proposal && proposal.status === STATUS.LIVE_DRAFT;
 
     return (
       <Modal
@@ -43,10 +44,14 @@ export default class SubmitWarningModal extends React.Component<Props> {
               }
             />
           )}
-          <p>
-            Are you sure you're ready to submit your proposal for approval? Once you’ve
-            done so, you won't be able to edit it.
-          </p>
+          {isLiveDraft ? (
+            <p>Are you sure you're ready to submit your edit?</p>
+          ) : (
+            <p>
+              Are you sure you're ready to submit your proposal for approval? Once you’ve
+              done so, you won't be able to edit it until it's been reviewed by an admin.
+            </p>
+          )}
         </div>
       </Modal>
     );
