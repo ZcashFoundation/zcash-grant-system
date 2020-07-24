@@ -2,7 +2,7 @@ import React from 'react';
 import moment from 'moment';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Icon, Button, Affix, Tag } from 'antd';
+import { Icon, Tag } from 'antd';
 import ExceptionPage from 'components/ExceptionPage';
 import { fetchRfp } from 'modules/rfps/actions';
 import { getRfp } from 'modules/rfps/selectors';
@@ -151,26 +151,6 @@ export class RFPDetail extends React.Component<Props> {
             {rfp.acceptedProposals.map(p => (
               <ProposalCard key={p.proposalId} {...p} />
             ))}
-          </div>
-        )}
-
-        {isLive && (
-          <div className="RFPDetail-submit">
-            <Affix offsetBottom={0}>
-              <div className="RFPDetail-submit-inner">
-                <span>Ready to take on this request?</span>{' '}
-                <Link to={`/create?rfp=${rfp.id}`}>
-                  <Button
-                    className="RFPDetail-submit-inner-button"
-                    type="primary"
-                    size="large"
-                  >
-                    Start a Proposal
-                    <Icon type="right-circle" />
-                  </Button>
-                </Link>
-              </div>
-            </Affix>
           </div>
         )}
       </div>

@@ -80,9 +80,9 @@ class HeaderDrawer extends React.Component<Props> {
             <Menu.Item key="/proposals">
               <Link to="/proposals">Browse proposals</Link>
             </Menu.Item>
-            <Menu.Item key="/create">
-              <Link to="/create">Start a proposal</Link>
-            </Menu.Item>
+            {/*<Menu.Item key="/create">*/}
+            {/*  <Link to="/create">Start a proposal</Link>*/}
+            {/*</Menu.Item>*/}
           </Menu.ItemGroup>
           <Menu.ItemGroup title="Requests">
             <Menu.Item key="/requests">
