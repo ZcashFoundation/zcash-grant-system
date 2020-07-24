@@ -51,11 +51,11 @@ class VerifyEmail extends React.Component<RouteComponentProps, State> {
 
     const actions = (
       <div>
-        <Link to="/create">
-          <Button size="large" type="primary">
-            Start a proposal
-          </Button>
-        </Link>
+        {/*<Link to="/create">*/}
+        {/*  <Button size="large" type="primary">*/}
+        {/*    Start a proposal*/}
+        {/*  </Button>*/}
+        {/*</Link>*/}
         <Link to="/create-request">
           <Button size="large" style={{ marginLeft: '0.5rem' }}>
             Create a request
