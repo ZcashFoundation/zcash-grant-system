@@ -155,23 +155,24 @@ export class RFPDetail extends React.Component<Props> {
         )}
 
         {isLive && (
-          <div className="RFPDetail-submit">
-            <Affix offsetBottom={0}>
-              <div className="RFPDetail-submit-inner">
-                <span>Ready to take on this request?</span>{' '}
-                <Link to={`/create?rfp=${rfp.id}`}>
-                  <Button
-                    className="RFPDetail-submit-inner-button"
-                    type="primary"
-                    size="large"
-                  >
-                    Start a Proposal
-                    <Icon type="right-circle" />
-                  </Button>
-                </Link>
-              </div>
-            </Affix>
-          </div>
+            null
+          // <div className="RFPDetail-submit">
+          //   <Affix offsetBottom={0}>
+          //     <div className="RFPDetail-submit-inner">
+          //       <span>Ready to take on this request?</span>{' '}
+          //       <Link to={`/create?rfp=${rfp.id}`}>
+          //         <Button
+          //           className="RFPDetail-submit-inner-button"
+          //           type="primary"
+          //           size="large"
+          //         >
+          //           Start a Proposal
+          //           <Icon type="right-circle" />
+          //         </Button>
+          //       </Link>
+          //     </div>
+          //   </Affix>
+          // </div>
         )}
       </div>
     );
