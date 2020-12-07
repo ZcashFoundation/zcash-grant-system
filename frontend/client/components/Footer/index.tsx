@@ -31,7 +31,14 @@ const Footer: React.SFC<WithNamespaces> = ({ t }) => (
           className="Footer-main-links-link"
           target="_blank"
         >
-          About
+          About Zcash Foundation
+        </a>
+        <a
+          href="https://zcashomg.org/"
+          className="Footer-main-links-link"
+          target="_blank"
+        >
+          About Zcash Open Major Grants (ZOMG)
         </a>
         <Link to="/contact" className="Footer-main-links-link">
           Contact
@@ -50,6 +57,14 @@ const Footer: React.SFC<WithNamespaces> = ({ t }) => (
     <div className="Footer-social">
       <a className="Footer-social-link" href="https://zfnd.org/" target="_blank">
         Zcash Foundation <Icon type="home" />
+      </a>
+      <a
+        className="Footer-social-link"
+        href="https://twitter.com/zcashomg"
+        target="_blank"
+        rel="noopener nofollow"
+      >
+        @zcashomg <Icon type="twitter" />
       </a>
       <a
         className="Footer-social-link"

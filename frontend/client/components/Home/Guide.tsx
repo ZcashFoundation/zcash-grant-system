@@ -9,19 +9,19 @@ import './Guide.less';
 const HomeGuide: React.SFC<WithNamespaces> = ({ t }) => {
   const items = [
     {
-      text: t('home.guide.submit'),
+      text: <p>Individuals and teams submit proposals against requests from the community or the Zcash Foundation or <a href="https://zcashomg.org/">Zcash Open Major Grants (ZOMG)</a>, or submit one of their own ideas</p>,
       icon: <SubmitIcon />,
     },
     {
-      text: t('home.guide.review'),
+      text: <p>The proposal is reviewed by the Zcash Foundation or <a href="https://zcashomg.org/">Zcash Open Major Grants (ZOMG)</a>, after which the proposal may be accepted with or without funding. In cases where the proposal is accepted without funding, the community may donate directly when the team has set a tip address.</p>,
       icon: <ReviewIcon />,
     },
     {
-      text: t('home.guide.community'),
+      text: <p>The proposal is then opened up to the community to discuss, provide feedback, and optionally donate to the team</p>,
       icon: <CommunityIcon />,
     },
     {
-      text: t('home.guide.complete'),
+      text: <p>The proposal creator(s) post updates with their progress, and if having received a bounty, are paid out as they reach project milestones</p>,
       icon: <CompleteIcon />,
     },
   ];

@@ -52,16 +52,19 @@ class Header extends React.Component<Props, State> {
     render() {
         const {isTransparent, ccrDrafts, proposalDrafts, hasCheckedUser} = this.props;
         const {isDrawerOpen} = this.state;
+        const showBanner = false;
 
         return (
             <div>
-                <Banner badgeName={"NOTE"}
-                        body={
-                            <p>The Zcash Foundation is not currently accepting any new grants; we are awaiting the
-                                formation of the Major Grant Review Committee to help guide our future grant strategy.
-                                For
-                                more information, please email <a
-                                    href={"mailto:contact@zfnd.org"}>contact@zfnd.org</a></p>}/>
+                {showBanner &&
+                <Banner
+                    badgeName={"NOTE"}
+                    body={
+                        <p>The Zcash Foundation is not currently accepting any new grants; we are
+                            awaiting the formation of the Major Grant Review Committee to help guide our future
+                            grant strategy. For more information, please email
+                            <a href={"mailto:contact@zfnd.org"}>contact@zfnd.org</a></p>}/>
+                }
                 <div
                     className={classnames({
                         Header: true,
@@ -98,7 +101,7 @@ class Header extends React.Component<Props, State> {
                                         {Array.isArray(proposalDrafts) && proposalDrafts.length > 0 ? (
                                             <Button>My Proposals</Button>
                                         ) : (
-                                         null   // <Button>Start a Proposal</Button>
+                                             <Button>Start a Proposal</Button>
                                         )}
                                     </Link>
                                 </div>
