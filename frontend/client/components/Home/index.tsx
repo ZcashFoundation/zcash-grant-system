@@ -11,12 +11,13 @@ import './style.less';
 class Home extends React.Component<WithNamespaces> {
   render() {
     const { t } = this.props;
+    const showRequests = false;
     return (
       <div className="Home">
         <HeaderDetails title={t('home.title')} description={t('home.description')} />
         <Intro />
         <Latest />
-        <Requests />
+        { showRequests && <Requests />}
         <Guide />
         <Actions />
       </div>
