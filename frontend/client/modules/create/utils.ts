@@ -83,8 +83,8 @@ export function getCreateErrors(
   }
 
   // RFP opt-in
-  if (rfpOptIn === null) {
-    errors.rfpOptIn = 'Please accept or decline KYC';
+  if (!rfpOptIn) {
+    errors.rfpOptIn = 'Please accept KYC to submit.'
   }
 
   // Title
