@@ -391,6 +391,8 @@ class Proposal(db.Model):
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
+    kyc_approved = db.Column(db.Boolean(), nullable=True, default=False)
+
     accepted_with_funding = db.Column(db.Boolean(), nullable=True)
     changes_requested_discussion = db.Column(db.Boolean(), nullable=True)
     changes_requested_discussion_reason = db.Column(db.String(255), nullable=True)
@@ -1096,7 +1098,8 @@ class ProposalSchema(ma.Schema):
             "tip_jar_view_key",
             "changes_requested_discussion",
             "changes_requested_discussion_reason",
-            "live_draft_id"
+            "live_draft_id",
+            "kyc_approved"
         )
 
     date_created = ma.Method("get_date_created")

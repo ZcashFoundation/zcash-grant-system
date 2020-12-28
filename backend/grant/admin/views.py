@@ -377,6 +377,19 @@ def open_proposal_for_discussion(proposal_id, is_open_for_discussion, reject_rea
     return proposal_schema.dump(proposal)
 
 
+@blueprint.route('/proposals/<id>/approve-kyc', methods=['PUT'])
+@admin.admin_auth_required
+def approve_proposal_kyc(id):
+    proposal = Proposal.query.get(id)
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    proposal.kyc_approved = True
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
+
+
 @blueprint.route('/proposals/<id>/accept', methods=['PUT'])
 @body({
     "isAccepted": fields.Bool(required=True),

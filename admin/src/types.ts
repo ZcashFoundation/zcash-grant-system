@@ -123,6 +123,7 @@ export interface Proposal {
   isVersionTwo: boolean;
   changesRequestedDiscussion: boolean | null;
   changesRequestedDiscussionReason: string | null;
+  kycApproved: null | boolean;
 }
 export interface Comment {
   id: number;

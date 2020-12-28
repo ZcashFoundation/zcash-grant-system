@@ -3,31 +3,31 @@ import BN from 'bn.js';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
 import {
-  Row,
-  Col,
-  Card,
   Alert,
   Button,
+  Card,
+  Col,
   Collapse,
-  Popconfirm,
   Input,
-  Tag,
   message,
+  Popconfirm,
+  Row,
+  Tag,
 } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { formatDateSeconds, formatDurationSeconds } from 'util/time';
 import {
-  PROPOSAL_STATUS,
-  PROPOSAL_ARBITER_STATUS,
   MILESTONE_STAGE,
+  PROPOSAL_ARBITER_STATUS,
   PROPOSAL_STAGE,
+  PROPOSAL_STATUS,
 } from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Markdown from 'components/Markdown';
 import ArbiterControl from 'components/ArbiterControl';
-import { toZat, fromZat } from 'src/util/units';
+import { fromZat, toZat } from 'src/util/units';
 import FeedbackModal from '../FeedbackModal';
 import { formatUsd } from 'util/formatters';
 import './index.less';
@@ -45,9 +45,11 @@ type State = typeof STATE;
 class ProposalDetailNaked extends React.Component<Props, State> {
   state = STATE;
   rejectInput: null | TextArea = null;
+
   componentDidMount() {
     this.loadDetail();
   }
+
   render() {
     const id = this.getIdFromQuery();
     const { proposalDetail: p, proposalDetailFetching } = store;
@@ -183,7 +185,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           <Alert
             showIcon
             type={p.rfpOptIn ? 'success' : 'error'}
-            message={p.rfpOptIn ? 'KYC accepted' : 'KYC rejected'}
+            message={p.rfpOptIn ? 'KYC Accepted by user' : 'KYC rejected'}
             description={
               <div>
                 {p.rfpOptIn ? (
@@ -272,24 +274,38 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 description={
                   <div>
                     <p>Please review this proposal and render your judgment.</p>
-                    <Button
-                      className="ProposalDetail-review"
-                      loading={store.proposalDetailAcceptingProposal}
-                      icon="check"
-                      type="primary"
-                      onClick={() => this.handleAcceptProposal(true, true)}
-                    >
-                      Approve With Funding
-                    </Button>
-                    <Button
-                      className="ProposalDetail-review"
-                      loading={store.proposalDetailAcceptingProposal}
-                      icon="check"
-                      type="default"
-                      onClick={() => this.handleAcceptProposal(true, false)}
-                    >
-                      Approve Without Funding
-                    </Button>
+                    {!p.kycApproved ? (
+                      <Button
+                        className="ProposalDetail-review"
+                        loading={store.proposalDetailApprovingKyc}
+                        icon="check"
+                        type="primary"
+                        onClick={() => this.handleApproveKYC()}
+                      >
+                        KYC Approved
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          className="ProposalDetail-review"
+                          loading={store.proposalDetailAcceptingProposal}
+                          icon="check"
+                          type="primary"
+                          onClick={() => this.handleAcceptProposal(true, true)}
+                        >
+                          Approve With Funding
+                        </Button>
+                        <Button
+                          className="ProposalDetail-review"
+                          loading={store.proposalDetailAcceptingProposal}
+                          icon="check"
+                          type="default"
+                          onClick={() => this.handleAcceptProposal(true, false)}
+                        >
+                          Approve Without Funding
+                        </Button>
+                      </>
+                    )}
                     <Button
                       className="ProposalDetail-review"
                       loading={store.proposalDetailMarkingChangesAsResolved}
@@ -714,6 +730,11 @@ class ProposalDetailNaked extends React.Component<Props, State> {
   private handleRejectPermanently = async (rejectReason: string) => {
     await store.rejectPermanentlyProposal(rejectReason);
     message.info('Proposal rejected permanently');
+  };
+
+  private handleApproveKYC = async () => {
+    await store.approveProposalKYC();
+    message.info(`Proposal KYC approved`);
   };
 
   private handleAcceptProposal = async (
