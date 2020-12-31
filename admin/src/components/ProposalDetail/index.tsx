@@ -274,38 +274,28 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 description={
                   <div>
                     <p>Please review this proposal and render your judgment.</p>
-                    {!p.kycApproved ? (
+
+                    <>
                       <Button
                         className="ProposalDetail-review"
-                        loading={store.proposalDetailApprovingKyc}
+                        loading={store.proposalDetailAcceptingProposal}
                         icon="check"
                         type="primary"
-                        onClick={() => this.handleApproveKYC()}
+                        onClick={() => this.handleAcceptProposal(true, true)}
                       >
-                        KYC Approved
+                        Approve With Funding
                       </Button>
-                    ) : (
-                      <>
-                        <Button
-                          className="ProposalDetail-review"
-                          loading={store.proposalDetailAcceptingProposal}
-                          icon="check"
-                          type="primary"
-                          onClick={() => this.handleAcceptProposal(true, true)}
-                        >
-                          Approve With Funding
-                        </Button>
-                        <Button
-                          className="ProposalDetail-review"
-                          loading={store.proposalDetailAcceptingProposal}
-                          icon="check"
-                          type="default"
-                          onClick={() => this.handleAcceptProposal(true, false)}
-                        >
-                          Approve Without Funding
-                        </Button>
-                      </>
-                    )}
+                      <Button
+                        className="ProposalDetail-review"
+                        loading={store.proposalDetailAcceptingProposal}
+                        icon="check"
+                        type="default"
+                        onClick={() => this.handleAcceptProposal(true, false)}
+                      >
+                        Approve Without Funding
+                      </Button>
+                    </>
+
                     <Button
                       className="ProposalDetail-review"
                       loading={store.proposalDetailMarkingChangesAsResolved}
@@ -387,17 +377,44 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     const renderNominateArbiter = () =>
       needsArbiter &&
       shouldShowArbiter && (
-        <Alert
-          showIcon
-          type="warning"
-          message="No arbiter on live proposal"
-          description={
-            <div>
-              <p>An arbiter is required to review milestone payout requests.</p>
-              <ArbiterControl {...p} />
-            </div>
-          }
-        />
+        <>
+          {!p.kycApproved ? (
+            <Alert
+              showIcon
+              type="error"
+              message="KYC approval required"
+              description={
+                <div>
+                  <p>
+                    Please wait until an Admin has marked KYC approved before proceeding
+                    with payouts.
+                  </p>
+                  <Button
+                    className="ProposalDetail-review"
+                    loading={store.proposalDetailApprovingKyc}
+                    icon="check"
+                    type="primary"
+                    onClick={() => this.handleApproveKYC()}
+                  >
+                    KYC Approved
+                  </Button>
+                </div>
+              }
+            />
+          ) : (
+            <Alert
+              showIcon
+              type="warning"
+              message="No arbiter on live proposal"
+              description={
+                <div>
+                  <p>An arbiter is required to review milestone payout requests.</p>
+                  <ArbiterControl {...p} />
+                </div>
+              }
+            />
+          )}
+        </>
       );
 
     const renderNominatedArbiter = () =>
@@ -513,6 +530,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
         {val} &nbsp;
       </div>
     );
+
+    console.log(p);
 
     return (
       <div className="ProposalDetail">
