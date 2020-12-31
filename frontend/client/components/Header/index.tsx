@@ -105,15 +105,6 @@ class Header extends React.Component<Props, State> {
                                         )}
                                     </Link>
                                 </div>
-                                {false && <div className="Header-links-button is-desktop">
-                                    <Link to="/create-request">
-                                        {Array.isArray(ccrDrafts) && ccrDrafts.length > 0 ? (
-                                            <Button type={'primary'}>My Requests</Button>
-                                        ) : (
-                                            <Button type={'primary'}>Create a Request</Button>
-                                        )}
-                                    </Link>
-                                </div>}
 
                                 <HeaderAuth/>
                             </div>
