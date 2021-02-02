@@ -84,7 +84,7 @@ export function getCreateErrors(
 
   // RFP opt-in
   if (!rfpOptIn) {
-    errors.rfpOptIn = 'Please accept KYC to submit.'
+    errors.rfpOptIn = 'Please accept KYC to submit.';
   }
 
   // Title
@@ -260,6 +260,7 @@ export function makeProposalPreviewFromDraft(draft: ProposalDraft): ProposalDeta
     authedLiked: false,
     likesCount: 0,
     isVersionTwo: true,
+    fundedByZomg: false,
     milestones: draft.milestones.map((m, idx) => ({
       id: idx,
       index: idx,
