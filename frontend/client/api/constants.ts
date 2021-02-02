@@ -86,11 +86,11 @@ export const STAGE_UI: { [key in PROPOSAL_FILTERS]: StageUI } = {
     color: '#8e44ad',
   },
   ACCEPTED_WITH_FUNDING: {
-    label: 'Funded by ZF',
+    label: 'Funded',
     color: '#8e44ad',
   },
   ACCEPTED_WITHOUT_FUNDING: {
-    label: 'Not Funded by ZF',
+    label: 'Not Funded',
     color: '#8e44ad',
   },
   WIP: {

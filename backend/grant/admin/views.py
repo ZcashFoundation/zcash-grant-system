@@ -4,7 +4,7 @@ from functools import reduce
 
 from flask import Blueprint, request
 from marshmallow import fields, validate
-from sqlalchemy import func, or_, text
+from sqlalchemy import func, text
 
 import grant.utils.admin as admin
 import grant.utils.auth as auth
@@ -25,7 +25,7 @@ from grant.proposal.models import (
     admin_proposal_contributions_schema,
 )
 from grant.rfp.models import RFP, admin_rfp_schema, admin_rfps_schema
-from grant.user.models import User, UserSettings, admin_users_schema, admin_user_schema
+from grant.user.models import User, admin_users_schema, admin_user_schema
 from grant.utils import pagination
 from grant.utils.enums import (
     ProposalStatus,
@@ -385,6 +385,22 @@ def approve_proposal_kyc(id):
         return {"message": "No proposal found."}, 404
 
     proposal.kyc_approved = True
+    db.session.add(proposal)
+    db.session.commit()
+    return proposal_schema.dump(proposal)
+
+
+@blueprint.route('/proposals/<id>/adjust-funder', methods=['PUT'])
+@body({
+    "fundedByZomg": fields.Bool(required=True),
+})
+@admin.admin_auth_required
+def adjust_funder(id, funded_by_zomg):
+    proposal = Proposal.query.get(id)
+    if not proposal:
+        return {"message": "No proposal found."}, 404
+
+    proposal.funded_by_zomg = funded_by_zomg
     db.session.add(proposal)
     db.session.commit()
     return proposal_schema.dump(proposal)

@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { Icon, Popover, Tooltip, Alert } from 'antd';
+import { Alert, Icon, Popover, Tooltip } from 'antd';
 import { Proposal, STATUS } from 'types';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
@@ -12,6 +12,8 @@ import Loader from 'components/Loader';
 import { PROPOSAL_STAGE } from 'api/constants';
 import { formatUsd } from 'utils/formatters';
 import ZFGrantsLogo from 'static/images/logo-name-light.svg';
+import ZomgLogo from 'static/images/zomg-logo.png';
+
 import './style.less';
 
 interface OwnProps {
@@ -134,7 +136,11 @@ export class ProposalCampaignBlock extends React.Component<Props, State> {
             isAcceptedWithFunding && (
               <div className="ProposalCampaignBlock-with-funding">
                 Funded through &nbsp;
-                <ZFGrantsLogo style={{ height: '1.5rem' }} />
+                {proposal.fundedByZomg ? (
+                  <img src={ZomgLogo} alt={'Zomg logo'} style={{ height: '1.5rem' }} />
+                ) : (
+                  <ZFGrantsLogo style={{ height: '1.5rem' }} />
+                )}
               </div>
             )}
 

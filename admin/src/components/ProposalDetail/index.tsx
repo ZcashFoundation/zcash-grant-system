@@ -2,27 +2,11 @@ import React from 'react';
 import BN from 'bn.js';
 import { view } from 'react-easy-state';
 import { RouteComponentProps, withRouter } from 'react-router';
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Collapse,
-  Input,
-  message,
-  Popconfirm,
-  Row,
-  Tag,
-} from 'antd';
+import { Alert, Button, Card, Col, Collapse, Input, message, Popconfirm, Row, Switch, Tag } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import store from 'src/store';
 import { formatDateSeconds, formatDurationSeconds } from 'util/time';
-import {
-  MILESTONE_STAGE,
-  PROPOSAL_ARBITER_STATUS,
-  PROPOSAL_STAGE,
-  PROPOSAL_STATUS,
-} from 'src/types';
+import { MILESTONE_STAGE, PROPOSAL_ARBITER_STATUS, PROPOSAL_STAGE, PROPOSAL_STATUS } from 'src/types';
 import { Link } from 'react-router-dom';
 import Back from 'components/Back';
 import Markdown from 'components/Markdown';
@@ -30,6 +14,7 @@ import ArbiterControl from 'components/ArbiterControl';
 import { fromZat, toZat } from 'src/util/units';
 import FeedbackModal from '../FeedbackModal';
 import { formatUsd } from 'util/formatters';
+
 import './index.less';
 
 type Props = RouteComponentProps<any>;
@@ -57,6 +42,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     if (!p || (p && p.proposalId !== id) || proposalDetailFetching) {
       return 'loading proposal...';
     }
+
+    console.log(p.fundedByZomg);
 
     const needsArbiter =
       PROPOSAL_ARBITER_STATUS.MISSING === p.arbiter.status &&
@@ -94,9 +81,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               </p>
             )
           }
-          placement="left"
-          cancelText="cancel"
-          okText="confirm"
+          placement='left'
+          cancelText='cancel'
+          okText='confirm'
           visible={this.state.showCancelAndRefundPopover}
           okButtonProps={{
             loading: store.proposalDetailCanceling,
@@ -105,8 +92,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           onConfirm={this.handleConfirmCancel}
         >
           <Button
-            icon="close-circle"
-            className="ProposalDetail-controls-control"
+            icon='close-circle'
+            className='ProposalDetail-controls-control'
             loading={store.proposalDetailCanceling}
             onClick={this.handleCancelAndRefundClick}
             disabled={disabled}
@@ -128,9 +115,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               with funding? This cannot be undone.
             </p>
           }
-          placement="left"
-          cancelText="cancel"
-          okText="confirm"
+          placement='left'
+          cancelText='cancel'
+          okText='confirm'
           visible={this.state.showChangeToAcceptedWithFundingPopover}
           okButtonProps={{
             loading: store.proposalDetailCanceling,
@@ -139,8 +126,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           onConfirm={this.handleChangeToAcceptWithFundingConfirm}
         >
           <Button
-            icon="close-circle"
-            className="ProposalDetail-controls-control"
+            icon='close-circle'
+            className='ProposalDetail-controls-control'
             loading={store.proposalDetailChangingToAcceptedWithFunding}
             onClick={this.handleChangeToAcceptedWithFunding}
             block
@@ -170,7 +157,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       p.status === PROPOSAL_STATUS.APPROVED && (
         <Alert
           showIcon
-          type="success"
+          type='success'
           message={`Approved on ${formatDateSeconds(p.dateApproved)}`}
           description={`
             This proposal has been approved and will become live when a team-member
@@ -206,25 +193,25 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             <Col span={isVersionTwo ? 16 : 24}>
               <Alert
                 showIcon
-                type="warning"
-                message="Review Discussion"
+                type='warning'
+                message='Review Discussion'
                 description={
                   <div>
                     <p>Please review this proposal and render your judgment.</p>
                     <Button
-                      className="ProposalDetail-review"
+                      className='ProposalDetail-review'
                       loading={store.proposalDetailApprovingDiscussion}
-                      icon="check"
-                      type="primary"
+                      icon='check'
+                      type='primary'
                       onClick={() => this.handleApproveDiscussion()}
                     >
                       Open for Public Review
                     </Button>
                     <Button
-                      className="ProposalDetail-review"
+                      className='ProposalDetail-review'
                       loading={store.proposalDetailApprovingDiscussion}
-                      icon="warning"
-                      type="default"
+                      icon='warning'
+                      type='default'
                       onClick={() => {
                         FeedbackModal.open({
                           title: 'Request changes to this proposal?',
@@ -237,10 +224,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                       Request Changes
                     </Button>
                     <Button
-                      className="ProposalDetail-review"
+                      className='ProposalDetail-review'
                       loading={store.proposalDetailRejectingPermanently}
-                      icon="close"
-                      type="danger"
+                      icon='close'
+                      type='danger'
                       onClick={() => {
                         FeedbackModal.open({
                           title: 'Reject this proposal permanently?',
@@ -269,27 +256,27 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             <Col span={isVersionTwo ? 16 : 24}>
               <Alert
                 showIcon
-                type="warning"
-                message="Review Pending"
+                type='warning'
+                message='Review Pending'
                 description={
                   <div>
                     <p>Please review this proposal and render your judgment.</p>
 
                     <>
                       <Button
-                        className="ProposalDetail-review"
+                        className='ProposalDetail-review'
                         loading={store.proposalDetailAcceptingProposal}
-                        icon="check"
-                        type="primary"
+                        icon='check'
+                        type='primary'
                         onClick={() => this.handleAcceptProposal(true, true)}
                       >
                         Approve With Funding
                       </Button>
                       <Button
-                        className="ProposalDetail-review"
+                        className='ProposalDetail-review'
                         loading={store.proposalDetailAcceptingProposal}
-                        icon="check"
-                        type="default"
+                        icon='check'
+                        type='default'
                         onClick={() => this.handleAcceptProposal(true, false)}
                       >
                         Approve Without Funding
@@ -297,10 +284,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                     </>
 
                     <Button
-                      className="ProposalDetail-review"
+                      className='ProposalDetail-review'
                       loading={store.proposalDetailMarkingChangesAsResolved}
-                      icon="close"
-                      type="danger"
+                      icon='close'
+                      type='danger'
                       onClick={() => {
                         FeedbackModal.open({
                           title: 'Request changes to this proposal?',
@@ -325,8 +312,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       p.status === PROPOSAL_STATUS.REJECTED && (
         <Alert
           showIcon
-          type="error"
-          message="Changes requested"
+          type='error'
+          message='Changes requested'
           description={
             <div>
               <p>
@@ -346,8 +333,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       p.changesRequestedDiscussion && (
         <Alert
           showIcon
-          type="error"
-          message="Changes requested"
+          type='error'
+          message='Changes requested'
           description={
             <div>
               <p>
@@ -360,10 +347,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               <br />
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
-                  className="ProposalDetail-review"
+                  className='ProposalDetail-review'
                   loading={false}
-                  icon="check"
-                  type="danger"
+                  icon='check'
+                  type='danger'
                   onClick={this.handleMarkChangesAsResolved}
                 >
                   Mark Request as Resolved
@@ -381,8 +368,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           {!p.kycApproved ? (
             <Alert
               showIcon
-              type="error"
-              message="KYC approval required"
+              type='error'
+              message='KYC approval required'
               description={
                 <div>
                   <p>
@@ -390,10 +377,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                     with payouts.
                   </p>
                   <Button
-                    className="ProposalDetail-review"
+                    className='ProposalDetail-review'
                     loading={store.proposalDetailApprovingKyc}
-                    icon="check"
-                    type="primary"
+                    icon='check'
+                    type='primary'
                     onClick={() => this.handleApproveKYC()}
                   >
                     KYC Approved
@@ -404,8 +391,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           ) : (
             <Alert
               showIcon
-              type="warning"
-              message="No arbiter on live proposal"
+              type='warning'
+              message='No arbiter on live proposal'
               description={
                 <div>
                   <p>An arbiter is required to review milestone payout requests.</p>
@@ -422,8 +409,8 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       p.status === PROPOSAL_STATUS.LIVE && (
         <Alert
           showIcon
-          type="info"
-          message="Arbiter has been nominated"
+          type='info'
+          message='Arbiter has been nominated'
           description={
             <div>
               <p>
@@ -469,9 +456,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
 
       return (
         <Alert
-          className="ProposalDetail-alert"
+          className='ProposalDetail-alert'
           showIcon
-          type="warning"
+          type='warning'
           message={null}
           description={
             <div>
@@ -487,9 +474,9 @@ class ProposalDetailNaked extends React.Component<Props, State> {
               </p>{' '}
               <pre>{p.payoutAddress}</pre>
               <Input.Search
-                placeholder="please enter payment txid"
+                placeholder='please enter payment txid'
                 value={this.state.paidTxId}
-                enterButton="Mark Paid"
+                enterButton='Mark Paid'
                 onChange={e => this.setState({ paidTxId: e.target.value })}
                 onSearch={this.handlePaidMilestone}
               />
@@ -503,7 +490,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       p.isFailed && (
         <Alert
           showIcon
-          type="error"
+          type='error'
           message={
             p.stage === PROPOSAL_STAGE.FAILED ? 'Proposal failed' : 'Proposal canceled'
           }
@@ -525,17 +512,16 @@ class ProposalDetailNaked extends React.Component<Props, State> {
       );
 
     const renderDeetItem = (name: string, val: any) => (
-      <div className="ProposalDetail-deet">
+      <div className='ProposalDetail-deet'>
         <span>{name}</span>
         {val} &nbsp;
       </div>
     );
 
-    console.log(p);
-
+    // @ts-ignore
     return (
-      <div className="ProposalDetail">
-        <Back to="/proposals" text="Proposals" />
+      <div className='ProposalDetail'>
+        <Back to='/proposals' text='Proposals' />
         <h1>{p.title}</h1>
         <Row gutter={16}>
           {/* MAIN */}
@@ -550,22 +536,22 @@ class ProposalDetailNaked extends React.Component<Props, State> {
             {renderMilestoneAccepted()}
             {renderFailed()}
             <Collapse defaultActiveKey={['brief', 'content', 'milestones']}>
-              <Collapse.Panel key="brief" header="brief">
+              <Collapse.Panel key='brief' header='brief'>
                 {p.brief}
               </Collapse.Panel>
 
-              <Collapse.Panel key="content" header="content">
+              <Collapse.Panel key='content' header='content'>
                 <Markdown source={p.content} />
               </Collapse.Panel>
 
-              <Collapse.Panel key="milestones" header="milestones">
+              <Collapse.Panel key='milestones' header='milestones'>
                 {p.milestones.map((milestone, i) => (
                   <Card
                     title={
                       <>
                         {milestone.title + ' '}
                         {milestone.immediatePayout && (
-                          <Tag color="magenta">Immediate Payout</Tag>
+                          <Tag color='magenta'>Immediate Payout</Tag>
                         )}
                       </>
                     }
@@ -590,7 +576,7 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 ))}
               </Collapse.Panel>
 
-              <Collapse.Panel key="json" header="json">
+              <Collapse.Panel key='json' header='json'>
                 <pre>{JSON.stringify(p, null, 4)}</pre>
               </Collapse.Panel>
             </Collapse>
@@ -599,26 +585,38 @@ class ProposalDetailNaked extends React.Component<Props, State> {
           {/* RIGHT SIDE */}
           <Col span={6}>
             {p.isVersionTwo &&
-              !p.acceptedWithFunding &&
-              p.stage === PROPOSAL_STAGE.WIP && (
-                <Alert
-                  message="Accepted without funding"
-                  description="This proposal has been posted publicly, but isn't being funded by the Zcash Foundation."
-                  type="info"
-                  showIcon
-                />
-              )}
+            !p.acceptedWithFunding &&
+            p.stage === PROPOSAL_STAGE.WIP && (
+              <Alert
+                message='Accepted without funding'
+                description="This proposal has been posted publicly, but isn't being funded by the Zcash Foundation."
+                type='info'
+                showIcon
+              />
+            )}
 
             {/* ACTIONS */}
-            <Card size="small" className="ProposalDetail-controls">
+            <Card size='small' className='ProposalDetail-controls'>
               {renderCancelControl()}
               {renderArbiterControl()}
+
+              {
+                p.acceptedWithFunding &&
+                <div style={{ marginTop: '10px' }}>
+                  <Switch checkedChildren='Funded by ZOMG'
+                          unCheckedChildren='Funded by ZF'
+                          onChange={this.handleSwitchFunder}
+                          loading={store.proposalDetailSwitchingFunder}
+                          checked={p.fundedByZomg} />
+                </div>
+              }
+
               {shouldShowChangeToAcceptedWithFunding &&
-                renderChangeToAcceptedWithFundingControl()}
+              renderChangeToAcceptedWithFundingControl()}
             </Card>
 
             {/* DETAILS */}
-            <Card title="Details" size="small">
+            <Card title='Details' size='small'>
               {renderDeetItem('id', p.proposalId)}
               {renderDeetItem('created', formatDateSeconds(p.dateCreated))}
               {renderDeetItem(
@@ -630,10 +628,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 formatDurationSeconds(p.deadlineDuration),
               )}
               {p.datePublished &&
-                renderDeetItem(
-                  '(deadline)',
-                  formatDateSeconds(p.datePublished + p.deadlineDuration),
-                )}
+              renderDeetItem(
+                '(deadline)',
+                formatDateSeconds(p.datePublished + p.deadlineDuration),
+              )}
               {renderDeetItem('isFailed', JSON.stringify(p.isFailed))}
               {renderDeetItem('status', p.status)}
               {renderDeetItem('stage', p.stage)}
@@ -662,14 +660,14 @@ class ProposalDetailNaked extends React.Component<Props, State> {
                 </>,
               )}
               {p.rfp &&
-                renderDeetItem(
-                  'rfp',
-                  <Link to={`/rfps/${p.rfp.id}`}>{p.rfp.title}</Link>,
-                )}
+              renderDeetItem(
+                'rfp',
+                <Link to={`/rfps/${p.rfp.id}`}>{p.rfp.title}</Link>,
+              )}
             </Card>
 
             {/* TEAM */}
-            <Card title="Team" size="small">
+            <Card title='Team' size='small'>
               {p.team.map(t => (
                 <div key={t.userid}>
                   <Link to={`/users/${t.userid}`}>{t.displayName}</Link>
@@ -782,6 +780,10 @@ class ProposalDetailNaked extends React.Component<Props, State> {
     const mid = store.proposalDetail!.currentMilestone!.id;
     await store.markMilestonePaid(pid, mid, this.state.paidTxId);
     message.success('Marked milestone paid.');
+  };
+
+  private handleSwitchFunder = async (checkValue: boolean) => {
+    store.switchProposalFunder(checkValue);
   };
 }
 

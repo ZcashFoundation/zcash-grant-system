@@ -1,8 +1,8 @@
 import datetime
 import json
-from typing import Optional
 from decimal import Decimal, ROUND_DOWN
 from functools import reduce
+from typing import Optional
 
 from marshmallow import post_dump
 from sqlalchemy import func, or_, select, ForeignKey
@@ -10,15 +10,14 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import column_property
 
 from grant.comment.models import Comment
-from grant.milestone.models import Milestone
 from grant.email.send import send_email
 from grant.extensions import ma, db
+from grant.milestone.models import Milestone
 from grant.settings import PROPOSAL_STAKING_AMOUNT, PROPOSAL_TARGET_MAX
 from grant.task.jobs import ContributionExpired
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
-    Category,
     ContributionStatus,
     ProposalArbiterStatus,
     MilestoneStage,
@@ -332,7 +331,8 @@ class ProposalRevision(db.Model):
         if old_proposal.title != new_proposal.title:
             proposal_changes.append({"type": ProposalChange.PROPOSAL_EDIT_TITLE})
 
-        milestone_changes = ProposalRevision.calculate_milestone_changes(old_proposal.milestones, new_proposal.milestones)
+        milestone_changes = ProposalRevision.calculate_milestone_changes(old_proposal.milestones,
+                                                                         new_proposal.milestones)
 
         return proposal_changes + milestone_changes
 
@@ -392,6 +392,7 @@ class Proposal(db.Model):
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
     kyc_approved = db.Column(db.Boolean(), nullable=True, default=False)
+    funded_by_zomg = db.Column(db.Boolean(), nullable=True, default=False)
 
     accepted_with_funding = db.Column(db.Boolean(), nullable=True)
     changes_requested_discussion = db.Column(db.Boolean(), nullable=True)
@@ -422,21 +423,23 @@ class Proposal(db.Model):
     )
     followers_count = column_property(
         select([func.count(proposal_follower.c.proposal_id)])
-        .where(proposal_follower.c.proposal_id == id)
-        .correlate_except(proposal_follower)
+            .where(proposal_follower.c.proposal_id == id)
+            .correlate_except(proposal_follower)
     )
     likes = db.relationship(
         "User", secondary=proposal_liker, back_populates="liked_proposals"
     )
     likes_count = column_property(
         select([func.count(proposal_liker.c.proposal_id)])
-        .where(proposal_liker.c.proposal_id == id)
-        .correlate_except(proposal_liker)
+            .where(proposal_liker.c.proposal_id == id)
+            .correlate_except(proposal_liker)
     )
     live_draft_parent_id = db.Column(db.Integer, ForeignKey('proposal.id'))
-    live_draft = db.relationship("Proposal", uselist=False, backref=db.backref('live_draft_parent', remote_side=[id], uselist=False))
+    live_draft = db.relationship("Proposal", uselist=False,
+                                 backref=db.backref('live_draft_parent', remote_side=[id], uselist=False))
 
-    revisions = db.relationship(ProposalRevision, foreign_keys=[ProposalRevision.proposal_id], lazy=True, cascade="all, delete-orphan")
+    revisions = db.relationship(ProposalRevision, foreign_keys=[ProposalRevision.proposal_id], lazy=True,
+                                cascade="all, delete-orphan")
 
     def __init__(
             self,
@@ -527,14 +530,13 @@ class Proposal(db.Model):
         # Validate payout address
         if not is_z_address_valid(self.payout_address):
             raise ValidationException("Payout address is not a valid z address")
-        
+
         # Validate tip jar address
         if self.tip_jar_address and not is_z_address_valid(self.tip_jar_address):
             raise ValidationException("Tip address is not a valid z address")
 
         # Then run through regular validation
         Proposal.simple_validate(vars(self))
-
 
     def validate_milestone_days(self):
         for milestone in self.milestones:
@@ -612,11 +614,11 @@ class Proposal(db.Model):
         self.rfp_opt_in = opt_in
 
     def create_contribution(
-        self,
-        amount,
-        user_id: int = None,
-        staking: bool = False,
-        private: bool = True,
+            self,
+            amount,
+            user_id: int = None,
+            staking: bool = False,
+            private: bool = True,
     ):
         contribution = ProposalContribution(
             proposal_id=self.id,
@@ -923,8 +925,8 @@ class Proposal(db.Model):
             return False
         res = (
             db.session.query(proposal_follower)
-            .filter_by(user_id=authed.id, proposal_id=self.id)
-            .count()
+                .filter_by(user_id=authed.id, proposal_id=self.id)
+                .count()
         )
         if res:
             return True
@@ -939,8 +941,8 @@ class Proposal(db.Model):
             return False
         res = (
             db.session.query(proposal_liker)
-            .filter_by(user_id=authed.id, proposal_id=self.id)
-            .count()
+                .filter_by(user_id=authed.id, proposal_id=self.id)
+                .count()
         )
         if res:
             return True
@@ -1099,7 +1101,8 @@ class ProposalSchema(ma.Schema):
             "changes_requested_discussion",
             "changes_requested_discussion_reason",
             "live_draft_id",
-            "kyc_approved"
+            "kyc_approved",
+            "funded_by_zomg"
         )
 
     date_created = ma.Method("get_date_created")
@@ -1109,6 +1112,7 @@ class ProposalSchema(ma.Schema):
     is_version_two = ma.Method("get_is_version_two")
     tip_jar_view_key = ma.Method("get_tip_jar_view_key")
     live_draft_id = ma.Method("get_live_draft_id")
+    funded_by_zomg = ma.Method("get_funded_by_zomg")
 
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
@@ -1117,6 +1121,14 @@ class ProposalSchema(ma.Schema):
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
     rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
     arbiter = ma.Nested("ProposalArbiterSchema", exclude=["proposal"])
+
+    def get_funded_by_zomg(self, obj):
+        if obj.funded_by_zomg is None:
+            return False
+        elif obj.funded_by_zomg is False:
+            return False
+        else:
+            return True
 
     def get_proposal_id(self, obj):
         return obj.id

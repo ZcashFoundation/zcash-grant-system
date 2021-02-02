@@ -81,6 +81,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   liveDraftId: string | null;
   isTeamMember?: boolean; // FE derived
   isArbiter?: boolean; // FE derived
+  fundedByZomg: boolean;
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {
