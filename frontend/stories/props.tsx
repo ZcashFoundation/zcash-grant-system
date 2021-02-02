@@ -170,6 +170,7 @@ export function generateProposal({
     liveDraftId: null,
     tipJarAddress: null,
     tipJarViewKey: null,
+    fundedByZomg: false,
     arbiter: {
       status: PROPOSAL_ARBITER_STATUS.ACCEPTED,
       user: {
