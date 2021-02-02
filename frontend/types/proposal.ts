@@ -125,6 +125,7 @@ export interface UserProposal {
   changesRequestedDiscussionReason: string | null;
   acceptedWithFunding: boolean | null;
   isVersionTwo: boolean;
+  fundedByZomg: boolean;
 }
 
 // NOTE: sync with backend/grant/proposal/models.py STATUSES
