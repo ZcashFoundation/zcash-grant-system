@@ -465,6 +465,7 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         self.stage = stage
         self.version = '2'
+        self.funded_by_zomg = True
 
     @staticmethod
     def simple_validate(proposal):
