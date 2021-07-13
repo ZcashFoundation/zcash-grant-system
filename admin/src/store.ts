@@ -2,17 +2,17 @@ import { pick } from 'lodash';
 import { store } from 'react-easy-state';
 import axios, { AxiosError } from 'axios';
 import {
-  User,
-  Proposal,
   CCR,
+  CommentArgs,
   Contribution,
   ContributionArgs,
+  EmailExample,
+  PageData,
+  PageQuery,
+  Proposal,
   RFP,
   RFPArgs,
-  EmailExample,
-  PageQuery,
-  PageData,
-  CommentArgs,
+  User,
 } from './types';
 
 // API
@@ -139,6 +139,16 @@ async function approveDiscussion(
     isOpenForDiscussion,
     rejectReason,
   });
+  return data;
+}
+
+async function switchProposalFunder(id: number, fundedByZomg: boolean) {
+  const { data } = await api.put(`/admin/proposals/${id}/adjust-funder`, {fundedByZomg});
+  return data;
+}
+
+async function approveProposalKYC(id: number) {
+  const { data } = await api.put(`/admin/proposals/${id}/approve-kyc`);
   return data;
 }
 
@@ -345,6 +355,8 @@ const app = store({
   proposalDetailApprovingDiscussion: false,
   proposalDetailMarkingChangesAsResolved: false,
   proposalDetailAcceptingProposal: false,
+  proposalDetailApprovingKyc: false,
+  proposalDetailSwitchingFunder: false,
   proposalDetailMarkingMilestonePaid: false,
   proposalDetailCanceling: false,
   proposalDetailUpdating: false,
@@ -688,6 +700,43 @@ const app = store({
       handleApiError(e);
     }
   },
+
+  async switchProposalFunder(fundedByZomg: boolean) {
+    if (!app.proposalDetail) {
+      const m = 'store.acceptProposal(): Expected proposalDetail to be populated!';
+      app.generalError.push(m);
+      console.error(m);
+      return;
+    }
+    app.proposalDetailSwitchingFunder = true;
+    try {
+      const { proposalId } = app.proposalDetail;
+      const res = await switchProposalFunder(proposalId, fundedByZomg);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailSwitchingFunder = false;
+  },
+
+  async approveProposalKYC() {
+    if (!app.proposalDetail) {
+      const m = 'store.acceptProposal(): Expected proposalDetail to be populated!';
+      app.generalError.push(m);
+      console.error(m);
+      return;
+    }
+    app.proposalDetailApprovingKyc = true;
+    try {
+      const { proposalId } = app.proposalDetail;
+      const res = await approveProposalKYC(proposalId);
+      app.updateProposalInStore(res);
+    } catch (e) {
+      handleApiError(e);
+    }
+    app.proposalDetailApprovingKyc = false;
+  },
+
   async acceptProposal(
     isAccepted: boolean,
     withFunding: boolean,
@@ -975,6 +1024,7 @@ function createDefaultPageData<T>(sort: string): PageData<T> {
 }
 
 type FNFetchPage = (params: PageQuery) => Promise<any>;
+
 interface PageParent<T> {
   page: PageData<T>;
 }

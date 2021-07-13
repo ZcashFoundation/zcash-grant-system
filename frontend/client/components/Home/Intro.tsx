@@ -30,8 +30,8 @@ const HomeIntro: React.SFC<Props> = ({ t, authUser }) => (
             {t('home.intro.signup')}
           </Link>
         )}
-        <Link className="HomeIntro-content-buttons-button" to="/create-request">
-          {t('home.intro.ccr')}
+        <Link className="HomeIntro-content-buttons-button" to="/create">
+          Create a Proposal
         </Link>
       </div>
     </div>

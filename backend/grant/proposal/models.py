@@ -1,8 +1,8 @@
 import datetime
 import json
-from typing import Optional
 from decimal import Decimal, ROUND_DOWN
 from functools import reduce
+from typing import Optional
 
 from marshmallow import post_dump
 from sqlalchemy import func, or_, select, ForeignKey
@@ -10,15 +10,14 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import column_property
 
 from grant.comment.models import Comment
-from grant.milestone.models import Milestone
 from grant.email.send import send_email
 from grant.extensions import ma, db
+from grant.milestone.models import Milestone
 from grant.settings import PROPOSAL_STAKING_AMOUNT, PROPOSAL_TARGET_MAX
 from grant.task.jobs import ContributionExpired
 from grant.utils.enums import (
     ProposalStatus,
     ProposalStage,
-    Category,
     ContributionStatus,
     ProposalArbiterStatus,
     MilestoneStage,
@@ -332,43 +331,49 @@ class ProposalRevision(db.Model):
         if old_proposal.title != new_proposal.title:
             proposal_changes.append({"type": ProposalChange.PROPOSAL_EDIT_TITLE})
 
-        milestone_changes = ProposalRevision.calculate_milestone_changes(old_proposal.milestones, new_proposal.milestones)
+        milestone_changes = ProposalRevision.calculate_milestone_changes(old_proposal.milestones,
+                                                                         new_proposal.milestones)
 
         return proposal_changes + milestone_changes
 
 
 def default_proposal_content():
-    return """# Applicant background
+    return """### If you have any doubts about the questions below, please reach out to anyone on the ZOMG on the [Zcash forums](https://forum.zcashcommunity.com/). 
 
-Summarize you and/or your team’s background and experience. Demonstrate that you have the skills and expertise necessary for the project that you’re proposing. Institutional bona fides are not required, but we want to hear about your track record.
+# Description of Problem or Opportunity  
+In addition to describing the problem/opportunity, please give a sense of how serious or urgent of a need you believe this to be. What evidence do you have? What validation have you already done, or how do you think you could validate this? 
 
-# Motivation and overview
+# Proposed Solution 
+Describe the solution at a high level. Please be specific about who the users and stakeholders are and how they would interact with your solution. E.g. retail ZEC holders, Zcash core devs, wallet devs, DeFi users, potential Zcash community participants.  
 
-What are your high-level goals? Why are they important? How is your project connected to [ZF’s mission](https://www.zfnd.org/about/#mission) and priorities? Whose needs will it serve?
+# Solution Format 
+What is the exact form of the deliverable you’re creating? E.g. code shipped within the zcashd and zebra code bases, a website, a feature within a wallet, a text/markdown file, user manuals, etc.
 
 # Technical approach
-
 Dive into the _how_ of your project. Describe your approaches, components, workflows, methodology, etc. Bullet points and diagrams are appreciated!
 
+# How big of a problem would it be to not solve this problem? 
+
 # Execution risks
+What obstacles do you expect? What is most likely to go wrong? Which unknown factors or dependencies could jeopardize success? Who would have to incorporate your work in order for it to be usable?
 
-What obstacles do you expect? What is most likely to go wrong? Which unknown factors or dependencies could jeopardize success? What are your contingency plans? Will subsequent activities be required to maximize impact?
 
-# Downsides
-
+# Unintended Consequences Downsides
 What are the negative ramifications if your project is successful? Consider usability, stability, privacy, integrity, availability, decentralization, interoperability, maintainability, technical debt, requisite education, etc.
 
 # Evaluation plan
+What metrics for success can you share with the community once you’re done? In addition to quantitative metrics, what qualitative metrics do you think you could report?
 
-What will your project look like if successful? How will we be able to tell? Include quantifiable metrics if possible.
 
-# Tasks and schedule
-
+# Schedule and Milestones
 What is your timeline for the project? Include concrete milestones and the major tasks required to complete each milestone.
 
-# Budget and justification
+# Budget and Payout Timeline
 
-How much funding do you need, and how will it be allocated (e.g., compensation for your effort, specific equipment, specific external services)? Specify a total cost, break it up into budget items, and explain the rationale for each. Feel free to present multiple options in terms of scope and cost.
+How much funding do you need, and how will it be allocated (e.g., compensation for your effort, specific equipment, specific external services)? Please tie your payout timelines to the milestones presented in the previous step. Convention has been for applicants to base their budget on hours of work and an hourly rate, but we are open to proposals based on the value of outcomes instead.  
+
+# Applicant background
+Summarize you and/or your team’s background and experience. Demonstrate that you have the skills and expertise necessary for the project that you’re proposing. Institutional bona fides are not required, but we want to hear about your track record.
 
 """
 
@@ -391,6 +396,9 @@ class Proposal(db.Model):
     date_approved = db.Column(db.DateTime)
     date_published = db.Column(db.DateTime)
     reject_reason = db.Column(db.String())
+    kyc_approved = db.Column(db.Boolean(), nullable=True, default=False)
+    funded_by_zomg = db.Column(db.Boolean(), nullable=True, default=False)
+
     accepted_with_funding = db.Column(db.Boolean(), nullable=True)
     changes_requested_discussion = db.Column(db.Boolean(), nullable=True)
     changes_requested_discussion_reason = db.Column(db.String(255), nullable=True)
@@ -420,21 +428,23 @@ class Proposal(db.Model):
     )
     followers_count = column_property(
         select([func.count(proposal_follower.c.proposal_id)])
-        .where(proposal_follower.c.proposal_id == id)
-        .correlate_except(proposal_follower)
+            .where(proposal_follower.c.proposal_id == id)
+            .correlate_except(proposal_follower)
     )
     likes = db.relationship(
         "User", secondary=proposal_liker, back_populates="liked_proposals"
     )
     likes_count = column_property(
         select([func.count(proposal_liker.c.proposal_id)])
-        .where(proposal_liker.c.proposal_id == id)
-        .correlate_except(proposal_liker)
+            .where(proposal_liker.c.proposal_id == id)
+            .correlate_except(proposal_liker)
     )
     live_draft_parent_id = db.Column(db.Integer, ForeignKey('proposal.id'))
-    live_draft = db.relationship("Proposal", uselist=False, backref=db.backref('live_draft_parent', remote_side=[id], uselist=False))
+    live_draft = db.relationship("Proposal", uselist=False,
+                                 backref=db.backref('live_draft_parent', remote_side=[id], uselist=False))
 
-    revisions = db.relationship(ProposalRevision, foreign_keys=[ProposalRevision.proposal_id], lazy=True, cascade="all, delete-orphan")
+    revisions = db.relationship(ProposalRevision, foreign_keys=[ProposalRevision.proposal_id], lazy=True,
+                                cascade="all, delete-orphan")
 
     def __init__(
             self,
@@ -460,6 +470,7 @@ class Proposal(db.Model):
         self.deadline_duration = deadline_duration
         self.stage = stage
         self.version = '2'
+        self.funded_by_zomg = True
 
     @staticmethod
     def simple_validate(proposal):
@@ -525,14 +536,13 @@ class Proposal(db.Model):
         # Validate payout address
         if not is_z_address_valid(self.payout_address):
             raise ValidationException("Payout address is not a valid z address")
-        
+
         # Validate tip jar address
         if self.tip_jar_address and not is_z_address_valid(self.tip_jar_address):
             raise ValidationException("Tip address is not a valid z address")
 
         # Then run through regular validation
         Proposal.simple_validate(vars(self))
-
 
     def validate_milestone_days(self):
         for milestone in self.milestones:
@@ -610,11 +620,11 @@ class Proposal(db.Model):
         self.rfp_opt_in = opt_in
 
     def create_contribution(
-        self,
-        amount,
-        user_id: int = None,
-        staking: bool = False,
-        private: bool = True,
+            self,
+            amount,
+            user_id: int = None,
+            staking: bool = False,
+            private: bool = True,
     ):
         contribution = ProposalContribution(
             proposal_id=self.id,
@@ -921,8 +931,8 @@ class Proposal(db.Model):
             return False
         res = (
             db.session.query(proposal_follower)
-            .filter_by(user_id=authed.id, proposal_id=self.id)
-            .count()
+                .filter_by(user_id=authed.id, proposal_id=self.id)
+                .count()
         )
         if res:
             return True
@@ -937,8 +947,8 @@ class Proposal(db.Model):
             return False
         res = (
             db.session.query(proposal_liker)
-            .filter_by(user_id=authed.id, proposal_id=self.id)
-            .count()
+                .filter_by(user_id=authed.id, proposal_id=self.id)
+                .count()
         )
         if res:
             return True
@@ -1096,7 +1106,9 @@ class ProposalSchema(ma.Schema):
             "tip_jar_view_key",
             "changes_requested_discussion",
             "changes_requested_discussion_reason",
-            "live_draft_id"
+            "live_draft_id",
+            "kyc_approved",
+            "funded_by_zomg"
         )
 
     date_created = ma.Method("get_date_created")
@@ -1106,6 +1118,7 @@ class ProposalSchema(ma.Schema):
     is_version_two = ma.Method("get_is_version_two")
     tip_jar_view_key = ma.Method("get_tip_jar_view_key")
     live_draft_id = ma.Method("get_live_draft_id")
+    funded_by_zomg = ma.Method("get_funded_by_zomg")
 
     updates = ma.Nested("ProposalUpdateSchema", many=True)
     team = ma.Nested("UserSchema", many=True)
@@ -1114,6 +1127,14 @@ class ProposalSchema(ma.Schema):
     invites = ma.Nested("ProposalTeamInviteSchema", many=True)
     rfp = ma.Nested("RFPSchema", exclude=["accepted_proposals"])
     arbiter = ma.Nested("ProposalArbiterSchema", exclude=["proposal"])
+
+    def get_funded_by_zomg(self, obj):
+        if obj.funded_by_zomg is None:
+            return False
+        elif obj.funded_by_zomg is False:
+            return False
+        else:
+            return True
 
     def get_proposal_id(self, obj):
         return obj.id

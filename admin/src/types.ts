@@ -123,6 +123,8 @@ export interface Proposal {
   isVersionTwo: boolean;
   changesRequestedDiscussion: boolean | null;
   changesRequestedDiscussionReason: string | null;
+  kycApproved: null | boolean;
+  fundedByZomg: boolean;
 }
 export interface Comment {
   id: number;
