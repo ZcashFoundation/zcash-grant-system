@@ -69,43 +69,43 @@ const routeConfigs: RouteConfig[] = [
       isFullScreen: true,
     },
   },
-  {
-    // Create request
-    route: {
-      path: '/create-request',
-      component: CreateRequest,
-    },
-    template: {
-      title: 'Create a Request',
-    },
-    onlyLoggedIn: true,
-  },
-  {
-    // Request edit page
-    route: {
-      path: '/ccrs/:id/edit',
-      component: RequestEdit,
-    },
-    template: {
-      title: 'Edit Request',
-      isFullScreen: true,
-      hideFooter: true,
-    },
-    onlyLoggedIn: true,
-  },
-  {
-    // Request view page
-    route: {
-      path: '/ccrs/:id',
-      component: Ccr,
-    },
-    template: {
-      title: 'View Request',
-      isFullScreen: true,
-      hideFooter: true,
-    },
-    onlyLoggedIn: true,
-  },
+  // {
+  //   // Create request
+  //   route: {
+  //     path: '/create-request',
+  //     component: CreateRequest,
+  //   },
+  //   template: {
+  //     title: 'Create a Request',
+  //   },
+  //   onlyLoggedIn: true,
+  // },
+  // {
+  //   // Request edit page
+  //   route: {
+  //     path: '/ccrs/:id/edit',
+  //     component: RequestEdit,
+  //   },
+  //   template: {
+  //     title: 'Edit Request',
+  //     isFullScreen: true,
+  //     hideFooter: true,
+  //   },
+  //   onlyLoggedIn: true,
+  // },
+  // {
+  //   // Request view page
+  //   route: {
+  //     path: '/ccrs/:id',
+  //     component: Ccr,
+  //   },
+  //   template: {
+  //     title: 'View Request',
+  //     isFullScreen: true,
+  //     hideFooter: true,
+  //   },
+  //   onlyLoggedIn: true,
+  // },
   {
     // Create proposal
     route: {
