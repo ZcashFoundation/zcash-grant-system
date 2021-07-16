@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { UserProposal, STATUS } from 'types';
+import { STATUS, UserProposal } from 'types';
 import './ProfileProposal.less';
 import UserRow from 'components/UserRow';
 import UnitDisplay from 'components/UnitDisplay';
@@ -23,7 +23,8 @@ export default class Profile extends React.Component<OwnProps> {
       isVersionTwo,
       acceptedWithFunding,
       status,
-      changesRequestedDiscussionReason 
+      changesRequestedDiscussionReason,
+      fundedByZomg,
     } = this.props.proposal;
 
     // pulled from `variables.less`
@@ -31,18 +32,24 @@ export default class Profile extends React.Component<OwnProps> {
     const secondaryColor = '#2D2A26';
 
     const isOpenForDiscussion = status === STATUS.DISCUSSION;
-    const discussionColor = changesRequestedDiscussionReason ? 'red' : infoColor
-    const discussionTag = changesRequestedDiscussionReason ? 'Changes Requested' : 'Open for Public Review'
+    const discussionColor = changesRequestedDiscussionReason ? 'red' : infoColor;
+    const discussionTag = changesRequestedDiscussionReason
+      ? 'Changes Requested'
+      : 'Open for Public Review';
 
-    let tagColor = infoColor
-    let tagMessage = 'Open for Contributions'
+    let tagColor = infoColor;
+    let tagMessage = 'Open for Contributions';
 
     if (acceptedWithFunding) {
-      tagColor = secondaryColor
-      tagMessage = 'Funded by ZF'
+      tagColor = secondaryColor;
+      if (!fundedByZomg) {
+        tagMessage = 'Funded by ZF';
+      } else {
+        tagMessage = 'Funded by ZOMG';
+      }
     } else if (isOpenForDiscussion) {
-      tagColor = discussionColor
-      tagMessage = discussionTag
+      tagColor = discussionColor;
+      tagMessage = discussionTag;
     }
 
     return (

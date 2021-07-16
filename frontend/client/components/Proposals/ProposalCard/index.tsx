@@ -29,6 +29,7 @@ export class ProposalCard extends React.Component<Proposal> {
       percentFunded,
       acceptedWithFunding,
       status,
+      fundedByZomg,
     } = this.props;
 
     // pulled from `variables.less`
@@ -46,7 +47,11 @@ export class ProposalCard extends React.Component<Proposal> {
     if (isVersionTwo && status === STATUS.LIVE) {
       if (acceptedWithFunding) {
         tagColor = secondaryColor;
-        tagMessage = 'Funded by ZF';
+        if (!fundedByZomg) {
+          tagMessage = 'Funded by ZF';
+        } else {
+          tagMessage = 'Funded by ZOMG';
+        }
       } else {
         tagColor = infoColor;
         tagMessage = 'Not Funded';

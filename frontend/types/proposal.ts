@@ -81,6 +81,7 @@ export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {
   liveDraftId: string | null;
   isTeamMember?: boolean; // FE derived
   isArbiter?: boolean; // FE derived
+  fundedByZomg: boolean;
 }
 
 export interface TeamInviteWithProposal extends TeamInvite {
@@ -124,6 +125,7 @@ export interface UserProposal {
   changesRequestedDiscussionReason: string | null;
   acceptedWithFunding: boolean | null;
   isVersionTwo: boolean;
+  fundedByZomg: boolean;
 }
 
 // NOTE: sync with backend/grant/proposal/models.py STATUSES

@@ -1,0 +1,34 @@
+
+.KYCModal {
+  &.ant-modal {
+    width: 50vw !important;
+
+  }
+
+  & .ant-modal-body {
+    padding-right: 2.5vw;
+    padding-left: 2.5vw;
+  }
+
+  & ::marker {
+    content: counters(list-item, '.') ':';
+    color: #CF8A00;
+    font-weight: bold;
+  }
+
+  & ol ol {
+    padding-left: 60px;
+  }
+
+  & li {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    margin-bottom: 5px;
+
+  }
+
+  & li li {
+    counter-reset: section
+  }
+
+}

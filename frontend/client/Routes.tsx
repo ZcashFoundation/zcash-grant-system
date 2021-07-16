@@ -37,6 +37,7 @@ const Tos = loadable(() => import('pages/tos'));
 const ProposalTutorial = loadable(() => import('pages/proposal-tutorial'));
 const About = loadable(() => import('pages/about'), opts);
 const Privacy = loadable(() => import('pages/privacy'), opts);
+const Kyc = loadable(() => import('pages/kyc'), opts);
 const Contact = loadable(() => import('pages/contact'), opts);
 const CodeOfConduct = loadable(() => import('pages/code-of-conduct'), opts);
 const VerifyEmail = loadable(() => import('pages/email-verify'), opts);
@@ -251,6 +252,18 @@ const routeConfigs: RouteConfig[] = [
     },
     template: {
       title: 'About',
+    },
+    onlyLoggedIn: false,
+  },
+  {
+    // Privacy page
+    route: {
+      path: '/kyc',
+      component: Kyc,
+      exact: true,
+    },
+    template: {
+      title: 'KYC',
     },
     onlyLoggedIn: false,
   },
