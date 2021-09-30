@@ -17,6 +17,8 @@ import log from './log';
 import serverRender from './render';
 import i18n from './i18n';
 
+// @ts-ignore
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 process.env.SERVER_SIDE_RENDER = 'true';
 const isDev = process.env.NODE_ENV === 'development';
 
