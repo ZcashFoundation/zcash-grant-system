@@ -86,9 +86,16 @@ const STEP_INFO: { [key in CREATE_STEP]: StepInfo } = {
   [CREATE_STEP.MILESTONES]: {
     short: 'Milestones',
     title: 'Set up milestones for deliverables',
-    subtitle: 'Make a timeline of when you’ll complete tasks, and receive funds',
+    subtitle: (
+      <>
+        Make a timeline of when you’ll complete tasks, and receive funds. <br />
+        Milestone deliverables must be specific and verifiable upon completion. <br />
+        Consider how success will be measured, both for individual deliverables, and the
+        project overall.
+      </>
+    ),
     help:
-      'Contributors are more willing to fund proposals with funding spread across multiple milestones',
+      'ZOMG & ZF are more willing to fund proposals with milestones based on verifiable deliverables.',
     component: Milestones,
   },
   [CREATE_STEP.PAYMENT]: {
@@ -146,6 +153,7 @@ class CreateFlow extends React.Component<Props, State> {
       queryStep && CREATE_STEP[queryStep]
         ? (CREATE_STEP[queryStep] as CREATE_STEP)
         : CREATE_STEP.BASICS;
+    // @ts-ignore
     const noExplain = !!ls<LSExplainer>('noExplain');
 
     this.state = {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Timeline } from 'antd';
-import { getCreateErrors, KeyOfForm, FIELD_NAME_MAP } from 'modules/create/utils';
+import { FIELD_NAME_MAP, getCreateErrors, KeyOfForm } from 'modules/create/utils';
 import Markdown from 'components/Markdown';
 import UserAvatar from 'components/UserAvatar';
 import { AppState } from 'store/reducers';
@@ -51,6 +51,11 @@ class CreateReview extends React.Component<Props> {
             key: 'rfpOptIn',
             content: <div>{form.rfpOptIn ? 'Accepted' : 'Declined'}</div>,
             error: errors.rfpOptIn,
+          },
+          {
+            key: 'postAgreementOptIn',
+            content: <div>{form.postAgreementOptIn ? 'Accepted' : 'Declined'}</div>,
+            error: errors.postAgreementOptIn,
           },
           {
             key: 'brief',

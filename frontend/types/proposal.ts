@@ -54,6 +54,7 @@ export interface ProposalDraft {
   deadlineDuration?: number;
   rfp?: RFP;
   rfpOptIn?: boolean;
+  postAgreementOptIn?: boolean;
 }
 
 export interface Proposal extends Omit<ProposalDraft, 'target' | 'invites'> {

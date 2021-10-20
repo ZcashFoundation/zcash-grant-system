@@ -32,7 +32,8 @@ interface State extends Partial<ProposalDraft> {
   brief: string;
   target: string;
   rfp?: RFP;
-  visible: boolean
+  visible: boolean;
+  postAgreementOptIn: boolean;
 }
 
 class CreateFlowBasics extends React.Component<Props, State> {
@@ -43,6 +44,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
       brief: '',
       target: '',
       visible: false,
+      postAgreementOptIn: false,
       ...(props.initialState || {}),
     };
   }
@@ -81,7 +83,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
 
   render() {
     const { isUnlinkingProposalRFP } = this.props;
-    const { title, brief, target, rfp, rfpOptIn } = this.state;
+    const { title, brief, target, rfp, rfpOptIn, postAgreementOptIn } = this.state;
     if (rfp && rfp.bounty && (target === null || target === '0')) {
       this.setState({ target: rfp.bounty.toString() });
     }
@@ -124,7 +126,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
         <Alert
           className='CreateFlow-rfpAlert'
           type='warning'
-          message='KYC (know your customer)'
+          message='Terms & Conditions and KYC (know your customer)'
           description={
             <>
               <div>
@@ -132,12 +134,39 @@ class CreateFlowBasics extends React.Component<Props, State> {
                 provide identifying information to the Zcash Foundation.
                 <Radio.Group onChange={this.handleRfpOptIn}>
                   <Radio value={true} checked={rfpOptIn && rfpOptIn === true}>
-                    <b>Yes</b>, I am willing to provide KYC information as outlined by the <span
-                    onClick={() => this.showModal()} style={{ color: 'CF8A00', textDecoration: 'underline' }}>ZF KYC requirements</span>
+                    <b>Yes</b>, I agree to all terms and conditions in the Grant Agreement and am willing to provide KYC
+                    information as outlined in the <a target={'_blank'}
+                                                      href={'https://www.zfnd.org/about/grant-agreement/'}>Grant
+                    Agreement</a>
                   </Radio>
                   <Radio value={false} checked={rfpOptIn !== null && rfpOptIn === false}>
-                    <b>No</b>, I do not wish to provide KYC information and understand I will not be able to submit my
-                    proposal.
+                    <b>No</b>, I do not agree to the <a target={'_blank'}
+                                                        href={'https://www.zfnd.org/about/grant-agreement/'}>Grant
+                    Agreement</a> and/or I do not wish to provide KYC information and understand I will not be able to
+                    submit my proposal.
+                  </Radio>
+                </Radio.Group>
+              </div>
+            </>
+          }
+        />
+
+        <Alert
+          className='CreateFlow-rfpAlert'
+          type='warning'
+          message='Zcash Community Forum Post Agreement'
+          description={
+            <>
+              <div>
+                I acknowledge it is my responsibility to post the details of this request on the <a
+                href={'https://forum.zcashcommunity.com/'}>Zcash Community Forum</a> for community input prior to ZOMG
+                discussing and voting on this request.
+                <Radio.Group onChange={this.handlePostAgreementOptIn}>
+                  <Radio value={true} checked={postAgreementOptIn && postAgreementOptIn === true}>
+                    <b>Yes</b>
+                  </Radio>
+                  <Radio value={false} checked={postAgreementOptIn !== null && postAgreementOptIn === false}>
+                    <b>No</b>
                   </Radio>
                 </Radio.Group>
               </div>
@@ -165,27 +194,39 @@ class CreateFlowBasics extends React.Component<Props, State> {
                 </li>
 
                 <li>The Foundation will run a Sanctions Screening and Fraud Monitoring on each recipient of its funds.
-                  As a condition of receiving the funds you represent to us, now and until the latter of the submission of a
-                  report on the status of the work covered by the proposal or the use of all of the funds, (i) that you are not
+                  As a condition of receiving the funds you represent to us, now and until the latter of the submission
+                  of a
+                  report on the status of the work covered by the proposal or the use of all of the funds, (i) that you
+                  are not
                   in violation of any law relating to terrorism or money laundering (“Anti-Terrorism Laws”), including
-                  Executive Order No. 13224 on Terrorist Financing, effective September 24, 2001 (the “Executive Order”), and the
+                  Executive Order No. 13224 on Terrorist Financing, effective September 24, 2001 (the “Executive
+                  Order”), and the
                   Uniting and Strengthening America by Providing Appropriate Tools Required to Intercept and Obstruct
-                  Terrorism Act of 2001(Title III of P.L. No. 107-56) (known as the “PATRIOT Act”). (ii) neither you or any affiliated
-                  person or entity is a person that is listed in the annex to, or is otherwise subject to the provisions of,
-                  the Executive Order or a person that is named as a “specially designated national and blocked person” on
-                  the most current list published by the US Department of the Treasury, Office of Foreign Assets Control (“OFAC”) at its
+                  Terrorism Act of 2001(Title III of P.L. No. 107-56) (known as the “PATRIOT Act”). (ii) neither you or
+                  any affiliated
+                  person or entity is a person that is listed in the annex to, or is otherwise subject to the provisions
+                  of,
+                  the Executive Order or a person that is named as a “specially designated national and blocked person”
+                  on
+                  the most current list published by the US Department of the Treasury, Office of Foreign Assets Control
+                  (“OFAC”) at its
                   official website or any replacement website or other replacement official publication of such list;
-                  (iii) neither you or any affiliated person or entity is subject to blocking provisions or otherwise a target of
-                  sanctions imposed under any sanctions program administered by OFAC; and (iv) neither you or any affiliate person
+                  (iii) neither you or any affiliated person or entity is subject to blocking provisions or otherwise a
+                  target of
+                  sanctions imposed under any sanctions program administered by OFAC; and (iv) neither you or any
+                  affiliate person
                   or entity deals in, or otherwise engages in any transaction relating to any property or interests in
                   property blocked pursuant to the Executive Order.
                 </li>
 
                 <li>With certain limited exceptions, in the following January the Zcash Foundation will report the value
-                  of the funds as taxable income on either US tax form 1099-MISC (for US taxpayers) or 1042-S (for foreign
-                  persons). These forms will report the value of the award in USD at the date it was distributed. You may need to
+                  of the funds as taxable income on either US tax form 1099-MISC (for US taxpayers) or 1042-S (for
+                  foreign
+                  persons). These forms will report the value of the award in USD at the date it was distributed. You
+                  may need to
                   include this income when filing your taxes, and it may affect your total tax due and estimated tax
-                  payments. Here are more details on <a href={'https://www.irs.gov/forms-pubs/about-form-1099-misc'}>filing the
+                  payments. Here are more details on <a href={'https://www.irs.gov/forms-pubs/about-form-1099-misc'}>filing
+                    the
                     1099-MISC</a> in the US, and its tax implications.
                 </li>
               </ol>
@@ -265,7 +306,7 @@ class CreateFlowBasics extends React.Component<Props, State> {
     );
   }
 
-  private handleInputChange = (
+  handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { value, name } = event.currentTarget;
@@ -274,13 +315,20 @@ class CreateFlowBasics extends React.Component<Props, State> {
     });
   };
 
-  private handleRfpOptIn = (e: RadioChangeEvent) => {
+  handleRfpOptIn = (e: RadioChangeEvent) => {
     this.setState({ rfpOptIn: e.target.value }, () => {
       this.props.updateForm(this.state);
     });
   };
 
-  private unlinkRfp = () => {
+  handlePostAgreementOptIn = (e: RadioChangeEvent) => {
+    this.setState({ postAgreementOptIn: e.target.value }, () => {
+      this.props.updateForm(this.state);
+    });
+  };
+
+
+  unlinkRfp = () => {
     this.props.unlinkProposalRFP(this.props.proposalId);
   };
 }

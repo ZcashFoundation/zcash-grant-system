@@ -136,7 +136,7 @@ const MilestoneFields = ({
       <Input.TextArea
         rows={3}
         name="content"
-        placeholder="Description of what will be delivered"
+        placeholder="Description of what will be delivered. Deliverables must be specific and verifiable upon completion. Consider how success will be measured for individual deliverables and then the project overall."
         value={milestone.content}
         onChange={ev =>
           onChange(index, { ...milestone, content: ev.currentTarget.value })
@@ -192,7 +192,7 @@ const MilestoneFields = ({
           >
             <span style={{ opacity: 0.7 }}>Payout Immediately</span>
           </Checkbox>
-          <Tooltip title="Allows the milestone to be paid out immediately if the proposal is accepted with funding.">
+          <Tooltip title="&quot;Payout Immediately&quot; should only be selected if there are demonstrable startup costs for this project.">
             <Icon type="info-circle" style={{ fontSize: '16px' }} />
           </Tooltip>
         </div>

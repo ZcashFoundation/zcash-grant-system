@@ -24,6 +24,7 @@ import {
 
 interface CreateFormErrors {
   rfpOptIn?: string;
+  postAgreementOptIn?: string;
   title?: string;
   brief?: string;
   target?: string;
@@ -37,6 +38,7 @@ interface CreateFormErrors {
 export type KeyOfForm = keyof CreateFormErrors;
 export const FIELD_NAME_MAP: { [key in KeyOfForm]: string } = {
   rfpOptIn: 'KYC',
+  postAgreementOptIn: 'Zcash Community Forum',
   title: 'Title',
   brief: 'Brief',
   target: 'Target amount',
@@ -64,6 +66,7 @@ export function getCreateErrors(
     tipJarAddress,
     rfpOptIn,
     brief,
+    postAgreementOptIn,
   } = form;
 
   // Required fields with no extra validation
@@ -85,6 +88,10 @@ export function getCreateErrors(
   // RFP opt-in
   if (!rfpOptIn) {
     errors.rfpOptIn = 'Please accept KYC to submit.';
+  }
+
+  if (!postAgreementOptIn) {
+    errors.postAgreementOptIn = 'Please agree to post on the Zcash Community Forum';
   }
 
   // Title
