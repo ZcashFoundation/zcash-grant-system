@@ -16,7 +16,7 @@ const HomeIntro: React.SFC<Props> = ({ t, authUser }) => (
   <div className="HomeIntro">
     <div className="HomeIntro-content">
       <h1 className="HomeIntro-content-title">{t('home.intro.title')}</h1>
-        <p className="HomeIntro-content-subtitle">Development, research, and community growth. Help us build a better Zcash by creating a proposal or requesting an improvement to Zcash Foundation or <a href="http://zcashomg.org/" target={"_blank"}>Zcash Open Major Grants (ZOMG)</a></p>
+        <p className="HomeIntro-content-subtitle">Development, research, and community growth. Help us build a better Zcash by creating a proposal or requesting an improvement to Zcash Foundation or <a href="http://zcashcommunitygrants.org/" target={"_blank"}>Zcash Community Grants</a>(formerly known as ZOMG)</p>
       <div className="HomeIntro-content-buttons">
         {authUser ? (
           <Link className="HomeIntro-content-buttons-button is-primary" to="/proposals">
