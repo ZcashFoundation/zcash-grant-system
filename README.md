@@ -1,6 +1,6 @@
 # Zcash Grant System
 
-This is a collection of the various services and components that make up the Zcash Grant System.
+This is a collection of the various services and components that make up the old Zcash Grant System, which has been deprecated. 
 
 ### Setup
 
